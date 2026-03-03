@@ -14,6 +14,8 @@ htmlcov/
 
 # Jupyter
 .ipynb_checkpoints/
+.jupyter_cache/
+*.nbconvert.ipynb
 
 # QuTiP / numeric artifacts
 qutip-data/

@@ -41,6 +41,26 @@ res = simulate_sequence(
 print(res.expectations["P_e"][-1])
 ```
 
+## Sequential Simulation Notebook
+- Notebook: `sequential_simulation.ipynb`
+- Generator: `outputs/generate_sequential_simulation_notebook.py`
+- Refactored reusable APIs live under:
+  - `cqed_sim.io.gates`
+  - `cqed_sim.simulators`
+  - `cqed_sim.observables`
+  - `cqed_sim.plotting`
+  - `cqed_sim.tests.test_sanity`
+- Regenerate the notebook after changing the generator:
+```bash
+python outputs/generate_sequential_simulation_notebook.py
+```
+- Run the notebook top-to-bottom in a kernel with `qutip`, `matplotlib`, and the editable package installed.
+- The notebook includes:
+  - Case A ideal gates
+  - Case B pulse-level unitary simulation
+  - Case C pulse-level dissipative simulation
+  - compact Wigner grids, relative phase tracking, weakness metrics, and a baseline-vs-refactor sanity check
+
 ## API Summary
 - `DispersiveTransmonCavityModel`: static Hamiltonian and basis state utilities.
 - `FrameSpec(omega_c_frame, omega_q_frame)`: per-mode rotating frame frequencies.
@@ -50,6 +70,15 @@ print(res.expectations["P_e"][-1])
 - `simulate_sequence(...)`: QuTiP `sesolve` / `mesolve` integration wrapper.
 - `NoiseSpec(t1, tphi, kappa, nth)`: optional Lindblad noise specification.
 - Sideband pulse convention: for constant `g`, swap `|e,0> -> |g,1>` at `T_pi = pi / (2g)`.
+- Sequential notebook entry points:
+  - `cqed_sim.io.gates.load_gate_sequence(...)`
+  - `cqed_sim.simulators.run_case_a(...)`
+  - `cqed_sim.simulators.run_case_b(...)`
+  - `cqed_sim.simulators.run_case_c(...)`
+  - `cqed_sim.observables.attach_weakness_metrics(...)`
+  - `cqed_sim.plotting.plot_bloch_track(...)`
+  - `cqed_sim.plotting.plot_wigner_grid(...)`
+  - `cqed_sim.plotting.plot_relative_phase_track(...)`
 
 ## Numerical Settings
 - Solver defaults: `atol=1e-8`, `rtol=1e-7`, optional `max_step`.
@@ -61,6 +90,11 @@ print(res.expectations["P_e"][-1])
 Run all:
 ```bash
 pytest -q
+```
+
+Run only the notebook refactor sanity coverage:
+```bash
+pytest -q cqed_sim/tests/test_sanity.py
 ```
 
 Skip slow tests:

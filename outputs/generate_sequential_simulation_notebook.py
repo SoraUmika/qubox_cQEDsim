@@ -31,45 +31,47 @@ cells: list[dict] = [
         """
         ## Section 0: Overview and Usage
 
-        This notebook implements three gate-by-gate simulations for the same validated JSON gate list:
+        This notebook implements four gate-by-gate simulations for the same validated JSON gate list:
 
         - **Case A**: instantaneous ideal gates.
         - **Case B**: pulse-level QuTiP dynamics with no dissipation.
         - **Case C**: pulse-level QuTiP dynamics with dissipation from `T1`, `T2`, and optional cavity loss.
+        - **Case D**: pulse-level simulation with numerically calibrated SQR gates using cached or on-demand per-manifold optimization.
+
+        The diagnostic overlays compare **simulated pulse-level** outputs against **Case A ideal references** using stable conventions:
+
+        - Filled heatmaps = simulated values.
+        - Dashed contours = ideal references.
+        - `X`, `Y`, `Z` keep the same blue/orange/green mapping in line plots and contour overlays.
+        - Simulated vs ideal are distinguished by style, not by component color changes.
 
         Usage:
 
         1. Edit the configuration in **Section 2**.
         2. Run the notebook top-to-bottom.
-        3. Compare Bloch trajectories, compact Wigner snapshots, relative phases, and weakness metrics across A/B/C.
+        3. Inspect the overlay diagnostics for Cases B/C/D in **Section Y**.
+        4. Review the weakness comparisons in **Section 8**.
+        5. Saved figures are written under `outputs/figures/`.
 
-        Pulse mapping used in this notebook:
-
-        - `Displacement` -> square cavity drive.
-        - `Rotation` -> Gaussian qubit drive.
-        - `SQR` -> simplified multitone Gaussian qubit drive using `cqed_sim` dispersive manifold frequencies.
+        Note: the notebook intentionally omits the old test-suite and final-summary sections.
         """
     ),
-    md_cell(
-        """
-        ## Section 1: Imports and Environment Checks
-        """
-    ),
+    md_cell("## Section 1: Imports and Environment Checks"),
     code_cell(
         """
         from __future__ import annotations
 
-        import copy
         import importlib
         import importlib.metadata
+        from pathlib import Path
 
         REQUIRED_HINTS = {
             "numpy": "pip install numpy",
             "matplotlib": "pip install matplotlib",
+            "scipy": "pip install scipy",
             "qutip": "pip install qutip",
             "cqed_sim": "pip install -e .",
         }
-        OPTIONAL_MODULES = ["ipywidgets"]
 
         missing = []
         versions = {}
@@ -89,12 +91,21 @@ cells: list[dict] = [
         import matplotlib.pyplot as plt
         import numpy as np
         import qutip as qt
+        import scipy
         from IPython.display import Markdown, display
 
-        import cqed_sim
         from cqed_sim.io.gates import load_gate_sequence, render_gate_table
+        from cqed_sim.observables.fock import conditional_phase_diagnostics, fock_resolved_bloch_diagnostics
         from cqed_sim.observables.weakness import attach_weakness_metrics, comparison_metrics
         from cqed_sim.plotting.bloch_plots import plot_bloch_track
+        from cqed_sim.plotting.gate_diagnostics import (
+            plot_fock_resolved_bloch_overlay,
+            plot_gate_bloch_trajectory_error,
+            plot_gate_bloch_trajectory_overlay,
+            plot_phase_error_heatmap,
+            plot_phase_heatmap_overlay,
+            save_figure,
+        )
         from cqed_sim.plotting.phase_plots import plot_relative_phase_track
         from cqed_sim.plotting.weakness_plots import (
             plot_cavity_population_comparison,
@@ -103,11 +114,11 @@ cells: list[dict] = [
             print_mapping_rows,
         )
         from cqed_sim.plotting.wigner_grids import plot_wigner_grid
-        from cqed_sim.simulators.common import final_case_summary
         from cqed_sim.simulators.ideal import run_case_a
+        from cqed_sim.simulators.pulse_calibrated import run_case_d
         from cqed_sim.simulators.pulse_open import run_case_c
         from cqed_sim.simulators.pulse_unitary import run_case_b
-        from cqed_sim.tests.test_sanity import baseline_vs_refactor_sanity, run_notebook_sanity_suite
+        from cqed_sim.simulators.trajectories import ideal_gate_bloch_trajectory, simulate_gate_bloch_trajectory
 
         def package_version(dist_name: str, default: str = "editable/local") -> str:
             try:
@@ -115,35 +126,22 @@ cells: list[dict] = [
             except importlib.metadata.PackageNotFoundError:
                 return default
 
-        optional_versions = {}
-        for module_name in OPTIONAL_MODULES:
-            try:
-                module = importlib.import_module(module_name)
-                optional_versions[module_name] = getattr(module, "__version__", "available")
-            except ModuleNotFoundError:
-                optional_versions[module_name] = "not installed"
-
         np.set_printoptions(precision=4, suppress=True)
         print("Required versions:")
         print(f"  numpy     : {versions['numpy']}")
         print(f"  matplotlib: {versions['matplotlib']}")
+        print(f"  scipy     : {versions['scipy']}")
         print(f"  qutip     : {versions['qutip']}")
         print(f"  cqed_sim  : {package_version('cqed-sim')}")
-        print("Optional:")
-        for name, version in optional_versions.items():
-            print(f"  {name:<10}: {version}")
         """
     ),
-    md_cell(
-        """
-        ## Section 2: User Configuration
-        """
-    ),
+    md_cell("## Section 2: User Configuration"),
     code_cell(
         r"""
         CONFIG = {
             "json_path": r"C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\JJL_Experiments\decomposition\cluster_U_T_1-1e+03ns-3_sqr-no_phases.josn",
-            "cavity_fock_cutoff": 24,
+            "json_fallback_path": "examples/sequences/sequential_demo.json",
+            "cavity_fock_cutoff": 12,
             "initial_qubit": "g",
             "initial_cavity_kind": "fock",
             "initial_cavity_fock": 0,
@@ -159,65 +157,90 @@ cells: list[dict] = [
             "phase_track_max_n": 2,
             "phase_reference_threshold": 1.0e-8,
             "phase_unwrap": False,
+            "overlay_cases": ("Case B", "Case C", "Case D"),
+            "trajectory_gate_index": None,
+            "trajectory_conditioned_max_n": 2,
+            "gate_diag_probability_threshold": 1.0e-8,
+            "output_figure_dir": "outputs/figures",
+            "save_output_figures": True,
+            "output_figure_dpi": 160,
             "dt_s": 1.0e-9,
             "max_step_s": 1.0e-9,
-            "duration_displacement_s": 32.0e-9,
-            "duration_rotation_s": 64.0e-9,
+            "duration_displacement_s": 48.0e-9,
+            "duration_rotation_s": 16.0e-9,
             "duration_sqr_s": 1.0e-6,
-            "rotation_sigma_fraction": 0.18,
-            "sqr_sigma_fraction": 0.18,
+            "rotation_sigma_fraction": 1.0 / 6.0,
+            "sqr_sigma_fraction": 1.0 / 6.0,
             "sqr_theta_cutoff": 1.0e-10,
             "use_rotating_frame": True,
             "omega_c_hz": 0.0,
             "omega_q_hz": 0.0,
             "qubit_alpha_hz": 0.0,
             "st_chi_hz": -2840421.354241756,
-            "st_chi2_hz": -21912.638362342423,
-            "st_chi3_hz": -327.37857577643325,
-            "st_K_hz": -28844.0,
-            "st_K2_hz": 1406.0,
+            "st_chi2_hz": 0.0,
+            "st_chi3_hz": 0.0,
+            "st_K_hz": 0.0,
+            "st_K2_hz": 0.0,
             "cavity_kappa_1_per_s": 0.0,
-            "qb_T1_relax_ns": 9812.873848245112,
-            "qb_T2_ramsey_ns": 6324.73112712837,
-            "qb_T2_echo_ns": 8070.0,
+            "qb_T1_relax_ns": 98120.873848245112,
+            "qb_T2_ramsey_ns": 63240.73112712837,
+            "qb_T2_echo_ns": 80700.0,
             "t2_source": "ramsey",
+            "max_n_cal": 2,
+            "optimizer_method_stage1": "Powell",
+            "optimizer_method_stage2": "L-BFGS-B",
+            "optimizer_maxiter_stage1": 40,
+            "optimizer_maxiter_stage2": 60,
+            "d_lambda_bounds": (-0.5, 0.5),
+            "d_alpha_bounds": (-np.pi, np.pi),
+            "d_omega_hz_bounds": (-2.0e6, 2.0e6),
+            "regularization_lambda": 1.0e-6,
+            "regularization_alpha": 1.0e-6,
+            "regularization_omega": 1.0e-18,
+            "calibration_cache_dir": "calibrations",
+            "calibration_force_recompute": False,
+            "case_d_include_dissipation": True,
         }
         CONFIG["n_cav_dim"] = int(CONFIG["cavity_fock_cutoff"]) + 1
 
         display(Markdown("Configured parameters:"))
         for key in sorted(CONFIG):
-            print(f"{key:>24}: {CONFIG[key]}")
+            print(f"{key:>28}: {CONFIG[key]}")
         """
     ),
-    md_cell(
-        """
-        ## Section 3: Load and Validate JSON Gate List
-        """
-    ),
+    md_cell("## Section 3: Load and Validate JSON Gate List"),
     code_cell(
         """
-        GATE_PATH, GATES = load_gate_sequence(CONFIG["json_path"])
+        requested_path = Path(CONFIG["json_path"])
+        fallback_path = Path(CONFIG["json_fallback_path"])
+        selected_path = CONFIG["json_path"] if requested_path.exists() else CONFIG["json_fallback_path"]
+        if not requested_path.exists():
+            print("Configured JSON path was not found.")
+            print(f"Requested: {requested_path}")
+            print(f"Falling back to repo-local demo sequence: {fallback_path.resolve()}")
+
+        GATE_PATH, GATES = load_gate_sequence(selected_path)
         print(f"Loaded {len(GATES)} gates from:\\n  {GATE_PATH}")
         render_gate_table(GATES, max_rows=int(CONFIG["summary_max_rows"]))
         """
     ),
-    md_cell(
-        """
-        ## Section 4: Shared Operator Builders and Utilities
-        """
-    ),
+    md_cell("## Section 4: Shared Operator Builders and Utilities"),
     code_cell(
         """
         SHARED_API = [
             "run_case_a",
             "run_case_b",
             "run_case_c",
-            "plot_bloch_track",
-            "plot_wigner_grid",
-            "plot_relative_phase_track",
-            "plot_component_comparison",
-            "plot_weakness",
-            "run_notebook_sanity_suite",
+            "run_case_d",
+            "fock_resolved_bloch_diagnostics",
+            "conditional_phase_diagnostics",
+            "simulate_gate_bloch_trajectory",
+            "ideal_gate_bloch_trajectory",
+            "plot_fock_resolved_bloch_overlay",
+            "plot_phase_heatmap_overlay",
+            "plot_phase_error_heatmap",
+            "plot_gate_bloch_trajectory_overlay",
+            "plot_gate_bloch_trajectory_error",
         ]
 
         print("Notebook orchestration uses cqed_sim package helpers:")
@@ -225,11 +248,7 @@ cells: list[dict] = [
             print(f"  - {name}")
         """
     ),
-    md_cell(
-        """
-        ## Section 5: Case A --- Ideal Gate Simulation
-        """
-    ),
+    md_cell("## Section 5: Case A --- Ideal Gate Simulation"),
     code_cell(
         """
         CASE_A = run_case_a(GATES, CONFIG, case_label="Case A")
@@ -245,19 +264,10 @@ cells: list[dict] = [
             }
         )
 
-        plot_bloch_track(
-            CASE_A,
-            title="Case A: ideal Bloch trajectory",
-            label_stride=int(CONFIG["top_axis_label_stride"]),
-        )
+        plot_bloch_track(CASE_A, title="Case A: ideal Bloch trajectory", label_stride=int(CONFIG["top_axis_label_stride"]))
         plt.show()
 
-        plot_wigner_grid(
-            CASE_A,
-            title="Case A: Wigner tomography by gate index",
-            stride=int(CONFIG["wigner_stride"]),
-            max_cols=int(CONFIG["wigner_max_cols"]),
-        )
+        plot_wigner_grid(CASE_A, title="Case A: Wigner tomography by gate index", stride=int(CONFIG["wigner_stride"]), max_cols=int(CONFIG["wigner_max_cols"]))
         plt.show()
 
         plot_relative_phase_track(
@@ -276,11 +286,11 @@ cells: list[dict] = [
 
         SQR note:
 
-        `cqed_sim` provides dispersive manifold-frequency helpers, but not a hardware-calibrated selective-SQR compiler. This notebook therefore uses a simplified multitone Gaussian rotating-wave model:
+        `cqed_sim` provides dispersive manifold-frequency helpers, but not a fully hardware-calibrated selective-SQR compiler. Cases B and C therefore use a simplified multitone Gaussian rotating-wave model:
 
         - one Gaussian-windowed tone per active Fock manifold,
         - tone frequencies from `cqed_sim.snap_opt.model.manifold_transition_frequency(...)`,
-        - per-tone area calibration `theta_n ≈ 2 * ∫ Ω_n(t) dt`.
+        - per-tone area calibration `theta_n ~= integral Omega_n(t) dt`.
         """
     ),
     code_cell(
@@ -300,19 +310,10 @@ cells: list[dict] = [
         print("Case B gate-to-pulse mapping:")
         print_mapping_rows(CASE_B)
 
-        plot_bloch_track(
-            CASE_B,
-            title="Case B: pulse-level Bloch trajectory (no dissipation)",
-            label_stride=int(CONFIG["top_axis_label_stride"]),
-        )
+        plot_bloch_track(CASE_B, title="Case B: pulse-level Bloch trajectory (no dissipation)", label_stride=int(CONFIG["top_axis_label_stride"]))
         plt.show()
 
-        plot_wigner_grid(
-            CASE_B,
-            title="Case B: pulse-level Wigner tomography by gate index",
-            stride=int(CONFIG["wigner_stride"]),
-            max_cols=int(CONFIG["wigner_max_cols"]),
-        )
+        plot_wigner_grid(CASE_B, title="Case B: pulse-level Wigner tomography by gate index", stride=int(CONFIG["wigner_stride"]), max_cols=int(CONFIG["wigner_max_cols"]))
         plt.show()
 
         plot_relative_phase_track(
@@ -325,11 +326,7 @@ cells: list[dict] = [
         plt.show()
         """
     ),
-    md_cell(
-        """
-        ## Section 7: Case C --- Pulse-level Simulation (With Dissipation)
-        """
-    ),
+    md_cell("## Section 7: Case C --- Pulse-level Simulation (With Dissipation)"),
     code_cell(
         """
         CASE_C = run_case_c(GATES, CONFIG, case_label="Case C")
@@ -357,19 +354,10 @@ cells: list[dict] = [
         print("Case C gate-to-pulse mapping:")
         print_mapping_rows(CASE_C)
 
-        plot_bloch_track(
-            CASE_C,
-            title="Case C: pulse-level Bloch trajectory (with dissipation)",
-            label_stride=int(CONFIG["top_axis_label_stride"]),
-        )
+        plot_bloch_track(CASE_C, title="Case C: pulse-level Bloch trajectory (with dissipation)", label_stride=int(CONFIG["top_axis_label_stride"]))
         plt.show()
 
-        plot_wigner_grid(
-            CASE_C,
-            title="Case C: pulse-level Wigner tomography by gate index",
-            stride=int(CONFIG["wigner_stride"]),
-            max_cols=int(CONFIG["wigner_max_cols"]),
-        )
+        plot_wigner_grid(CASE_C, title="Case C: pulse-level Wigner tomography by gate index", stride=int(CONFIG["wigner_stride"]), max_cols=int(CONFIG["wigner_max_cols"]))
         plt.show()
 
         plot_relative_phase_track(
@@ -380,6 +368,172 @@ cells: list[dict] = [
             label_stride=int(CONFIG["top_axis_label_stride"]),
         )
         plt.show()
+        """
+    ),
+    md_cell("## Section X: Case D --- Pulse-level Simulation with Calibrated SQR"),
+    code_cell(
+        """
+        CASE_D = run_case_d(GATES, CONFIG, case_label="Case D")
+
+        print("Case D diagnostics:")
+        print(
+            {
+                "solver": CASE_D["metadata"]["solver"],
+                "final_x": CASE_D["x"][-1],
+                "final_y": CASE_D["y"][-1],
+                "final_z": CASE_D["z"][-1],
+                "final_n": CASE_D["n"][-1],
+                "n_calibrated_sqr_gates": len(CASE_D["metadata"].get("calibration_results", {})),
+            }
+        )
+        print("Case D gate-to-pulse mapping:")
+        print_mapping_rows(CASE_D)
+        print("Case D calibration summaries:")
+        for name, summary in CASE_D["metadata"].get("calibration_summaries", {}).items():
+            print(name, summary)
+
+        plot_bloch_track(CASE_D, title="Case D: calibrated-SQR pulse-level Bloch trajectory", label_stride=int(CONFIG["top_axis_label_stride"]))
+        plt.show()
+
+        plot_wigner_grid(CASE_D, title="Case D: calibrated-SQR Wigner tomography by gate index", stride=int(CONFIG["wigner_stride"]), max_cols=int(CONFIG["wigner_max_cols"]))
+        plt.show()
+
+        plot_relative_phase_track(
+            CASE_D,
+            max_n=int(CONFIG["phase_track_max_n"]),
+            threshold=float(CONFIG["phase_reference_threshold"]),
+            unwrap=bool(CONFIG["phase_unwrap"]),
+            label_stride=int(CONFIG["top_axis_label_stride"]),
+        )
+        plt.show()
+        """
+    ),
+    md_cell("## Section Y: Gate-Indexed Diagnostics and Pulse-Level Trajectories"),
+    code_cell(
+        """
+        TRACKS = {
+            "Case A": CASE_A,
+            "Case B": CASE_B,
+            "Case C": CASE_C,
+            "Case D": CASE_D,
+        }
+        overlay_case_names = [str(name) for name in CONFIG["overlay_cases"]]
+        for name in overlay_case_names:
+            if name not in {"Case B", "Case C", "Case D"}:
+                raise KeyError(f"Unsupported overlay case '{name}'. Expected Case B/Case C/Case D.")
+
+        diagnostic_max_n = int(CONFIG["phase_track_max_n"])
+        probability_threshold = float(CONFIG["gate_diag_probability_threshold"])
+        label_stride = int(CONFIG["top_axis_label_stride"])
+        output_dir = Path(CONFIG["output_figure_dir"])
+        ideal_bloch = fock_resolved_bloch_diagnostics(CASE_A, max_n=diagnostic_max_n, probability_threshold=probability_threshold)
+        ideal_phase = conditional_phase_diagnostics(
+            CASE_A,
+            max_n=diagnostic_max_n,
+            probability_threshold=probability_threshold,
+            unwrap=bool(CONFIG["phase_unwrap"]),
+        )
+
+        if CONFIG["trajectory_gate_index"] is None:
+            selected_gate_index = next((idx for idx, gate in enumerate(GATES, start=1) if gate.type == "SQR"), 1)
+        else:
+            selected_gate_index = int(CONFIG["trajectory_gate_index"])
+
+        conditioned_cap = min(int(CONFIG["trajectory_conditioned_max_n"]), diagnostic_max_n)
+        conditioned_levels = list(range(conditioned_cap + 1))
+
+        print(
+            {
+                "overlay_cases": overlay_case_names,
+                "n_max": diagnostic_max_n,
+                "selected_gate_index": selected_gate_index,
+                "selected_gate_type": GATES[selected_gate_index - 1].type,
+                "selected_gate_name": GATES[selected_gate_index - 1].name,
+            }
+        )
+
+        OVERLAY_RESULTS = {}
+        for case_name in overlay_case_names:
+            track = TRACKS[case_name]
+            case_slug = case_name.lower().replace(" ", "_")
+            sim_bloch = fock_resolved_bloch_diagnostics(track, max_n=diagnostic_max_n, probability_threshold=probability_threshold)
+            sim_phase = conditional_phase_diagnostics(
+                track,
+                max_n=diagnostic_max_n,
+                probability_threshold=probability_threshold,
+                unwrap=bool(CONFIG["phase_unwrap"]),
+            )
+            sim_traj = simulate_gate_bloch_trajectory(
+                track,
+                GATES,
+                CONFIG,
+                gate_index=selected_gate_index,
+                conditioned_n_levels=conditioned_levels,
+                probability_threshold=probability_threshold,
+            )
+            ideal_traj = ideal_gate_bloch_trajectory(
+                CASE_A,
+                GATES,
+                CONFIG,
+                gate_index=selected_gate_index,
+                times_s=sim_traj["times_s"],
+                conditioned_n_levels=conditioned_levels,
+                probability_threshold=probability_threshold,
+            )
+            OVERLAY_RESULTS[case_name] = {
+                "bloch": sim_bloch,
+                "phase": sim_phase,
+                "trajectory": sim_traj,
+                "ideal_trajectory": ideal_traj,
+            }
+
+            print(f"Overlay diagnostics for {case_name}:")
+            for component in ("x", "y", "z"):
+                fig = plot_fock_resolved_bloch_overlay(sim_bloch, ideal_bloch, track, component=component, label_stride=label_stride)
+                if bool(CONFIG["save_output_figures"]):
+                    target = f"{case_slug}_bloch_fock_heatmap_{component.upper()}_sim_ideal.png"
+                    print("Saved:", save_figure(fig, output_dir, target, dpi=int(CONFIG["output_figure_dpi"])))
+                    if case_name == "Case D":
+                        generic = f"bloch_fock_heatmap_{component.upper()}_sim_ideal.png"
+                        print("Saved:", save_figure(fig, output_dir, generic, dpi=int(CONFIG["output_figure_dpi"])))
+                plt.show()
+                plt.close(fig)
+
+            fig = plot_phase_heatmap_overlay(sim_phase, ideal_phase, track, label_stride=label_stride)
+            if bool(CONFIG["save_output_figures"]):
+                print("Saved:", save_figure(fig, output_dir, f"{case_slug}_phase_heatmap_sim_ideal.png", dpi=int(CONFIG["output_figure_dpi"])))
+                if case_name == "Case D":
+                    print("Saved:", save_figure(fig, output_dir, "phase_heatmap_sim_ideal.png", dpi=int(CONFIG["output_figure_dpi"])))
+            plt.show()
+            plt.close(fig)
+
+            fig = plot_phase_error_heatmap(sim_phase, ideal_phase, track, label_stride=label_stride)
+            if bool(CONFIG["save_output_figures"]):
+                print("Saved:", save_figure(fig, output_dir, f"{case_slug}_phase_error_heatmap.png", dpi=int(CONFIG["output_figure_dpi"])))
+                if case_name == "Case D":
+                    print("Saved:", save_figure(fig, output_dir, "phase_error_heatmap.png", dpi=int(CONFIG["output_figure_dpi"])))
+            plt.show()
+            plt.close(fig)
+
+            fig = plot_gate_bloch_trajectory_overlay(sim_traj, ideal_traj)
+            if bool(CONFIG["save_output_figures"]):
+                target = f"{case_slug}_bloch_trajectory_gate_{selected_gate_index}_sim_ideal.png"
+                print("Saved:", save_figure(fig, output_dir, target, dpi=int(CONFIG["output_figure_dpi"])))
+                if case_name == "Case D":
+                    generic = f"bloch_trajectory_gate_{selected_gate_index}_sim_ideal.png"
+                    print("Saved:", save_figure(fig, output_dir, generic, dpi=int(CONFIG["output_figure_dpi"])))
+            plt.show()
+            plt.close(fig)
+
+            fig = plot_gate_bloch_trajectory_error(sim_traj, ideal_traj)
+            if bool(CONFIG["save_output_figures"]):
+                target = f"{case_slug}_bloch_trajectory_error_gate_{selected_gate_index}.png"
+                print("Saved:", save_figure(fig, output_dir, target, dpi=int(CONFIG["output_figure_dpi"])))
+                if case_name == "Case D":
+                    generic = f"bloch_trajectory_error_gate_{selected_gate_index}.png"
+                    print("Saved:", save_figure(fig, output_dir, generic, dpi=int(CONFIG["output_figure_dpi"])))
+            plt.show()
+            plt.close(fig)
         """
     ),
     md_cell(
@@ -397,72 +551,27 @@ cells: list[dict] = [
         CASE_A = attach_weakness_metrics(CASE_A, CASE_A)
         CASE_B = attach_weakness_metrics(CASE_A, CASE_B)
         CASE_C = attach_weakness_metrics(CASE_A, CASE_C)
+        CASE_D = attach_weakness_metrics(CASE_A, CASE_D)
 
-        plot_component_comparison(
-            CASE_A,
-            CASE_B,
-            CASE_C,
-            label_stride=int(CONFIG["top_axis_label_stride"]),
-        )
+        plot_component_comparison(CASE_A, CASE_B, CASE_C, case_d=CASE_D, label_stride=int(CONFIG["top_axis_label_stride"]))
         plt.show()
 
-        plot_cavity_population_comparison(
-            CASE_A,
-            CASE_B,
-            CASE_C,
-            label_stride=int(CONFIG["top_axis_label_stride"]),
-        )
+        plot_cavity_population_comparison(CASE_A, CASE_B, CASE_C, case_d=CASE_D, label_stride=int(CONFIG["top_axis_label_stride"]))
         plt.show()
 
-        plot_weakness(
-            CASE_B,
-            CASE_C,
-            reference_track=CASE_A,
-            label_stride=int(CONFIG["top_axis_label_stride"]),
-        )
+        plot_weakness(CASE_B, CASE_C, reference_track=CASE_A, case_d=CASE_D, label_stride=int(CONFIG["top_axis_label_stride"]))
         plt.show()
 
         COMPARISON_AB = comparison_metrics(CASE_A, CASE_B)
         COMPARISON_AC = comparison_metrics(CASE_A, CASE_C)
+        COMPARISON_AD = comparison_metrics(CASE_A, CASE_D)
         print("A vs B:", COMPARISON_AB)
         print("A vs C:", COMPARISON_AC)
-        """
-    ),
-    md_cell(
-        """
-        ## Section 9: Test Suite
-        """
-    ),
-    code_cell(
-        """
-        BASELINE_VS_REFACTOR = baseline_vs_refactor_sanity(CONFIG)
-        print("Baseline vs refactor sanity:", BASELINE_VS_REFACTOR)
+        print("A vs D:", COMPARISON_AD)
 
-        TEST_RESULTS = run_notebook_sanity_suite(CONFIG)
-        for row in TEST_RESULTS:
-            print(f"{row['status']}: {row['label']}")
-
-        TEST_RESULTS
-        """
-    ),
-    md_cell(
-        """
-        ## Section 10: Final Summary Tables and Notes
-        """
-    ),
-    code_cell(
-        """
-        FINAL_SUMMARIES = [final_case_summary(track) for track in (CASE_A, CASE_B, CASE_C)]
-        print("Final case summaries:")
-        for row in FINAL_SUMMARIES:
-            print(row)
-
-        print("\\nNotes:")
-        print("- Case A is the instantaneous-unitary baseline.")
-        print("- Case B and Case C use the same pulse shapes; Case C adds Lindblad dissipation.")
-        print("- SQR in Cases B/C uses a simplified multitone Gaussian selective-drive approximation tied to cqed_sim dispersive manifold frequencies.")
-        print("- Bloch plots intentionally keep gate-type labels only on the top x-axis to avoid duplication.")
-        print("- The baseline-vs-refactor check compares the refactored Case A path against an independent direct-unitary reference.")
+        if CASE_D["metadata"].get("calibration_summaries"):
+            first_summary = next(iter(CASE_D["metadata"]["calibration_summaries"].values()))
+            print("Example Case D calibration reduction:", first_summary)
         """
     ),
 ]

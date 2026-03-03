@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import math
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -10,14 +11,17 @@ import qutip as qt
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.io.gates import DisplacementGate, RotationGate, SQRGate
 from cqed_sim.observables.bloch import bloch_xyz_from_joint, reduced_qubit_state
+from cqed_sim.observables.fock import conditional_phase_diagnostics, fock_resolved_bloch_diagnostics
 from cqed_sim.observables.weakness import comparison_metrics
 from cqed_sim.operators.basic import purity
 from cqed_sim.sim.noise import NoiseSpec
 from cqed_sim.sim.runner import SimulationConfig, simulate_sequence
 from cqed_sim.simulators.common import build_initial_state
 from cqed_sim.simulators.ideal import ideal_gate_unitary, run_case_a
+from cqed_sim.simulators.pulse_calibrated import run_case_d
 from cqed_sim.simulators.pulse_open import run_case_c
 from cqed_sim.simulators.pulse_unitary import run_case_b
+from cqed_sim.simulators.trajectories import simulate_gate_bloch_trajectory
 from cqed_sim.sequence.scheduler import SequenceCompiler
 
 
@@ -226,6 +230,106 @@ def _test_6_case_b_case_c_shapes(base_config: dict[str, Any]) -> None:
             raise AssertionError("Non-finite Bloch values detected.")
 
 
+def _test_7_case_d_shapes_and_calibration(base_config: dict[str, Any]) -> None:
+    config = _normalized_config(base_config)
+    config.update(
+        {
+            "cavity_fock_cutoff": 5,
+            "n_cav_dim": 6,
+            "omega_c_hz": 0.0,
+            "omega_q_hz": 0.0,
+            "qubit_alpha_hz": 0.0,
+            "st_chi_hz": -2.0e5,
+            "st_chi2_hz": 0.0,
+            "st_chi3_hz": 0.0,
+            "st_K_hz": 0.0,
+            "st_K2_hz": 0.0,
+            "duration_displacement_s": 48.0e-9,
+            "duration_rotation_s": 16.0e-9,
+            "duration_sqr_s": 1.0e-6,
+            "dt_s": 2.0e-8,
+            "max_step_s": 2.0e-8,
+            "max_n_cal": 1,
+            "optimizer_method_stage1": "Powell",
+            "optimizer_method_stage2": "L-BFGS-B",
+            "optimizer_maxiter_stage1": 6,
+            "optimizer_maxiter_stage2": 8,
+            "d_lambda_bounds": (-0.5, 0.5),
+            "d_alpha_bounds": (-np.pi, np.pi),
+            "d_omega_hz_bounds": (-5.0e5, 5.0e5),
+            "regularization_lambda": 1.0e-6,
+            "regularization_alpha": 1.0e-6,
+            "regularization_omega": 1.0e-18,
+            "calibration_cache_dir": str(Path("calibrations") / "_test_cache"),
+            "calibration_force_recompute": True,
+            "case_d_include_dissipation": False,
+        }
+    )
+    gates = [
+        RotationGate(index=0, name="x90", theta=np.pi / 2.0, phi=0.0),
+        SQRGate(index=1, name="sqr_case_d", theta=(0.0, np.pi / 4.0), phi=(0.0, np.pi / 5.0)),
+    ]
+    case_d = run_case_d(gates, config, case_label="Case D test")
+    if case_d["x"].shape != (len(gates) + 1,):
+        raise AssertionError("Unexpected Case D Bloch output shape.")
+    if not np.all(np.isfinite(case_d["x"])) or not np.all(np.isfinite(case_d["y"])) or not np.all(np.isfinite(case_d["z"])):
+        raise AssertionError("Non-finite Case D Bloch values detected.")
+    summaries = case_d["metadata"].get("calibration_summaries", {})
+    if not summaries:
+        raise AssertionError("Case D did not attach calibration summaries.")
+    first_summary = next(iter(summaries.values()))
+    if not first_summary["improved_levels"]:
+        raise AssertionError("Case D calibration did not improve any manifold.")
+
+
+def _test_8_gate_indexed_diagnostics(base_config: dict[str, Any]) -> None:
+    config = _normalized_config(base_config)
+    config.update(
+        {
+            "cavity_fock_cutoff": 5,
+            "n_cav_dim": 6,
+            "omega_c_hz": 0.0,
+            "omega_q_hz": 0.0,
+            "qubit_alpha_hz": 0.0,
+            "st_chi_hz": 0.0,
+            "st_chi2_hz": 0.0,
+            "st_chi3_hz": 0.0,
+            "st_K_hz": 0.0,
+            "st_K2_hz": 0.0,
+            "duration_displacement_s": 1.0,
+            "duration_rotation_s": 1.0,
+            "duration_sqr_s": 1.0,
+            "dt_s": 5.0e-3,
+            "max_step_s": 5.0e-3,
+            "phase_track_max_n": 2,
+        }
+    )
+    gates = [
+        DisplacementGate(index=0, name="disp", re=0.2, im=0.0),
+        RotationGate(index=1, name="x45", theta=np.pi / 4.0, phi=0.0),
+    ]
+    track = run_case_b(gates, config, case_label="Case B diagnostics test")
+    bloch = fock_resolved_bloch_diagnostics(track, max_n=int(config["phase_track_max_n"]))
+    phase = conditional_phase_diagnostics(track, max_n=int(config["phase_track_max_n"]))
+    if not np.array_equal(bloch["n_values"], phase["n_values"]):
+        raise AssertionError("Gate diagnostics used mismatched n ranges.")
+    expected_shape = (int(config["phase_track_max_n"]) + 1, len(gates) + 1)
+    if bloch["x"].shape != expected_shape or phase["phase"].shape != expected_shape:
+        raise AssertionError("Unexpected gate-diagnostic array shape.")
+    trajectory = simulate_gate_bloch_trajectory(
+        track,
+        gates,
+        config,
+        gate_index=2,
+        conditioned_n_levels=[0, 1],
+        probability_threshold=1.0e-8,
+    )
+    if trajectory["times_s"].shape[0] != trajectory["x"].shape[0]:
+        raise AssertionError("Trajectory times and Bloch arrays have mismatched lengths.")
+    if not np.all(np.isfinite(trajectory["x"])) or not np.all(np.isfinite(trajectory["y"])) or not np.all(np.isfinite(trajectory["z"])):
+        raise AssertionError("Non-finite unconditional trajectory values detected.")
+
+
 def run_notebook_sanity_suite(base_config: dict[str, Any]) -> list[dict[str, str]]:
     tests = [
         ("Test 1: ideal rotation sanity", lambda: _test_1_ideal_rotation_sanity(base_config)),
@@ -234,6 +338,8 @@ def run_notebook_sanity_suite(base_config: dict[str, Any]) -> list[dict[str, str
         ("Test 4: decoherence limits", _test_4_decoherence_limits),
         ("Test 5: Case A vs Case B ideal limit", lambda: _test_5_case_a_vs_case_b_ideal_limit(base_config)),
         ("Test 6: Case B/Case C shape and finiteness", lambda: _test_6_case_b_case_c_shapes(base_config)),
+        ("Test 7: Case D calibrated SQR path", lambda: _test_7_case_d_shapes_and_calibration(base_config)),
+        ("Test 8: gate-indexed diagnostics", lambda: _test_8_gate_indexed_diagnostics(base_config)),
     ]
     results = []
     for label, fn in tests:

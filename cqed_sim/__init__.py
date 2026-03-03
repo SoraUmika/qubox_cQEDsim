@@ -3,13 +3,16 @@
 from .core.ideal_gates import displacement_op, embed_cavity_op, embed_qubit_op, qubit_rotation_xy, sqr_op
 from .core.frame import FrameSpec
 from .core.model import DispersiveTransmonCavityModel
+from .calibration.sqr import calibrate_sqr_gate, extract_sqr_gates, load_or_calibrate_sqr_gate, select_sqr_gate
 from .io.gates import load_gate_sequence, render_gate_table
 from .pulses.pulse import Pulse
 from .sequence.scheduler import SequenceCompiler
 from .simulators.common import build_frame, build_initial_state, build_model, build_noise_spec
 from .simulators.ideal import ideal_gate_unitary, run_case_a
+from .simulators.pulse_calibrated import run_case_d
 from .simulators.pulse_open import run_case_c
 from .simulators.pulse_unitary import run_case_b
+from .simulators.trajectories import ideal_gate_bloch_trajectory, simulate_gate_bloch_trajectory
 from .sim.noise import NoiseSpec
 from .sim.runner import SimulationConfig, simulate_sequence
 from .tomo.device import DeviceParameters
@@ -27,6 +30,10 @@ __all__ = [
     "simulate_sequence",
     "load_gate_sequence",
     "render_gate_table",
+    "extract_sqr_gates",
+    "select_sqr_gate",
+    "calibrate_sqr_gate",
+    "load_or_calibrate_sqr_gate",
     "build_initial_state",
     "build_model",
     "build_frame",
@@ -35,6 +42,9 @@ __all__ = [
     "run_case_a",
     "run_case_b",
     "run_case_c",
+    "run_case_d",
+    "ideal_gate_bloch_trajectory",
+    "simulate_gate_bloch_trajectory",
     "qubit_rotation_xy",
     "displacement_op",
     "sqr_op",

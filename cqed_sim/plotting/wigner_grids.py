@@ -21,7 +21,7 @@ def plot_wigner_grid(
     title: str,
     stride: int,
     max_cols: int | None = None,
-    show_colorbar: bool = True,
+    show_colorbar: bool = False,
 ):
     panels = selected_wigner_snapshots(track, stride=stride)
     if not panels:

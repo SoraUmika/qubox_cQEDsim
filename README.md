@@ -44,22 +44,35 @@ print(res.expectations["P_e"][-1])
 ## Sequential Simulation Notebook
 - Notebook: `sequential_simulation.ipynb`
 - Generator: `outputs/generate_sequential_simulation_notebook.py`
+- Additional calibration notebook: `SQR_calibration.ipynb`
+- Calibration notebook generator: `outputs/generate_sqr_calibration_notebook.py`
+- Repo-local demo gate list fallback: `examples/sequences/sequential_demo.json`
 - Refactored reusable APIs live under:
   - `cqed_sim.io.gates`
+  - `cqed_sim.calibration`
   - `cqed_sim.simulators`
   - `cqed_sim.observables`
   - `cqed_sim.plotting`
   - `cqed_sim.tests.test_sanity`
-- Regenerate the notebook after changing the generator:
+  - `cqed_sim.tests.test_sqr_calibration`
+- Regenerate the notebooks after changing the generators:
 ```bash
 python outputs/generate_sequential_simulation_notebook.py
+python outputs/generate_sqr_calibration_notebook.py
 ```
-- Run the notebook top-to-bottom in a kernel with `qutip`, `matplotlib`, and the editable package installed.
+- Run the notebooks top-to-bottom in a kernel with `qutip`, `matplotlib`, `scipy`, and the editable package installed.
 - The notebook includes:
   - Case A ideal gates
   - Case B pulse-level unitary simulation
   - Case C pulse-level dissipative simulation
-  - compact Wigner grids, relative phase tracking, weakness metrics, and a baseline-vs-refactor sanity check
+  - Case D calibrated-SQR pulse-level simulation with cache-backed SQR optimization
+  - compact Wigner grids, relative phase tracking, gate-indexed Fock-resolved Bloch heatmaps, selected-gate pulse trajectories, weakness metrics, and a baseline-vs-refactor sanity check
+  - saved figures under `outputs/figures/`, including:
+    - `fock_resolved_bloch_heatmaps.png`
+    - `relative_phase_heatmap.png`
+    - `bloch_trajectory_gate_<i>.png`
+    - `combined_gate_diagnostics.png`
+- `SQR_calibration.ipynb` performs per-manifold SQR fitting and exports `sqr_calibration_result.json` plus reusable cache files under `calibrations/`
 
 ## API Summary
 - `DispersiveTransmonCavityModel`: static Hamiltonian and basis state utilities.
@@ -72,13 +85,23 @@ python outputs/generate_sequential_simulation_notebook.py
 - Sideband pulse convention: for constant `g`, swap `|e,0> -> |g,1>` at `T_pi = pi / (2g)`.
 - Sequential notebook entry points:
   - `cqed_sim.io.gates.load_gate_sequence(...)`
+  - `cqed_sim.calibration.sqr.calibrate_sqr_gate(...)`
+  - `cqed_sim.calibration.sqr.load_or_calibrate_sqr_gate(...)`
   - `cqed_sim.simulators.run_case_a(...)`
   - `cqed_sim.simulators.run_case_b(...)`
   - `cqed_sim.simulators.run_case_c(...)`
+  - `cqed_sim.simulators.run_case_d(...)`
+  - `cqed_sim.simulators.simulate_gate_bloch_trajectory(...)`
   - `cqed_sim.observables.attach_weakness_metrics(...)`
+  - `cqed_sim.observables.fock_resolved_bloch_diagnostics(...)`
+  - `cqed_sim.observables.conditional_phase_diagnostics(...)`
   - `cqed_sim.plotting.plot_bloch_track(...)`
   - `cqed_sim.plotting.plot_wigner_grid(...)`
   - `cqed_sim.plotting.plot_relative_phase_track(...)`
+  - `cqed_sim.plotting.plot_sqr_calibration_result(...)`
+  - `cqed_sim.plotting.plot_fock_resolved_bloch_heatmaps(...)`
+  - `cqed_sim.plotting.plot_relative_phase_heatmap(...)`
+  - `cqed_sim.plotting.plot_gate_bloch_trajectory(...)`
 
 ## Numerical Settings
 - Solver defaults: `atol=1e-8`, `rtol=1e-7`, optional `max_step`.
@@ -95,6 +118,7 @@ pytest -q
 Run only the notebook refactor sanity coverage:
 ```bash
 pytest -q cqed_sim/tests/test_sanity.py
+pytest -q cqed_sim/tests/test_sqr_calibration.py
 ```
 
 Skip slow tests:

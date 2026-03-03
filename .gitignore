@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# QuTiP / numeric artifacts
+qutip-data/
+*.qobj
+
+# IDE / OS
+.vscode/
+.DS_Store
+Thumbs.db

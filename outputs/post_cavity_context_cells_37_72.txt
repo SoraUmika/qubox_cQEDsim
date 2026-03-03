@@ -1,0 +1,3809 @@
+﻿===== CELL 37 (markdown) =====
+## 4. Qubit Characterization
+
+===== CELL 38 (markdown) =====
+### 4.1 Qubit Spectroscopy
+
+
+
+Sweep qubit drive frequency to locate the qubit transition.
+
+Updates qubit frequency in the cooldown-scoped calibration store.
+
+===== CELL 39 (code) =====
+from datetime import datetime
+
+
+
+from qubox_v2.calibration import Patch
+
+
+
+
+
+
+
+qb_spec = QubitSpectroscopy(session)
+
+
+
+pre_qb_fq = float(getattr(attr, "qb_fq", np.nan))
+
+
+
+qb_therm_seed = 10000
+
+
+
+rf_begin_mhz = 6145.0
+
+
+
+rf_end_mhz = 6155.0
+
+
+
+
+
+
+
+qb_cycle = orch.run_analysis_patch_cycle(
+
+
+
+    qb_spec,
+
+
+
+    run_kwargs={
+
+
+
+        "pulse": "const",
+
+
+
+        "rf_begin": rf_begin_mhz * u.MHz,
+
+
+
+        "rf_end": rf_end_mhz * u.MHz,
+
+
+
+        "df": 200 * u.kHz,
+
+
+
+        "qb_gain": 1.2,
+
+
+
+        "qb_len": 3000,
+
+
+
+        "qb_therm_clks": qb_therm_seed,
+
+
+
+        "n_avg": 4000,
+
+
+
+    },
+
+
+
+    analyze_kwargs={"update_calibration": True},
+
+
+
+    apply=False,
+
+
+
+    persist_artifact=True,
+
+
+
+)
+
+
+
+
+
+
+
+qb_result = orch._run_result_from_artifact(qb_cycle["artifact"])
+
+
+
+qb_analysis = qb_spec.analyze(qb_result, update_calibration=False)
+
+
+
+qb_spec.plot(qb_analysis)
+
+
+
+
+
+
+
+f01_mhz = float(qb_cycle["calibration_result"].params.get("f0_MHz", np.nan))
+
+
+
+f01_hz = f01_mhz * 1e6
+
+
+
+in_sweep = np.isfinite(f01_mhz) and (rf_begin_mhz <= f01_mhz <= rf_end_mhz)
+
+
+
+
+
+
+
+print(f"f01 fitted = {f01_mhz:.6f} MHz")
+
+
+
+print(f"fit in sweep range? {in_sweep}")
+
+
+
+print("Patch preview:")
+
+
+
+for item in qb_cycle["dry_run"]["preview"]:
+
+
+
+    print(" ", item)
+
+
+
+
+
+
+
+if in_sweep:
+
+
+
+    qb_apply = orch.apply_patch(qb_cycle["patch"], dry_run=False)
+
+
+
+    post_qb_fq = float(getattr(session.attributes, "qb_fq", np.nan))
+
+
+
+    dq_hz = post_qb_fq - pre_qb_fq
+
+
+
+    status = "applied"
+
+
+
+else:
+
+
+
+    rollback_patch = Patch(reason="qubit_spec_invalid_fit_rollback", provenance={"f0_MHz": f01_mhz, "rf_begin_MHz": rf_begin_mhz, "rf_end_MHz": rf_end_mhz})
+
+
+
+    rollback_patch.add("SetCalibration", path="frequencies.transmon.qubit_freq", value=float(pre_qb_fq))
+
+
+
+    qb_apply = orch.apply_patch(rollback_patch, dry_run=False)
+
+
+
+    post_qb_fq = float(getattr(session.attributes, "qb_fq", np.nan))
+
+
+
+    dq_hz = post_qb_fq - pre_qb_fq
+
+
+
+    status = "rejected_invalid_fit_rolled_back"
+
+
+
+
+
+
+
+print("\n[Qubit Frequency Patch]")
+
+
+
+print(f"Previous qb_fq:  {pre_qb_fq/1e6:.6f} MHz")
+
+
+
+print(f"Fitted f01:       {f01_mhz:.6f} MHz")
+
+
+
+print(f"Patched qb_fq:    {post_qb_fq/1e6:.6f} MHz")
+
+
+
+print(f"Shift applied:    {dq_hz/1e6:+.6f} MHz")
+
+
+
+print(f"status:           {status}")
+
+
+
+print(f"apply result:     {qb_apply}")
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({
+
+
+
+    "f01_hz": float(post_qb_fq if in_sweep else pre_qb_fq),
+
+
+
+    "f01_fit_hz": float(f01_hz),
+
+
+
+    "f01_before_hz": float(pre_qb_fq),
+
+
+
+    "f01_shift_hz": float(dq_hz),
+
+
+
+    "qb_therm_clks_seed": int(qb_therm_seed),
+
+
+
+})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "1.1+1.2_qubit_spectroscopy_and_patch",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "fit": {"f0_MHz": f01_mhz, "in_sweep": bool(in_sweep)},
+
+
+
+    "before": {"qb_fq_hz": float(pre_qb_fq)},
+
+
+
+    "after": {"qb_fq_hz": float(post_qb_fq)},
+
+
+
+    "status": status,
+
+
+
+    "patch": qb_apply,
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_1_qubit_spectroscopy", bringup["steps"][-1])
+
+
+===== CELL 40 (code) =====
+# Reload experiment/session modules after backend frequency-resolution patch
+
+
+
+import importlib
+
+
+
+import qubox_v2.experiments.experiment_base as experiment_base_mod
+
+
+
+import qubox_v2.experiments.session as session_mod
+
+
+
+import qubox_v2.experiments.spectroscopy.qubit as qb_spec_mod
+
+
+
+
+
+
+
+importlib.reload(experiment_base_mod)
+
+
+
+importlib.reload(session_mod)
+
+
+
+importlib.reload(qb_spec_mod)
+
+
+
+
+
+
+
+from qubox_v2.experiments.spectroscopy.qubit import QubitSpectroscopy
+
+
+
+
+
+
+
+session.refresh_attribute_frequencies_from_calibration(persist=True)
+
+
+
+
+
+
+
+cal_ro = session.calibration.get_frequencies(attr.ro_el)
+
+
+
+print("Calibration readout entry:", cal_ro)
+
+
+
+print(f"attr.ro_fq (after refresh) = {float(getattr(session.attributes, 'ro_fq', float('nan'))):.3f} Hz")
+
+
+
+
+
+
+
+tmp_qb_spec = QubitSpectroscopy(session)
+
+
+
+resolved_ro = tmp_qb_spec._resolve_readout_frequency()
+
+
+
+print(f"Resolved readout frequency used by experiment = {resolved_ro:.3f} Hz")
+
+
+
+
+
+
+
+session.hw.set_element_fq(attr.ro_el, float(resolved_ro))
+
+
+
+print(f"HW LO = {session.hw.get_element_lo(attr.ro_el):.3f} Hz")
+
+
+
+print(f"HW IF = {session.hw.get_element_if(attr.ro_el):.3f} Hz")
+
+
+
+print(f"HW RF = {session.hw.get_element_lo(attr.ro_el) + session.hw.get_element_if(attr.ro_el):.3f} Hz")
+
+
+===== CELL 41 (code) =====
+# Adaptive rescue for Step 1 when Lorentzian fit is invalid in narrow sweep
+
+
+
+from datetime import datetime
+
+
+
+from qubox_v2.calibration import Patch
+
+
+
+
+
+
+
+def _extract_freq_amp_arrays(analysis_obj):
+
+
+
+    data = getattr(analysis_obj, "data", {}) or {}
+
+
+
+    freq_candidates = ["fqs_MHz", "freqs_MHz", "rf_MHz", "x_MHz", "fqs", "freqs", "rf"]
+
+
+
+    amp_candidates = ["mags", "magnitude", "amp", "y", "response"]
+
+
+
+
+
+
+
+    fq = None
+
+
+
+    for k in freq_candidates:
+
+
+
+        if k in data:
+
+
+
+            fq = np.asarray(data[k], dtype=float)
+
+
+
+            break
+
+
+
+    amp = None
+
+
+
+    for k in amp_candidates:
+
+
+
+        if k in data:
+
+
+
+            amp = np.asarray(data[k], dtype=float)
+
+
+
+            break
+
+
+
+    if fq is not None and np.nanmax(np.abs(fq)) > 1e8:
+
+
+
+        fq = fq / 1e6
+
+
+
+    return fq, amp
+
+
+
+
+
+
+
+attempts = [
+
+
+
+    dict(rf_begin=6140.0, rf_end=6160.0, df_khz=100, qb_gain=0.04, qb_len=20000, n_avg=4000),
+
+
+
+    dict(rf_begin=6120.0, rf_end=6180.0, df_khz=100, qb_gain=0.05, qb_len=24000, n_avg=4000),
+
+
+
+]
+
+
+
+
+
+
+
+pre_qb_fq = float(getattr(attr, "qb_fq", np.nan))
+
+
+
+best = {"status": "failed", "f01_mhz": np.nan, "method": "none", "attempt": None, "apply": None}
+
+
+
+
+
+
+
+for i, a in enumerate(attempts, start=1):
+
+
+
+    qb_cycle_try = orch.run_analysis_patch_cycle(
+
+
+
+        qb_spec,
+
+
+
+        run_kwargs={
+
+
+
+            "pulse": "const",
+
+
+
+            "rf_begin": a["rf_begin"] * u.MHz,
+
+
+
+            "rf_end": a["rf_end"] * u.MHz,
+
+
+
+            "df": a["df_khz"] * u.kHz,
+
+
+
+            "qb_gain": a["qb_gain"],
+
+
+
+            "qb_len": a["qb_len"],
+
+
+
+            "qb_therm_clks": 10000,
+
+
+
+            "n_avg": a["n_avg"],
+
+
+
+        },
+
+
+
+        analyze_kwargs={"update_calibration": True},
+
+
+
+        apply=False,
+
+
+
+        persist_artifact=True,
+
+
+
+    )
+
+
+
+    qb_result_try = orch._run_result_from_artifact(qb_cycle_try["artifact"])
+
+
+
+    qb_analysis_try = qb_spec.analyze(qb_result_try, update_calibration=False)
+
+
+
+    qb_spec.plot(qb_analysis_try)
+
+
+
+
+
+
+
+    f0_mhz = float(qb_cycle_try["calibration_result"].params.get("f0_MHz", np.nan))
+
+
+
+    in_sweep = np.isfinite(f0_mhz) and (a["rf_begin"] <= f0_mhz <= a["rf_end"])
+
+
+
+    print(f"Attempt {i}: fitted f0={f0_mhz:.6f} MHz | in_sweep={in_sweep} | span=[{a['rf_begin']}, {a['rf_end']}] MHz | qb_gain={a['qb_gain']:.3f} qb_len={a['qb_len']}")
+
+
+
+
+
+
+
+    if in_sweep:
+
+
+
+        apply_res = orch.apply_patch(qb_cycle_try["patch"], dry_run=False)
+
+
+
+        best = {"status": "ok", "f01_mhz": f0_mhz, "method": "fit", "attempt": i, "apply": apply_res}
+
+
+
+        break
+
+
+
+
+
+
+
+    fq_arr, amp_arr = _extract_freq_amp_arrays(qb_analysis_try)
+
+
+
+    if fq_arr is not None and amp_arr is not None and len(fq_arr) == len(amp_arr) and len(fq_arr) > 3:
+
+
+
+        idx = int(np.nanargmin(amp_arr))
+
+
+
+        fallback_f0 = float(fq_arr[idx])
+
+
+
+        if a["rf_begin"] <= fallback_f0 <= a["rf_end"]:
+
+
+
+            p = Patch(reason="qubit_spec_fallback_extremum", provenance={"attempt": i, "fit_f0_MHz": f0_mhz, "fallback": fallback_f0})
+
+
+
+            p.add("SetCalibration", path="frequencies.transmon.qubit_freq", value=fallback_f0 * 1e6)
+
+
+
+            apply_res = orch.apply_patch(p, dry_run=False)
+
+
+
+            best = {"status": "ok", "f01_mhz": fallback_f0, "method": "min_magnitude_fallback", "attempt": i, "apply": apply_res}
+
+
+
+            break
+
+
+
+
+
+
+
+post_qb_fq = float(getattr(session.attributes, "qb_fq", np.nan))
+
+
+
+if best["status"] != "ok":
+
+
+
+    print("Rescue failed: keeping previous qb_fq unchanged.")
+
+
+
+else:
+
+
+
+    print(f"Rescue success: method={best['method']} attempt={best['attempt']} f01={best['f01_mhz']:.6f} MHz")
+
+
+
+    print(best["apply"])
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({
+
+
+
+    "f01_hz": float(post_qb_fq),
+
+
+
+    "f01_rescue_method": best["method"],
+
+
+
+    "f01_shift_hz": float(post_qb_fq - pre_qb_fq),
+
+
+
+})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "1_rescue_qubit_spectroscopy",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "before": {"qb_fq_hz": float(pre_qb_fq)},
+
+
+
+    "after": {"qb_fq_hz": float(post_qb_fq)},
+
+
+
+    "rescue": best,
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_1_rescue", bringup["steps"][-1])
+
+
+===== CELL 42 (code) =====
+# Safety restore if previous run applied an invalid qubit frequency
+
+
+
+from qubox_v2.calibration import Patch
+
+
+
+
+
+
+
+restore_hz = None
+
+
+
+if "bringup" in globals():
+
+
+
+    restore_hz = bringup.get("results", {}).get("f01_before_hz", None)
+
+
+
+
+
+
+
+if restore_hz is None or not np.isfinite(float(restore_hz)):
+
+
+
+    restore_hz = 6150.0e6
+
+
+
+
+
+
+
+cur_hz = float(getattr(session.attributes, "qb_fq", np.nan))
+
+
+
+if np.isfinite(cur_hz) and (cur_hz < 5.0e9 or cur_hz > 8.0e9):
+
+
+
+    p = Patch(reason="safety_restore_qb_fq")
+
+
+
+    p.add("SetCalibration", path="frequencies.transmon.qubit_freq", value=float(restore_hz))
+
+
+
+    restore_apply = orch.apply_patch(p, dry_run=False)
+
+
+
+    print(f"Restored qb_fq from {cur_hz/1e6:.6f} MHz -> {float(restore_hz)/1e6:.6f} MHz")
+
+
+
+    print(restore_apply)
+
+
+
+else:
+
+
+
+    print(f"qb_fq looks sane: {cur_hz/1e6:.6f} MHz (no restore)")
+
+
+===== CELL 43 (code) =====
+# === Define ref_r180 pulse ===
+
+
+
+from datetime import datetime
+
+
+
+from qubox_v2.tools.waveforms import drag_gaussian_pulse_waveforms
+
+
+
+
+
+
+
+seed_len_ns = 16
+
+
+
+seed_amp_v = 0.1
+
+
+
+seed_alpha = 0.0
+
+
+
+seed_detuning_hz = 0.0
+
+
+
+seed_sigma_ns = seed_len_ns / 6.0
+
+
+
+anh = float(getattr(attr, "anharmonicity", 0) or -200e6)
+
+
+
+
+
+
+
+seed_I, seed_Q = drag_gaussian_pulse_waveforms(
+
+
+
+    amplitude=seed_amp_v,
+
+
+
+    length=seed_len_ns,
+
+
+
+    sigma=seed_sigma_ns,
+
+
+
+    alpha=seed_alpha,
+
+
+
+    detuning=seed_detuning_hz,
+
+
+
+    anharmonicity=anh,
+
+
+
+    subtracted=True,
+
+
+
+)
+
+
+
+
+
+
+
+pm = session.pulse_mgr
+
+
+
+pm.create_control_pulse(
+
+
+
+    element=attr.qb_el,
+
+
+
+    op="ref_r180",
+
+
+
+    length=seed_len_ns,
+
+
+
+    I_samples=seed_I,
+
+
+
+    Q_samples=seed_Q,
+
+
+
+    override=True,
+
+
+
+    persist=True,
+
+
+
+)
+
+
+
+
+
+
+
+session.calibration.set_pulse_calibration(
+
+
+
+    "ref_r180",
+
+
+
+    element=attr.qb_el,
+
+
+
+    amplitude=float(seed_amp_v),
+
+
+
+    length=int(seed_len_ns),
+
+
+
+    sigma=float(seed_sigma_ns),
+
+
+
+    drag_coeff=float(seed_alpha),
+
+
+
+    detuning=float(seed_detuning_hz),
+
+
+
+)
+
+
+
+session.calibration.save()
+
+
+
+session.burn_pulses()
+
+
+
+session.save_pulses()
+
+
+
+
+
+
+
+print("[ref_r180 seed defined]")
+
+
+
+print(f"length_ns={seed_len_ns}, amplitude_V={seed_amp_v:.6f}, alpha={seed_alpha:+.6f}, detuning_Hz={seed_detuning_hz:.1f}, sigma_ns={seed_sigma_ns:.3f}")
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({
+
+
+
+    "ref_r180_seed": {
+
+
+
+        "length_ns": int(seed_len_ns),
+
+
+
+        "amplitude_V": float(seed_amp_v),
+
+
+
+        "alpha": float(seed_alpha),
+
+
+
+        "detuning_Hz": float(seed_detuning_hz),
+
+
+
+        "sigma_ns": float(seed_sigma_ns),
+
+
+
+    }
+
+
+
+})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "2.1_define_ref_r180_seed",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "params": bringup["results"]["ref_r180_seed"],
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_2_ref_r180_seed", bringup["steps"][-1])
+
+
+===== CELL 44 (markdown) =====
+### 4.2 Power Rabi
+
+
+
+Sweep qubit drive amplitude to calibrate the pi pulse gain.
+
+Updates `ref_r180` amplitude and derived primitives (cooldown-scoped).
+
+===== CELL 45 (code) =====
+from datetime import datetime
+
+
+
+import importlib
+
+
+
+import qubox_v2.calibration.orchestrator as orch_mod
+
+
+
+import qubox_v2.experiments.time_domain.rabi as rabi_mod
+
+
+
+importlib.reload(orch_mod)
+
+
+
+importlib.reload(rabi_mod)
+
+
+
+from qubox_v2.experiments.time_domain.rabi import PowerRabi
+
+
+
+
+
+
+
+orch = orch_mod.CalibrationOrchestrator(session)
+
+
+
+rabi = PowerRabi(session)
+
+
+
+
+
+
+
+POWER_RABI_OP = "ref_r180"
+
+
+
+pre_ref_cal = session.calibration.get_pulse_calibration(POWER_RABI_OP)
+
+
+
+pre_amp = float(getattr(pre_ref_cal, "amplitude", np.nan)) if pre_ref_cal is not None else float("nan")
+
+
+
+
+
+
+
+op_info = session.pulse_mgr.get_pulseOp_by_element_op(attr.qb_el, POWER_RABI_OP)
+
+
+
+op_peak = max(float(np.max(np.abs(op_info.I_wf))), float(np.max(np.abs(op_info.Q_wf))))
+
+
+
+print(f"Running Power Rabi on op='{POWER_RABI_OP}' | pulse='{op_info.pulse}' | len={op_info.length} | peak={op_peak:.6f}")
+
+
+
+
+
+
+
+rabi_cycle = orch.run_analysis_patch_cycle(
+
+
+
+    rabi,
+
+
+
+    run_kwargs={
+
+
+
+        "max_gain": 1.2,
+
+
+
+        "dg": 0.04,
+
+
+
+        "op": POWER_RABI_OP,
+
+
+
+        "n_avg": 4000,
+
+
+
+    },
+
+
+
+    analyze_kwargs={
+
+
+
+        "update_calibration": True,
+
+
+
+        "p0": [0.0001, 1, 0],
+
+
+
+    },
+
+
+
+    apply=False,
+
+
+
+    persist_artifact=True,
+
+
+
+)
+
+
+
+
+
+
+
+rabi_result = orch._run_result_from_artifact(rabi_cycle["artifact"])
+
+
+
+rabi_analysis = rabi.analyze(rabi_result, update_calibration=False, p0=[0.0001, 1, 0])
+
+
+
+rabi.plot(rabi_analysis)
+
+
+
+rabi_g_pi = float(rabi_cycle["calibration_result"].params.get("g_pi", 1.0))
+
+
+
+
+
+
+
+print(f"g_pi ({POWER_RABI_OP}) = {rabi_g_pi:.6f}")
+
+
+
+print("Patch preview:")
+
+
+
+for item in rabi_cycle["dry_run"]["preview"]:
+
+
+
+    print(" ", item)
+
+
+
+
+
+
+
+rabi_apply = orch.apply_patch(rabi_cycle["patch"], dry_run=False)
+
+
+
+post_ref_cal = session.calibration.get_pulse_calibration(POWER_RABI_OP)
+
+
+
+post_amp = float(getattr(post_ref_cal, "amplitude", np.nan)) if post_ref_cal is not None else float("nan")
+
+
+
+
+
+
+
+print("\n[Power Rabi ref_r180 amplitude patch]")
+
+
+
+print(f"Initial amplitude: {pre_amp:.6f} V")
+
+
+
+print(f"Fitted g_pi:       {rabi_g_pi:.6f}")
+
+
+
+print(f"Final amplitude:   {post_amp:.6f} V")
+
+
+
+print(f"Scale factor:      {post_amp/pre_amp if np.isfinite(pre_amp) and pre_amp != 0 else float('nan'):.6f}")
+
+
+
+print(f"apply result:      {rabi_apply}")
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({
+
+
+
+    "pi_gain_factor": float(rabi_g_pi),
+
+
+
+    "pi_amplitude_V": float(post_amp),
+
+
+
+})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "3.1+3.2_power_rabi_and_patch",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "fit": {"g_pi": float(rabi_g_pi)},
+
+
+
+    "before": {"ref_r180_amp_V": float(pre_amp)},
+
+
+
+    "after": {"ref_r180_amp_V": float(post_amp)},
+
+
+
+    "patch": rabi_apply,
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_3_power_rabi", bringup["steps"][-1])
+
+
+===== CELL 46 (code) =====
+print("Section 4.2 already applied patch explicitly in-cell via orch.apply_patch(...).")
+
+===== CELL 47 (markdown) =====
+### 4.3 Temporal Rabi
+
+
+
+Sweep pulse duration at fixed amplitude to measure Rabi frequency.
+
+===== CELL 48 (code) =====
+trabi = TemporalRabi(session)
+
+result = trabi.run(
+
+    pulse="const",
+
+    pulse_len_begin=16,
+
+    pulse_len_end=500,
+
+    dt=4,
+
+    n_avg=5000,
+
+)
+
+
+
+analysis = trabi.analyze(result)
+
+trabi.plot(analysis)
+
+print(f"f_Rabi = {analysis.metrics.get('f_Rabi', 'N/A')} Hz")
+
+print(f"pi_length = {analysis.metrics.get('pi_length', 'N/A')} ns")
+
+===== CELL 49 (markdown) =====
+### 4.4 T1 Relaxation
+
+
+
+Measure energy relaxation time after a pi pulse.
+
+Stores T1 result in the cooldown-scoped calibration.
+
+===== CELL 50 (code) =====
+from datetime import datetime
+
+
+
+from qubox_v2.calibration import Patch
+
+
+
+
+
+
+
+t1 = T1Relaxation(session)
+
+
+
+t1_cycle = orch.run_analysis_patch_cycle(
+
+
+
+    t1,
+
+
+
+    run_kwargs={
+
+
+
+        "delay_end": 50 * u.us,
+
+
+
+        "dt": 500,
+
+
+
+        "n_avg": 2000,
+
+
+
+    },
+
+
+
+    analyze_kwargs={
+
+
+
+        "update_calibration": True,
+
+
+
+        "p0": [0, 10, 0],
+
+
+
+        "p0_time_unit": "us",
+
+
+
+        "derive_qb_therm_clks": False,
+
+
+
+    },
+
+
+
+    apply=False,
+
+
+
+    persist_artifact=True,
+
+
+
+)
+
+
+
+
+
+
+
+t1_result = orch._run_result_from_artifact(t1_cycle["artifact"])
+
+
+
+t1_analysis = t1.analyze(t1_result, update_calibration=False, p0=[0, 10, 0], p0_time_unit="us")
+
+
+
+t1.plot(t1_analysis)
+
+
+
+
+
+
+
+t1_us = float(t1_cycle["calibration_result"].params.get("T1_us", np.nan))
+
+
+
+clock_period_ns = 4.0
+
+
+
+new_qb_therm_clks = int(max(1, round(5.0 * t1_us * 1000.0 / clock_period_ns))) if np.isfinite(t1_us) else int(getattr(attr, "qb_therm_clks", 10000))
+
+
+
+pre_qb_therm = int(getattr(attr, "qb_therm_clks", 0) or 0)
+
+
+
+
+
+
+
+t1_apply = orch.apply_patch(t1_cycle["patch"], dry_run=False)
+
+
+
+
+
+
+
+manual_therm_patch = Patch(reason="T1_manual_qb_therm_5x", provenance={"T1_us": t1_us, "factor": 5.0, "clock_period_ns": clock_period_ns})
+
+
+
+manual_therm_patch.add("SetCalibration", path="attributes.qb_therm_clks", value=int(new_qb_therm_clks))
+
+
+
+manual_therm_apply = orch.apply_patch(manual_therm_patch, dry_run=False)
+
+
+
+post_qb_therm = int(getattr(session.attributes, "qb_therm_clks", new_qb_therm_clks) or new_qb_therm_clks)
+
+
+
+
+
+
+
+print(f"T1 = {t1_us:.2f} us")
+
+
+
+print("\n[T1 -> qb_therm_clks patch]")
+
+
+
+print(f"Previous qb_therm_clks: {pre_qb_therm}")
+
+
+
+print(f"Computed (5 x T1):       {new_qb_therm_clks}")
+
+
+
+print(f"Patched qb_therm_clks:   {post_qb_therm}")
+
+
+
+print(f"T1 patch apply result:   {t1_apply}")
+
+
+
+print(f"Therm patch result:      {manual_therm_apply}")
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({
+
+
+
+    "T1_us": float(t1_us),
+
+
+
+    "qb_therm_clks": int(post_qb_therm),
+
+
+
+})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "5.1_t1_and_qb_therm_patch",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "fit": {"T1_us": float(t1_us)},
+
+
+
+    "before": {"qb_therm_clks": int(pre_qb_therm)},
+
+
+
+    "after": {"qb_therm_clks": int(post_qb_therm)},
+
+
+
+    "patch": {"t1": t1_apply, "therm_manual": manual_therm_apply},
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_5_1_t1", bringup["steps"][-1])
+
+
+===== CELL 51 (markdown) =====
+### 4.5 T2 Ramsey
+
+
+
+Ramsey interferometry with intentional detuning to measure T2*.
+
+Applies frequency correction if configured (cooldown-scoped).
+
+===== CELL 52 (code) =====
+from datetime import datetime
+
+
+
+
+
+
+
+t2r = T2Ramsey(session)
+
+
+
+qb_det_MHz = 0.2
+
+
+
+pre_qb_fq = float(getattr(attr, "qb_fq", np.nan))
+
+
+
+
+
+
+
+t2r_cycle = orch.run_analysis_patch_cycle(
+
+
+
+    t2r,
+
+
+
+    run_kwargs={
+
+
+
+        "qb_detune": int(qb_det_MHz * 1e6),
+
+
+
+        "delay_end": 40 * u.us,
+
+
+
+        "dt": 100,
+
+
+
+        "n_avg": 4000,
+
+
+
+        "qb_detune_MHz": qb_det_MHz,
+
+
+
+    },
+
+
+
+    analyze_kwargs={
+
+
+
+        "update_calibration": True,
+
+
+
+        "p0": [0, 20, 1.0, qb_det_MHz, 0.0, 0],
+
+
+
+        "p0_time_unit": "us",
+
+
+
+        "p0_freq_unit": "MHz",
+
+
+
+        "apply_frequency_correction": True,
+
+
+
+        "freq_correction_sign": -1.0,
+
+
+
+    },
+
+
+
+    apply=False,
+
+
+
+    persist_artifact=True,
+
+
+
+)
+
+
+
+
+
+
+
+t2r_result = orch._run_result_from_artifact(t2r_cycle["artifact"])
+
+
+
+t2r_analysis = t2r.analyze(
+
+
+
+    t2r_result,
+
+
+
+    update_calibration=False,
+
+
+
+    p0=[0, 20, 1.0, qb_det_MHz, 0.0, 0],
+
+
+
+    p0_time_unit="us",
+
+
+
+    p0_freq_unit="MHz",
+
+
+
+)
+
+
+
+t2r.plot(t2r_analysis)
+
+
+
+
+
+
+
+t2s_us = float(t2r_cycle["calibration_result"].params.get("T2_star_us", np.nan))
+
+
+
+f_det_mhz = float(t2r_cycle["calibration_result"].params.get("f_det_MHz", np.nan))
+
+
+
+
+
+
+
+print(f"T2* = {t2s_us:.2f} us")
+
+
+
+print(f"f_detuning = {f_det_mhz:.6f} MHz")
+
+
+
+print("Patch preview:")
+
+
+
+for item in t2r_cycle["dry_run"]["preview"]:
+
+
+
+    print(" ", item)
+
+
+
+
+
+
+
+t2r_apply = orch.apply_patch(t2r_cycle["patch"], dry_run=False)
+
+
+
+post_qb_fq = float(getattr(session.attributes, "qb_fq", np.nan))
+
+
+
+
+
+
+
+print("\n[T2 Ramsey frequency correction]")
+
+
+
+print(f"f01_old:          {pre_qb_fq/1e6:.6f} MHz")
+
+
+
+print(f"f_detuning:       {f_det_mhz:+.6f} MHz")
+
+
+
+print(f"f01_new(patched): {post_qb_fq/1e6:.6f} MHz")
+
+
+
+print(f"shift applied:    {(post_qb_fq-pre_qb_fq)/1e6:+.6f} MHz")
+
+
+
+print(f"apply result:     {t2r_apply}")
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({
+
+
+
+    "T2_star_us": float(t2s_us),
+
+
+
+    "f_detuning_MHz": float(f_det_mhz),
+
+
+
+    "f01_hz": float(post_qb_fq),
+
+
+
+})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "5.2_t2_ramsey_and_frequency_patch",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "fit": {"T2_star_us": float(t2s_us), "f_det_MHz": float(f_det_mhz)},
+
+
+
+    "before": {"qb_fq_hz": float(pre_qb_fq)},
+
+
+
+    "after": {"qb_fq_hz": float(post_qb_fq)},
+
+
+
+    "patch": t2r_apply,
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_5_2_t2_ramsey", bringup["steps"][-1])
+
+
+===== CELL 53 (markdown) =====
+### 4.6 T2 Echo
+
+
+
+Hahn echo measurement for T2_echo (removing low-frequency dephasing).
+
+===== CELL 54 (code) =====
+from datetime import datetime
+
+
+
+
+
+
+
+t2e = T2Echo(session)
+
+
+
+t2e_cycle = orch.run_analysis_patch_cycle(
+
+
+
+    t2e,
+
+
+
+    run_kwargs={
+
+
+
+        "delay_end": 40 * u.us,
+
+
+
+        "dt": 200,
+
+
+
+        "n_avg": 2000,
+
+
+
+    },
+
+
+
+    analyze_kwargs={
+
+
+
+        "update_calibration": True,
+
+
+
+        "p0": [-1, 40, 1.0, 0],
+
+
+
+        "p0_time_unit": "us",
+
+
+
+    },
+
+
+
+    apply=False,
+
+
+
+    persist_artifact=True,
+
+
+
+)
+
+
+
+
+
+
+
+t2e_result = orch._run_result_from_artifact(t2e_cycle["artifact"])
+
+
+
+t2e_analysis = t2e.analyze(t2e_result, update_calibration=False, p0=[-1, 40, 1.0, 0], p0_time_unit="us")
+
+
+
+t2e.plot(t2e_analysis)
+
+
+
+t2e_us = float(t2e_cycle["calibration_result"].params.get("T2_echo_us", np.nan))
+
+
+
+
+
+
+
+print(f"T2_echo = {t2e_us:.2f} us")
+
+
+
+print("No patch required for this step.")
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({"T2_echo_us": float(t2e_us)})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "5.3_t2_echo_record_only",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "fit": {"T2_echo_us": float(t2e_us)},
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_5_3_t2_echo", bringup["steps"][-1])
+
+
+===== CELL 55 (markdown) =====
+### 4.7 Primitive Pulse Waveform Update
+
+
+
+Apply the Power Rabi calibration (`g_pi`) to the reference pulse and regenerate
+
+all qubit rotation waveforms.
+
+===== CELL 56 (code) =====
+from datetime import datetime
+
+
+
+from qubox_v2.tools.waveforms import drag_gaussian_pulse_waveforms
+
+
+
+from qubox_v2.tools.generators import register_rotations_from_ref_iq
+
+
+
+
+
+
+
+ref_name = "ref_r180"
+
+
+
+ref_cal = session.calibration.get_pulse_calibration(ref_name)
+
+
+
+if ref_cal is None:
+
+
+
+    raise RuntimeError("ref_r180 calibration missing. Run Section 4.2 first.")
+
+
+
+
+
+
+
+ref_amp = float(getattr(ref_cal, "amplitude", np.nan))
+
+
+
+ref_len = int(getattr(ref_cal, "length", 16) or 16)
+
+
+
+ref_sigma = float(getattr(ref_cal, "sigma", ref_len / 6.0) or (ref_len / 6.0))
+
+
+
+ref_drag = 0.0
+
+
+
+anh = float(getattr(attr, "anharmonicity", 0) or -200e6)
+
+
+
+
+
+
+
+# Step 4.1: ensure calibrated amplitude + alpha=0 on ref_r180
+
+
+
+session.calibration.set_pulse_calibration(
+
+
+
+    ref_name,
+
+
+
+    amplitude=float(ref_amp),
+
+
+
+    length=int(ref_len),
+
+
+
+    sigma=float(ref_sigma),
+
+
+
+    drag_coeff=float(ref_drag),
+
+
+
+    detuning=0.0,
+
+
+
+)
+
+
+
+
+
+
+
+ref_I, ref_Q = drag_gaussian_pulse_waveforms(
+
+
+
+    amplitude=ref_amp,
+
+
+
+    length=ref_len,
+
+
+
+    sigma=ref_sigma,
+
+
+
+    alpha=ref_drag,
+
+
+
+    detuning=0.0,
+
+
+
+    anharmonicity=anh,
+
+
+
+    subtracted=True,
+
+
+
+)
+
+
+
+
+
+
+
+# Step 4.2: derive standard primitives consistently from ref_r180
+
+
+
+pm = session.pulse_mgr
+
+
+
+updated_ops = register_rotations_from_ref_iq(
+
+
+
+    pm,
+
+
+
+    ref_I=ref_I,
+
+
+
+    ref_Q=ref_Q,
+
+
+
+    element=attr.qb_el,
+
+
+
+    rotations="all",
+
+
+
+    make_r0=False,
+
+
+
+    override=True,
+
+
+
+    persist=True,
+
+
+
+)
+
+
+
+
+
+
+
+session.burn_pulses()
+
+
+
+session.save_pulses()
+
+
+
+session.calibration.save()
+
+
+
+
+
+
+
+log_ops = ["ref_r180", "ref_r90", "ref_mr90", "x180", "x90", "xn90", "y180", "y90", "yn90"]
+
+
+
+print("[Section 4.7 Primitive update]")
+
+
+
+print(f"ref_r180 amp={ref_amp:.6f} V, len={ref_len} ns, sigma={ref_sigma:.3f} ns, drag={ref_drag:+.6f}")
+
+
+
+print("Derived/updated ops:", sorted(updated_ops.keys()))
+
+
+
+print("Primitive parameters:")
+
+
+
+for op_name in log_ops:
+
+
+
+    pcal = session.calibration.get_pulse_calibration(op_name)
+
+
+
+    if pcal is None:
+
+
+
+        continue
+
+
+
+    print(
+
+
+
+        f"  {op_name:8s} amp={float(getattr(pcal, 'amplitude', np.nan)):.6f} "
+
+
+
+        f"len={int(getattr(pcal, 'length', 0) or 0):4d} "
+
+
+
+        f"sigma={float(getattr(pcal, 'sigma', np.nan)):.3f} "
+
+
+
+        f"drag={float(getattr(pcal, 'drag_coeff', 0.0) or 0.0):+.6f}"
+
+
+
+    )
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({
+
+
+
+    "pi_amplitude_V": float(ref_amp),
+
+
+
+    "drag_alpha": float(ref_drag),
+
+
+
+})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "4.1+4.2_primitive_update_alpha0",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "params": {
+
+
+
+        "ref_r180": {"amp_V": float(ref_amp), "len_ns": int(ref_len), "sigma_ns": float(ref_sigma), "drag": float(ref_drag)},
+
+
+
+        "updated_ops": sorted(updated_ops.keys()),
+
+
+
+    },
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_4_primitive_update", bringup["steps"][-1])
+
+
+===== CELL 57 (markdown) =====
+## 5. Pulse Calibration
+
+===== CELL 58 (markdown) =====
+### 5.1 DRAG Calibration
+
+
+
+Sweep DRAG coefficient to minimize leakage to the second excited state.
+
+Stores DRAG alpha in the cooldown-scoped calibration.
+
+===== CELL 59 (code) =====
+from datetime import datetime
+
+
+
+
+
+
+
+drag = DRAGCalibration(session)
+
+
+
+pre_ref = session.calibration.get_pulse_calibration("ref_r180")
+
+
+
+pre_alpha = float(getattr(pre_ref, "drag_coeff", 0.0) or 0.0)
+
+
+
+
+
+
+
+drag_cycle = orch.run_analysis_patch_cycle(
+
+
+
+    drag,
+
+
+
+    run_kwargs={
+
+
+
+        "amps": np.linspace(-0.5, 0.5, 20),
+
+
+
+        "n_avg": 5000,
+
+
+
+        "base_alpha": 1.0,
+
+
+
+    },
+
+
+
+    analyze_kwargs={
+
+
+
+        "update_calibration": True,
+
+
+
+    },
+
+
+
+    apply=False,
+
+
+
+    persist_artifact=True,
+
+
+
+)
+
+
+
+
+
+
+
+drag_result = orch._run_result_from_artifact(drag_cycle["artifact"])
+
+
+
+drag_analysis = drag.analyze(drag_result, update_calibration=False)
+
+
+
+drag.plot(drag_analysis)
+
+
+
+
+
+
+
+opt_alpha = float(drag_cycle["calibration_result"].params.get("optimal_alpha", np.nan))
+
+
+
+metric_before = drag_analysis.metrics.get("loss_before", drag_analysis.metrics.get("phase_error_before", np.nan))
+
+
+
+metric_after = drag_analysis.metrics.get("loss_after", drag_analysis.metrics.get("phase_error_after", np.nan))
+
+
+
+
+
+
+
+print(f"Optimal alpha = {opt_alpha:+.6f}")
+
+
+
+print("Patch preview:")
+
+
+
+for item in drag_cycle["dry_run"]["preview"]:
+
+
+
+    print(" ", item)
+
+
+
+
+
+
+
+drag_apply = orch.apply_patch(drag_cycle["patch"], dry_run=False)
+
+
+
+post_ref = session.calibration.get_pulse_calibration("ref_r180")
+
+
+
+post_alpha = float(getattr(post_ref, "drag_coeff", np.nan) or np.nan)
+
+
+
+
+
+
+
+print("\n[DRAG patch]")
+
+
+
+print(f"Initial alpha:    {pre_alpha:+.6f}")
+
+
+
+print(f"Optimized alpha:  {opt_alpha:+.6f}")
+
+
+
+print(f"Patched alpha:    {post_alpha:+.6f}")
+
+
+
+print(f"Improvement metric before={metric_before} after={metric_after}")
+
+
+
+print(f"apply result:     {drag_apply}")
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({
+
+
+
+    "drag_alpha": float(post_alpha),
+
+
+
+    "drag_improvement": {"before": metric_before, "after": metric_after},
+
+
+
+})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "6.1+6.2_drag_calibration_and_patch",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "fit": {"optimal_alpha": float(opt_alpha)},
+
+
+
+    "before": {"drag_alpha": float(pre_alpha), "metric": metric_before},
+
+
+
+    "after": {"drag_alpha": float(post_alpha), "metric": metric_after},
+
+
+
+    "patch": drag_apply,
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_6_drag", bringup["steps"][-1])
+
+
+===== CELL 60 (code) =====
+# Section 7 â€” Rebuild primitives with optimized DRAG
+
+
+
+from datetime import datetime
+
+
+
+from qubox_v2.tools.waveforms import drag_gaussian_pulse_waveforms
+
+
+
+from qubox_v2.tools.generators import register_rotations_from_ref_iq
+
+
+
+
+
+
+
+ref_cal = session.calibration.get_pulse_calibration("ref_r180")
+
+
+
+if ref_cal is None:
+
+
+
+    raise RuntimeError("ref_r180 calibration missing before Section 7 update")
+
+
+
+
+
+
+
+ref_amp = float(getattr(ref_cal, "amplitude", np.nan))
+
+
+
+ref_len = int(getattr(ref_cal, "length", 16) or 16)
+
+
+
+ref_sigma = float(getattr(ref_cal, "sigma", ref_len / 6.0) or (ref_len / 6.0))
+
+
+
+ref_drag = float(getattr(ref_cal, "drag_coeff", 0.0) or 0.0)
+
+
+
+anh = float(getattr(attr, "anharmonicity", 0) or -200e6)
+
+
+
+
+
+
+
+ref_I, ref_Q = drag_gaussian_pulse_waveforms(
+
+
+
+    amplitude=ref_amp,
+
+
+
+    length=ref_len,
+
+
+
+    sigma=ref_sigma,
+
+
+
+    alpha=ref_drag,
+
+
+
+    detuning=0.0,
+
+
+
+    anharmonicity=anh,
+
+
+
+    subtracted=True,
+
+
+
+)
+
+
+
+
+
+
+
+updated_ops_drag = register_rotations_from_ref_iq(
+
+
+
+    session.pulse_mgr,
+
+
+
+    ref_I=ref_I,
+
+
+
+    ref_Q=ref_Q,
+
+
+
+    element=attr.qb_el,
+
+
+
+    rotations="all",
+
+
+
+    make_r0=False,
+
+
+
+    override=True,
+
+
+
+    persist=True,
+
+
+
+)
+
+
+
+
+
+
+
+session.burn_pulses()
+
+
+
+session.save_pulses()
+
+
+
+
+
+
+
+print("[Section 7 Primitive DRAG propagation]")
+
+
+
+print(f"Applied drag alpha={ref_drag:+.6f} to ref_r180 and derived primitives")
+
+
+
+print("Updated ops:", sorted(updated_ops_drag.keys()))
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "7_rebuild_primitives_with_drag",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "params": {"drag_alpha": float(ref_drag), "ops": sorted(updated_ops_drag.keys())},
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_7_primitive_drag_sync", bringup["steps"][-1])
+
+
+===== CELL 61 (markdown) =====
+### 5.1b DRAG Calibration Commit
+
+
+
+Wrap the DRAG calibration result in a `CalibrationStateMachine` lifecycle
+
+and commit via `CalibrationPatch` if the fit quality passes validation.
+
+===== CELL 62 (code) =====
+from qubox_v2.calibration import Patch
+
+
+
+# Build a candidate DRAG patch from Section 5.1 analysis output
+
+optimal_alpha = drag_analysis.metrics.get("optimal_alpha", None)
+
+
+
+drag_cal = session.calibration.get_pulse_calibration("ref_r180")
+
+old_drag = drag_cal.drag_coeff if (drag_cal and drag_cal.drag_coeff is not None) else 0.0
+
+
+
+alpha_valid = optimal_alpha is not None and np.isfinite(optimal_alpha)
+
+bounds_ok = alpha_valid and abs(float(optimal_alpha)) < 5.0
+
+approved = bool(alpha_valid and bounds_ok)
+
+
+
+if approved:
+
+    drag_patch = Patch(
+
+        reason="drag_calibration",
+
+        provenance={
+
+            "optimal_alpha": float(optimal_alpha),
+
+            "old_drag": float(old_drag),
+
+            "checks": {"alpha_finite": True, "alpha_bounds": True},
+
+        },
+
+    )
+
+    drag_patch.add(
+
+        "SetCalibration",
+
+        path="pulse_calibrations.ref_r180.drag_coeff",
+
+        value=float(optimal_alpha),
+
+    )
+
+
+
+    dry = orch.apply_patch(drag_patch, dry_run=True)
+
+    apply_res = orch.apply_patch(drag_patch, dry_run=False)
+
+
+
+    print("DRAG patch committed via orchestrator.")
+
+    print(f"old_drag={float(old_drag):+.6f} -> new_drag={float(optimal_alpha):+.6f}")
+
+    print(f"dry_run updates={dry['n_updates']} | apply updates={apply_res['n_updates']}")
+
+
+
+    if "am" in globals():
+
+        am.save_artifact("drag_calibration_patch", {
+
+            "approved": True,
+
+            "optimal_alpha": float(optimal_alpha),
+
+            "old_drag": float(old_drag),
+
+            "dry_run": dry,
+
+            "apply": apply_res,
+
+        })
+
+else:
+
+    print("DRAG calibration NOT committed. Candidate failed validation.")
+
+    print(f"optimal_alpha={optimal_alpha}")
+
+    print(f"checks={{'alpha_finite': {alpha_valid}, 'alpha_bounds': {bounds_ok}}}")
+
+
+
+    if "am" in globals():
+
+        am.save_artifact("drag_calibration_candidate", {
+
+            "approved": False,
+
+            "optimal_alpha": None if optimal_alpha is None else float(optimal_alpha),
+
+            "old_drag": float(old_drag),
+
+            "checks": {"alpha_finite": alpha_valid, "alpha_bounds": bounds_ok},
+
+        })
+
+===== CELL 63 (markdown) =====
+### 5.1c Pulse-Train Rotation Calibration (Tomography)
+
+
+
+Full 3-axis qubit state tomography at each N with multiple preps.
+
+Fits Bloch-vector evolution via DE+LS global optimisation to extract
+
+amplitude error, phase error, detuning, and zeta (per-step Z rotation).
+
+Converts to QubitRotation knob corrections (d_lambda, d_alpha, d_omega).
+
+
+
+Uses the unified `run() -> analyze() -> plot()` protocol via `PulseTrainCalibration(session)`.
+
+===== CELL 64 (code) =====
+from qm.qua import play, align
+
+from dataclasses import dataclass
+
+
+
+pt = PulseTrainCalibration(session)
+
+
+
+theta = np.pi
+
+phi = 0.0
+
+N_values = np.arange(0, 80, 8)
+
+n_avg = 20000
+
+
+
+# Prep using primitives (x90/y90/xn90/yn90/x180)
+
+def prep_e():  play("x180", attr.qb_el)
+
+def prep_px(): play("y90", attr.qb_el)
+
+def prep_mx(): play("yn90", attr.qb_el)
+
+def prep_py(): play("xn90", attr.qb_el)
+
+def prep_my(): play("x90", attr.qb_el)
+
+
+
+prep_defs = {
+
+    "g": None, "e": prep_e,
+
+    "+x": prep_px, "+y": prep_py, "-x": prep_mx, "-y": prep_my,
+
+}
+
+
+
+# Gate under test (modern, non-legacy wrapper)
+
+@dataclass
+
+class NotebookRotationGate:
+
+    op: str
+
+    element: str
+
+    pulse_len: int
+
+
+
+    def play(self):
+
+        play(self.op, self.element)
+
+
+
+    def waveforms(self):
+
+        return [0.0] * self.pulse_len, [0.0] * self.pulse_len, self.pulse_len, True
+
+
+
+arb_rot = NotebookRotationGate(
+
+    op="x180",
+
+    element=attr.qb_el,
+
+    pulse_len=int(getattr(attr, "ge_rlen", 16) or 16),
+
+)
+
+session.burn_pulses()
+
+
+
+# Run tomography sweep
+
+result = pt.run(
+
+    arb_rot=arb_rot, prep_defs=prep_defs, N_values=N_values,
+
+    n_avg=n_avg, theta=theta, phi=phi, verbose=True, sanity_check=True,
+
+)
+
+
+
+# Analyse Ã¢â‚¬â€ knob conversion requires dt_s and n_samp
+
+_Iw, _Qw, waveform_len, marker = arb_rot.waveforms()
+
+dt_s = float(getattr(attr, "dt_s", 1e-9))
+
+n_samp = int(waveform_len)
+
+
+
+analysis = pt.analyze(
+
+    result, fit_zeta=True, multi_seed=True, seeds=range(1, 2),
+
+    seed_select="ls", verbose=True,
+
+    dt_s=dt_s, n_samp=n_samp, d_omega_sign=1.0,
+
+    bounds={"delta": (-0.001, 0.001), "amp_err": (-0.05, +0.05),
+
+            "phase_err": (-0.2, +0.2), "zeta": (-0.1, 0.1)},
+
+)
+
+
+
+# Plot
+
+pt.plot(analysis, residual_mode="both")
+
+
+
+# Print fit results and knob corrections
+
+print(f"amp_err    = {analysis.metrics['amp_err']:+.4%}")
+
+print(f"phase_err  = {analysis.metrics['phase_err']:+.6f} rad")
+
+print(f"delta      = {analysis.metrics['delta']:+.6f} rad/pulse")
+
+print(f"zeta       = {analysis.metrics['zeta']:+.6f} rad/step")
+
+if "d_lambda" in analysis.metrics:
+
+    print(f"d_lambda   = {analysis.metrics['d_lambda']:+.6e}")
+
+    print(f"d_alpha    = {analysis.metrics['d_alpha']:+.6f} rad")
+
+    print(f"d_omega    = {analysis.metrics['d_omega']:+.6e} rad/s")
+
+===== CELL 65 (markdown) =====
+### 5.1d Verify Run (Apply Knob Corrections)
+
+
+
+Re-run pulse-train tomography with the fitted knob corrections applied to
+
+the `QubitRotation` gate. Uses a 3-prep subset (g, +x, +y) at half `n_avg`
+
+for faster verification.
+
+
+
+**NEEDS_RUN**: Requires QOP connection.
+
+===== CELL 66 (code) =====
+# Apply knob corrections from the initial fit and re-run tomography
+
+APPLY_KNOBS = True
+
+
+
+theta_v = theta
+
+phi_v = phi
+
+
+
+kwargs_knobs = {}
+
+if APPLY_KNOBS and "d_lambda" in analysis.metrics:
+
+    kwargs_knobs = dict(
+
+        d_lambda=analysis.metrics["d_lambda"],
+
+        d_alpha=analysis.metrics["d_alpha"],
+
+        d_omega=analysis.metrics["d_omega"],
+
+    )
+
+    print(f"Applying knobs: d_lambda={kwargs_knobs['d_lambda']:+.6e}, "
+
+          f"d_alpha={kwargs_knobs['d_alpha']:+.6f}, "
+
+          f"d_omega={kwargs_knobs['d_omega']:+.6e}")
+
+
+
+arb_rot_corrected = NotebookRotationGate(
+
+    op="x180",
+
+    element=attr.qb_el,
+
+    pulse_len=int(getattr(attr, "ge_rlen", 16) or 16),
+
+)
+
+
+
+
+
+
+
+# Subset preps for verification
+
+prep_defs_verify = {
+
+    "g": None,
+
+    "+x": prep_px,
+
+    "+y": prep_py,
+
+}
+
+
+
+N_values_v = N_values
+
+n_avg_v = n_avg // 2
+
+
+
+result_v = pt.run(
+
+    arb_rot=arb_rot_corrected, prep_defs=prep_defs_verify,
+
+    N_values=N_values_v, n_avg=n_avg_v,
+
+    theta=theta_v, phi=phi_v, verbose=True, sanity_check=True,
+
+)
+
+print("Verify run complete.")
+
+===== CELL 67 (markdown) =====
+### 5.1e Verify Analysis (Before vs After)
+
+
+
+Compare angular deviation from ideal Bloch trajectories before and after
+
+correction. No fitting is performed on verify data Ã¢â‚¬â€ purely a comparison
+
+against zero-error expectations.
+
+===== CELL 68 (code) =====
+# Analyse the verify run Ã¢â‚¬â€ compare before and after angular errors
+
+analysis_v = pt.analyze(
+
+    result_v, fit_zeta=False, verbose=False,
+
+    dt_s=dt_s, n_samp=n_samp,
+
+)
+
+
+
+pt.plot(analysis_v, residual_mode="both")
+
+
+
+# Angular comparison (if available in metrics)
+
+print("\nVerify run metrics:")
+
+for k in ["amp_err", "phase_err", "delta", "zeta"]:
+
+    before = analysis.metrics.get(k, float("nan"))
+
+    after = analysis_v.metrics.get(k, float("nan"))
+
+    print(f"  {k:12s}  before={before:+.6f}  after={after:+.6f}")
+
+
+
+print("\nKnobs applied:", kwargs_knobs)
+
+===== CELL 69 (markdown) =====
+### 5.1f Apply Corrections to All Standard Rotations
+
+
+
+Broadcast the calibrated knob corrections to all pi/2 and pi rotation gates
+
+(x90, y90, xn90, yn90, x180, y180) by rebuilding from the DRAG Gaussian
+
+reference pulse with per-gate knob maps.
+
+
+
+**NEEDS_RUN**: Requires `register_rotations_from_ref_iq` and pulse persistence.
+
+===== CELL 70 (code) =====
+from qubox_v2.tools.waveforms import drag_gaussian_pulse_waveforms
+
+from qubox_v2.tools.generators import register_rotations_from_ref_iq
+
+
+
+# Knob values from the fit (edit after calibration)
+
+d_lambda_90  = analysis.metrics.get("d_lambda", 0.0)
+
+d_alpha_90   = analysis.metrics.get("d_alpha", 0.0)
+
+d_omega_90   = 0.0
+
+
+
+d_lambda_180 = d_lambda_90  # scale if needed
+
+d_alpha_180  = d_alpha_90
+
+d_omega_180  = 0.0
+
+
+
+PI2_ROTS = ["x90", "y90", "xn90", "yn90"]
+
+PI_ROTS  = ["x180", "y180"]
+
+
+
+d_lambda_map = {k: float(d_lambda_90) for k in PI2_ROTS}
+
+d_alpha_map  = {k: float(d_alpha_90)  for k in PI2_ROTS}
+
+d_omega_map  = {k: float(d_omega_90)  for k in PI2_ROTS}
+
+d_lambda_map.update({k: float(d_lambda_180) for k in PI_ROTS})
+
+d_alpha_map.update({k: float(d_alpha_180)  for k in PI_ROTS})
+
+d_omega_map.update({k: float(d_omega_180)  for k in PI_ROTS})
+
+
+
+# Rebuild reference DRAG Gaussian pulse
+
+pcal_ref = session.calibration.get_pulse_calibration("ref_r180")
+
+ref_amp = getattr(pcal_ref, "amplitude", rabi_g_pi)
+
+ref_len = getattr(pcal_ref, "length", 40)
+
+ref_drag = getattr(pcal_ref, "drag_coeff", 0.0)
+
+anh = float(getattr(attr, "anharmonicity", 0) or -200e6)
+
+
+
+gauss_r180, drag_r180 = drag_gaussian_pulse_waveforms(
+
+    amplitude=ref_amp, length=ref_len,
+
+    alpha=ref_drag, anharmonicity=anh, subtracted=True,
+
+)
+
+
+
+pm = session.pulse_mgr
+
+res = register_rotations_from_ref_iq(
+
+    pm,
+
+    ref_I=gauss_r180,
+
+    ref_Q=drag_r180,
+
+    element=attr.qb_el,
+
+    rotations="all",
+
+    make_r0=True,
+
+    override=True,
+
+    persist=True,
+
+    d_lambda_map=d_lambda_map,
+
+    d_alpha_map=d_alpha_map,
+
+    d_omega_map=d_omega_map,
+
+)
+
+session.burn_pulses()
+
+session.save_pulses()
+
+
+
+print("Broadcast rotation knobs to all standard gates:")
+
+for gate_name, (I, Q) in res.items():
+
+    print(f"  {gate_name:6s}: len={len(I)}, max_I={max(abs(I)):.6f}, "
+
+          f"d_lambda={d_lambda_map.get(gate_name, 0):.1f}, "
+
+          f"d_alpha={d_alpha_map.get(gate_name, 0):.6f}")
+
+print("\nPulses saved to disk.")
+
+===== CELL 71 (markdown) =====
+### 5.2 AllXY
+
+
+
+21-point gate error diagnostic. Ideal result is the stepped staircase pattern.
+
+===== CELL 72 (code) =====
+from datetime import datetime
+
+
+
+from qubox_v2.programs.macros.measure import measureMacro
+
+
+
+
+
+
+
+allxy = AllXY(session)
+
+
+
+allxy_result = allxy.run(n_avg=5000)
+
+
+
+allxy_analysis = allxy.analyze(allxy_result)
+
+
+
+allxy.plot(allxy_analysis)
+
+
+
+
+
+
+
+gate_error = float(allxy_analysis.metrics.get("gate_error", np.nan))
+
+
+
+observable = allxy_analysis.metrics.get("observable", "unknown")
+
+
+
+state_mapping = allxy_analysis.metrics.get("state_mapping", {})
+
+
+
+used_cc = bool(allxy_analysis.metrics.get("used_confusion_correction", False))
+
+
+
+bias_x = allxy_analysis.metrics.get("x_bias", np.nan)
+
+
+
+bias_y = allxy_analysis.metrics.get("y_bias", np.nan)
+
+
+
+systematic_bias = (np.isfinite(bias_x) and abs(float(bias_x)) > 0.05) or (np.isfinite(bias_y) and abs(float(bias_y)) > 0.05)
+
+
+
+
+
+
+
+print(f"Gate error metric = {gate_error:.6f}")
+
+
+
+print(f"Observable = {observable}")
+
+
+
+print(f"State map  = {state_mapping}")
+
+
+
+print(f"Confusion correction used = {used_cc}")
+
+
+
+print(f"Confusion matrix present  = {measureMacro._ro_quality_params.get('confusion_matrix') is not None}")
+
+
+
+print(f"x_bias = {bias_x}, y_bias = {bias_y}")
+
+
+
+print(f"Systematic bias detected? {systematic_bias}")
+
+
+
+
+
+
+
+if systematic_bias:
+
+
+
+    print("[ACTION] Large systematic deviation detected: re-run DRAG optimization and re-check pi calibration.")
+
+
+
+
+
+
+
+bringup = globals().get("bringup", {"steps": [], "results": {}})
+
+
+
+bringup["results"].update({
+
+
+
+    "allxy_gate_error": float(gate_error),
+
+
+
+    "allxy_observable": observable,
+
+
+
+    "allxy_systematic_bias": bool(systematic_bias),
+
+
+
+})
+
+
+
+bringup["steps"].append({
+
+
+
+    "step": "8_allxy_validation",
+
+
+
+    "timestamp": datetime.now().isoformat(),
+
+
+
+    "metrics": {
+
+
+
+        "gate_error": float(gate_error),
+
+
+
+        "observable": observable,
+
+
+
+        "state_mapping": state_mapping,
+
+
+
+        "used_confusion_correction": used_cc,
+
+
+
+        "x_bias": None if not np.isfinite(bias_x) else float(bias_x),
+
+
+
+        "y_bias": None if not np.isfinite(bias_y) else float(bias_y),
+
+
+
+        "systematic_bias": bool(systematic_bias),
+
+
+
+    },
+
+
+
+})
+
+
+
+globals()["bringup"] = bringup
+
+
+
+
+
+
+
+if "am" in globals():
+
+
+
+    am.save_artifact("bringup_step_8_allxy", bringup["steps"][-1])
+
+

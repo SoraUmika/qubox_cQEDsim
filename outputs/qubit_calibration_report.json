@@ -1,0 +1,21 @@
+{
+  "allxy_order_match": true,
+  "drag_applied": true,
+  "allxy_rms_before": 0.6352086037192682,
+  "allxy_rms_after": 0.30492074335789304,
+  "allxy_improved": true,
+  "state_min_fidelity": 0.9779740063537028,
+  "state_fidelity_threshold": 0.95,
+  "state_pass": true,
+  "arb_max_angle_error_deg": 31.13315319180958,
+  "arb_angle_threshold_deg": 6.0,
+  "arb_pass": false,
+  "required_figures_exist": true,
+  "mapping_sources": {
+    "legacy_notebook_found": true,
+    "calibration_notebook_found": false,
+    "allxy_source": "C:\\Users\\dazzl\\Box\\Shyam Shankar Quantum Circuits Group\\Users\\Users_JianJun\\JJL_Experiments\\post_cavity_experiment_legacy.ipynb",
+    "drag_method_source": "C:\\Users\\dazzl\\Box\\Shyam Shankar Quantum Circuits Group\\Users\\Users_JianJun\\JJL_Experiments\\post_cavity_experiment_legacy.ipynb",
+    "arb_rotation_source": "R_xy(theta,phi) pulse mapping in simulation (fallback)"
+  }
+}

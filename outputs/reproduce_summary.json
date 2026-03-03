@@ -1,0 +1,161 @@
+{
+  "config": {
+    "n_cav": 6,
+    "n_tr": 2,
+    "n_max": 2,
+    "chi": 0.12566370614359174,
+    "dt": 0.25,
+    "base_amp": 0.01,
+    "durations": [
+      70.0,
+      120.0,
+      180.0,
+      240.0
+    ],
+    "learning_rate": 0.3,
+    "iteration_cap": 60,
+    "epsilon_target": 1e-05,
+    "local_refine_maxiter": 8,
+    "fft_bins": 8192,
+    "leakage_threshold": 0.001
+  },
+  "citations": {
+    "doi": "10.1103/PhysRevLett.133.260802",
+    "arxiv": "2310.10498",
+    "supplement_used": true
+  },
+  "epsilon_target": 1e-05,
+  "T_opt": 180.0,
+  "T_below": 120.0,
+  "T_above": 180.0,
+  "curves": {
+    "durations": [
+      70.0,
+      120.0,
+      180.0,
+      240.0
+    ],
+    "epsilon_vanilla": [
+      0.9621425248572057,
+      0.9094010768884299,
+      0.830547283553958,
+      0.5837127548942318
+    ],
+    "epsilon_optimized": [
+      0.3278656555879349,
+      0.1230825463250027,
+      2.8117491044366005e-06,
+      9.239542464456463e-11
+    ],
+    "fidelity_optimized": [
+      0.6721343444120651,
+      0.8769174536749973,
+      0.9999971882508956,
+      0.9999999999076046
+    ]
+  },
+  "threshold_hit_map": [
+    false,
+    false,
+    true,
+    true
+  ],
+  "metric_bounds_ok": true,
+  "max_component_after": 0.004030302596196868,
+  "threshold_evidence": {
+    "t_below": 120.0,
+    "t_above": 180.0,
+    "epsilon_below": 0.1230825463250027,
+    "epsilon_above": 2.8117491044366005e-06,
+    "hit_below": false,
+    "hit_above": true,
+    "max_component_below": 0.7688828612844935,
+    "max_component_above": 0.004030302596196868
+  },
+  "per_manifold_at_topt": [
+    {
+      "n": 0,
+      "abs_dtheta": 0.0,
+      "abs_dlambda": 0.0003225535521787817,
+      "abs_dalpha": 0.004030302596196868,
+      "overlap": 0.9999959131550471
+    },
+    {
+      "n": 1,
+      "abs_dtheta": 0.0003092737975936011,
+      "abs_dlambda": 0.0025370713988892312,
+      "abs_dalpha": 0.0018804688114676365,
+      "overlap": 0.9999975067764415
+    },
+    {
+      "n": 2,
+      "abs_dtheta": 0.0008944726057100727,
+      "abs_dlambda": 0.0019329953667472377,
+      "abs_dalpha": 0.0015639871490135415,
+      "overlap": 0.9999984543682776
+    }
+  ],
+  "r_out": 6.918828769707796e-05,
+  "leakage_threshold": 0.001,
+  "fft_details": {
+    "df_hz": 0.005555555555556424,
+    "n_bins": 8192,
+    "neighbor_rule": "+/-2 FFT bins around each allowed tone and mirror (Hann-window main-lobe capture)"
+  },
+  "difficulty_pairs": [
+    [
+      3.6617443115451977,
+      NaN
+    ],
+    [
+      1.021110255092798,
+      NaN
+    ],
+    [
+      2.822308292331602,
+      NaN
+    ],
+    [
+      2.5484051844350937,
+      NaN
+    ],
+    [
+      2.6787293178146268,
+      NaN
+    ]
+  ],
+  "secondary_diagnostics": {
+    "ratio_optimized_to_vanilla": [
+      0.3407662036729895,
+      0.13534462345936185,
+      3.3854172545179724e-06,
+      1.5828919938764502e-10
+    ]
+  },
+  "convergence_check": {
+    "coarse_epsilon": 2.8117491044366005e-06,
+    "fine_epsilon": 0.00013319815284784653,
+    "coarse_fidelity": 0.9999971882508956,
+    "fine_fidelity": 0.9998668018471522,
+    "relative": 0.0001304037732851359
+  },
+  "runtime_s": 76.88298940000004,
+  "figure_files": [
+    "epsilon_vs_gate_time.png",
+    "optimization_limit.png",
+    "components_before_after.png",
+    "optimized_params_vs_n.png",
+    "pulse_spectrum.png",
+    "difficulty_vs_topt.png",
+    "error_norm_vs_epsilon.png"
+  ],
+  "figure_files_by_name": {
+    "epsilon_vs_gate_time.png": "figures/epsilon_vs_gate_time.png",
+    "optimization_limit.png": "figures/optimization_limit.png",
+    "components_before_after.png": "figures/components_before_after.png",
+    "optimized_params_vs_n.png": "figures/optimized_params_vs_n.png",
+    "pulse_spectrum.png": "figures/pulse_spectrum.png",
+    "difficulty_vs_topt.png": "figures/difficulty_vs_topt.png",
+    "error_norm_vs_epsilon.png": "figures/error_norm_vs_epsilon.png"
+  }
+}

@@ -26,9 +26,9 @@ def relative_phase_diagnostics(
 
     for snapshot in track["snapshots"]:
         rho = snapshot["state"]
-        c_ref = complex((reference_state.dag() * rho * reference_state)[0, 0])
+        c_ref = complex(reference_state.dag() * rho * reference_state)
         for label, ket in labels_and_states:
-            c_j = complex((reference_state.dag() * rho * ket)[0, 0])
+            c_j = complex(reference_state.dag() * rho * ket)
             amplitudes[label].append(abs(c_j))
             if label == "|g0|":
                 traces[label].append(0.0)

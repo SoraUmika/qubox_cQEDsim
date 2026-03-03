@@ -4,6 +4,7 @@ from typing import Any
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from matplotlib.colors import TwoSlopeNorm
 
 from cqed_sim.observables.wigner import selected_wigner_snapshots
@@ -15,15 +16,27 @@ def _gate_panel_title(snapshot: dict[str, Any]) -> str:
     return f"k={snapshot['index']} ({snapshot['gate_type']})"
 
 
-def plot_wigner_grid(track: dict[str, Any], title: str, stride: int, max_cols: int | None = None):
+def plot_wigner_grid(
+    track: dict[str, Any],
+    title: str,
+    stride: int,
+    max_cols: int | None = None,
+    show_colorbar: bool = True,
+):
     panels = selected_wigner_snapshots(track, stride=stride)
     if not panels:
         print(f"No Wigner panels stored for {track['case']}.")
         return None
-    requested_cols = 5 if max_cols is None else int(max_cols)
-    n_cols = min(max(1, requested_cols), len(panels))
+    requested_cols = 4 if max_cols is None else int(max_cols)
+    n_cols = max(1, min(4, requested_cols, len(panels)))
     n_rows = int(np.ceil(len(panels) / n_cols))
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4.1 * n_cols, 3.5 * n_rows), squeeze=False)
+    fig, axes = plt.subplots(
+        n_rows,
+        n_cols,
+        figsize=(3.3 * n_cols, 3.5 * n_rows),
+        squeeze=False,
+        gridspec_kw={"wspace": 0.0, "hspace": 0.0},
+    )
     all_w = np.concatenate([panel["wigner"]["w"].ravel() for panel in panels])
     vmax = float(np.max(np.abs(all_w)))
     norm = TwoSlopeNorm(vcenter=0.0, vmin=-vmax, vmax=vmax) if vmax > 0 else None
@@ -39,7 +52,20 @@ def plot_wigner_grid(track: dict[str, Any], title: str, stride: int, max_cols: i
             norm=norm,
             aspect="equal",
         )
-        axis.set_title(_gate_panel_title(panel), fontsize=9)
+        panel_label = _gate_panel_title(panel)
+        label_handle = Line2D([], [], linestyle="none")
+        axis.legend(
+            handles=[label_handle],
+            labels=[panel_label],
+            loc="upper right",
+            fontsize=8,
+            framealpha=0.7,
+            handlelength=0,
+            handletextpad=0.0,
+            borderpad=0.25,
+        )
+        axis.set_xlim(-2.0, 2.0)
+        axis.set_ylim(-2.0, 2.0)
         row = flat_idx // n_cols
         col = flat_idx % n_cols
         show_bottom = row == (n_rows - 1)
@@ -52,7 +78,7 @@ def plot_wigner_grid(track: dict[str, Any], title: str, stride: int, max_cols: i
             axis.set_yticklabels([])
     for axis in axes.ravel()[len(panels):]:
         axis.axis("off")
-    if image is not None:
+    if image is not None and show_colorbar:
         fig.colorbar(image, ax=axes.ravel().tolist(), shrink=0.84, label="W(x, p)")
     fig.suptitle(f"{title} (axes: x, p)", y=1.02)
     fig.tight_layout()

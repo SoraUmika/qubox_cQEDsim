@@ -43,7 +43,8 @@ def cosine_rise_envelope(t_rel: np.ndarray, rise_fraction: float = 0.1) -> np.nd
 def gaussian_area_fraction(sigma_fraction: float, n_pts: int = 4097) -> float:
     grid = np.linspace(0.0, 1.0, n_pts)
     env = np.asarray(gaussian_envelope(grid, sigma=sigma_fraction), dtype=np.complex128)
-    return float(np.trapezoid(np.real(env), grid))
+    trapezoid = getattr(np, "trapezoid", np.trapz)
+    return float(trapezoid(np.real(env), grid))
 
 
 def normalized_gaussian(t_rel: np.ndarray, sigma_fraction: float) -> np.ndarray:

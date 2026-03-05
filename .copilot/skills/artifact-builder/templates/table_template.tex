@@ -1,0 +1,18 @@
+% Template: per-level calibration summary table
+% Replace <ROWS> with generated content
+\begin{table}[h]
+\centering
+\caption{Per-manifold SQR calibration corrections and unitary process fidelity
+for gate \texttt{<GATE\_NAME>}. Corrections $(\delta\lambda, \delta\alpha,
+\delta\omega)$ are optimized via two-stage Powell/L-BFGS-B minimization of the
+per-manifold process infidelity $\mathcal{L}^{(n)} = 1 -
+|\mathrm{Tr}(U_{\mathrm{tgt}}^{(n)\dagger} U_{\mathrm{sim}}^{(n)})|^2 / 4$.}
+\label{tab:sqr_calibration_levels}
+\begin{tabular}{cS[table-format=+1.4]S[table-format=+1.4]S[table-format=+4.1]S[table-format=1.2e-1]S[table-format=1.2e-1]S[table-format=1.1e+1]}
+\hline
+$n$ & {$\delta\lambda$} & {$\delta\alpha$ [rad]} & {$\delta\omega/2\pi$ [kHz]} & {$\mathcal{L}_{\mathrm{init}}$} & {$\mathcal{L}_{\mathrm{opt}}$} & {Improvement} \\
+\hline
+<ROWS>
+\hline
+\end{tabular}
+\end{table}

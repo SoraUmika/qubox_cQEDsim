@@ -11,10 +11,16 @@ import qutip as qt
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.io.gates import DisplacementGate, RotationGate, SQRGate
 from cqed_sim.observables.bloch import bloch_xyz_from_joint, reduced_qubit_state
-from cqed_sim.observables.fock import conditional_phase_diagnostics, fock_resolved_bloch_diagnostics
+from cqed_sim.observables.fock import (
+    conditional_phase_diagnostics,
+    fock_resolved_bloch_diagnostics,
+    relative_phase_family_diagnostics,
+    wrapped_phase_error,
+)
 from cqed_sim.observables.weakness import comparison_metrics
 from cqed_sim.operators.basic import purity
 from cqed_sim.sim.noise import NoiseSpec
+from cqed_sim.sim.extractors import conditioned_bloch_xyz
 from cqed_sim.sim.runner import SimulationConfig, simulate_sequence
 from cqed_sim.simulators.common import build_initial_state
 from cqed_sim.simulators.ideal import ideal_gate_unitary, run_case_a
@@ -63,6 +69,26 @@ def _baseline_case_a(gates, config: dict[str, Any]) -> dict[str, np.ndarray]:
         "y": np.asarray(ys, dtype=float),
         "z": np.asarray(zs, dtype=float),
         "n": np.asarray(ns, dtype=float),
+    }
+
+
+def _minimal_track_from_states(states: list[qt.Qobj], case: str, gate_type: str = "Test") -> dict[str, Any]:
+    snapshots = []
+    for idx, state in enumerate(states):
+        rho = state if state.isoper else state.proj()
+        snapshots.append(
+            {
+                "index": idx,
+                "state": rho,
+                "rho_c": qt.ptrace(rho, 0),
+                "gate_type": "INIT" if idx == 0 else gate_type,
+                "top_label": "0:INIT" if idx == 0 else f"{idx}:{gate_type}",
+            }
+        )
+    return {
+        "case": case,
+        "indices": np.arange(len(states), dtype=int),
+        "snapshots": snapshots,
     }
 
 
@@ -310,11 +336,15 @@ def _test_8_gate_indexed_diagnostics(base_config: dict[str, Any]) -> None:
     ]
     track = run_case_b(gates, config, case_label="Case B diagnostics test")
     bloch = fock_resolved_bloch_diagnostics(track, max_n=int(config["phase_track_max_n"]))
-    phase = conditional_phase_diagnostics(track, max_n=int(config["phase_track_max_n"]))
+    phase = relative_phase_family_diagnostics(track, max_n=int(config["phase_track_max_n"]))
     if not np.array_equal(bloch["n_values"], phase["n_values"]):
         raise AssertionError("Gate diagnostics used mismatched n ranges.")
     expected_shape = (int(config["phase_track_max_n"]) + 1, len(gates) + 1)
-    if bloch["x"].shape != expected_shape or phase["phase"].shape != expected_shape:
+    if (
+        bloch["x"].shape != expected_shape
+        or phase["families"]["ground"]["phase"].shape != expected_shape
+        or phase["families"]["excited"]["phase"].shape != expected_shape
+    ):
         raise AssertionError("Unexpected gate-diagnostic array shape.")
     trajectory = simulate_gate_bloch_trajectory(
         track,
@@ -330,6 +360,179 @@ def _test_8_gate_indexed_diagnostics(base_config: dict[str, Any]) -> None:
         raise AssertionError("Non-finite unconditional trajectory values detected.")
 
 
+def _test_9_phase_unwrap_continuity_across_branch_cut() -> None:
+    n_cav = 3
+
+    def qubit_dm(phase: float) -> qt.Qobj:
+        coherence = 0.5 * np.exp(-1j * phase)
+        return qt.Qobj(
+            np.array([[0.5, coherence], [np.conjugate(coherence), 0.5]], dtype=np.complex128),
+            dims=[[2], [2]],
+        )
+
+    state_a = qt.tensor(qt.basis(n_cav, 0).proj(), qubit_dm(np.pi - 5.0e-2))
+    state_b = qt.tensor(qt.basis(n_cav, 0).proj(), qubit_dm(-np.pi + 4.0e-2))
+    track = _minimal_track_from_states([state_a, state_b], case="phase continuity test", gate_type="Rotation")
+    diag = conditional_phase_diagnostics(track, max_n=0, probability_threshold=1.0e-8, unwrap=True, coherence_threshold=1.0e-8)
+    delta = float(diag["phase"][0, 1] - diag["phase"][0, 0])
+    if abs(delta) > 0.2:
+        raise AssertionError(f"Unwrapped phase jumped across the branch cut: {delta}")
+
+    ideal = conditional_phase_diagnostics(
+        _minimal_track_from_states([state_a], case="ideal phase reference"),
+        max_n=0,
+        probability_threshold=1.0e-8,
+        unwrap=False,
+        coherence_threshold=1.0e-8,
+    )
+    simulated = conditional_phase_diagnostics(
+        _minimal_track_from_states([state_b], case="simulated phase reference"),
+        max_n=0,
+        probability_threshold=1.0e-8,
+        unwrap=False,
+        coherence_threshold=1.0e-8,
+    )
+    error = float(wrapped_phase_error(simulated, ideal)[0, 0])
+    if abs(error) > 0.2:
+        raise AssertionError(f"Ratio-based wrapped phase error should stay small across the branch cut, got {error}")
+
+
+def _test_10_relative_phase_definition() -> None:
+    n_cav = 4
+    n_target = 2
+    theta = 0.73
+    psi = (qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)) + np.exp(1j * theta) * qt.tensor(qt.basis(n_cav, n_target), qt.basis(2, 1))).unit()
+    diag = conditional_phase_diagnostics(
+        _minimal_track_from_states([psi], case="relative phase definition test", gate_type="SQR"),
+        max_n=n_target,
+        probability_threshold=1.0e-8,
+        unwrap=False,
+        coherence_threshold=1.0e-8,
+    )
+    phase = float(diag["phase"][n_target, 0])
+    wrapped = (phase - theta + np.pi) % (2.0 * np.pi) - np.pi
+    if abs(wrapped) > 1.0e-10:
+        raise AssertionError(f"Relative phase definition mismatch: expected {theta}, got {phase}")
+    if not np.isnan(diag["phase"][0, 0]) or not np.isnan(diag["phase"][1, 0]):
+        raise AssertionError("Unpopulated |e,n> manifolds should be masked in the controlled-superposition test.")
+
+
+def _test_11_global_phase_invariance() -> None:
+    n_cav = 4
+    n_target = 1
+    theta = -1.11
+    alpha = 0.42
+    psi = (qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)) + np.exp(1j * theta) * qt.tensor(qt.basis(n_cav, n_target), qt.basis(2, 1))).unit()
+    psi_shifted = np.exp(1j * alpha) * psi
+    diag_a = conditional_phase_diagnostics(
+        _minimal_track_from_states([psi], case="global phase baseline"),
+        max_n=n_target,
+        probability_threshold=1.0e-8,
+        unwrap=False,
+        coherence_threshold=1.0e-8,
+    )
+    diag_b = conditional_phase_diagnostics(
+        _minimal_track_from_states([psi_shifted], case="global phase shifted"),
+        max_n=n_target,
+        probability_threshold=1.0e-8,
+        unwrap=False,
+        coherence_threshold=1.0e-8,
+    )
+    phase_a = float(diag_a["phase"][n_target, 0])
+    phase_b = float(diag_b["phase"][n_target, 0])
+    wrapped = (phase_a - phase_b + np.pi) % (2.0 * np.pi) - np.pi
+    if abs(wrapped) > 1.0e-12:
+        raise AssertionError(f"Global phase invariance failed: {phase_a} vs {phase_b}")
+
+
+def _test_11b_ground_relative_phase_definition() -> None:
+    n_cav = 4
+    n_target = 2
+    theta = -0.37
+    psi = (qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)) + np.exp(1j * theta) * qt.tensor(qt.basis(n_cav, n_target), qt.basis(2, 0))).unit()
+    diag = relative_phase_family_diagnostics(
+        _minimal_track_from_states([psi], case="ground relative phase definition test", gate_type="Displacement"),
+        max_n=n_target,
+        probability_threshold=1.0e-8,
+        unwrap=False,
+        coherence_threshold=1.0e-8,
+    )
+    phase_ground = float(diag["families"]["ground"]["phase"][n_target, 0])
+    wrapped = (phase_ground - theta + np.pi) % (2.0 * np.pi) - np.pi
+    if abs(wrapped) > 1.0e-10:
+        raise AssertionError(f"Ground-family relative phase mismatch: expected {theta}, got {phase_ground}")
+    if not np.isnan(diag["families"]["excited"]["phase"][n_target, 0]):
+        raise AssertionError("Excited-family phase should be masked for a pure ground-manifold superposition.")
+
+
+def _test_12_conditioned_bloch_matches_known_state() -> None:
+    n_cav = 5
+    rho_q = ((qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit()).proj()
+    state = qt.tensor(qt.basis(n_cav, 2).proj(), rho_q)
+    conditioned = np.asarray(conditioned_bloch_xyz(state, n=2, fallback="nan")[:3], dtype=float)
+    unconditional = np.asarray(bloch_xyz_from_joint(state), dtype=float)
+    _assert_close(conditioned, unconditional, atol=1.0e-12, label="Conditioned Bloch known state")
+
+
+def _test_13_bloch_bounds_or_masking() -> None:
+    n_cav = 3
+    state = qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0))
+    track = _minimal_track_from_states([state], case="bloch masking test")
+    diagnostics = fock_resolved_bloch_diagnostics(track, max_n=1, probability_threshold=1.0e-6)
+    if not diagnostics["valid"][0, 0]:
+        raise AssertionError("Populated manifold should remain valid.")
+    if diagnostics["valid"][1, 0]:
+        raise AssertionError("Empty manifold should be masked.")
+    if not (np.isnan(diagnostics["x"][1, 0]) and np.isnan(diagnostics["y"][1, 0]) and np.isnan(diagnostics["z"][1, 0])):
+        raise AssertionError("Masked Bloch entries should be NaN for low-population manifolds.")
+    values = np.asarray([diagnostics["x"][0, 0], diagnostics["y"][0, 0], diagnostics["z"][0, 0]], dtype=float)
+    if np.any(np.abs(values) > 1.0 + 1.0e-9):
+        raise AssertionError(f"Conditioned Bloch values exceeded physical bounds: {values}")
+
+
+def _test_14_manifold_isolation() -> None:
+    n_cav = 4
+    theta = -0.61
+    psi = (qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)) + np.exp(1j * theta) * qt.tensor(qt.basis(n_cav, 1), qt.basis(2, 1))).unit()
+    diag = conditional_phase_diagnostics(
+        _minimal_track_from_states([psi], case="manifold isolation test", gate_type="SQR"),
+        max_n=2,
+        probability_threshold=1.0e-8,
+        unwrap=False,
+        coherence_threshold=1.0e-8,
+    )
+    if np.isnan(diag["phase"][1, 0]):
+        raise AssertionError("n=1 phase should be present in the manifold-isolation test.")
+    if not np.isnan(diag["phase"][0, 0]) or not np.isnan(diag["phase"][2, 0]):
+        raise AssertionError("Only the populated |e,1> manifold should carry a defined relative phase.")
+
+
+def _test_15_phase_family_bundle_contains_both() -> None:
+    n_cav = 4
+    theta_ground = 0.21
+    theta_excited = -0.64
+    psi = (
+        qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0))
+        + np.exp(1j * theta_ground) * qt.tensor(qt.basis(n_cav, 1), qt.basis(2, 0))
+        + np.exp(1j * theta_excited) * qt.tensor(qt.basis(n_cav, 2), qt.basis(2, 1))
+    ).unit()
+    diag = relative_phase_family_diagnostics(
+        _minimal_track_from_states([psi], case="phase family bundle test", gate_type="SQR"),
+        max_n=2,
+        probability_threshold=1.0e-8,
+        unwrap=False,
+        coherence_threshold=1.0e-8,
+    )
+    if set(diag["families"]) != {"ground", "excited"}:
+        raise AssertionError("Combined phase diagnostics must expose both ground and excited families.")
+    ground_phase = float(diag["families"]["ground"]["phase"][1, 0])
+    excited_phase = float(diag["families"]["excited"]["phase"][2, 0])
+    if abs(((ground_phase - theta_ground + np.pi) % (2.0 * np.pi)) - np.pi) > 1.0e-10:
+        raise AssertionError("Ground-family phase was not extracted correctly from the combined bundle.")
+    if abs(((excited_phase - theta_excited + np.pi) % (2.0 * np.pi)) - np.pi) > 1.0e-10:
+        raise AssertionError("Excited-family phase was not extracted correctly from the combined bundle.")
+
+
 def run_notebook_sanity_suite(base_config: dict[str, Any]) -> list[dict[str, str]]:
     tests = [
         ("Test 1: ideal rotation sanity", lambda: _test_1_ideal_rotation_sanity(base_config)),
@@ -340,6 +543,14 @@ def run_notebook_sanity_suite(base_config: dict[str, Any]) -> list[dict[str, str
         ("Test 6: Case B/Case C shape and finiteness", lambda: _test_6_case_b_case_c_shapes(base_config)),
         ("Test 7: Case D calibrated SQR path", lambda: _test_7_case_d_shapes_and_calibration(base_config)),
         ("Test 8: gate-indexed diagnostics", lambda: _test_8_gate_indexed_diagnostics(base_config)),
+        ("Test 9: relative phase definition", _test_10_relative_phase_definition),
+        ("Test 10: branch cut continuity", _test_9_phase_unwrap_continuity_across_branch_cut),
+        ("Test 11: global phase invariance", _test_11_global_phase_invariance),
+        ("Test 11b: ground relative phase definition", _test_11b_ground_relative_phase_definition),
+        ("Test 12: conditioned Bloch matches known state", _test_12_conditioned_bloch_matches_known_state),
+        ("Test 13: Bloch bounds or masking", _test_13_bloch_bounds_or_masking),
+        ("Test 14: manifold isolation", _test_14_manifold_isolation),
+        ("Test 15: phase family bundle contains both", _test_15_phase_family_bundle_contains_both),
     ]
     results = []
     for label, fn in tests:
@@ -384,3 +595,35 @@ def test_baseline_vs_refactor_case_a():
         "max_step_s": 1.0e-9,
     }
     baseline_vs_refactor_sanity(base_config)
+
+
+def test_relative_phase_definition():
+    _test_10_relative_phase_definition()
+
+
+def test_branch_cut_continuity():
+    _test_9_phase_unwrap_continuity_across_branch_cut()
+
+
+def test_global_phase_invariance():
+    _test_11_global_phase_invariance()
+
+
+def test_ground_relative_phase_definition():
+    _test_11b_ground_relative_phase_definition()
+
+
+def test_conditioned_bloch_matches_known_state():
+    _test_12_conditioned_bloch_matches_known_state()
+
+
+def test_bloch_bounds_or_masking():
+    _test_13_bloch_bounds_or_masking()
+
+
+def test_manifold_isolation():
+    _test_14_manifold_isolation()
+
+
+def test_phase_family_bundle_contains_both():
+    _test_15_phase_family_bundle_contains_both()

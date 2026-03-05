@@ -3,9 +3,19 @@ from __future__ import annotations
 import numpy as np
 import qutip as qt
 
+from cqed_sim.operators.cavity import fock_projector
+
 
 def _as_dm(state: qt.Qobj) -> qt.Qobj:
     return state if state.isoper else state.proj()
+
+
+def _joint_dims(rho: qt.Qobj) -> tuple[int, int]:
+    if len(rho.dims[0]) != 2 or len(rho.dims[1]) != 2:
+        raise ValueError(f"Expected a cavity-qubit bipartite state, got dims={rho.dims}.")
+    n_cav = int(rho.dims[0][0])
+    n_qubit = int(rho.dims[0][1])
+    return n_cav, n_qubit
 
 
 def reduced_qubit_state(state: qt.Qobj) -> qt.Qobj:
@@ -25,21 +35,30 @@ def bloch_xyz_from_joint(state: qt.Qobj) -> tuple[float, float, float]:
     )
 
 
-def conditioned_qubit_state(state: qt.Qobj, n: int, fallback: str = "nan") -> tuple[qt.Qobj, float, bool]:
+def conditioned_population(state: qt.Qobj, n: int) -> float:
     rho = _as_dm(state)
-    n_cav = rho.dims[0][0]
+    n_cav, n_qubit = _joint_dims(rho)
     if n < 0 or n >= n_cav:
         raise IndexError("Conditioning index n out of range.")
-    proj_n = qt.tensor(qt.basis(n_cav, n) * qt.basis(n_cav, n).dag(), qt.qeye(rho.dims[0][1]))
+    proj_n = qt.tensor(fock_projector(n_cav, n), qt.qeye(n_qubit))
+    return float(np.real((proj_n * rho).tr()))
+
+
+def conditioned_qubit_state(state: qt.Qobj, n: int, fallback: str = "nan") -> tuple[qt.Qobj, float, bool]:
+    rho = _as_dm(state)
+    n_cav, n_qubit = _joint_dims(rho)
+    if n < 0 or n >= n_cav:
+        raise IndexError("Conditioning index n out of range.")
+    proj_n = qt.tensor(fock_projector(n_cav, n), qt.qeye(n_qubit))
     block = proj_n * rho * proj_n
     rho_q_tilde = qt.ptrace(block, 1)
     p_n = float(np.real(rho_q_tilde.tr()))
-    if p_n > 0:
+    if p_n > 1.0e-15:
         return rho_q_tilde / p_n, p_n, True
     if fallback == "zero":
-        return 0 * qt.qeye(rho.dims[0][1]), 0.0, False
+        return 0 * qt.qeye(n_qubit), 0.0, False
     if fallback == "nan":
-        nan_dm = qt.Qobj(np.full((rho.dims[0][1], rho.dims[0][1]), np.nan, dtype=np.complex128), dims=[[rho.dims[0][1]], [rho.dims[0][1]]])
+        nan_dm = qt.Qobj(np.full((n_qubit, n_qubit), np.nan, dtype=np.complex128), dims=[[n_qubit], [n_qubit]])
         return nan_dm, 0.0, False
     raise ValueError(f"Unsupported fallback '{fallback}'.")
 

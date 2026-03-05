@@ -1,37 +1,45 @@
 {
   "sqr_name": "SQR_789278ba62949511b06e9d76a4bb8437",
-  "max_n": 1,
+  "max_n": 2,
   "d_lambda": [
-    0.007288819856735238,
+    -9.327350453685555e-08,
+    0.0,
     0.0
   ],
   "d_alpha": [
-    3.6637359812630166e-15,
+    -2.3849983608153665e-08,
+    0.0,
     0.0
   ],
   "d_omega_rad_s": [
-    -8712703.010949608,
+    0.0002465495718091908,
+    0.0,
     0.0
   ],
   "d_omega_hz": [
-    -1386669.75188427,
+    3.923958307062293e-05,
+    0.0,
     0.0
   ],
   "theta_target": [
     -4.603698833859033,
+    0.0,
     0.0
   ],
   "phi_target": [
     1.5787159007312601,
+    0.0,
     0.0
   ],
   "initial_loss": [
-    0.0,
-    0.35179950945375815
+    1.5549339593690092e-11,
+    0.23097002613306739,
+    0.7104912567599944
   ],
   "optimized_loss": [
-    0.553273086939225,
-    0.35179950945375815
+    1.5695889042209443e-11,
+    0.23097002613306739,
+    0.7104912567599944
   ],
   "levels": [
     {
@@ -45,17 +53,17 @@
         0.0
       ],
       "optimized_params": [
-        0.007288819856735238,
-        3.6637359812630166e-15,
-        -8712703.010949608
+        -9.327350453685555e-08,
+        -2.3849983608153665e-08,
+        0.0002465495718091908
       ],
-      "initial_loss": 0.0,
-      "optimized_loss": 0.553273086939225,
-      "process_fidelity": 0.446802824307659,
+      "initial_loss": 1.5549339593690092e-11,
+      "optimized_loss": 1.5695889042209443e-11,
+      "process_fidelity": 0.9999999999843041,
       "success_stage1": true,
       "success_stage2": true,
       "message_stage1": "Optimization terminated successfully.",
-      "message_stage2": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL"
+      "message_stage2": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH"
     },
     {
       "n": 1,
@@ -72,9 +80,32 @@
         0.0,
         0.0
       ],
-      "initial_loss": 0.35179950945375815,
-      "optimized_loss": 0.35179950945375815,
-      "process_fidelity": 0.6482004905462418,
+      "initial_loss": 0.23097002613306739,
+      "optimized_loss": 0.23097002613306739,
+      "process_fidelity": 0.7690299738669326,
+      "success_stage1": false,
+      "success_stage2": false,
+      "message_stage1": "",
+      "message_stage2": ""
+    },
+    {
+      "n": 2,
+      "theta_target": 0.0,
+      "phi_target": 0.0,
+      "skipped": true,
+      "initial_params": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "optimized_params": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "initial_loss": 0.7104912567599944,
+      "optimized_loss": 0.7104912567599944,
+      "process_fidelity": 0.28950874324000564,
       "success_stage1": false,
       "success_stage2": false,
       "message_stage1": "",
@@ -82,17 +113,17 @@
     }
   ],
   "metadata": {
-    "timestamp": "2026-03-03T17:50:46.528178+00:00",
+    "timestamp": "2026-03-03T20:38:45.597683+00:00",
     "objective_type": "process_infidelity_plus_regularization",
     "config_snapshot": {
-      "duration_sqr_s": 5e-06,
+      "duration_sqr_s": 1e-06,
       "sqr_sigma_fraction": 0.16666666666666666,
       "dt_s": 1e-09,
       "max_step_s": 1e-09,
       "st_chi_hz": -2840421.354241756,
       "st_chi2_hz": 0.0,
       "st_chi3_hz": 0.0,
-      "max_n_cal": 1,
+      "max_n_cal": 2,
       "sqr_theta_cutoff": 1e-10,
       "optimizer_method_stage1": "Powell",
       "optimizer_method_stage2": "L-BFGS-B",
@@ -112,7 +143,7 @@
       "regularization_alpha": 1e-06,
       "regularization_omega": 1e-18
     },
-    "config_hash": "498608b0505c389e",
+    "config_hash": "1e34016917f38930",
     "optimizer_method_stage1": "Powell",
     "optimizer_method_stage2": "L-BFGS-B",
     "cache_hit": false,

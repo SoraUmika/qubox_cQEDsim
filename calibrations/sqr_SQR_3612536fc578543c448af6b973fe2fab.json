@@ -1,0 +1,121 @@
+{
+  "sqr_name": "SQR_3612536fc578543c448af6b973fe2fab",
+  "max_n": 1,
+  "d_lambda": [
+    -1.0116815440941451e-09,
+    -0.2640017675585064
+  ],
+  "d_alpha": [
+    1.9984014443252818e-15,
+    -2.239719759868
+  ],
+  "d_omega_rad_s": [
+    0.01007845247294992,
+    -373987.7361786128
+  ],
+  "d_omega_hz": [
+    0.0016040355297867164,
+    -59521.996868573886
+  ],
+  "theta_target": [
+    2.117288570963087,
+    1.1733553057973722
+  ],
+  "phi_target": [
+    -0.4323251370670569,
+    1.951686218705614
+  ],
+  "initial_loss": [
+    2.5757174171303632e-14,
+    0.9403105479449579
+  ],
+  "optimized_loss": [
+    3.108624479210309e-14,
+    0.3064681193432802
+  ],
+  "levels": [
+    {
+      "n": 0,
+      "theta_target": 2.117288570963087,
+      "phi_target": -0.4323251370670569,
+      "skipped": false,
+      "initial_params": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "optimized_params": [
+        -1.0116815440941451e-09,
+        1.9984014443252818e-15,
+        0.01007845247294992
+      ],
+      "initial_loss": 2.5757174171303632e-14,
+      "optimized_loss": 3.108624479210309e-14,
+      "process_fidelity": 0.9999999999999689,
+      "success_stage1": true,
+      "success_stage2": true,
+      "message_stage1": "Optimization terminated successfully.",
+      "message_stage2": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL"
+    },
+    {
+      "n": 1,
+      "theta_target": 1.1733553057973722,
+      "phi_target": 1.951686218705614,
+      "skipped": false,
+      "initial_params": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "optimized_params": [
+        -0.2640017675585064,
+        -2.239719759868,
+        -373987.7361786128
+      ],
+      "initial_loss": 0.9403105479449579,
+      "optimized_loss": 0.3064681193432802,
+      "process_fidelity": 0.6935371065650826,
+      "success_stage1": true,
+      "success_stage2": true,
+      "message_stage1": "Optimization terminated successfully.",
+      "message_stage2": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL"
+    }
+  ],
+  "metadata": {
+    "timestamp": "2026-03-03T19:53:29.425488+00:00",
+    "objective_type": "process_infidelity_plus_regularization",
+    "config_snapshot": {
+      "duration_sqr_s": 1e-05,
+      "sqr_sigma_fraction": 0.16666666666666666,
+      "dt_s": 1e-09,
+      "max_step_s": 1e-09,
+      "st_chi_hz": -2840421.354241756,
+      "st_chi2_hz": 0.0,
+      "st_chi3_hz": 0.0,
+      "max_n_cal": 1,
+      "sqr_theta_cutoff": 1e-10,
+      "optimizer_method_stage1": "Powell",
+      "optimizer_method_stage2": "L-BFGS-B",
+      "d_lambda_bounds": [
+        -0.5,
+        0.5
+      ],
+      "d_alpha_bounds": [
+        -3.141592653589793,
+        3.141592653589793
+      ],
+      "d_omega_hz_bounds": [
+        -2000000.0,
+        2000000.0
+      ],
+      "regularization_lambda": 1e-06,
+      "regularization_alpha": 1e-06,
+      "regularization_omega": 1e-18
+    },
+    "config_hash": "06ce19660a356539",
+    "optimizer_method_stage1": "Powell",
+    "optimizer_method_stage2": "L-BFGS-B",
+    "cache_hit": false,
+    "cache_path": "calibrations\\sqr_SQR_3612536fc578543c448af6b973fe2fab.json"
+  }
+}

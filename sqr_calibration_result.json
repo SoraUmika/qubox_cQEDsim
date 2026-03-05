@@ -34,7 +34,7 @@
   "initial_loss": [
     1.970645868709653e-12,
     0.335584477325375,
-    0.7199359799975484
+    0.7199359799850924
   ],
   "optimized_loss": [
     0.3902340696842193,
@@ -103,7 +103,7 @@
         -3.047910267511775,
         -1997273.8427564888
       ],
-      "initial_loss": 0.7199359799975484,
+      "initial_loss": 0.7199359799850924,
       "optimized_loss": 0.03800898755749175,
       "process_fidelity": 0.9620045412397913,
       "success_stage1": true,
@@ -113,7 +113,7 @@
     }
   ],
   "metadata": {
-    "timestamp": "2026-03-03T18:40:00.677357+00:00",
+    "timestamp": "2026-03-03T21:06:34.978784+00:00",
     "objective_type": "process_infidelity_plus_regularization",
     "config_snapshot": {
       "duration_sqr_s": 1e-06,
@@ -146,7 +146,7 @@
     "config_hash": "cffc7b29de6f511b",
     "optimizer_method_stage1": "Powell",
     "optimizer_method_stage2": "L-BFGS-B",
-    "cache_hit": true,
+    "cache_hit": false,
     "cache_path": "calibrations\\sqr_sqr_demo.json"
   }
 }

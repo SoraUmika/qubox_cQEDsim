@@ -40,10 +40,10 @@ cells: list[dict] = [
 
         The diagnostic overlays compare **simulated pulse-level** outputs against **Case A ideal references** using stable conventions:
 
-        - Filled heatmaps = simulated values.
-        - Dashed contours = ideal references.
-        - `X`, `Y`, `Z` keep the same blue/orange/green mapping in line plots and contour overlays.
-        - Simulated vs ideal are distinguished by style, not by component color changes.
+        - Fock-resolved Bloch diagnostics use grouped bars by gate index.
+        - Same color = same Fock manifold `n`; simulated vs ideal are distinguished by filled vs hollow bar style.
+        - Relative phase uses masked segment-wise unwrapping and ratio-based phase error.
+        - Pulse-level trajectory overlays keep `X/Y/Z = blue/orange/green`, with simulated solid and ideal dashed.
 
         Usage:
 
@@ -95,15 +95,15 @@ cells: list[dict] = [
         from IPython.display import Markdown, display
 
         from cqed_sim.io.gates import load_gate_sequence, render_gate_table
-        from cqed_sim.observables.fock import conditional_phase_diagnostics, fock_resolved_bloch_diagnostics
+        from cqed_sim.observables.fock import conditional_phase_diagnostics, fock_resolved_bloch_diagnostics, relative_phase_debug_values, relative_phase_family_diagnostics
         from cqed_sim.observables.weakness import attach_weakness_metrics, comparison_metrics
         from cqed_sim.plotting.bloch_plots import plot_bloch_track
         from cqed_sim.plotting.gate_diagnostics import (
-            plot_fock_resolved_bloch_overlay,
+            plot_fock_resolved_bloch_grouped_bars,
             plot_gate_bloch_trajectory_error,
             plot_gate_bloch_trajectory_overlay,
-            plot_phase_error_heatmap,
-            plot_phase_heatmap_overlay,
+            plot_phase_error_track,
+            plot_phase_overlay_lines,
             save_figure,
         )
         from cqed_sim.plotting.phase_plots import plot_relative_phase_track
@@ -155,12 +155,12 @@ cells: list[dict] = [
             "top_axis_label_stride": 1,
             "summary_max_rows": 20,
             "phase_track_max_n": 2,
-            "phase_reference_threshold": 1.0e-8,
-            "phase_unwrap": False,
+            "phase_reference_threshold": 1.0e-6,
+            "phase_unwrap": True,
             "overlay_cases": ("Case B", "Case C", "Case D"),
             "trajectory_gate_index": None,
             "trajectory_conditioned_max_n": 2,
-            "gate_diag_probability_threshold": 1.0e-8,
+            "gate_diag_probability_threshold": 1.0e-6,
             "output_figure_dir": "outputs/figures",
             "save_output_figures": True,
             "output_figure_dpi": 160,
@@ -234,11 +234,13 @@ cells: list[dict] = [
             "run_case_d",
             "fock_resolved_bloch_diagnostics",
             "conditional_phase_diagnostics",
+            "relative_phase_debug_values",
+            "relative_phase_family_diagnostics",
             "simulate_gate_bloch_trajectory",
             "ideal_gate_bloch_trajectory",
-            "plot_fock_resolved_bloch_overlay",
-            "plot_phase_heatmap_overlay",
-            "plot_phase_error_heatmap",
+            "plot_fock_resolved_bloch_grouped_bars",
+            "plot_phase_overlay_lines",
+            "plot_phase_error_track",
             "plot_gate_bloch_trajectory_overlay",
             "plot_gate_bloch_trajectory_error",
         ]
@@ -427,11 +429,12 @@ cells: list[dict] = [
         label_stride = int(CONFIG["top_axis_label_stride"])
         output_dir = Path(CONFIG["output_figure_dir"])
         ideal_bloch = fock_resolved_bloch_diagnostics(CASE_A, max_n=diagnostic_max_n, probability_threshold=probability_threshold)
-        ideal_phase = conditional_phase_diagnostics(
+        ideal_phase = relative_phase_family_diagnostics(
             CASE_A,
             max_n=diagnostic_max_n,
             probability_threshold=probability_threshold,
             unwrap=bool(CONFIG["phase_unwrap"]),
+            coherence_threshold=probability_threshold,
         )
 
         if CONFIG["trajectory_gate_index"] is None:
@@ -452,16 +455,64 @@ cells: list[dict] = [
             }
         )
 
+        def _print_phase_debug(case_name, diagnostics, track):
+            debug_snapshot = track["snapshots"][selected_gate_index]
+            debug = relative_phase_debug_values(
+                debug_snapshot["state"],
+                max_n=diagnostic_max_n,
+                probability_threshold=probability_threshold,
+                coherence_threshold=probability_threshold,
+            )
+            print(f"{case_name} relative-phase debug at gate index {selected_gate_index}:")
+            print("  basis ordering:", debug["basis_ordering"])
+            print(
+                "  reference:",
+                debug["reference_label"],
+                "targets:",
+                debug["ground_target_template"],
+                "and",
+                debug["excited_target_template"],
+            )
+            print("  c_g0 =", debug["c_g0_gauge"])
+            for row_idx, row in enumerate(debug["levels"]):
+                plotted_ground = diagnostics["families"]["ground"]["phase"][row_idx, selected_gate_index]
+                plotted_excited = diagnostics["families"]["excited"]["phase"][row_idx, selected_gate_index]
+                print(
+                    f"  c_g{row['n']} = {row['c_gn_gauge']} | "
+                    f"coherence=<g,{row['n']}|rho|g,0>={row['coherence_gn_g0']} | "
+                    f"phi_g={row['ground_phase_rad']} | plotted_phi_g={plotted_ground}"
+                )
+                print(
+                    f"  c_e{row['n']} = {row['c_en_gauge']} | "
+                    f"coherence=<e,{row['n']}|rho|g,0>={row['coherence_en_g0']} | "
+                    f"phi_e={row['excited_phase_rad']} | plotted_phi_e={plotted_excited}"
+                )
+                if np.isfinite(row["ground_phase_rad"]) != np.isfinite(plotted_ground):
+                    raise AssertionError(f"{case_name} ground-family phase masking mismatch at n={row['n']}.")
+                if np.isfinite(row["ground_phase_rad"]) and np.isfinite(plotted_ground):
+                    wrapped = (float(plotted_ground) - float(row["ground_phase_rad"]) + np.pi) % (2.0 * np.pi) - np.pi
+                    if abs(wrapped) > 1.0e-10:
+                        raise AssertionError(f"{case_name} plotted phase does not match extracted |g,0> -> |g,{row['n']}| phase.")
+                if np.isfinite(row["excited_phase_rad"]) != np.isfinite(plotted_excited):
+                    raise AssertionError(f"{case_name} excited-family phase masking mismatch at n={row['n']}.")
+                if np.isfinite(row["excited_phase_rad"]) and np.isfinite(plotted_excited):
+                    wrapped = (float(plotted_excited) - float(row["excited_phase_rad"]) + np.pi) % (2.0 * np.pi) - np.pi
+                    if abs(wrapped) > 1.0e-10:
+                        raise AssertionError(f"{case_name} plotted phase does not match extracted |g,0> -> |e,{row['n']}| phase.")
+
+        _print_phase_debug("Case A", ideal_phase, CASE_A)
+
         OVERLAY_RESULTS = {}
         for case_name in overlay_case_names:
             track = TRACKS[case_name]
             case_slug = case_name.lower().replace(" ", "_")
             sim_bloch = fock_resolved_bloch_diagnostics(track, max_n=diagnostic_max_n, probability_threshold=probability_threshold)
-            sim_phase = conditional_phase_diagnostics(
+            sim_phase = relative_phase_family_diagnostics(
                 track,
                 max_n=diagnostic_max_n,
                 probability_threshold=probability_threshold,
                 unwrap=bool(CONFIG["phase_unwrap"]),
+                coherence_threshold=probability_threshold,
             )
             sim_traj = simulate_gate_bloch_trajectory(
                 track,
@@ -488,30 +539,31 @@ cells: list[dict] = [
             }
 
             print(f"Overlay diagnostics for {case_name}:")
+            _print_phase_debug(case_name, sim_phase, track)
             for component in ("x", "y", "z"):
-                fig = plot_fock_resolved_bloch_overlay(sim_bloch, ideal_bloch, track, component=component, label_stride=label_stride)
+                fig = plot_fock_resolved_bloch_grouped_bars(sim_bloch, ideal_bloch, track, component=component, label_stride=label_stride)
                 if bool(CONFIG["save_output_figures"]):
-                    target = f"{case_slug}_bloch_fock_heatmap_{component.upper()}_sim_ideal.png"
+                    target = f"{case_slug}_bloch_{component.upper()}_grouped_bars.png"
                     print("Saved:", save_figure(fig, output_dir, target, dpi=int(CONFIG["output_figure_dpi"])))
                     if case_name == "Case D":
-                        generic = f"bloch_fock_heatmap_{component.upper()}_sim_ideal.png"
+                        generic = f"bloch_{component.upper()}_grouped_bars.png"
                         print("Saved:", save_figure(fig, output_dir, generic, dpi=int(CONFIG["output_figure_dpi"])))
                 plt.show()
                 plt.close(fig)
 
-            fig = plot_phase_heatmap_overlay(sim_phase, ideal_phase, track, label_stride=label_stride)
+            fig = plot_phase_overlay_lines(sim_phase, ideal_phase, track, label_stride=label_stride)
             if bool(CONFIG["save_output_figures"]):
-                print("Saved:", save_figure(fig, output_dir, f"{case_slug}_phase_heatmap_sim_ideal.png", dpi=int(CONFIG["output_figure_dpi"])))
+                print("Saved:", save_figure(fig, output_dir, f"{case_slug}_relative_phase_vs_gate_index.png", dpi=int(CONFIG["output_figure_dpi"])))
                 if case_name == "Case D":
-                    print("Saved:", save_figure(fig, output_dir, "phase_heatmap_sim_ideal.png", dpi=int(CONFIG["output_figure_dpi"])))
+                    print("Saved:", save_figure(fig, output_dir, "relative_phase_vs_gate_index.png", dpi=int(CONFIG["output_figure_dpi"])))
             plt.show()
             plt.close(fig)
 
-            fig = plot_phase_error_heatmap(sim_phase, ideal_phase, track, label_stride=label_stride)
+            fig = plot_phase_error_track(sim_phase, ideal_phase, track, label_stride=label_stride)
             if bool(CONFIG["save_output_figures"]):
-                print("Saved:", save_figure(fig, output_dir, f"{case_slug}_phase_error_heatmap.png", dpi=int(CONFIG["output_figure_dpi"])))
+                print("Saved:", save_figure(fig, output_dir, f"{case_slug}_phase_error_vs_gate_index.png", dpi=int(CONFIG["output_figure_dpi"])))
                 if case_name == "Case D":
-                    print("Saved:", save_figure(fig, output_dir, "phase_error_heatmap.png", dpi=int(CONFIG["output_figure_dpi"])))
+                    print("Saved:", save_figure(fig, output_dir, "phase_error_vs_gate_index.png", dpi=int(CONFIG["output_figure_dpi"])))
             plt.show()
             plt.close(fig)
 

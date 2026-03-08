@@ -1,0 +1,668 @@
+{
+  "summary": {
+    "fidelity_target": 0.99,
+    "baseline_total_duration_ns": 4256.000000000001,
+    "compressed_total_duration_ns": 4246.000000000001,
+    "saved_total_ns": 10.0,
+    "saved_fraction": 0.0023496240601503754,
+    "baseline_fidelity": 0.9990497152458196,
+    "compressed_fidelity": 0.9901098799685081,
+    "baseline_leakage_worst": 2.220446049250313e-16,
+    "compressed_leakage_worst": 1.1102230246251565e-16,
+    "baseline_sqr_durations_ns": [
+      1000,
+      1000,
+      1000,
+      1000
+    ],
+    "compressed_sqr_durations_ns": [
+      1000,
+      995,
+      995,
+      1000
+    ]
+  },
+  "per_gate": [
+    {
+      "gate_name": "SQR_1",
+      "baseline_ns": 1000,
+      "compressed_ns": 1000,
+      "saved_ns": 0
+    },
+    {
+      "gate_name": "SQR_4",
+      "baseline_ns": 1000,
+      "compressed_ns": 995,
+      "saved_ns": 5
+    },
+    {
+      "gate_name": "SQR_7",
+      "baseline_ns": 1000,
+      "compressed_ns": 995,
+      "saved_ns": 5
+    },
+    {
+      "gate_name": "SQR_10",
+      "baseline_ns": 1000,
+      "compressed_ns": 1000,
+      "saved_ns": 0
+    }
+  ],
+  "history": [
+    {
+      "accepted": true,
+      "step_ns": 0,
+      "changed_gate": null,
+      "gate_name": null,
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4256.000000000001,
+      "fidelity": 0.9990497152458196,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 200,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        800,
+        1000,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4056.0000000000005,
+      "fidelity": 0.25403489561249654,
+      "leakage_worst": 0.0
+    },
+    {
+      "accepted": false,
+      "step_ns": 200,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        800,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4056.0000000000005,
+      "fidelity": 0.223166388190274,
+      "leakage_worst": 3.3306690738754696e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 200,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        800,
+        1000
+      ],
+      "total_duration_ns": 4056.0000000000005,
+      "fidelity": 0.2117081899758394,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 200,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        1000,
+        800
+      ],
+      "total_duration_ns": 4056.0000000000014,
+      "fidelity": 0.2114981835808315,
+      "leakage_worst": 7.771561172376096e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 100,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        900,
+        1000,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4156.000000000001,
+      "fidelity": 0.03565673856192878,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 100,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        900,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4156.000000000001,
+      "fidelity": 0.03398872321771427,
+      "leakage_worst": 6.661338147750939e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 100,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        900,
+        1000
+      ],
+      "total_duration_ns": 4156.000000000002,
+      "fidelity": 0.039897409615445294,
+      "leakage_worst": 4.440892098500626e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 100,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        1000,
+        900
+      ],
+      "total_duration_ns": 4156.000000000002,
+      "fidelity": 0.03584670992734367,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 50,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        950,
+        1000,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4206.000000000001,
+      "fidelity": 0.4570088937012493,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 50,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        950,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4206.000000000001,
+      "fidelity": 0.4595994275026473,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 50,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        950,
+        1000
+      ],
+      "total_duration_ns": 4206.000000000001,
+      "fidelity": 0.4600379558786518,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 50,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        1000,
+        950
+      ],
+      "total_duration_ns": 4206.000000000001,
+      "fidelity": 0.4605672081024261,
+      "leakage_worst": 5.551115123125783e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 20,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        980,
+        1000,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4236.000000000001,
+      "fidelity": 0.8923681515143754,
+      "leakage_worst": 4.440892098500626e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 20,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        980,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4236.000000000001,
+      "fidelity": 0.8935067586979201,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 20,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        980,
+        1000
+      ],
+      "total_duration_ns": 4236.000000000002,
+      "fidelity": 0.893984004846294,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 20,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        1000,
+        980
+      ],
+      "total_duration_ns": 4236.000000000002,
+      "fidelity": 0.8937027238348515,
+      "leakage_worst": 4.440892098500626e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 10,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        990,
+        1000,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4246.000000000001,
+      "fidelity": 0.9712729290656607,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 10,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        990,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4246.000000000001,
+      "fidelity": 0.9718624734911274,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 10,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        990,
+        1000
+      ],
+      "total_duration_ns": 4246.000000000001,
+      "fidelity": 0.9720715604689903,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 10,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        1000,
+        990
+      ],
+      "total_duration_ns": 4246.000000000001,
+      "fidelity": 0.9718758428102512,
+      "leakage_worst": 4.440892098500626e-16
+    },
+    {
+      "accepted": true,
+      "step_ns": 5,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        995,
+        1000,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4251.000000000001,
+      "fidelity": 0.9918844666252383,
+      "leakage_worst": 0.0
+    },
+    {
+      "accepted": true,
+      "step_ns": 5,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        995,
+        1000,
+        1000
+      ],
+      "total_duration_ns": 4251.000000000001,
+      "fidelity": 0.9921827172767305,
+      "leakage_worst": 4.440892098500626e-16
+    },
+    {
+      "accepted": true,
+      "step_ns": 5,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        995,
+        1000
+      ],
+      "total_duration_ns": 4251.000000000001,
+      "fidelity": 0.9922750843102587,
+      "leakage_worst": 3.3306690738754696e-16
+    },
+    {
+      "accepted": true,
+      "step_ns": 5,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        1000,
+        995
+      ],
+      "total_duration_ns": 4251.000000000001,
+      "fidelity": 0.9921677696247059,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 5,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        995,
+        1000,
+        995,
+        1000
+      ],
+      "total_duration_ns": 4246.000000000001,
+      "fidelity": 0.987348205747773,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": true,
+      "step_ns": 5,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        995,
+        995,
+        1000
+      ],
+      "total_duration_ns": 4246.000000000001,
+      "fidelity": 0.9901098799685081,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 5,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        990,
+        1000
+      ],
+      "total_duration_ns": 4246.000000000001,
+      "fidelity": 0.9720715604689903,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 5,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        1000,
+        995,
+        995
+      ],
+      "total_duration_ns": 4246.000000000001,
+      "fidelity": 0.976935674934321,
+      "leakage_worst": 3.3306690738754696e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 5,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        995,
+        995,
+        995,
+        1000
+      ],
+      "total_duration_ns": 4241.000000000001,
+      "fidelity": 0.9751913737136366,
+      "leakage_worst": 0.0
+    },
+    {
+      "accepted": false,
+      "step_ns": 5,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        990,
+        995,
+        1000
+      ],
+      "total_duration_ns": 4241.000000000001,
+      "fidelity": 0.9743807381664715,
+      "leakage_worst": 0.0
+    },
+    {
+      "accepted": false,
+      "step_ns": 5,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        995,
+        990,
+        1000
+      ],
+      "total_duration_ns": 4241.000000000001,
+      "fidelity": 0.9746004839536925,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 5,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        995,
+        995,
+        995
+      ],
+      "total_duration_ns": 4241.000000000001,
+      "fidelity": 0.9790356432747868,
+      "leakage_worst": 3.3306690738754696e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 2,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        998,
+        995,
+        995,
+        1000
+      ],
+      "total_duration_ns": 4244.0,
+      "fidelity": 0.9857491297090036,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 2,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        993,
+        995,
+        1000
+      ],
+      "total_duration_ns": 4244.000000000001,
+      "fidelity": 0.9854288257830413,
+      "leakage_worst": 3.3306690738754696e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 2,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        995,
+        993,
+        1000
+      ],
+      "total_duration_ns": 4244.0,
+      "fidelity": 0.9855000852641314,
+      "leakage_worst": 4.440892098500626e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 2,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        995,
+        995,
+        998
+      ],
+      "total_duration_ns": 4244.0,
+      "fidelity": 0.9872898236688182,
+      "leakage_worst": 4.440892098500626e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 1,
+      "changed_gate": 0,
+      "gate_name": "SQR_1",
+      "sqr_durations_ns": [
+        999,
+        995,
+        995,
+        1000
+      ],
+      "total_duration_ns": 4245.000000000001,
+      "fidelity": 0.9881992740716129,
+      "leakage_worst": 3.3306690738754696e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 1,
+      "changed_gate": 1,
+      "gate_name": "SQR_4",
+      "sqr_durations_ns": [
+        1000,
+        994,
+        995,
+        1000
+      ],
+      "total_duration_ns": 4245.000000000001,
+      "fidelity": 0.9880400275427537,
+      "leakage_worst": 4.440892098500626e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 1,
+      "changed_gate": 2,
+      "gate_name": "SQR_7",
+      "sqr_durations_ns": [
+        1000,
+        995,
+        994,
+        1000
+      ],
+      "total_duration_ns": 4245.0,
+      "fidelity": 0.9880729976579831,
+      "leakage_worst": 5.551115123125783e-16
+    },
+    {
+      "accepted": false,
+      "step_ns": 1,
+      "changed_gate": 3,
+      "gate_name": "SQR_10",
+      "sqr_durations_ns": [
+        1000,
+        995,
+        995,
+        999
+      ],
+      "total_duration_ns": 4245.000000000001,
+      "fidelity": 0.9889693692826634,
+      "leakage_worst": 3.3306690738754696e-16
+    }
+  ]
+}

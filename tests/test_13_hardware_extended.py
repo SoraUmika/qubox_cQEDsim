@@ -52,14 +52,14 @@ def test_iq_sideband_selection_usb_lsb():
     r_plus = simulate_sequence(
         m,
         SequenceCompiler(dt=0.01, hardware=hw_plus).compile([p], t_end=2.1),
-        m.basis_state(0, 0),
+        m.basis_state( 0,0),
         {"q": "qubit"},
         SimulationConfig(frame=FrameSpec(omega_q_frame=delta)),
     )
     r_minus = simulate_sequence(
         m,
         SequenceCompiler(dt=0.01, hardware=hw_minus).compile([p], t_end=2.1),
-        m.basis_state(0, 0),
+        m.basis_state( 0,0),
         {"q": "qubit"},
         SimulationConfig(frame=FrameSpec(omega_q_frame=delta)),
     )
@@ -72,12 +72,12 @@ def test_amplitude_quantization_effect_is_bounded():
     m = DispersiveTransmonCavityModel(omega_c=0.0, omega_q=0.0, alpha=0.0, chi=0.0, kerr=0.0, n_cav=2, n_tr=2)
     p = Pulse("q", 0.0, 1.0, _square, amp=np.pi / 4.0)
     rc = simulate_sequence(
-        m, SequenceCompiler(dt=0.01).compile([p], t_end=1.1), m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig()
+        m, SequenceCompiler(dt=0.01).compile([p], t_end=1.1), m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig()
     )
     rq = simulate_sequence(
         m,
         SequenceCompiler(dt=0.01, hardware={"q": HardwareConfig(amplitude_bits=8)}).compile([p], t_end=1.1),
-        m.basis_state(0, 0),
+        m.basis_state( 0,0),
         {"q": "qubit"},
         SimulationConfig(),
     )
@@ -92,8 +92,8 @@ def test_channel_crosstalk_matrix_smoke():
     p = Pulse("q", 0.0, 1.8, _square, amp=0.3)
     c_off = SequenceCompiler(dt=0.01, crosstalk_matrix={}).compile([p], t_end=2.0)
     c_on = SequenceCompiler(dt=0.01, crosstalk_matrix={"q": {"c": 0.15}}).compile([p], t_end=2.0)
-    r_off = simulate_sequence(m, c_off, m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig())
-    r_on = simulate_sequence(m, c_on, m.basis_state(0, 0), {"q": "qubit", "c": "cavity"}, SimulationConfig())
+    r_off = simulate_sequence(m, c_off, m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig())
+    r_on = simulate_sequence(m, c_on, m.basis_state( 0,0), {"q": "qubit", "c": "cavity"}, SimulationConfig())
     assert r_on.expectations["n_c"][-1] > r_off.expectations["n_c"][-1] + 5e-3
     assert (time.perf_counter() - start) < 1.8
 

@@ -1,0 +1,2890 @@
+[
+  {
+    "iteration": 0,
+    "objective_total": 0.0007064668753462566,
+    "metrics.fidelity_subspace": 0.9992935331246537,
+    "params.amp_rad_s": 98174770.42468102,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 1,
+    "objective_total": 0.04028343309065019,
+    "metrics.fidelity_subspace": 0.9597165669093498,
+    "params.amp_rad_s": 115870175.75001639,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 2,
+    "objective_total": 0.37415998986840404,
+    "metrics.fidelity_subspace": 0.625840010131596,
+    "params.amp_rad_s": 154110442.91785643,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 3,
+    "objective_total": 0.005270147898178035,
+    "metrics.fidelity_subspace": 0.994729852101822,
+    "params.amp_rad_s": 92236390.90141459,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 4,
+    "objective_total": 0.0007361109284189649,
+    "metrics.fidelity_subspace": 0.999263889071581,
+    "params.amp_rad_s": 97731080.27501307,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 5,
+    "objective_total": 0.0007062921947993406,
+    "metrics.fidelity_subspace": 0.9992937078052007,
+    "params.amp_rad_s": 98228206.9805248,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 6,
+    "objective_total": 0.0007062674049158613,
+    "metrics.fidelity_subspace": 0.9992937325950841,
+    "params.amp_rad_s": 98214490.16356733,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 7,
+    "objective_total": 0.0007062673990878565,
+    "metrics.fidelity_subspace": 0.9992937326009121,
+    "params.amp_rad_s": 98214279.00947486,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 8,
+    "objective_total": 0.0007062673990865243,
+    "metrics.fidelity_subspace": 0.9992937326009135,
+    "params.amp_rad_s": 98214276.5822635,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 9,
+    "objective_total": 0.0007062673990875235,
+    "metrics.fidelity_subspace": 0.9992937326009125,
+    "params.amp_rad_s": 98214275.62906104,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 10,
+    "objective_total": 0.0007062673990871904,
+    "metrics.fidelity_subspace": 0.9992937326009128,
+    "params.amp_rad_s": 98214277.21499847,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 11,
+    "objective_total": 0.0007062673990865243,
+    "metrics.fidelity_subspace": 0.9992937326009135,
+    "params.amp_rad_s": 98214276.5012921,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 12,
+    "objective_total": 0.0007062673990866353,
+    "metrics.fidelity_subspace": 0.9992937326009134,
+    "params.amp_rad_s": 98214276.54177779,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 13,
+    "objective_total": 0.0007062673990870794,
+    "metrics.fidelity_subspace": 0.9992937326009129,
+    "params.amp_rad_s": 98214276.16812947,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 14,
+    "objective_total": 0.0007062673990869683,
+    "metrics.fidelity_subspace": 0.999293732600913,
+    "params.amp_rad_s": 98214276.3740353,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 15,
+    "objective_total": 0.0007062673990869683,
+    "metrics.fidelity_subspace": 0.999293732600913,
+    "params.amp_rad_s": 98214276.45268433,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 16,
+    "objective_total": 0.0007062673990874124,
+    "metrics.fidelity_subspace": 0.9992937326009126,
+    "params.amp_rad_s": 98214276.48272558,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 17,
+    "objective_total": 0.0007062673990869683,
+    "metrics.fidelity_subspace": 0.999293732600913,
+    "params.amp_rad_s": 98214276.51675625,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 18,
+    "objective_total": 0.0007062673990867463,
+    "metrics.fidelity_subspace": 0.9992937326009133,
+    "params.amp_rad_s": 98214276.49420032,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 19,
+    "objective_total": 0.0007062673990865243,
+    "metrics.fidelity_subspace": 0.9992937326009135,
+    "params.amp_rad_s": 98214276.50719887,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 20,
+    "objective_total": 0.0007062673990863022,
+    "metrics.fidelity_subspace": 0.9992937326009137,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 21,
+    "objective_total": 0.0007062673990869683,
+    "metrics.fidelity_subspace": 0.999293732600913,
+    "params.amp_rad_s": 98214276.51310566,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 22,
+    "objective_total": 0.0007062673990864132,
+    "metrics.fidelity_subspace": 0.9992937326009136,
+    "params.amp_rad_s": 98214276.50945507,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 23,
+    "objective_total": 0.0007062673990865243,
+    "metrics.fidelity_subspace": 0.9992937326009135,
+    "params.amp_rad_s": 98214276.51171125,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 24,
+    "objective_total": 0.0007062673990867463,
+    "metrics.fidelity_subspace": 0.9992937326009133,
+    "params.amp_rad_s": 98214276.51023017,
+    "params.detuning_hz": 0.0,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 25,
+    "objective_total": 0.002965732766385565,
+    "metrics.fidelity_subspace": 0.9970342672336144,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -1416407.8649987392,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 26,
+    "objective_total": 0.004206090109805327,
+    "metrics.fidelity_subspace": 0.9957939098901947,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": 1416407.8649987374,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 27,
+    "objective_total": 0.013694519022487306,
+    "metrics.fidelity_subspace": 0.9863054809775127,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -3167184.2700025244,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 28,
+    "objective_total": 0.0006726975372304267,
+    "metrics.fidelity_subspace": 0.9993273024627696,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152831.27127403373,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 29,
+    "objective_total": 0.0006726977157999192,
+    "metrics.fidelity_subspace": 0.9993273022842001,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152513.78690859597,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 30,
+    "objective_total": 0.0006726975352622233,
+    "metrics.fidelity_subspace": 0.9993273024647378,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.33322950968,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 31,
+    "objective_total": 0.0006726975352621123,
+    "metrics.fidelity_subspace": 0.9993273024647379,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.28523750493,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 32,
+    "objective_total": 0.0006726975352631115,
+    "metrics.fidelity_subspace": 0.9993273024647369,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152867.53669991397,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 33,
+    "objective_total": 0.0006726975352622233,
+    "metrics.fidelity_subspace": 0.9993273024647378,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152867.99932158703,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 34,
+    "objective_total": 0.0006726975352617792,
+    "metrics.fidelity_subspace": 0.9993273024647382,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.16627554834,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 35,
+    "objective_total": 0.0006726975352626674,
+    "metrics.fidelity_subspace": 0.9993273024647373,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1524469323,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 36,
+    "objective_total": 0.0006726975352622233,
+    "metrics.fidelity_subspace": 0.9993273024647378,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.2117149724,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 37,
+    "objective_total": 0.0006726975352617792,
+    "metrics.fidelity_subspace": 0.9993273024647382,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 38,
+    "objective_total": 0.0006726975352622233,
+    "metrics.fidelity_subspace": 0.9993273024647378,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1749537061,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 39,
+    "objective_total": 0.0006726975352622233,
+    "metrics.fidelity_subspace": 0.9993273024647378,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.19435865682,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 40,
+    "objective_total": 0.0006726975352618902,
+    "metrics.fidelity_subspace": 0.9993273024647381,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.18590457065,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 41,
+    "objective_total": 0.0006726975352624454,
+    "metrics.fidelity_subspace": 0.9993273024647376,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.18031710258,
+    "params.sigma_fraction": 0.18
+  },
+  {
+    "iteration": 42,
+    "objective_total": 0.0007258313712501518,
+    "metrics.fidelity_subspace": 0.9992741686287498,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.18875388202501892
+  },
+  {
+    "iteration": 43,
+    "objective_total": 0.0009657605359888466,
+    "metrics.fidelity_subspace": 0.9990342394640112,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.23124611797498107
+  },
+  {
+    "iteration": 44,
+    "objective_total": 0.0005667565461112689,
+    "metrics.fidelity_subspace": 0.9994332434538887,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.16249223594996215
+  },
+  {
+    "iteration": 45,
+    "objective_total": 0.0004715202370944027,
+    "metrics.fidelity_subspace": 0.9995284797629056,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.14626164607505676
+  },
+  {
+    "iteration": 46,
+    "objective_total": 0.000415578993552268,
+    "metrics.fidelity_subspace": 0.9995844210064477,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.13623058987490536
+  },
+  {
+    "iteration": 47,
+    "objective_total": 0.00038255708691925516,
+    "metrics.fidelity_subspace": 0.9996174429130807,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.13003105620015143
+  },
+  {
+    "iteration": 48,
+    "objective_total": 0.00036277434751830206,
+    "metrics.fidelity_subspace": 0.9996372256524817,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.12619953367475395
+  },
+  {
+    "iteration": 49,
+    "objective_total": 0.00035113477632431334,
+    "metrics.fidelity_subspace": 0.9996488652236757,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.12383152252539747
+  },
+  {
+    "iteration": 50,
+    "objective_total": 0.000343604480517401,
+    "metrics.fidelity_subspace": 0.9996563955194826,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.12236801114935647
+  },
+  {
+    "iteration": 51,
+    "objective_total": 0.00033909408199817026,
+    "metrics.fidelity_subspace": 0.9996609059180018,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.121463511376041
+  },
+  {
+    "iteration": 52,
+    "objective_total": 0.00033646113957108703,
+    "metrics.fidelity_subspace": 0.9996635388604289,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.12090449977331547
+  },
+  {
+    "iteration": 53,
+    "objective_total": 0.00033458703212152496,
+    "metrics.fidelity_subspace": 0.9996654129678785,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.12055901160272553
+  },
+  {
+    "iteration": 54,
+    "objective_total": 0.00033367697520625406,
+    "metrics.fidelity_subspace": 0.9996663230247937,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.12034548817058993
+  },
+  {
+    "iteration": 55,
+    "objective_total": 0.0003330438628494914,
+    "metrics.fidelity_subspace": 0.9996669561371505,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.1202135234321356
+  },
+  {
+    "iteration": 56,
+    "objective_total": 0.0003325977592354423,
+    "metrics.fidelity_subspace": 0.9996674022407646,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.12013196473845433
+  },
+  {
+    "iteration": 57,
+    "objective_total": 0.0003323963921474382,
+    "metrics.fidelity_subspace": 0.9996676036078526,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.12008155869368126
+  },
+  {
+    "iteration": 58,
+    "objective_total": 0.0003322346221050765,
+    "metrics.fidelity_subspace": 0.9996677653778949,
+    "params.amp_rad_s": 98214276.51084948,
+    "params.detuning_hz": -152868.1836318639,
+    "params.sigma_fraction": 0.12004822447161381
+  },
+  {
+    "iteration": 59,
+    "objective_total": 0.00033202966304246573,
+    "metrics.fidelity_subspace": 0.9996679703369575,
+    "params.amp_rad_s": 98214308.28905979,
+    "params.detuning_hz": -152991.14892050193,
+    "params.sigma_fraction": 0.12
+  },
+  {
+    "iteration": 60,
+    "objective_total": 0.0011471137555594257,
+    "metrics.fidelity_subspace": 0.9988528862444406,
+    "params.amp_rad_s": 98141001.05697381,
+    "params.detuning_hz": 130670.04111179904,
+    "params.sigma_fraction": 0.23124611797498107
+  },
+  {
+    "iteration": 61,
+    "objective_total": 0.0007772030651401751,
+    "metrics.fidelity_subspace": 0.9992227969348598,
+    "params.amp_rad_s": 98169001.92800948,
+    "params.detuning_hz": 22321.107808702985,
+    "params.sigma_fraction": 0.18875388202501894
+  },
+  {
+    "iteration": 62,
+    "objective_total": 0.0005752067509685599,
+    "metrics.fidelity_subspace": 0.9994247932490314,
+    "params.amp_rad_s": 98186307.41802412,
+    "params.detuning_hz": -44642.215617405825,
+    "params.sigma_fraction": 0.16249223594996215
+  },
+  {
+    "iteration": 63,
+    "objective_total": 0.00046820591228224906,
+    "metrics.fidelity_subspace": 0.9995317940877178,
+    "params.amp_rad_s": 98197002.79904515,
+    "params.detuning_hz": -86027.82549439312,
+    "params.sigma_fraction": 0.1462616460750568
+  },
+  {
+    "iteration": 64,
+    "objective_total": 0.00041041513880601954,
+    "metrics.fidelity_subspace": 0.999589584861194,
+    "params.amp_rad_s": 98203612.90803877,
+    "params.detuning_hz": -111605.53904351463,
+    "params.sigma_fraction": 0.13623058987490536
+  },
+  {
+    "iteration": 65,
+    "objective_total": 0.0003782229272288884,
+    "metrics.fidelity_subspace": 0.9996217770727711,
+    "params.amp_rad_s": 98207698.18006615,
+    "params.detuning_hz": -127413.43537138043,
+    "params.sigma_fraction": 0.13003105620015143
+  },
+  {
+    "iteration": 66,
+    "objective_total": 0.00035962639779818506,
+    "metrics.fidelity_subspace": 0.9996403736022018,
+    "params.amp_rad_s": 98210223.01703238,
+    "params.detuning_hz": -137183.25259263613,
+    "params.sigma_fraction": 0.12619953367475395
+  },
+  {
+    "iteration": 67,
+    "objective_total": 0.0003490689047047635,
+    "metrics.fidelity_subspace": 0.9996509310952952,
+    "params.amp_rad_s": 98211783.45209356,
+    "params.detuning_hz": -143221.33169924622,
+    "params.sigma_fraction": 0.12383152252539747
+  },
+  {
+    "iteration": 68,
+    "objective_total": 0.0003422775604127182,
+    "metrics.fidelity_subspace": 0.9996577224395873,
+    "params.amp_rad_s": 98212747.8539986,
+    "params.detuning_hz": -146953.06981389187,
+    "params.sigma_fraction": 0.12236801114935647
+  },
+  {
+    "iteration": 69,
+    "objective_total": 0.00033822181998222067,
+    "metrics.fidelity_subspace": 0.9996617781800178,
+    "params.amp_rad_s": 98213343.88715474,
+    "params.detuning_hz": -149259.4108058563,
+    "params.sigma_fraction": 0.121463511376041
+  },
+  {
+    "iteration": 70,
+    "objective_total": 0.0003359404249860809,
+    "metrics.fidelity_subspace": 0.9996640595750139,
+    "params.amp_rad_s": 98213712.25590365,
+    "params.detuning_hz": -150684.80792853748,
+    "params.sigma_fraction": 0.12090449977331547
+  },
+  {
+    "iteration": 71,
+    "objective_total": 0.00033427861645451973,
+    "metrics.fidelity_subspace": 0.9996657213835455,
+    "params.amp_rad_s": 98213939.92031087,
+    "params.detuning_hz": -151565.75179782076,
+    "params.sigma_fraction": 0.12055901160272553
+  },
+  {
+    "iteration": 72,
+    "objective_total": 0.00033349637392043885,
+    "metrics.fidelity_subspace": 0.9996665036260796,
+    "params.amp_rad_s": 98214080.62465256,
+    "params.detuning_hz": -152110.20505121865,
+    "params.sigma_fraction": 0.12034548817058993
+  },
+  {
+    "iteration": 73,
+    "objective_total": 0.0003329430551457513,
+    "metrics.fidelity_subspace": 0.9996670569448542,
+    "params.amp_rad_s": 98214167.5847181,
+    "params.detuning_hz": -152446.695667104,
+    "params.sigma_fraction": 0.1202135234321356
+  },
+  {
+    "iteration": 74,
+    "objective_total": 0.0003325465706885966,
+    "metrics.fidelity_subspace": 0.9996674534293114,
+    "params.amp_rad_s": 98214221.32899426,
+    "params.detuning_hz": -152654.65830461655,
+    "params.sigma_fraction": 0.12013196473845433
+  },
+  {
+    "iteration": 75,
+    "objective_total": 0.0003323759863110842,
+    "metrics.fidelity_subspace": 0.9996676240136889,
+    "params.amp_rad_s": 98214254.54478362,
+    "params.detuning_hz": -152783.1862829894,
+    "params.sigma_fraction": 0.12008155869368127
+  },
+  {
+    "iteration": 76,
+    "objective_total": 0.0003322440580365571,
+    "metrics.fidelity_subspace": 0.9996677559419634,
+    "params.amp_rad_s": 98214275.07327041,
+    "params.detuning_hz": -152862.6209421291,
+    "params.sigma_fraction": 0.12005040604477306
+  },
+  {
+    "iteration": 77,
+    "objective_total": 0.00033216207073261117,
+    "metrics.fidelity_subspace": 0.9996678379292674,
+    "params.amp_rad_s": 98214287.76057298,
+    "params.detuning_hz": -152911.7142613622,
+    "params.sigma_fraction": 0.1200311526489082
+  },
+  {
+    "iteration": 78,
+    "objective_total": 0.00033211156705059697,
+    "metrics.fidelity_subspace": 0.9996678884329494,
+    "params.amp_rad_s": 98214295.60175721,
+    "params.detuning_hz": -152942.05560126883,
+    "params.sigma_fraction": 0.12001925339586486
+  },
+  {
+    "iteration": 79,
+    "objective_total": 0.0003320803625530555,
+    "metrics.fidelity_subspace": 0.999667919637447,
+    "params.amp_rad_s": 98214300.44787556,
+    "params.detuning_hz": -152960.8075805953,
+    "params.sigma_fraction": 0.12001189925304334
+  },
+  {
+    "iteration": 80,
+    "objective_total": 0.00033206088383330723,
+    "metrics.fidelity_subspace": 0.9996679391161667,
+    "params.amp_rad_s": 98214303.44294143,
+    "params.detuning_hz": -152972.39694117542,
+    "params.sigma_fraction": 0.12000735414282152
+  },
+  {
+    "iteration": 81,
+    "objective_total": 0.0003320489578204633,
+    "metrics.fidelity_subspace": 0.9996679510421795,
+    "params.amp_rad_s": 98214305.29399392,
+    "params.detuning_hz": -152979.55955992182,
+    "params.sigma_fraction": 0.12000454511022182
+  },
+  {
+    "iteration": 82,
+    "objective_total": 0.0003320404740256855,
+    "metrics.fidelity_subspace": 0.9996679595259743,
+    "params.amp_rad_s": 98214306.6108639,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 83,
+    "objective_total": 0.04014530347898049,
+    "metrics.fidelity_subspace": 0.9598546965210195,
+    "params.amp_rad_s": 115870175.75001639,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 84,
+    "objective_total": 0.37471930669456843,
+    "metrics.fidelity_subspace": 0.6252806933054316,
+    "params.amp_rad_s": 154110442.91785643,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 85,
+    "objective_total": 0.004836966238365159,
+    "metrics.fidelity_subspace": 0.9951630337616348,
+    "params.amp_rad_s": 92236390.90141459,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 86,
+    "objective_total": 0.0003624815181391128,
+    "metrics.fidelity_subspace": 0.9996375184818609,
+    "params.amp_rad_s": 97682860.38128833,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 87,
+    "objective_total": 0.00033147788159260116,
+    "metrics.fidelity_subspace": 0.9996685221184074,
+    "params.amp_rad_s": 98186030.051303,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 88,
+    "objective_total": 0.0003316216981885667,
+    "metrics.fidelity_subspace": 0.9996683783018114,
+    "params.amp_rad_s": 98175652.18551354,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 89,
+    "objective_total": 0.00033263458294974235,
+    "metrics.fidelity_subspace": 0.9996673654170503,
+    "params.amp_rad_s": 98252337.2231302,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 90,
+    "objective_total": 0.00033201009190908515,
+    "metrics.fidelity_subspace": 0.9996679899080909,
+    "params.amp_rad_s": 98211357.1372431,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 91,
+    "objective_total": 0.0003314919752257506,
+    "metrics.fidelity_subspace": 0.9996685080247742,
+    "params.amp_rad_s": 98187935.73321873,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 92,
+    "objective_total": 0.000331469305174803,
+    "metrics.fidelity_subspace": 0.9996685306948252,
+    "params.amp_rad_s": 98184845.74765216,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 93,
+    "objective_total": 0.0003316234511010485,
+    "metrics.fidelity_subspace": 0.999668376548899,
+    "params.amp_rad_s": 98181334.11939289,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 94,
+    "objective_total": 0.0003314599519848027,
+    "metrics.fidelity_subspace": 0.9996685400480152,
+    "params.amp_rad_s": 98183504.42501298,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 95,
+    "objective_total": 0.00033145416113700144,
+    "metrics.fidelity_subspace": 0.999668545838863,
+    "params.amp_rad_s": 98182675.44203208,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 96,
+    "objective_total": 0.000331469396591455,
+    "metrics.fidelity_subspace": 0.9996685306034085,
+    "params.amp_rad_s": 98182163.1023738,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 97,
+    "objective_total": 0.0003314562857531511,
+    "metrics.fidelity_subspace": 0.9996685437142468,
+    "params.amp_rad_s": 98182992.08535469,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 98,
+    "objective_total": 0.00033145286265667817,
+    "metrics.fidelity_subspace": 0.9996685471373433,
+    "params.amp_rad_s": 98182479.7456964,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 99,
+    "objective_total": 0.0003314520653019404,
+    "metrics.fidelity_subspace": 0.9996685479346981,
+    "params.amp_rad_s": 98182358.79870947,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 100,
+    "objective_total": 0.0003314515744419211,
+    "metrics.fidelity_subspace": 0.9996685484255581,
+    "params.amp_rad_s": 98182284.04936072,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 101,
+    "objective_total": 0.00033145127178546563,
+    "metrics.fidelity_subspace": 0.9996685487282145,
+    "params.amp_rad_s": 98182237.85172255,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 102,
+    "objective_total": 0.0003314695051854777,
+    "metrics.fidelity_subspace": 0.9996685304948145,
+    "params.amp_rad_s": 98182209.30001196,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 103,
+    "objective_total": 0.0003314513873233782,
+    "metrics.fidelity_subspace": 0.9996685486126766,
+    "params.amp_rad_s": 98182255.49765013,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 104,
+    "objective_total": 0.0003314512004127801,
+    "metrics.fidelity_subspace": 0.9996685487995872,
+    "params.amp_rad_s": 98182226.94593954,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 105,
+    "objective_total": 0.0003314511563203837,
+    "metrics.fidelity_subspace": 0.9996685488436796,
+    "params.amp_rad_s": 98182220.20579496,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 106,
+    "objective_total": 0.00033145112907151386,
+    "metrics.fidelity_subspace": 0.9996685488709285,
+    "params.amp_rad_s": 98182216.04015653,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 107,
+    "objective_total": 0.0003314511122334274,
+    "metrics.fidelity_subspace": 0.9996685488877666,
+    "params.amp_rad_s": 98182213.4656504,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 108,
+    "objective_total": 0.00033145110182575266,
+    "metrics.fidelity_subspace": 0.9996685488981742,
+    "params.amp_rad_s": 98182211.8745181,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 109,
+    "objective_total": 0.0003314695185608896,
+    "metrics.fidelity_subspace": 0.9996685304814391,
+    "params.amp_rad_s": 98182210.89114426,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 110,
+    "objective_total": 0.00033145110580412585,
+    "metrics.fidelity_subspace": 0.9996685488941959,
+    "params.amp_rad_s": 98182212.48227656,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 111,
+    "objective_total": 0.00033146952384643935,
+    "metrics.fidelity_subspace": 0.9996685304761536,
+    "params.amp_rad_s": 98182211.49890271,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 112,
+    "objective_total": 0.00033145110334709127,
+    "metrics.fidelity_subspace": 0.9996685488966529,
+    "params.amp_rad_s": 98182212.10666117,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 113,
+    "objective_total": 0.00033145110088939056,
+    "metrics.fidelity_subspace": 0.9996685488991106,
+    "params.amp_rad_s": 98182211.73104578,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 114,
+    "objective_total": 0.00033145110030630143,
+    "metrics.fidelity_subspace": 0.9996685488996937,
+    "params.amp_rad_s": 98182211.64237502,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 115,
+    "objective_total": 0.0003314510999502529,
+    "metrics.fidelity_subspace": 0.9996685489000497,
+    "params.amp_rad_s": 98182211.58757348,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 116,
+    "objective_total": 0.0003314510997312059,
+    "metrics.fidelity_subspace": 0.9996685489002688,
+    "params.amp_rad_s": 98182211.55370426,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 117,
+    "objective_total": 0.0003314510995984232,
+    "metrics.fidelity_subspace": 0.9996685489004016,
+    "params.amp_rad_s": 98182211.53277193,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 118,
+    "objective_total": 0.000331451099507718,
+    "metrics.fidelity_subspace": 0.9996685489004923,
+    "params.amp_rad_s": 98182211.51983504,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 119,
+    "objective_total": 0.0003314510994574249,
+    "metrics.fidelity_subspace": 0.9996685489005426,
+    "params.amp_rad_s": 98182211.5118396,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 120,
+    "objective_total": 0.00033145109942223083,
+    "metrics.fidelity_subspace": 0.9996685489005778,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 121,
+    "objective_total": 0.00033146952389218054,
+    "metrics.fidelity_subspace": 0.9996685304761078,
+    "params.amp_rad_s": 98182211.50384417,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 122,
+    "objective_total": 0.0003314510994411046,
+    "metrics.fidelity_subspace": 0.9996685489005589,
+    "params.amp_rad_s": 98182211.50878562,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 123,
+    "objective_total": 0.00033146952389828677,
+    "metrics.fidelity_subspace": 0.9996685304761017,
+    "params.amp_rad_s": 98182211.50573163,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 124,
+    "objective_total": 0.0003314510994276709,
+    "metrics.fidelity_subspace": 0.9996685489005723,
+    "params.amp_rad_s": 98182211.5076191,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 125,
+    "objective_total": 0.0003314510994236741,
+    "metrics.fidelity_subspace": 0.9996685489005763,
+    "params.amp_rad_s": 98182211.50638877,
+    "params.detuning_hz": -152984.65516769487,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 126,
+    "objective_total": 0.002776477609674366,
+    "metrics.fidelity_subspace": 0.9972235223903256,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -1416407.8649987392,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 127,
+    "objective_total": 0.003265220068604746,
+    "metrics.fidelity_subspace": 0.9967347799313953,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": 1416407.8649987374,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 128,
+    "objective_total": 0.013227637950818716,
+    "metrics.fidelity_subspace": 0.9867723620491813,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -3167184.2700025244,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 129,
+    "objective_total": 0.00032094375608138215,
+    "metrics.fidelity_subspace": 0.9996790562439186,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64376.87280140043,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 130,
+    "objective_total": 0.0003209438427476119,
+    "metrics.fidelity_subspace": 0.9996790561572524,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64232.09894434003,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 131,
+    "objective_total": 0.0003209437258661074,
+    "metrics.fidelity_subspace": 0.9996790562741339,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64527.25782368544,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 132,
+    "objective_total": 0.0003209437258619996,
+    "metrics.fidelity_subspace": 0.999679056274138,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.620655221705,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 133,
+    "objective_total": 0.0003209437258724357,
+    "metrics.fidelity_subspace": 0.9996790562741276,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64524.61141719507,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 134,
+    "objective_total": 0.000320943725864109,
+    "metrics.fidelity_subspace": 0.9996790562741359,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64525.85319458703,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 135,
+    "objective_total": 0.00032094372586133346,
+    "metrics.fidelity_subspace": 0.9996790562741387,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.44684811019,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 136,
+    "objective_total": 0.00032094372586377595,
+    "metrics.fidelity_subspace": 0.9996790562741362,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.36089217076,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 137,
+    "objective_total": 0.0003209437258668846,
+    "metrics.fidelity_subspace": 0.9996790562741331,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.518315635694,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 138,
+    "objective_total": 0.00032094372586566333,
+    "metrics.fidelity_subspace": 0.9996790562741343,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.41401586285,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 139,
+    "objective_total": 0.00032094372586477515,
+    "metrics.fidelity_subspace": 0.9996790562741352,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.47414627585,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 140,
+    "objective_total": 0.000320943725864109,
+    "metrics.fidelity_subspace": 0.9996790562741359,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.43430730763,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 141,
+    "objective_total": 0.00032094372586477515,
+    "metrics.fidelity_subspace": 0.9996790562741352,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.457275081644,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 142,
+    "objective_total": 0.0003209437258628878,
+    "metrics.fidelity_subspace": 0.9996790562741371,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.442057949855,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 143,
+    "objective_total": 0.000320943725863887,
+    "metrics.fidelity_subspace": 0.9996790562741361,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.45083085888,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 144,
+    "objective_total": 0.0003209437258665515,
+    "metrics.fidelity_subspace": 0.9996790562741334,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.44501843175,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 145,
+    "objective_total": 0.00032094372586477515,
+    "metrics.fidelity_subspace": 0.9996790562741352,
+    "params.amp_rad_s": 98182211.50689815,
+    "params.detuning_hz": -64526.44836938482,
+    "params.sigma_fraction": 0.12000254671705633
+  },
+  {
+    "iteration": 146,
+    "objective_total": 0.0012542523739720313,
+    "metrics.fidelity_subspace": 0.998745747626028,
+    "params.amp_rad_s": 98108905.95300807,
+    "params.detuning_hz": 219128.24943138365,
+    "params.sigma_fraction": 0.23124611797498107
+  },
+  {
+    "iteration": 147,
+    "objective_total": 0.0008373667412651109,
+    "metrics.fidelity_subspace": 0.9991626332587349,
+    "params.amp_rad_s": 98136906.82404374,
+    "params.detuning_hz": 110779.3161282876,
+    "params.sigma_fraction": 0.18875388202501892
+  },
+  {
+    "iteration": 148,
+    "objective_total": 0.0006068211835322801,
+    "metrics.fidelity_subspace": 0.9993931788164677,
+    "params.amp_rad_s": 98154212.31405838,
+    "params.detuning_hz": 43815.992702178846,
+    "params.sigma_fraction": 0.16249223594996215
+  },
+  {
+    "iteration": 149,
+    "objective_total": 0.0004829371652564918,
+    "metrics.fidelity_subspace": 0.9995170628347435,
+    "params.amp_rad_s": 98164907.6950794,
+    "params.detuning_hz": 2430.3828251915534,
+    "params.sigma_fraction": 0.1462616460750568
+  },
+  {
+    "iteration": 150,
+    "objective_total": 0.0004151188505495673,
+    "metrics.fidelity_subspace": 0.9995848811494504,
+    "params.amp_rad_s": 98171517.80407302,
+    "params.detuning_hz": -23147.33072392995,
+    "params.sigma_fraction": 0.13623058987490538
+  },
+  {
+    "iteration": 151,
+    "objective_total": 0.0003769073371081566,
+    "metrics.fidelity_subspace": 0.9996230926628918,
+    "params.amp_rad_s": 98175603.07610042,
+    "params.detuning_hz": -38955.227051795744,
+    "params.sigma_fraction": 0.13003105620015143
+  },
+  {
+    "iteration": 152,
+    "objective_total": 0.0003548315514432243,
+    "metrics.fidelity_subspace": 0.9996451684485568,
+    "params.amp_rad_s": 98178127.91306664,
+    "params.detuning_hz": -48725.04427305146,
+    "params.sigma_fraction": 0.12619953367475395
+  },
+  {
+    "iteration": 153,
+    "objective_total": 0.00034187024233856,
+    "metrics.fidelity_subspace": 0.9996581297576614,
+    "params.amp_rad_s": 98179688.34812783,
+    "params.detuning_hz": -54763.12337966155,
+    "params.sigma_fraction": 0.12383152252539747
+  },
+  {
+    "iteration": 154,
+    "objective_total": 0.000333716719619348,
+    "metrics.fidelity_subspace": 0.9996662832803807,
+    "params.amp_rad_s": 98180652.75003287,
+    "params.detuning_hz": -58494.86149430718,
+    "params.sigma_fraction": 0.12236801114935647
+  },
+  {
+    "iteration": 155,
+    "objective_total": 0.0003288655728597156,
+    "metrics.fidelity_subspace": 0.9996711344271403,
+    "params.amp_rad_s": 98181248.783189,
+    "params.detuning_hz": -60801.20248627163,
+    "params.sigma_fraction": 0.121463511376041
+  },
+  {
+    "iteration": 156,
+    "objective_total": 0.00032603021760801987,
+    "metrics.fidelity_subspace": 0.999673969782392,
+    "params.amp_rad_s": 98181617.15193792,
+    "params.detuning_hz": -62226.59960895281,
+    "params.sigma_fraction": 0.12090449977331547
+  },
+  {
+    "iteration": 157,
+    "objective_total": 0.00032405302624027854,
+    "metrics.fidelity_subspace": 0.9996759469737597,
+    "params.amp_rad_s": 98181844.81634513,
+    "params.detuning_hz": -63107.54347823609,
+    "params.sigma_fraction": 0.12055901160272553
+  },
+  {
+    "iteration": 158,
+    "objective_total": 0.0003230589982720078,
+    "metrics.fidelity_subspace": 0.999676941001728,
+    "params.amp_rad_s": 98181985.52068682,
+    "params.detuning_hz": -63651.99673163399,
+    "params.sigma_fraction": 0.12034548817058993
+  },
+  {
+    "iteration": 159,
+    "objective_total": 0.00032238408174645183,
+    "metrics.fidelity_subspace": 0.9996776159182535,
+    "params.amp_rad_s": 98182072.48075235,
+    "params.detuning_hz": -63988.48734751935,
+    "params.sigma_fraction": 0.1202135234321356
+  },
+  {
+    "iteration": 160,
+    "objective_total": 0.0003219124007691754,
+    "metrics.fidelity_subspace": 0.9996780875992308,
+    "params.amp_rad_s": 98182126.22502851,
+    "params.detuning_hz": -64196.4499850319,
+    "params.sigma_fraction": 0.12013196473845433
+  },
+  {
+    "iteration": 161,
+    "objective_total": 0.00032169542133941853,
+    "metrics.fidelity_subspace": 0.9996783045786606,
+    "params.amp_rad_s": 98182159.44081788,
+    "params.detuning_hz": -64324.97796340472,
+    "params.sigma_fraction": 0.12008155869368127
+  },
+  {
+    "iteration": 162,
+    "objective_total": 0.00032153448512906024,
+    "metrics.fidelity_subspace": 0.9996784655148709,
+    "params.amp_rad_s": 98182179.96930468,
+    "params.detuning_hz": -64404.412622544434,
+    "params.sigma_fraction": 0.12005040604477306
+  },
+  {
+    "iteration": 163,
+    "objective_total": 0.00032143496051384446,
+    "metrics.fidelity_subspace": 0.9996785650394862,
+    "params.amp_rad_s": 98182192.65660726,
+    "params.detuning_hz": -64453.50594177755,
+    "params.sigma_fraction": 0.1200311526489082
+  },
+  {
+    "iteration": 164,
+    "objective_total": 0.00032137345833194164,
+    "metrics.fidelity_subspace": 0.9996786265416681,
+    "params.amp_rad_s": 98182200.49779147,
+    "params.detuning_hz": -64483.84728168416,
+    "params.sigma_fraction": 0.12001925339586486
+  },
+  {
+    "iteration": 165,
+    "objective_total": 0.0003213353233645355,
+    "metrics.fidelity_subspace": 0.9996786646766355,
+    "params.amp_rad_s": 98182205.34390983,
+    "params.detuning_hz": -64502.599261010655,
+    "params.sigma_fraction": 0.12001189925304334
+  },
+  {
+    "iteration": 166,
+    "objective_total": 0.000320988970670566,
+    "metrics.fidelity_subspace": 0.9996790110293294,
+    "params.amp_rad_s": 98182208.33897568,
+    "params.detuning_hz": -64514.188621590765,
+    "params.sigma_fraction": 0.12000735414282152
+  },
+  {
+    "iteration": 167,
+    "objective_total": 0.00032096216412436096,
+    "metrics.fidelity_subspace": 0.9996790378358756,
+    "params.amp_rad_s": 98182210.19002819,
+    "params.detuning_hz": -64521.35124033716,
+    "params.sigma_fraction": 0.12000454511022182
+  },
+  {
+    "iteration": 168,
+    "objective_total": 0.0003209706653917177,
+    "metrics.fidelity_subspace": 0.9996790293346083,
+    "params.amp_rad_s": 98182209.61138277,
+    "params.detuning_hz": -64519.112180906945,
+    "params.sigma_fraction": 0.12000542322354249
+  },
+  {
+    "iteration": 169,
+    "objective_total": 0.0003209456505521846,
+    "metrics.fidelity_subspace": 0.9996790543494478,
+    "params.amp_rad_s": 98182211.33404155,
+    "params.detuning_hz": -64525.77798217088,
+    "params.sigma_fraction": 0.12000280903259969
+  },
+  {
+    "iteration": 170,
+    "objective_total": 0.00032093396355137305,
+    "metrics.fidelity_subspace": 0.9996790660364486,
+    "params.amp_rad_s": 98182212.04108068,
+    "params.detuning_hz": -64528.51385908354,
+    "params.sigma_fraction": 0.12000173607762211
+  },
+  {
+    "iteration": 171,
+    "objective_total": 0.00032092718975085255,
+    "metrics.fidelity_subspace": 0.9996790728102491,
+    "params.amp_rad_s": 98182212.4780549,
+    "params.detuning_hz": -64530.2047240046,
+    "params.sigma_fraction": 0.12000107295497757
+  },
+  {
+    "iteration": 172,
+    "objective_total": 0.00032092295750985045,
+    "metrics.fidelity_subspace": 0.9996790770424901,
+    "params.amp_rad_s": 98182212.74811982,
+    "params.detuning_hz": -64531.2497359962,
+    "params.sigma_fraction": 0.12000066312264454
+  },
+  {
+    "iteration": 173,
+    "objective_total": 0.0003209205046870167,
+    "metrics.fidelity_subspace": 0.999679079495313,
+    "params.amp_rad_s": 98182212.91502912,
+    "params.detuning_hz": -64531.89558892567,
+    "params.sigma_fraction": 0.12000040983233304
+  },
+  {
+    "iteration": 174,
+    "objective_total": 0.0003209188859972789,
+    "metrics.fidelity_subspace": 0.9996790811140027,
+    "params.amp_rad_s": 98182213.01818474,
+    "params.detuning_hz": -64532.2947479878,
+    "params.sigma_fraction": 0.1200002532903115
+  },
+  {
+    "iteration": 175,
+    "objective_total": 0.0003209178672519686,
+    "metrics.fidelity_subspace": 0.999679082132748,
+    "params.amp_rad_s": 98182213.08193842,
+    "params.detuning_hz": -64532.54144185512,
+    "params.sigma_fraction": 0.12000015654202152
+  },
+  {
+    "iteration": 176,
+    "objective_total": 0.00032091722246363474,
+    "metrics.fidelity_subspace": 0.9996790827775364,
+    "params.amp_rad_s": 98182213.12134036,
+    "params.detuning_hz": -64532.69390704994,
+    "params.sigma_fraction": 0.12000009674828997
+  },
+  {
+    "iteration": 177,
+    "objective_total": 0.00032091682405210875,
+    "metrics.fidelity_subspace": 0.9996790831759479,
+    "params.amp_rad_s": 98182213.1456921,
+    "params.detuning_hz": -64532.78813572245,
+    "params.sigma_fraction": 0.12000005979373156
+  },
+  {
+    "iteration": 178,
+    "objective_total": 0.0003209165778723655,
+    "metrics.fidelity_subspace": 0.9996790834221276,
+    "params.amp_rad_s": 98182213.1607423,
+    "params.detuning_hz": -64532.84637224476,
+    "params.sigma_fraction": 0.12000003695455841
+  },
+  {
+    "iteration": 179,
+    "objective_total": 0.000320916761384904,
+    "metrics.fidelity_subspace": 0.9996790832386151,
+    "params.amp_rad_s": 98182213.17004384,
+    "params.detuning_hz": -64532.88236439494,
+    "params.sigma_fraction": 0.12000002283917313
+  },
+  {
+    "iteration": 180,
+    "objective_total": 0.00032091661068422983,
+    "metrics.fidelity_subspace": 0.9996790833893158,
+    "params.amp_rad_s": 98182213.15873626,
+    "params.detuning_hz": -64532.8386098983,
+    "params.sigma_fraction": 0.12000003999879195
+  },
+  {
+    "iteration": 181,
+    "objective_total": 0.00032091655236432537,
+    "metrics.fidelity_subspace": 0.9996790834476357,
+    "params.amp_rad_s": 98182213.16230196,
+    "params.detuning_hz": -64532.85240732024,
+    "params.sigma_fraction": 0.12000003458772522
+  },
+  {
+    "iteration": 182,
+    "objective_total": 0.00032091683709611907,
+    "metrics.fidelity_subspace": 0.9996790831629039,
+    "params.amp_rad_s": 98182213.1652591,
+    "params.detuning_hz": -64532.86384990458,
+    "params.sigma_fraction": 0.12000003010017765
+  },
+  {
+    "iteration": 183,
+    "objective_total": 0.00032091653388977015,
+    "metrics.fidelity_subspace": 0.9996790834661102,
+    "params.amp_rad_s": 98182213.16343148,
+    "params.detuning_hz": -64532.85677799854,
+    "params.sigma_fraction": 0.12000003287363457
+  },
+  {
+    "iteration": 184,
+    "objective_total": 0.000320916394056181,
+    "metrics.fidelity_subspace": 0.9996790836059438,
+    "params.amp_rad_s": 98182191.29159467,
+    "params.detuning_hz": -64472.599318667,
+    "params.sigma_fraction": 0.12
+  },
+  {
+    "iteration": 185,
+    "objective_total": 0.018591165134681065,
+    "metrics.fidelity_subspace": 0.9814088348653189,
+    "params.amp_rad_s": 99513706.44831604,
+    "params.detuning_hz": -3732830.274096047,
+    "params.sigma_fraction": 0.12200128334385836
+  },
+  {
+    "iteration": 186,
+    "objective_total": 0.007312627933158455,
+    "metrics.fidelity_subspace": 0.9926873720668415,
+    "params.amp_rad_s": 99005112.91498412,
+    "params.detuning_hz": -2331642.3252226207,
+    "params.sigma_fraction": 0.12123686112762351
+  },
+  {
+    "iteration": 187,
+    "objective_total": 0.002994613648090616,
+    "metrics.fidelity_subspace": 0.9970053863519094,
+    "params.amp_rad_s": 98690784.82492658,
+    "params.detuning_hz": -1465660.5481920934,
+    "params.sigma_fraction": 0.12076442221623485
+  },
+  {
+    "iteration": 188,
+    "objective_total": 0.0013436354976079645,
+    "metrics.fidelity_subspace": 0.998656364502392,
+    "params.amp_rad_s": 98496519.3816522,
+    "params.detuning_hz": -930454.3763491946,
+    "params.sigma_fraction": 0.12047243891138866
+  },
+  {
+    "iteration": 189,
+    "objective_total": 0.0007121956889527548,
+    "metrics.fidelity_subspace": 0.9992878043110472,
+    "params.amp_rad_s": 98376456.73486906,
+    "params.detuning_hz": -599678.771161566,
+    "params.sigma_fraction": 0.1202919833048462
+  },
+  {
+    "iteration": 190,
+    "objective_total": 0.00047120138736977957,
+    "metrics.fidelity_subspace": 0.9995287986126302,
+    "params.amp_rad_s": 98302253.93837781,
+    "params.detuning_hz": -395248.2045062956,
+    "params.sigma_fraction": 0.12018045560654246
+  },
+  {
+    "iteration": 191,
+    "objective_total": 0.00037880439444704095,
+    "metrics.fidelity_subspace": 0.999621195605553,
+    "params.amp_rad_s": 98256394.08808593,
+    "params.detuning_hz": -268903.16597393755,
+    "params.sigma_fraction": 0.12011152769830372
+  },
+  {
+    "iteration": 192,
+    "objective_total": 0.0003434539902231748,
+    "metrics.fidelity_subspace": 0.9996565460097768,
+    "params.amp_rad_s": 98228051.14188656,
+    "params.detuning_hz": -190817.6378510251,
+    "params.sigma_fraction": 0.12006892790823874
+  },
+  {
+    "iteration": 193,
+    "objective_total": 0.0003298625658312293,
+    "metrics.fidelity_subspace": 0.9996701374341688,
+    "params.amp_rad_s": 98210534.23779404,
+    "params.detuning_hz": -142558.12744157945,
+    "params.sigma_fraction": 0.12004259979006497
+  },
+  {
+    "iteration": 194,
+    "objective_total": 0.00032462667353394536,
+    "metrics.fidelity_subspace": 0.999675373326466,
+    "params.amp_rad_s": 98199708.19568719,
+    "params.detuning_hz": -112732.10972811267,
+    "params.sigma_fraction": 0.12002632811817376
+  },
+  {
+    "iteration": 195,
+    "objective_total": 0.0003225991644038029,
+    "metrics.fidelity_subspace": 0.9996774008355962,
+    "params.amp_rad_s": 98193017.33370152,
+    "params.detuning_hz": -94298.6170321338,
+    "params.sigma_fraction": 0.1200162716718912
+  },
+  {
+    "iteration": 196,
+    "objective_total": 0.00032180779920987224,
+    "metrics.fidelity_subspace": 0.9996781922007901,
+    "params.amp_rad_s": 98188882.15358035,
+    "params.detuning_hz": -82906.09201464591,
+    "params.sigma_fraction": 0.12001005644628256
+  },
+  {
+    "iteration": 197,
+    "objective_total": 0.00032117617771487694,
+    "metrics.fidelity_subspace": 0.9996788238222851,
+    "params.amp_rad_s": 98186326.47171585,
+    "params.detuning_hz": -75865.1243361549,
+    "params.sigma_fraction": 0.12000621522560866
+  },
+  {
+    "iteration": 198,
+    "objective_total": 0.0003210362102576969,
+    "metrics.fidelity_subspace": 0.9996789637897423,
+    "params.amp_rad_s": 98184746.97345917,
+    "params.detuning_hz": -71513.566997158,
+    "params.sigma_fraction": 0.1200038412206739
+  },
+  {
+    "iteration": 199,
+    "objective_total": 0.00032101099282599854,
+    "metrics.fidelity_subspace": 0.999678989007174,
+    "params.amp_rad_s": 98184380.97244069,
+    "params.detuning_hz": -70505.22500547655,
+    "params.sigma_fraction": 0.12000329111672772
+  },
+  {
+    "iteration": 200,
+    "objective_total": 0.00032096435920603295,
+    "metrics.fidelity_subspace": 0.999679035640794,
+    "params.amp_rad_s": 98183544.58878203,
+    "params.detuning_hz": -68200.96703452099,
+    "params.sigma_fraction": 0.12000203402199867
+  },
+  {
+    "iteration": 201,
+    "objective_total": 0.0003209408835214145,
+    "metrics.fidelity_subspace": 0.9996790591164786,
+    "params.amp_rad_s": 98183027.67525335,
+    "params.detuning_hz": -66776.85728962257,
+    "params.sigma_fraction": 0.12000125709472904
+  },
+  {
+    "iteration": 202,
+    "objective_total": 0.0003209296682120666,
+    "metrics.fidelity_subspace": 0.9996790703317879,
+    "params.amp_rad_s": 98182708.20512336,
+    "params.detuning_hz": -65896.70906356542,
+    "params.sigma_fraction": 0.12000077692726963
+  },
+  {
+    "iteration": 203,
+    "objective_total": 0.00032092379329107246,
+    "metrics.fidelity_subspace": 0.9996790762067089,
+    "params.amp_rad_s": 98182510.76172465,
+    "params.detuning_hz": -65352.747544724174,
+    "params.sigma_fraction": 0.12000048016745941
+  },
+  {
+    "iteration": 204,
+    "objective_total": 0.0003209207219725396,
+    "metrics.fidelity_subspace": 0.9996790792780275,
+    "params.amp_rad_s": 98182388.73499338,
+    "params.detuning_hz": -65016.56083750826,
+    "params.sigma_fraction": 0.12000029675981021
+  },
+  {
+    "iteration": 205,
+    "objective_total": 0.00032091887564222876,
+    "metrics.fidelity_subspace": 0.9996790811243578,
+    "params.amp_rad_s": 98182313.31832594,
+    "params.detuning_hz": -64808.78602588292,
+    "params.sigma_fraction": 0.1200001834076492
+  },
+  {
+    "iteration": 206,
+    "objective_total": 0.0003209177686468445,
+    "metrics.fidelity_subspace": 0.9996790822313532,
+    "params.amp_rad_s": 98182266.70826213,
+    "params.detuning_hz": -64680.37413029235,
+    "params.sigma_fraction": 0.120000113352161
+  },
+  {
+    "iteration": 207,
+    "objective_total": 0.0003209170969155073,
+    "metrics.fidelity_subspace": 0.9996790829030845,
+    "params.amp_rad_s": 98182237.90165848,
+    "params.detuning_hz": -64601.01121425758,
+    "params.sigma_fraction": 0.1200000700554882
+  },
+  {
+    "iteration": 208,
+    "objective_total": 0.0003209166904262206,
+    "metrics.fidelity_subspace": 0.9996790833095738,
+    "params.amp_rad_s": 98182220.09819832,
+    "params.detuning_hz": -64551.96223470178,
+    "params.sigma_fraction": 0.1200000432966728
+  },
+  {
+    "iteration": 209,
+    "objective_total": 0.0003209167774982369,
+    "metrics.fidelity_subspace": 0.9996790832225018,
+    "params.amp_rad_s": 98182209.09505484,
+    "params.detuning_hz": -64521.648298222804,
+    "params.sigma_fraction": 0.1200000267588154
+  },
+  {
+    "iteration": 210,
+    "objective_total": 0.00032091664982603074,
+    "metrics.fidelity_subspace": 0.999679083350174,
+    "params.amp_rad_s": 98182218.30380534,
+    "params.detuning_hz": -64547.01863699525,
+    "params.sigma_fraction": 0.1200000405996785
+  },
+  {
+    "iteration": 211,
+    "objective_total": 0.0003209165930460056,
+    "metrics.fidelity_subspace": 0.999679083406954,
+    "params.amp_rad_s": 98182215.78970875,
+    "params.detuning_hz": -64540.09223778889,
+    "params.sigma_fraction": 0.120000036820961
+  },
+  {
+    "iteration": 212,
+    "objective_total": 0.0003209165354497445,
+    "metrics.fidelity_subspace": 0.9996790834645503,
+    "params.amp_rad_s": 98182213.2325785,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 213,
+    "objective_total": 0.00032091683309010133,
+    "metrics.fidelity_subspace": 0.9996790831669099,
+    "params.amp_rad_s": 98182211.65218508,
+    "params.detuning_hz": -64528.6932562506,
+    "params.sigma_fraction": 0.12000003060221301
+  },
+  {
+    "iteration": 214,
+    "objective_total": 0.00032091655950183817,
+    "metrics.fidelity_subspace": 0.9996790834404982,
+    "params.amp_rad_s": 98182214.30135675,
+    "params.detuning_hz": -64535.99179065905,
+    "params.sigma_fraction": 0.12000003458394998
+  },
+  {
+    "iteration": 215,
+    "objective_total": 0.04013620820315056,
+    "metrics.fidelity_subspace": 0.9598637917968494,
+    "params.amp_rad_s": 115870175.75001639,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 216,
+    "objective_total": 0.3747166961266155,
+    "metrics.fidelity_subspace": 0.6252833038733845,
+    "params.amp_rad_s": 154110442.91785643,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 217,
+    "objective_total": 0.004826166809979382,
+    "metrics.fidelity_subspace": 0.9951738331900206,
+    "params.amp_rad_s": 92236390.90141459,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 218,
+    "objective_total": 0.00035193112831821693,
+    "metrics.fidelity_subspace": 0.9996480688716818,
+    "params.amp_rad_s": 97682638.50028552,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 219,
+    "objective_total": 0.0003209418791492169,
+    "metrics.fidelity_subspace": 0.9996790581208508,
+    "params.amp_rad_s": 98185826.9438099,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 220,
+    "objective_total": 0.00032105766730916585,
+    "metrics.fidelity_subspace": 0.9996789423326908,
+    "params.amp_rad_s": 98175304.62150528,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 221,
+    "objective_total": 0.0003217534484667439,
+    "metrics.fidelity_subspace": 0.9996782465515333,
+    "params.amp_rad_s": 98234155.52103391,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 222,
+    "objective_total": 0.0003213930466438031,
+    "metrics.fidelity_subspace": 0.9996786069533562,
+    "params.amp_rad_s": 98204286.81768155,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 223,
+    "objective_total": 0.0003209362708271879,
+    "metrics.fidelity_subspace": 0.9996790637291728,
+    "params.amp_rad_s": 98185064.66961549,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 224,
+    "objective_total": 0.00032092459130539375,
+    "metrics.fidelity_subspace": 0.9996790754086946,
+    "params.amp_rad_s": 98183490.3969716,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 225,
+    "objective_total": 0.0003209051479876601,
+    "metrics.fidelity_subspace": 0.9996790948520123,
+    "params.amp_rad_s": 98180363.70896775,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 226,
+    "objective_total": 0.0003208939313938952,
+    "metrics.fidelity_subspace": 0.9996791060686061,
+    "params.amp_rad_s": 98178431.30950914,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 227,
+    "objective_total": 0.00032090558811281866,
+    "metrics.fidelity_subspace": 0.9996790944118872,
+    "params.amp_rad_s": 98177237.02096388,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 228,
+    "objective_total": 0.0003208961017709955,
+    "metrics.fidelity_subspace": 0.999679103898229,
+    "params.amp_rad_s": 98178814.50337306,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 229,
+    "objective_total": 0.0003208911961128935,
+    "metrics.fidelity_subspace": 0.9996791088038871,
+    "params.amp_rad_s": 98177975.13187723,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 230,
+    "objective_total": 0.0003208896498378966,
+    "metrics.fidelity_subspace": 0.9996791103501621,
+    "params.amp_rad_s": 98177693.19859579,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 231,
+    "objective_total": 0.00032088870590296636,
+    "metrics.fidelity_subspace": 0.999679111294097,
+    "params.amp_rad_s": 98177518.95424531,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 232,
+    "objective_total": 0.0003208881265915897,
+    "metrics.fidelity_subspace": 0.9996791118734084,
+    "params.amp_rad_s": 98177411.26531437,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 233,
+    "objective_total": 0.0003209061923012957,
+    "metrics.fidelity_subspace": 0.9996790938076987,
+    "params.amp_rad_s": 98177344.70989484,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 234,
+    "objective_total": 0.00032088834750720885,
+    "metrics.fidelity_subspace": 0.9996791116524928,
+    "params.amp_rad_s": 98177452.39882578,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 235,
+    "objective_total": 0.00032088799028540116,
+    "metrics.fidelity_subspace": 0.9996791120097146,
+    "params.amp_rad_s": 98177385.84340625,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 236,
+    "objective_total": 0.00032088790611795037,
+    "metrics.fidelity_subspace": 0.999679112093882,
+    "params.amp_rad_s": 98177370.13180296,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 237,
+    "objective_total": 0.0003208878541319793,
+    "metrics.fidelity_subspace": 0.999679112145868,
+    "params.amp_rad_s": 98177360.4214981,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 238,
+    "objective_total": 0.000320906244502317,
+    "metrics.fidelity_subspace": 0.9996790937554977,
+    "params.amp_rad_s": 98177354.42019968,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 239,
+    "objective_total": 0.0003208878739873189,
+    "metrics.fidelity_subspace": 0.9996791121260127,
+    "params.amp_rad_s": 98177364.13050452,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 240,
+    "objective_total": 0.00032090627194847343,
+    "metrics.fidelity_subspace": 0.9996790937280515,
+    "params.amp_rad_s": 98177358.12920609,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 241,
+    "objective_total": 0.0003208878617180222,
+    "metrics.fidelity_subspace": 0.999679112138282,
+    "params.amp_rad_s": 98177361.83821249,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 242,
+    "objective_total": 0.00032088784944506177,
+    "metrics.fidelity_subspace": 0.9996791121505549,
+    "params.amp_rad_s": 98177359.54592048,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 243,
+    "objective_total": 0.00032090644240811983,
+    "metrics.fidelity_subspace": 0.9996790935575919,
+    "params.amp_rad_s": 98177359.00478373,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 244,
+    "objective_total": 0.00032088785123751684,
+    "metrics.fidelity_subspace": 0.9996791121487625,
+    "params.amp_rad_s": 98177359.88036136,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 245,
+    "objective_total": 0.00032088784834194417,
+    "metrics.fidelity_subspace": 0.9996791121516581,
+    "params.amp_rad_s": 98177359.33922462,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 246,
+    "objective_total": 0.00032088784765826883,
+    "metrics.fidelity_subspace": 0.9996791121523417,
+    "params.amp_rad_s": 98177359.21147957,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 247,
+    "objective_total": 0.00032090644304683114,
+    "metrics.fidelity_subspace": 0.9996790935569532,
+    "params.amp_rad_s": 98177359.13252878,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 248,
+    "objective_total": 0.0003208878479170618,
+    "metrics.fidelity_subspace": 0.9996791121520829,
+    "params.amp_rad_s": 98177359.26027384,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 249,
+    "objective_total": 0.0003208878474938448,
+    "metrics.fidelity_subspace": 0.9996791121525062,
+    "params.amp_rad_s": 98177359.18132305,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 250,
+    "objective_total": 0.00032088784739248144,
+    "metrics.fidelity_subspace": 0.9996791121526075,
+    "params.amp_rad_s": 98177359.1626853,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 251,
+    "objective_total": 0.00032088784733519393,
+    "metrics.fidelity_subspace": 0.9996791121526648,
+    "params.amp_rad_s": 98177359.15116654,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 252,
+    "objective_total": 0.00032088784729289443,
+    "metrics.fidelity_subspace": 0.9996791121527071,
+    "params.amp_rad_s": 98177359.14404754,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 253,
+    "objective_total": 0.00032088784727069,
+    "metrics.fidelity_subspace": 0.9996791121527293,
+    "params.amp_rad_s": 98177359.13964777,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 254,
+    "objective_total": 0.0003208878472582555,
+    "metrics.fidelity_subspace": 0.9996791121527417,
+    "params.amp_rad_s": 98177359.13692856,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 255,
+    "objective_total": 0.0003208878472484855,
+    "metrics.fidelity_subspace": 0.9996791121527515,
+    "params.amp_rad_s": 98177359.13524799,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 256,
+    "objective_total": 0.000320887847246043,
+    "metrics.fidelity_subspace": 0.999679112152754,
+    "params.amp_rad_s": 98177359.13420935,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 257,
+    "objective_total": 0.00032088784724271235,
+    "metrics.fidelity_subspace": 0.9996791121527573,
+    "params.amp_rad_s": 98177359.13380511,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 258,
+    "objective_total": 0.0003208878472413801,
+    "metrics.fidelity_subspace": 0.9996791121527586,
+    "params.amp_rad_s": 98177359.1333176,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 259,
+    "objective_total": 0.0003208878472428234,
+    "metrics.fidelity_subspace": 0.9996791121527572,
+    "params.amp_rad_s": 98177359.13342293,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 260,
+    "objective_total": 0.00032088784723671715,
+    "metrics.fidelity_subspace": 0.9996791121527633,
+    "params.amp_rad_s": 98177359.1330163,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 261,
+    "objective_total": 0.00032088784723716124,
+    "metrics.fidelity_subspace": 0.9996791121527628,
+    "params.amp_rad_s": 98177359.13283008,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 262,
+    "objective_total": 0.00032088784723827146,
+    "metrics.fidelity_subspace": 0.9996791121527617,
+    "params.amp_rad_s": 98177359.13312162,
+    "params.detuning_hz": -64533.0472797611,
+    "params.sigma_fraction": 0.12000003297756337
+  },
+  {
+    "iteration": 263,
+    "objective_total": 0.0012545272597257462,
+    "metrics.fidelity_subspace": 0.9987454727402743,
+    "params.amp_rad_s": 98104051.92266138,
+    "params.detuning_hz": 219128.0586646181,
+    "params.sigma_fraction": 0.23124611797498107
+  },
+  {
+    "iteration": 264,
+    "objective_total": 0.0008374841264358057,
+    "metrics.fidelity_subspace": 0.9991625158735642,
+    "params.amp_rad_s": 98132052.79369703,
+    "params.detuning_hz": 110779.12536152199,
+    "params.sigma_fraction": 0.18875388202501894
+  },
+  {
+    "iteration": 265,
+    "objective_total": 0.0006068690296185952,
+    "metrics.fidelity_subspace": 0.9993931309703814,
+    "params.amp_rad_s": 98149358.28371167,
+    "params.detuning_hz": 43815.8019354132,
+    "params.sigma_fraction": 0.16249223594996215
+  },
+  {
+    "iteration": 266,
+    "objective_total": 0.0004829524484010195,
+    "metrics.fidelity_subspace": 0.999517047551599,
+    "params.amp_rad_s": 98160053.6647327,
+    "params.detuning_hz": 2430.192058425908,
+    "params.sigma_fraction": 0.1462616460750568
+  },
+  {
+    "iteration": 267,
+    "objective_total": 0.0004151250254518235,
+    "metrics.fidelity_subspace": 0.9995848749745482,
+    "params.amp_rad_s": 98166663.77372633,
+    "params.detuning_hz": -23147.5214906956,
+    "params.sigma_fraction": 0.13623058987490538
+  },
+  {
+    "iteration": 268,
+    "objective_total": 0.0003769069960395388,
+    "metrics.fidelity_subspace": 0.9996230930039605,
+    "params.amp_rad_s": 98170749.04575372,
+    "params.detuning_hz": -38955.4178185614,
+    "params.sigma_fraction": 0.13003105620015143
+  },
+  {
+    "iteration": 269,
+    "objective_total": 0.0003548148250620553,
+    "metrics.fidelity_subspace": 0.999645185174938,
+    "params.amp_rad_s": 98173273.88271995,
+    "params.detuning_hz": -48725.23503981712,
+    "params.sigma_fraction": 0.12619953367475395
+  },
+  {
+    "iteration": 270,
+    "objective_total": 0.00034186420650961225,
+    "metrics.fidelity_subspace": 0.9996581357934904,
+    "params.amp_rad_s": 98174834.31778112,
+    "params.detuning_hz": -54763.3141464272,
+    "params.sigma_fraction": 0.12383152252539747
+  },
+  {
+    "iteration": 271,
+    "objective_total": 0.00033370929741427524,
+    "metrics.fidelity_subspace": 0.9996662907025857,
+    "params.amp_rad_s": 98175798.71968617,
+    "params.detuning_hz": -58495.05226107284,
+    "params.sigma_fraction": 0.12236801114935647
+  },
+  {
+    "iteration": 272,
+    "objective_total": 0.00032885735767806956,
+    "metrics.fidelity_subspace": 0.9996711426423219,
+    "params.amp_rad_s": 98176394.75284229,
+    "params.detuning_hz": -60801.393253037284,
+    "params.sigma_fraction": 0.121463511376041
+  },
+  {
+    "iteration": 273,
+    "objective_total": 0.00032602937877823646,
+    "metrics.fidelity_subspace": 0.9996739706212218,
+    "params.amp_rad_s": 98176763.12159121,
+    "params.detuning_hz": -62226.79037571847,
+    "params.sigma_fraction": 0.12090449977331547
+  },
+  {
+    "iteration": 274,
+    "objective_total": 0.00032404405029329286,
+    "metrics.fidelity_subspace": 0.9996759559497067,
+    "params.amp_rad_s": 98176990.78599843,
+    "params.detuning_hz": -63107.73424500174,
+    "params.sigma_fraction": 0.12055901160272553
+  },
+  {
+    "iteration": 275,
+    "objective_total": 0.0003230498128306003,
+    "metrics.fidelity_subspace": 0.9996769501871694,
+    "params.amp_rad_s": 98177131.49034013,
+    "params.detuning_hz": -63652.187498399646,
+    "params.sigma_fraction": 0.12034548817058993
+  },
+  {
+    "iteration": 276,
+    "objective_total": 0.0003220453601979756,
+    "metrics.fidelity_subspace": 0.999677954639802,
+    "params.amp_rad_s": 98177218.45040566,
+    "params.detuning_hz": -63988.678114285016,
+    "params.sigma_fraction": 0.1202135234321356
+  },
+  {
+    "iteration": 277,
+    "objective_total": 0.00032190303602641634,
+    "metrics.fidelity_subspace": 0.9996780969639736,
+    "params.amp_rad_s": 98177272.19468181,
+    "params.detuning_hz": -64196.64075179755,
+    "params.sigma_fraction": 0.12013196473845433
+  },
+  {
+    "iteration": 278,
+    "objective_total": 0.0003219634528388582,
+    "metrics.fidelity_subspace": 0.9996780365471611,
+    "params.amp_rad_s": 98177266.24964099,
+    "params.detuning_hz": -64173.63650912977,
+    "params.sigma_fraction": 0.12014098653200125
+  },
+  {
+    "iteration": 279,
+    "objective_total": 0.0003216859935669669,
+    "metrics.fidelity_subspace": 0.999678314006433,
+    "params.amp_rad_s": 98177305.41047119,
+    "params.detuning_hz": -64325.16873017038,
+    "params.sigma_fraction": 0.12008155869368127
+  },
+  {
+    "iteration": 280,
+    "objective_total": 0.00032153972267501274,
+    "metrics.fidelity_subspace": 0.999678460277325,
+    "params.amp_rad_s": 98177324.0661202,
+    "params.detuning_hz": -64397.356472803374,
+    "params.sigma_fraction": 0.1200532481372305
+  },
+  {
+    "iteration": 281,
+    "objective_total": 0.0003214345668156593,
+    "metrics.fidelity_subspace": 0.9996785654331843,
+    "params.amp_rad_s": 98177337.46878316,
+    "params.detuning_hz": -64449.21786782842,
+    "params.sigma_fraction": 0.12003290915864608
+  },
+  {
+    "iteration": 282,
+    "objective_total": 0.0003213696335180316,
+    "metrics.fidelity_subspace": 0.999678630366482,
+    "params.amp_rad_s": 98177345.75208439,
+    "params.detuning_hz": -64481.26997265788,
+    "params.sigma_fraction": 0.12002033897858443
+  },
+  {
+    "iteration": 283,
+    "objective_total": 0.0003210135773790146,
+    "metrics.fidelity_subspace": 0.999678986422621,
+    "params.amp_rad_s": 98177350.8714461,
+    "params.detuning_hz": -64501.07926285346,
+    "params.sigma_fraction": 0.12001257018006163
+  },
+  {
+    "iteration": 284,
+    "objective_total": 0.00032096822938698644,
+    "metrics.fidelity_subspace": 0.999679031770613,
+    "params.amp_rad_s": 98177354.03538564,
+    "params.detuning_hz": -64513.32207748735,
+    "params.sigma_fraction": 0.12000776879852279
+  },
+  {
+    "iteration": 285,
+    "objective_total": 0.00032097567814604044,
+    "metrics.fidelity_subspace": 0.999679024321854,
+    "params.amp_rad_s": 98177353.52844864,
+    "params.detuning_hz": -64511.36049269243,
+    "params.sigma_fraction": 0.12000853809196575
+  },
+  {
+    "iteration": 286,
+    "objective_total": 0.00032093843634617425,
+    "metrics.fidelity_subspace": 0.9996790615636538,
+    "params.amp_rad_s": 98177355.9908078,
+    "params.detuning_hz": -64520.888553049044,
+    "params.sigma_fraction": 0.12000480138153884
+  },
+  {
+    "iteration": 287,
+    "objective_total": 0.00032091957232571744,
+    "metrics.fidelity_subspace": 0.9996790804276743,
+    "params.amp_rad_s": 98177357.19932517,
+    "params.detuning_hz": -64525.56489212122,
+    "params.sigma_fraction": 0.12000296741698395
+  },
+  {
+    "iteration": 288,
+    "objective_total": 0.00032090754902713847,
+    "metrics.fidelity_subspace": 0.9996790924509729,
+    "params.amp_rad_s": 98177357.94622998,
+    "params.detuning_hz": -64528.45502861075,
+    "params.sigma_fraction": 0.12000183396455488
+  },
+  {
+    "iteration": 289,
+    "objective_total": 0.0003208999964032788,
+    "metrics.fidelity_subspace": 0.9996791000035967,
+    "params.amp_rad_s": 98177358.40784253,
+    "params.detuning_hz": -64530.241231193395,
+    "params.sigma_fraction": 0.12000113345242908
+  },
+  {
+    "iteration": 290,
+    "objective_total": 0.0003208951217783529,
+    "metrics.fidelity_subspace": 0.9996791048782216,
+    "params.amp_rad_s": 98177358.69313478,
+    "params.detuning_hz": -64531.34516510027,
+    "params.sigma_fraction": 0.1200007005121258
+  },
+  {
+    "iteration": 291,
+    "objective_total": 0.0003208922035593531,
+    "metrics.fidelity_subspace": 0.9996791077964406,
+    "params.amp_rad_s": 98177358.8694551,
+    "params.detuning_hz": -64532.02743377605,
+    "params.sigma_fraction": 0.12000043294030327
+  },
+  {
+    "iteration": 292,
+    "objective_total": 0.000320890401472429,
+    "metrics.fidelity_subspace": 0.9996791095985276,
+    "params.amp_rad_s": 98177358.97842704,
+    "params.detuning_hz": -64532.44909900714,
+    "params.sigma_fraction": 0.12000026757182251
+  },
+  {
+    "iteration": 293,
+    "objective_total": 0.0003208892886514825,
+    "metrics.fidelity_subspace": 0.9996791107113485,
+    "params.amp_rad_s": 98177359.0457754,
+    "params.detuning_hz": -64532.70970245184,
+    "params.sigma_fraction": 0.12000016536848075
+  },
+  {
+    "iteration": 294,
+    "objective_total": 0.00032088860092827076,
+    "metrics.fidelity_subspace": 0.9996791113990717,
+    "params.amp_rad_s": 98177359.08739898,
+    "params.detuning_hz": -64532.870764238236,
+    "params.sigma_fraction": 0.12000010220334177
+  },
+  {
+    "iteration": 295,
+    "objective_total": 0.0003208881759078075,
+    "metrics.fidelity_subspace": 0.9996791118240922,
+    "params.amp_rad_s": 98177359.11312376,
+    "params.detuning_hz": -64532.97030589652,
+    "params.sigma_fraction": 0.12000006316513898
+  },
+  {
+    "iteration": 296,
+    "objective_total": 0.0003208879132216014,
+    "metrics.fidelity_subspace": 0.9996791120867784,
+    "params.amp_rad_s": 98177359.12902255,
+    "params.detuning_hz": -64533.03182602464,
+    "params.sigma_fraction": 0.12000003903820279
+  },
+  {
+    "iteration": 297,
+    "objective_total": 0.00032090617064661764,
+    "metrics.fidelity_subspace": 0.9996790938293534,
+    "params.amp_rad_s": 98177359.13884856,
+    "params.detuning_hz": -64533.069847554805,
+    "params.sigma_fraction": 0.12000002412693618
+  },
+  {
+    "iteration": 298,
+    "objective_total": 0.0003208880801450764,
+    "metrics.fidelity_subspace": 0.9996791119198549,
+    "params.amp_rad_s": 98177359.12294976,
+    "params.detuning_hz": -64533.008327426694,
+    "params.sigma_fraction": 0.12000004825387237
+  },
+  {
+    "iteration": 299,
+    "objective_total": 0.0003208878512128699,
+    "metrics.fidelity_subspace": 0.9996791121487871,
+    "params.amp_rad_s": 98177359.13277575,
+    "params.detuning_hz": -64533.04634895686,
+    "params.sigma_fraction": 0.12000003334260576
+  },
+  {
+    "iteration": 300,
+    "objective_total": 0.0003209062357500958,
+    "metrics.fidelity_subspace": 0.9996790937642499,
+    "params.amp_rad_s": 98177359.13509536,
+    "params.detuning_hz": -64533.05532462259,
+    "params.sigma_fraction": 0.12000002982253322
+  },
+  {
+    "iteration": 301,
+    "objective_total": 0.0003208878749003663,
+    "metrics.fidelity_subspace": 0.9996791121250996,
+    "params.amp_rad_s": 98177359.13134216,
+    "params.detuning_hz": -64533.04080169036,
+    "params.sigma_fraction": 0.12000003551813024
+  },
+  {
+    "iteration": 302,
+    "objective_total": 0.0003209062631535087,
+    "metrics.fidelity_subspace": 0.9996790937368465,
+    "params.amp_rad_s": 98177359.1337791,
+    "params.detuning_hz": -64533.0502313414,
+    "params.sigma_fraction": 0.12000003182001394
+  },
+  {
+    "iteration": 303,
+    "objective_total": 0.007311602579582188,
+    "metrics.fidelity_subspace": 0.9926883974204178,
+    "params.amp_rad_s": 99000258.6652061,
+    "params.detuning_hz": -2331641.911106189,
+    "params.sigma_fraction": 0.12123686126725126
+  },
+  {
+    "iteration": 304,
+    "objective_total": 0.018589521754319493,
+    "metrics.fidelity_subspace": 0.9814104782456805,
+    "params.amp_rad_s": 99508852.25595252,
+    "params.detuning_hz": -3732830.0181580167,
+    "params.sigma_fraction": 0.12200128356978081
+  },
+  {
+    "iteration": 305,
+    "objective_total": 0.0029939740959470384,
+    "metrics.fidelity_subspace": 0.997006025904053,
+    "params.amp_rad_s": 98685930.53966446,
+    "params.detuning_hz": -1465660.0363160337,
+    "params.sigma_fraction": 0.12076442230252954
+  },
+  {
+    "iteration": 306,
+    "objective_total": 0.0013432363184336937,
+    "metrics.fidelity_subspace": 0.9986567636815663,
+    "params.amp_rad_s": 98491665.07445969,
+    "params.detuning_hz": -930453.8040543622,
+    "params.sigma_fraction": 0.1204724389647217
+  },
+  {
+    "iteration": 307,
+    "objective_total": 0.0007121204405697856,
+    "metrics.fidelity_subspace": 0.9992878795594302,
+    "params.amp_rad_s": 98371602.41412282,
+    "params.detuning_hz": -599678.1615258786,
+    "params.sigma_fraction": 0.12029198333780783
+  },
+  {
+    "iteration": 308,
+    "objective_total": 0.00047104386211305194,
+    "metrics.fidelity_subspace": 0.999528956137887,
+    "params.amp_rad_s": 98297399.60925491,
+    "params.detuning_hz": -395247.5717926904,
+    "params.sigma_fraction": 0.12018045562691387
+  },
+  {
+    "iteration": 309,
+    "objective_total": 0.0003787029538064868,
+    "metrics.fidelity_subspace": 0.9996212970461935,
+    "params.amp_rad_s": 98251539.75378597,
+    "params.detuning_hz": -268902.5189973949,
+    "params.sigma_fraction": 0.12011152771089395
+  },
+  {
+    "iteration": 310,
+    "objective_total": 0.00034338765906627433,
+    "metrics.fidelity_subspace": 0.9996566123409337,
+    "params.amp_rad_s": 98223196.80438699,
+    "params.detuning_hz": -190816.9820595023,
+    "params.sigma_fraction": 0.12006892791601993
+  },
+  {
+    "iteration": 311,
+    "objective_total": 0.0003298181167770142,
+    "metrics.fidelity_subspace": 0.999670181883223,
+    "params.amp_rad_s": 98205679.89831701,
+    "params.detuning_hz": -142557.46620209928,
+    "params.sigma_fraction": 0.12004259979487401
+  },
+  {
+    "iteration": 312,
+    "objective_total": 0.0003245956376846104,
+    "metrics.fidelity_subspace": 0.9996754043623154,
+    "params.amp_rad_s": 98194853.85498802,
+    "params.detuning_hz": -112731.44512160971,
+    "params.sigma_fraction": 0.12002632812114591
+  },
+  {
+    "iteration": 313,
+    "objective_total": 0.0003225763971772544,
+    "metrics.fidelity_subspace": 0.9996774236028227,
+    "params.amp_rad_s": 98188162.99224703,
+    "params.detuning_hz": -94297.95034469626,
+    "params.sigma_fraction": 0.1200162716737281
+  },
+  {
+    "iteration": 314,
+    "objective_total": 0.00032178995933440646,
+    "metrics.fidelity_subspace": 0.9996782100406656,
+    "params.amp_rad_s": 98184027.81165904,
+    "params.detuning_hz": -82905.42404112012,
+    "params.sigma_fraction": 0.12001005644741781
+  },
+  {
+    "iteration": 315,
+    "objective_total": 0.000321146398663652,
+    "metrics.fidelity_subspace": 0.9996788536013363,
+    "params.amp_rad_s": 98181472.12950604,
+    "params.detuning_hz": -75864.45556778285,
+    "params.sigma_fraction": 0.12000621522631028
+  },
+  {
+    "iteration": 316,
+    "objective_total": 0.000321007039501664,
+    "metrics.fidelity_subspace": 0.9996789929604983,
+    "params.amp_rad_s": 98179892.63107105,
+    "params.detuning_hz": -71512.89773754396,
+    "params.sigma_fraction": 0.12000384122110752
+  },
+  {
+    "iteration": 317,
+    "objective_total": 0.00032098452843087877,
+    "metrics.fidelity_subspace": 0.9996790154715691,
+    "params.amp_rad_s": 98179567.22402601,
+    "params.detuning_hz": -70616.39316149951,
+    "params.sigma_fraction": 0.12000335213039315
+  },
+  {
+    "iteration": 318,
+    "objective_total": 0.0003209358999172185,
+    "metrics.fidelity_subspace": 0.9996790641000828,
+    "params.amp_rad_s": 98178715.33473903,
+    "params.detuning_hz": -68269.4167953803,
+    "params.sigma_fraction": 0.12000207173051769
+  },
+  {
+    "iteration": 319,
+    "objective_total": 0.00032091290288560614,
+    "metrics.fidelity_subspace": 0.9996790870971144,
+    "params.amp_rad_s": 98178188.83820502,
+    "params.detuning_hz": -66818.9056303259,
+    "params.sigma_fraction": 0.12000128039987545
+  },
+  {
+    "iteration": 320,
+    "objective_total": 0.00032090149591867956,
+    "metrics.fidelity_subspace": 0.9996790985040813,
+    "params.amp_rad_s": 98177863.44545205,
+    "params.detuning_hz": -65922.44042926107,
+    "params.sigma_fraction": 0.12000079133064222
+  },
+  {
+    "iteration": 321,
+    "objective_total": 0.00032089555023750993,
+    "metrics.fidelity_subspace": 0.9996791044497625,
+    "params.amp_rad_s": 98177662.34167102,
+    "params.detuning_hz": -65368.39446527151,
+    "params.sigma_fraction": 0.12000048906923323
+  },
+  {
+    "iteration": 322,
+    "objective_total": 0.0003208920262732784,
+    "metrics.fidelity_subspace": 0.9996791079737267,
+    "params.amp_rad_s": 98177538.05269907,
+    "params.detuning_hz": -65025.97522819625,
+    "params.sigma_fraction": 0.12000030226140898
+  },
+  {
+    "iteration": 323,
+    "objective_total": 0.00032089015232583673,
+    "metrics.fidelity_subspace": 0.9996791098476742,
+    "params.amp_rad_s": 98177461.23788999,
+    "params.detuning_hz": -64814.34850128193,
+    "params.sigma_fraction": 0.12000018680782425
+  },
+  {
+    "iteration": 324,
+    "objective_total": 0.00032088905553029345,
+    "metrics.fidelity_subspace": 0.9996791109444697,
+    "params.amp_rad_s": 98177413.76372713,
+    "params.detuning_hz": -64683.55599112099,
+    "params.sigma_fraction": 0.12000011545358474
+  },
+  {
+    "iteration": 325,
+    "objective_total": 0.00032088840107036276,
+    "metrics.fidelity_subspace": 0.9996791115989296,
+    "params.amp_rad_s": 98177384.4230809,
+    "params.detuning_hz": -64602.721774367616,
+    "params.sigma_fraction": 0.1200000713542395
+  },
+  {
+    "iteration": 326,
+    "objective_total": 0.00032088806983665563,
+    "metrics.fidelity_subspace": 0.9996791119301633,
+    "params.amp_rad_s": 98177366.28956428,
+    "params.detuning_hz": -64552.76348096005,
+    "params.sigma_fraction": 0.12000004409934524
+  },
+  {
+    "iteration": 327,
+    "objective_total": 0.0003209061830322657,
+    "metrics.fidelity_subspace": 0.9996790938169677,
+    "params.amp_rad_s": 98177355.08243467,
+    "params.detuning_hz": -64521.88755761424,
+    "params.sigma_fraction": 0.12000002725489424
+  },
+  {
+    "iteration": 328,
+    "objective_total": 0.00032088815577191454,
+    "metrics.fidelity_subspace": 0.9996791118442281,
+    "params.amp_rad_s": 98177373.2159513,
+    "params.detuning_hz": -64571.845851021804,
+    "params.sigma_fraction": 0.12000005450978848
+  },
+  {
+    "iteration": 329,
+    "objective_total": 0.0003209062499602844,
+    "metrics.fidelity_subspace": 0.9996790937500397,
+    "params.amp_rad_s": 98177357.88761914,
+    "params.detuning_hz": -64529.615911240566,
+    "params.sigma_fraction": 0.12000003147112034
+  },
+  {
+    "iteration": 330,
+    "objective_total": 0.0003208879361700223,
+    "metrics.fidelity_subspace": 0.99967911206383,
+    "params.amp_rad_s": 98177363.08030681,
+    "params.detuning_hz": -64543.92189608417,
+    "params.sigma_fraction": 0.12000003927579256
+  },
+  {
+    "iteration": 331,
+    "objective_total": 0.0003208878934464199,
+    "metrics.fidelity_subspace": 0.9996791121065536,
+    "params.amp_rad_s": 98177361.0968766,
+    "params.detuning_hz": -64538.457496116454,
+    "params.sigma_fraction": 0.12000003629467304
+  },
+  {
+    "iteration": 332,
+    "objective_total": 0.00032088785496564576,
+    "metrics.fidelity_subspace": 0.9996791121450344,
+    "params.amp_rad_s": 98177359.30760081,
+    "params.detuning_hz": -64533.527996386874,
+    "params.sigma_fraction": 0.12000003360536993
+  },
+  {
+    "iteration": 333,
+    "objective_total": 0.00032088786965367433,
+    "metrics.fidelity_subspace": 0.9996791121303463,
+    "params.amp_rad_s": 98177359.99104336,
+    "params.detuning_hz": -64535.410897736045,
+    "params.sigma_fraction": 0.12000003463259232
+  },
+  {
+    "iteration": 334,
+    "objective_total": 0.0003209064393046024,
+    "metrics.fidelity_subspace": 0.9996790935606954,
+    "params.amp_rad_s": 98177358.76521608,
+    "params.detuning_hz": -64532.03371282787,
+    "params.sigma_fraction": 0.12000003279015913
+  },
+  {
+    "iteration": 335,
+    "objective_total": 0.0003208878605760468,
+    "metrics.fidelity_subspace": 0.999679112139424,
+    "params.amp_rad_s": 98177359.56865263,
+    "params.detuning_hz": -64534.2472007048,
+    "params.sigma_fraction": 0.12000003399773397
+  },
+  {
+    "iteration": 336,
+    "objective_total": 0.0003208878505135404,
+    "metrics.fidelity_subspace": 0.9996791121494865,
+    "params.amp_rad_s": 98177359.10042828,
+    "params.detuning_hz": -64532.95723085617,
+    "params.sigma_fraction": 0.12000003329398712
+  },
+  {
+    "iteration": 337,
+    "objective_total": 0.0003208878477667376,
+    "metrics.fidelity_subspace": 0.9996791121522333,
+    "params.amp_rad_s": 98177358.97238861,
+    "params.detuning_hz": -64532.604478358575,
+    "params.sigma_fraction": 0.12000003310154195
+  },
+  {
+    "iteration": 338,
+    "objective_total": 0.000320906441936053,
+    "metrics.fidelity_subspace": 0.999679093558064,
+    "params.amp_rad_s": 98177358.89325574,
+    "params.detuning_hz": -64532.38646532546,
+    "params.sigma_fraction": 0.1200000329826043
+  },
+  {
+    "iteration": 339,
+    "objective_total": 0.0003208878488185629,
+    "metrics.fidelity_subspace": 0.9996791121511814,
+    "params.amp_rad_s": 98177359.02129541,
+    "params.detuning_hz": -64532.73921782304,
+    "params.sigma_fraction": 0.12000003317504945
+  },
+  {
+    "iteration": 340,
+    "objective_total": 0.0003209064429426922,
+    "metrics.fidelity_subspace": 0.9996790935570573,
+    "params.amp_rad_s": 98177358.94216254,
+    "params.detuning_hz": -64532.52120478992,
+    "params.sigma_fraction": 0.1200000330561118
+  },
+  {
+    "iteration": 341,
+    "objective_total": 0.0003208878481678612,
+    "metrics.fidelity_subspace": 0.9996791121518321,
+    "params.amp_rad_s": 98177358.99106935,
+    "params.detuning_hz": -64532.65594425437,
+    "params.sigma_fraction": 0.12000003312961932
+  },
+  {
+    "iteration": 342,
+    "objective_total": 0.0003208878475142729,
+    "metrics.fidelity_subspace": 0.9996791121524857,
+    "params.amp_rad_s": 98177358.96084328,
+    "params.detuning_hz": -64532.57267068572,
+    "params.sigma_fraction": 0.12000003308418918
+  },
+  {
+    "iteration": 343,
+    "objective_total": 0.00032088784736417075,
+    "metrics.fidelity_subspace": 0.9996791121526358,
+    "params.amp_rad_s": 98177358.95370787,
+    "params.detuning_hz": -64532.55301246278,
+    "params.sigma_fraction": 0.12000003307346457
+  },
+  {
+    "iteration": 344,
+    "objective_total": 0.0003209064430869102,
+    "metrics.fidelity_subspace": 0.9996790935569131,
+    "params.amp_rad_s": 98177358.94929795,
+    "params.detuning_hz": -64532.54086301285,
+    "params.sigma_fraction": 0.1200000330668364
+  },
+  {
+    "iteration": 345,
+    "objective_total": 0.0003208878474215693,
+    "metrics.fidelity_subspace": 0.9996791121525784,
+    "params.amp_rad_s": 98177358.95643336,
+    "params.detuning_hz": -64532.560521235784,
+    "params.sigma_fraction": 0.120000033077561
+  },
+  {
+    "iteration": 346,
+    "objective_total": 0.00032088784732975384,
+    "metrics.fidelity_subspace": 0.9996791121526702,
+    "params.amp_rad_s": 98177358.95202343,
+    "params.detuning_hz": -64532.54837178585,
+    "params.sigma_fraction": 0.12000003307093283
+  },
+  {
+    "iteration": 347,
+    "objective_total": 0.0003208878473045518,
+    "metrics.fidelity_subspace": 0.9996791121526954,
+    "params.amp_rad_s": 98177358.95098239,
+    "params.detuning_hz": -64532.54550368978,
+    "params.sigma_fraction": 0.12000003306936814
+  },
+  {
+    "iteration": 348,
+    "objective_total": 0.0003209064431064501,
+    "metrics.fidelity_subspace": 0.9996790935568935,
+    "params.amp_rad_s": 98177358.95033899,
+    "params.detuning_hz": -64532.543731108926,
+    "params.sigma_fraction": 0.12000003306840111
+  },
+  {
+    "iteration": 349,
+    "objective_total": 0.00032088784731532094,
+    "metrics.fidelity_subspace": 0.9996791121526847,
+    "params.amp_rad_s": 98177358.95138004,
+    "params.detuning_hz": -64532.546599204994,
+    "params.sigma_fraction": 0.1200000330699658
+  },
+  {
+    "iteration": 350,
+    "objective_total": 0.00032088784730133213,
+    "metrics.fidelity_subspace": 0.9996791121526987,
+    "params.amp_rad_s": 98177358.95073664,
+    "params.detuning_hz": -64532.544826624144,
+    "params.sigma_fraction": 0.12000003306899877
+  },
+  {
+    "iteration": 351,
+    "objective_total": 0.0003208878472982235,
+    "metrics.fidelity_subspace": 0.9996791121527018,
+    "params.amp_rad_s": 98177358.95055808,
+    "params.detuning_hz": -64532.54433468826,
+    "params.sigma_fraction": 0.12000003306873039
+  },
+  {
+    "iteration": 352,
+    "objective_total": 0.0003209064431044517,
+    "metrics.fidelity_subspace": 0.9996790935568955,
+    "params.amp_rad_s": 98177358.9504744,
+    "params.detuning_hz": -64532.54410414147,
+    "params.sigma_fraction": 0.12000003306860461
+  },
+  {
+    "iteration": 353,
+    "objective_total": 0.0003209064431117792,
+    "metrics.fidelity_subspace": 0.9996790935568882,
+    "params.amp_rad_s": 98177358.95062628,
+    "params.detuning_hz": -64532.54452259105,
+    "params.sigma_fraction": 0.1200000330688329
+  },
+  {
+    "iteration": 354,
+    "objective_total": 0.00032088784730344155,
+    "metrics.fidelity_subspace": 0.9996791121526966,
+    "params.amp_rad_s": 98177358.95052612,
+    "params.detuning_hz": -64532.544246627214,
+    "params.sigma_fraction": 0.12000003306868234
+  },
+  {
+    "iteration": 355,
+    "objective_total": 0.0003209064431124453,
+    "metrics.fidelity_subspace": 0.9996790935568876,
+    "params.amp_rad_s": 98177358.95058413,
+    "params.detuning_hz": -64532.54440646074,
+    "params.sigma_fraction": 0.12000003306876955
+  },
+  {
+    "iteration": 356,
+    "objective_total": 0.000320906443110891,
+    "metrics.fidelity_subspace": 0.9996790935568891,
+    "params.amp_rad_s": 98177358.95054586,
+    "params.detuning_hz": -64532.54430105194,
+    "params.sigma_fraction": 0.12000003306871204
+  },
+  {
+    "iteration": 357,
+    "objective_total": 0.00032090644310667216,
+    "metrics.fidelity_subspace": 0.9996790935568933,
+    "params.amp_rad_s": 98177358.95056804,
+    "params.detuning_hz": -64532.54436210291,
+    "params.sigma_fraction": 0.12000003306874535
+  },
+  {
+    "iteration": 358,
+    "objective_total": 0.00032090644311166816,
+    "metrics.fidelity_subspace": 0.9996790935568883,
+    "params.amp_rad_s": 98177358.95055342,
+    "params.detuning_hz": -64532.54432184033,
+    "params.sigma_fraction": 0.12000003306872338
+  },
+  {
+    "iteration": 359,
+    "objective_total": 0.00032088784729744635,
+    "metrics.fidelity_subspace": 0.9996791121527026,
+    "params.amp_rad_s": 98177358.95056188,
+    "params.detuning_hz": -64532.54434515972,
+    "params.sigma_fraction": 0.1200000330687361
+  },
+  {
+    "iteration": 360,
+    "objective_total": 0.0003209064431098918,
+    "metrics.fidelity_subspace": 0.9996790935568901,
+    "params.amp_rad_s": 98177358.95056424,
+    "params.detuning_hz": -64532.54435163145,
+    "params.sigma_fraction": 0.12000003306873963
+  }
+]

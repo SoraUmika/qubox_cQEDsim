@@ -1,0 +1,137 @@
+{
+  "case_name": "phase1_selective_flip_n0",
+  "description": "Selective pattern: only n=0 is flipped by the SQR. The tested gate is U_test = U_pi_ideal @ U_SQR.",
+  "phase": "phase1",
+  "sweep": [
+    {
+      "duration_s": 5.0000000000000004e-08,
+      "duration_ns": 50.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.7686381706741683,
+      "logical_fidelity_weighted": 0.5945101410508262,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.6635964931534551,
+      "selected_run_id": "phase1_selective_flip_n0_T0050ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\T_0050ns\\summary.json"
+    },
+    {
+      "duration_s": 7.500000000000001e-08,
+      "duration_ns": 75.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8167099219301907,
+      "logical_fidelity_weighted": 0.6771784926420358,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.08610669499346804,
+      "selected_run_id": "phase1_selective_flip_n0_T0075ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\T_0075ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000001e-07,
+      "duration_ns": 100.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8444341138415536,
+      "logical_fidelity_weighted": 0.7242458029131273,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.22871843643042986,
+      "selected_run_id": "phase1_selective_flip_n0_T0100ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\T_0100ns\\summary.json"
+    },
+    {
+      "duration_s": 1.5000000000000002e-07,
+      "duration_ns": 150.00000000000003,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.87770658624114,
+      "logical_fidelity_weighted": 0.7758772982386498,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.3152101893309075,
+      "selected_run_id": "phase1_selective_flip_n0_T0150ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\T_0150ns\\summary.json"
+    },
+    {
+      "duration_s": 2.0000000000000002e-07,
+      "duration_ns": 200.00000000000003,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9030107913346354,
+      "logical_fidelity_weighted": 0.818551415415561,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.005621428411486553,
+      "selected_run_id": "phase1_selective_flip_n0_T0200ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\T_0200ns\\summary.json"
+    },
+    {
+      "duration_s": 3.0000000000000004e-07,
+      "duration_ns": 300.00000000000006,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9479809487024119,
+      "logical_fidelity_weighted": 0.8987346598650676,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.015566693164545762,
+      "selected_run_id": "phase1_selective_flip_n0_T0300ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\T_0300ns\\summary.json"
+    },
+    {
+      "duration_s": 5.000000000000001e-07,
+      "duration_ns": 500.00000000000006,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9814596155349072,
+      "logical_fidelity_weighted": 0.9634769472103892,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.0003302492454958588,
+      "selected_run_id": "phase1_selective_flip_n0_T0500ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\T_0500ns\\summary.json"
+    },
+    {
+      "duration_s": 7.5e-07,
+      "duration_ns": 750.0,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9914957872241188,
+      "logical_fidelity_weighted": 0.983114352215898,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.04449666971761473,
+      "selected_run_id": "phase1_selective_flip_n0_T0750ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\T_0750ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000002e-06,
+      "duration_ns": 1000.0000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.562191036994541,
+      "logical_fidelity_weighted": 0.6909908309159513,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.029572828146915982,
+      "selected_run_id": "phase1_selective_flip_n0_T1000ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\T_1000ns\\summary.json"
+    }
+  ],
+  "thresholds": [
+    {
+      "threshold": 0.99,
+      "min_duration_s": 7.5e-07,
+      "min_duration_ns": 750.0
+    },
+    {
+      "threshold": 0.999,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    },
+    {
+      "threshold": 0.9999,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    }
+  ],
+  "selected_visualization_duration_ns": 750.0,
+  "curve_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\fidelity_leakage.png",
+  "waveform_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\selected_waveform.png",
+  "spectrum_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\selected_spectrum.png",
+  "per_n_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase1\\phase1_selective_flip_n0\\selected_per_n.png"
+}

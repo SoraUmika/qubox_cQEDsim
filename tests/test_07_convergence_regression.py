@@ -38,7 +38,7 @@ def _hard_run(dt: float):
     res = simulate_sequence(
         model,
         compiled,
-        model.basis_state(0, 0),
+        model.basis_state( 0,0),
         {"q": "qubit", "c": "cavity"},
         SimulationConfig(frame=FrameSpec()),
     )

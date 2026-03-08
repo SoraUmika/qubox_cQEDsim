@@ -21,9 +21,9 @@ def test_pulse_x90_matches_ideal_rotation_in_linear_regime():
     m = DispersiveTransmonCavityModel(omega_c=0.0, omega_q=0.0, alpha=0.0, chi=0.0, kerr=0.0, n_cav=2, n_tr=2)
     p = Pulse("q", 0.0, 1.0, _square, amp=np.pi / 4.0)
     c = SequenceCompiler(dt=0.01).compile([p], t_end=1.1)
-    sim = simulate_sequence(m, c, m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig(frame=FrameSpec()))
+    sim = simulate_sequence(m, c, m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig(frame=FrameSpec()))
     u = embed_qubit_op(qubit_rotation_axis(np.pi / 2, "x"), 2)
-    ideal = u * m.basis_state(0, 0)
+    ideal = u * m.basis_state( 0,0)
     f = abs(ideal.overlap(sim.final_state)) ** 2
     assert f > 0.995
 
@@ -40,13 +40,13 @@ def test_pulse_displacement_matches_ideal_displacement_k0():
     sim = simulate_sequence(
         m,
         c,
-        m.basis_state(0, 0),
+        m.basis_state( 0,0),
         {"c": "cavity"},
         SimulationConfig(frame=FrameSpec(omega_c_frame=m.omega_c, omega_q_frame=0.0)),
     )
     alpha = -1j * amp * dur
     ideal_c = displacement_op(m.n_cav, alpha) * qt.basis(m.n_cav, 0)
-    joint_ideal = qt.tensor(ideal_c, qt.basis(2, 0))
+    joint_ideal = qt.tensor( qt.basis(2, 0),ideal_c)
     m_sim = cavity_moments(sim.final_state)
     m_id = cavity_moments(joint_ideal)
     assert np.isclose(m_sim["n"], m_id["n"], rtol=0.12, atol=0.02)

@@ -1,0 +1,307 @@
+{
+  "output_dir": "outputs\\analysis\\smoke_study",
+  "phase1": [
+    {
+      "case_name": "phase1_selective_flip_n0",
+      "description": "Selective pattern: only n=0 is flipped by the SQR. The tested gate is U_test = U_pi_ideal @ U_SQR.",
+      "phase": "phase1",
+      "sweep": [
+        {
+          "duration_s": 5.0000000000000004e-08,
+          "duration_ns": 50.00000000000001,
+          "sigma_fraction": 0.25,
+          "subspace_fidelity": 0.7323625951216065,
+          "logical_fidelity_weighted": 0.5375242452189952,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.874567285122603,
+          "selected_run_id": "phase1_selective_flip_n0_T0050ns_sigma0p25_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase1\\phase1_selective_flip_n0\\T_0050ns\\summary.json"
+        },
+        {
+          "duration_s": 1.0000000000000001e-07,
+          "duration_ns": 100.00000000000001,
+          "sigma_fraction": 0.25,
+          "subspace_fidelity": 0.8326901734222315,
+          "logical_fidelity_weighted": 0.7007049905619445,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.08889093982826908,
+          "selected_run_id": "phase1_selective_flip_n0_T0100ns_sigma0p25_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase1\\phase1_selective_flip_n0\\T_0100ns\\summary.json"
+        }
+      ],
+      "thresholds": [
+        {
+          "threshold": 0.99,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.9999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        }
+      ],
+      "selected_visualization_duration_ns": 100.0,
+      "curve_path": "outputs\\analysis\\smoke_study\\phase1\\phase1_selective_flip_n0\\fidelity_leakage.png",
+      "waveform_path": "outputs\\analysis\\smoke_study\\phase1\\phase1_selective_flip_n0\\selected_waveform.png",
+      "spectrum_path": "outputs\\analysis\\smoke_study\\phase1\\phase1_selective_flip_n0\\selected_spectrum.png",
+      "per_n_path": "outputs\\analysis\\smoke_study\\phase1\\phase1_selective_flip_n0\\selected_per_n.png"
+    }
+  ],
+  "phase2": [
+    {
+      "case_name": "phase2_alternating_flips",
+      "description": "Alternating selective flips across Fock levels.",
+      "phase": "phase2",
+      "sweep": [
+        {
+          "duration_s": 5.0000000000000004e-08,
+          "duration_ns": 50.00000000000001,
+          "sigma_fraction": 0.15,
+          "subspace_fidelity": 0.32544398927983914,
+          "logical_fidelity_weighted": 0.33329780028766726,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.0005163777497251153,
+          "selected_run_id": "phase2_alternating_flips_T0050ns_sigma0p15_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\T_0050ns\\summary.json"
+        },
+        {
+          "duration_s": 1.0000000000000001e-07,
+          "duration_ns": 100.00000000000001,
+          "sigma_fraction": 0.25,
+          "subspace_fidelity": 0.32207150155253356,
+          "logical_fidelity_weighted": 0.32936030838560076,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.003027268047850972,
+          "selected_run_id": "phase2_alternating_flips_T0100ns_sigma0p25_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\T_0100ns\\summary.json"
+        }
+      ],
+      "thresholds": [
+        {
+          "threshold": 0.99,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.9999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        }
+      ],
+      "selected_visualization_duration_ns": 100.0,
+      "curve_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\fidelity_leakage.png",
+      "waveform_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\selected_waveform.png",
+      "spectrum_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\selected_spectrum.png",
+      "per_n_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\selected_per_n.png"
+    },
+    {
+      "case_name": "phase2_mixed_angles",
+      "description": "Mixed pi/2 and pi rotations with nontrivial XY phases.",
+      "phase": "phase2",
+      "sweep": [
+        {
+          "duration_s": 5.0000000000000004e-08,
+          "duration_ns": 50.00000000000001,
+          "sigma_fraction": 0.25,
+          "subspace_fidelity": 0.7940374490745373,
+          "logical_fidelity_weighted": 0.693743457930733,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.9851166598153737,
+          "selected_run_id": "phase2_mixed_angles_T0050ns_sigma0p25_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_mixed_angles\\T_0050ns\\summary.json"
+        },
+        {
+          "duration_s": 1.0000000000000001e-07,
+          "duration_ns": 100.00000000000001,
+          "sigma_fraction": 0.15,
+          "subspace_fidelity": 0.8206771052730829,
+          "logical_fidelity_weighted": 0.6888876812710938,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.9591945249615663,
+          "selected_run_id": "phase2_mixed_angles_T0100ns_sigma0p15_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_mixed_angles\\T_0100ns\\summary.json"
+        }
+      ],
+      "thresholds": [
+        {
+          "threshold": 0.99,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.9999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        }
+      ],
+      "selected_visualization_duration_ns": 100.0,
+      "curve_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_mixed_angles\\fidelity_leakage.png",
+      "waveform_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_mixed_angles\\selected_waveform.png",
+      "spectrum_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_mixed_angles\\selected_spectrum.png",
+      "per_n_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_mixed_angles\\selected_per_n.png"
+    },
+    {
+      "case_name": "phase2_seeded_random",
+      "description": "Deterministic seeded random target over the matched subspace.",
+      "phase": "phase2",
+      "sweep": [
+        {
+          "duration_s": 5.0000000000000004e-08,
+          "duration_ns": 50.00000000000001,
+          "sigma_fraction": 0.25,
+          "subspace_fidelity": 0.8796095536549141,
+          "logical_fidelity_weighted": 0.7798221734076509,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.999776447549693,
+          "selected_run_id": "phase2_seeded_random_T0050ns_sigma0p25_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_seeded_random\\T_0050ns\\summary.json"
+        },
+        {
+          "duration_s": 1.0000000000000001e-07,
+          "duration_ns": 100.00000000000001,
+          "sigma_fraction": 0.25,
+          "subspace_fidelity": 0.8860866101286415,
+          "logical_fidelity_weighted": 0.7896939590745506,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.9406587593493807,
+          "selected_run_id": "phase2_seeded_random_T0100ns_sigma0p25_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_seeded_random\\T_0100ns\\summary.json"
+        }
+      ],
+      "thresholds": [
+        {
+          "threshold": 0.99,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.9999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        }
+      ],
+      "selected_visualization_duration_ns": 100.0,
+      "curve_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_seeded_random\\fidelity_leakage.png",
+      "waveform_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_seeded_random\\selected_waveform.png",
+      "spectrum_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_seeded_random\\selected_spectrum.png",
+      "per_n_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_seeded_random\\selected_per_n.png"
+    },
+    {
+      "case_name": "phase2_cluster_like",
+      "description": "Cluster-relevant heuristic block pattern on n <= n_match.",
+      "phase": "phase2",
+      "sweep": [
+        {
+          "duration_s": 5.0000000000000004e-08,
+          "duration_ns": 50.00000000000001,
+          "sigma_fraction": 0.25,
+          "subspace_fidelity": 0.8129949772563219,
+          "logical_fidelity_weighted": 0.6979726407360406,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.984696479014619,
+          "selected_run_id": "phase2_cluster_like_T0050ns_sigma0p25_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\T_0050ns\\summary.json"
+        },
+        {
+          "duration_s": 1.0000000000000001e-07,
+          "duration_ns": 100.00000000000001,
+          "sigma_fraction": 0.25,
+          "subspace_fidelity": 0.7865891337602244,
+          "logical_fidelity_weighted": 0.6631219178804919,
+          "leakage_average": 0.0,
+          "leakage_worst": 0.0,
+          "guard_selectivity_error": 0.9670478420666309,
+          "selected_run_id": "phase2_cluster_like_T0100ns_sigma0p25_start00",
+          "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\T_0100ns\\summary.json"
+        }
+      ],
+      "thresholds": [
+        {
+          "threshold": 0.99,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        },
+        {
+          "threshold": 0.9999,
+          "min_duration_s": null,
+          "min_duration_ns": null
+        }
+      ],
+      "selected_visualization_duration_ns": 100.0,
+      "curve_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\fidelity_leakage.png",
+      "waveform_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\selected_waveform.png",
+      "spectrum_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\selected_spectrum.png",
+      "per_n_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\selected_per_n.png"
+    }
+  ],
+  "fast_pi": {
+    "duration_s": 1.6e-08,
+    "results": [
+      {
+        "n_validate": 1,
+        "subspace_fidelity": 0.9996791121527026,
+        "worst_block_fidelity": 0.9987276161987615,
+        "average_block_fidelity": 0.9993584268188002,
+        "leakage_average": 0.0,
+        "leakage_worst": 0.0,
+        "amp_rad_s": 98177358.95056188,
+        "amp_hz": 15625411.976689259,
+        "detuning_hz": -64532.54434515972,
+        "sigma_fraction": 0.1200000330687361,
+        "history_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_1\\history.json",
+        "waveform_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_1\\waveform.png",
+        "spectrum_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_1\\spectrum.png"
+      },
+      {
+        "n_validate": 2,
+        "subspace_fidelity": 0.9989335808179639,
+        "worst_block_fidelity": 0.9949167990497113,
+        "average_block_fidelity": 0.997869453519176,
+        "leakage_average": 0.0,
+        "leakage_worst": 0.0,
+        "amp_rad_s": 98171450.24887884,
+        "amp_hz": 15624471.577609146,
+        "detuning_hz": -128750.12237480645,
+        "sigma_fraction": 0.1200030002562526,
+        "history_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_2\\history.json",
+        "waveform_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_2\\waveform.png",
+        "spectrum_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_2\\spectrum.png"
+      }
+    ]
+  }
+}

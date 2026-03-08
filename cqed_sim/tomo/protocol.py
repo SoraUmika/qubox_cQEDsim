@@ -11,7 +11,7 @@ from cqed_sim.core.ideal_gates import embed_qubit_op, qubit_rotation_axis
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.pulse import Pulse
 from cqed_sim.sequence.scheduler import SequenceCompiler
-from cqed_sim.sim.extractors import conditioned_bloch_xyz, reduced_qubit_state
+from cqed_sim.sim.extractors import bloch_xyz_from_qubit_state, conditioned_bloch_xyz, qubit_density_from_bloch_xyz, reduced_qubit_state
 from cqed_sim.sim.noise import NoiseSpec
 from cqed_sim.sim.runner import SimulationConfig, simulate_sequence
 
@@ -111,7 +111,7 @@ def run_all_xy(
     noise: NoiseSpec | None = None,
 ) -> dict[str, np.ndarray]:
     frame = frame or FrameSpec(omega_q_frame=model.omega_q)
-    init = model.basis_state(0, 0)
+    init = model.basis_state( 0,0)
     measured = []
     expected = []
     for a, b in ALL_XY_21:
@@ -128,7 +128,7 @@ def run_all_xy(
         psi_ideal = init
         psi_ideal = _apply_ideal_label(psi_ideal, a, model.n_cav)
         psi_ideal = _apply_ideal_label(psi_ideal, b, model.n_cav)
-        rho_q_ideal = qt.ptrace(psi_ideal, 1)
+        rho_q_ideal = reduced_qubit_state(psi_ideal)
         expected.append(float(np.real((rho_q_ideal * qt.sigmaz()).tr())))
     measured_arr = np.asarray(measured, dtype=float)
     expected_arr = np.asarray(expected, dtype=float)
@@ -239,7 +239,7 @@ def run_fock_resolved_tomo(
                 # matched idle
                 comp_off = SequenceCompiler(dt=dt_ns).compile([], t_end=tag_duration_ns + dt_ns)
                 off = simulate_sequence(model, comp_off, off_state, {}, SimulationConfig(frame=frame), noise=noise)
-                s_off = float(np.real((qt.ptrace(off.final_state, 1) * qt.sigmaz()).tr()))
+                s_off = float(np.real((reduced_qubit_state(off.final_state) * qt.sigmaz()).tr()))
                 t_pre = 0.0
                 pre = []
             else:
@@ -248,19 +248,21 @@ def run_fock_resolved_tomo(
                 # OFF branch: matched idle equal to tag duration.
                 comp_off = SequenceCompiler(dt=dt_ns).compile(pre, t_end=t_pre + tag_duration_ns + dt_ns)
                 off = simulate_sequence(model, comp_off, rho0, {"q": "qubit"} if pre else {}, SimulationConfig(frame=frame), noise=noise)
-                s_off = float(np.real((qt.ptrace(off.final_state, 1) * qt.sigmaz()).tr()))
+                s_off = float(np.real((reduced_qubit_state(off.final_state) * qt.sigmaz()).tr()))
 
             if ideal_tag:
                 pn = qt.basis(model.n_cav, n) * qt.basis(model.n_cav, n).dag()
-                tag_u = qt.tensor(qt.qeye(model.n_cav) - pn, qt.qeye(model.n_tr)) + qt.tensor(pn, qubit_rotation_axis(np.pi, "x"))
+                tag_u = qt.tensor(qt.qeye(model.n_tr), qt.qeye(model.n_cav) - pn) + qt.tensor(
+                    qubit_rotation_axis(np.pi, "x"), pn
+                )
                 on_state = tag_u * off.final_state * tag_u.dag() if off.final_state.isoper else tag_u * off.final_state
-                rho_q_on = qt.ptrace(on_state, 1)
+                rho_q_on = reduced_qubit_state(on_state)
                 s_on = float(np.real((rho_q_on * qt.sigmaz()).tr()))
             else:
                 tag = selective_pi_pulse(n=n, t0_ns=t_pre, duration_ns=tag_duration_ns, amp=tag_amp, model=model, drag=cal.drag)
                 comp_on = SequenceCompiler(dt=dt_ns).compile(pre + [tag], t_end=t_pre + tag_duration_ns + dt_ns)
                 on = simulate_sequence(model, comp_on, rho0, {"q": "qubit"}, SimulationConfig(frame=frame), noise=noise)
-                s_on = float(np.real((qt.ptrace(on.final_state, 1) * qt.sigmaz()).tr()))
+                s_on = float(np.real((reduced_qubit_state(on.final_state) * qt.sigmaz()).tr()))
 
             v_hat[a][n] = 0.5 * (s_off - s_on)
 
@@ -268,7 +270,7 @@ def run_fock_resolved_tomo(
         rho_prep = state_prep()
         if not rho_prep.isoper:
             rho_prep = rho_prep.proj()
-        proj_n = qt.tensor(qt.basis(model.n_cav, n) * qt.basis(model.n_cav, n).dag(), qt.qeye(model.n_tr))
+        proj_n = qt.tensor(qt.qeye(model.n_tr), qt.basis(model.n_cav, n) * qt.basis(model.n_cav, n).dag())
         p_n[n] = float(np.real((rho_prep * proj_n).tr()))
 
     v_rec = None
@@ -290,16 +292,18 @@ def run_fock_resolved_tomo(
 
 def true_fock_resolved_vectors(state: qt.Qobj, n_max: int) -> dict[str, np.ndarray]:
     rho = state if state.isoper else state.proj()
-    n_cav = rho.dims[0][0]
+    n_cav = rho.dims[0][1]
     out = {a: np.zeros(n_max + 1, dtype=float) for a in ("x", "y", "z")}
-    pauli = {"x": qt.sigmax(), "y": qt.sigmay(), "z": qt.sigmaz()}
     for n in range(n_max + 1):
         if n >= n_cav:
             continue
         pn = qt.basis(n_cav, n) * qt.basis(n_cav, n).dag()
-        for a in ("x", "y", "z"):
-            op = qt.tensor(pn, pauli[a])
-            out[a][n] = float(np.real((rho * op).tr()))
+        block = qt.tensor(qt.qeye(2), pn) * rho * qt.tensor(qt.qeye(2), pn)
+        rho_q_tilde = qt.ptrace(block, 0)
+        x, y, z = bloch_xyz_from_qubit_state(rho_q_tilde)
+        out["x"][n] = x
+        out["y"][n] = y
+        out["z"][n] = z
     return out
 
 
@@ -319,8 +323,8 @@ def calibrate_leakage_matrix(
     for alpha in alphas:
         coh = qt.coherent(model.n_cav, alpha)
         for r in bloch_states:
-            rq = 0.5 * (qt.qeye(2) + r[0] * qt.sigmax() + r[1] * qt.sigmay() + r[2] * qt.sigmaz())
-            rho = qt.tensor(coh.proj(), rq)
+            rq = qubit_density_from_bloch_xyz(r[0], r[1], r[2])
+            rho = qt.tensor(rq, coh.proj())
             v_true = true_fock_resolved_vectors(rho, n_max=n_max)
             tomo = run_fock_resolved_tomo(
                 model=model,

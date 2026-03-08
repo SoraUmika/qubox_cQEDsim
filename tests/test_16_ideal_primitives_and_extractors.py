@@ -23,7 +23,7 @@ from cqed_sim.sim.extractors import (
 
 
 def _joint_g(n_cav: int = 8) -> qt.Qobj:
-    return qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0))
+    return qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 0))
 
 
 def test_ideal_rotation_mapping_x90_and_y90():
@@ -33,7 +33,7 @@ def test_ideal_rotation_mapping_x90_and_y90():
     uy = embed_qubit_op(qubit_rotation_axis(np.pi / 2, "y"), 4)
     x = bloch_xyz_from_joint(ux * psi)
     y = bloch_xyz_from_joint(uy * psi)
-    assert np.allclose(x, (0.0, -1.0, 0.0), atol=2e-3)
+    assert np.allclose(x, (0.0, 1.0, 0.0), atol=2e-3)
     assert np.allclose(y, (1.0, 0.0, 0.0), atol=2e-3)
     assert (time.perf_counter() - start) < 0.8
 
@@ -154,12 +154,12 @@ def test_sqr_applies_rotation_only_on_target_fock():
     phis = np.zeros(n_cav)
     thetas[n0] = np.pi / 2
     u = sqr_op(thetas, phis)
-    psi = qt.tensor(qt.basis(n_cav, n0), qt.basis(2, 0))
+    psi = qt.tensor( qt.basis(2, 0),qt.basis(n_cav, n0))
     out = u * psi
     x, y, z = bloch_xyz_from_joint(out)
-    assert np.allclose((x, y, z), (0.0, -1.0, 0.0), atol=2e-3)
+    assert np.allclose((x, y, z), (0.0, 1.0, 0.0), atol=2e-3)
     # Mixed-n input: n=1 branch unchanged.
-    rho = 0.5 * qt.tensor(qt.basis(n_cav, 1), qt.basis(2, 0)).proj() + 0.5 * psi.proj()
+    rho = 0.5 * qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 1)).proj() + 0.5 * psi.proj()
     rho_out = u * rho * u.dag()
     x1, y1, z1, p1, _ = conditioned_bloch_xyz(rho_out, 1)
     assert np.isclose(p1, 0.5, atol=1e-8)
@@ -171,11 +171,11 @@ def test_sqr_linearity_on_superposition():
     thetas = np.linspace(0, np.pi / 2, n_cav)
     phis = np.linspace(0.1, 0.5, n_cav)
     u = sqr_op(thetas, phis)
-    psi = qt.tensor((qt.basis(n_cav, 0) + qt.basis(n_cav, 2)).unit(), (qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit())
+    psi = qt.tensor( (qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit(),(qt.basis(n_cav, 0) + qt.basis(n_cav, 2)).unit())
     out1 = u * psi
     out2 = 0 * psi
     for n in range(n_cav):
-        out2 += qt.tensor(qt.basis(n_cav, n) * qt.basis(n_cav, n).dag(), qubit_rotation_xy(thetas[n], phis[n])) * psi
+        out2 += qt.tensor( qubit_rotation_xy(thetas[n], phis[n]),qt.basis(n_cav, n) * qt.basis(n_cav, n).dag()) * psi
     assert abs(out1.overlap(out2)) > 1 - 1e-10
 
 
@@ -184,22 +184,22 @@ def test_sqr_reduces_to_global_rotation_when_theta_phi_constant():
     theta = np.pi / 3
     phi = 0.2
     u = sqr_op(np.full(n_cav, theta), np.full(n_cav, phi))
-    ref = qt.tensor(qt.qeye(n_cav), qubit_rotation_xy(theta, phi))
+    ref = qt.tensor( qubit_rotation_xy(theta, phi),qt.qeye(n_cav))
     assert (u - ref).norm() < 1e-10
 
 
 def test_bloch_extractor_for_known_pure_states():
     n_cav = 4
-    plus_x = qt.tensor(qt.basis(n_cav, 0), (qt.basis(2, 0) + qt.basis(2, 1)).unit())
-    plus_y = qt.tensor(qt.basis(n_cav, 0), (qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit())
+    plus_x = qt.tensor( (qt.basis(2, 0) + qt.basis(2, 1)).unit(),qt.basis(n_cav, 0))
+    plus_y = qt.tensor( (qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit(),qt.basis(n_cav, 0))
     assert np.allclose(bloch_xyz_from_joint(plus_x), (1.0, 0.0, 0.0), atol=2e-3)
-    assert np.allclose(bloch_xyz_from_joint(plus_y), (0.0, 1.0, 0.0), atol=2e-3)
+    assert np.allclose(bloch_xyz_from_joint(plus_y), (0.0, -1.0, 0.0), atol=2e-3)
 
 
 def test_conditional_bloch_extractor_matches_postselection():
     n_cav = 4
     p = 0.3
-    rho = p * qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)).proj() + (1 - p) * qt.tensor(qt.basis(n_cav, 1), qt.basis(2, 1)).proj()
+    rho = p * qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 0)).proj() + (1 - p) * qt.tensor( qt.basis(2, 1),qt.basis(n_cav, 1)).proj()
     x0, y0, z0, p0, _ = conditioned_bloch_xyz(rho, 0)
     x1, y1, z1, p1, _ = conditioned_bloch_xyz(rho, 1)
     assert np.isclose(p0, p, atol=1e-10) and np.isclose(p1, 1 - p, atol=1e-10)
@@ -209,7 +209,7 @@ def test_conditional_bloch_extractor_matches_postselection():
 
 def test_conditional_extractor_handles_zero_probability():
     n_cav = 5
-    rho = qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)).proj()
+    rho = qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 0)).proj()
     x, y, z, p, valid = conditioned_bloch_xyz(rho, 3, fallback="nan")
     assert p == 0.0 and not valid
     assert np.isnan(x) and np.isnan(y) and np.isnan(z)
@@ -258,6 +258,6 @@ def test_plot_helpers_return_correct_shapes_and_axes():
     assert y.shape == (31,)
     assert w.shape == (31, 31)
     # Moment helper smoke.
-    joint = qt.tensor(rho, qt.basis(2, 0).proj())
+    joint = qt.tensor(qt.basis(2, 0).proj(), rho)
     moments = cavity_moments(joint)
     assert set(moments.keys()) == {"a", "adag_a", "n"}

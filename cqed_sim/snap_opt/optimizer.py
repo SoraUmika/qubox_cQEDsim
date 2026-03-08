@@ -43,10 +43,10 @@ def _evaluate_errors(
     dlambda = np.zeros(n_max + 1, dtype=float)
     dalpha = np.zeros(n_max + 1, dtype=float)
     for n in range(n_max + 1):
-        psi0 = model.basis_state(n, 0)
+        psi0 = model.basis_state( 0,n)
         out, _, _ = run_snap_stage(model, target_phases, params, cfg, psi0, frame=frame)
-        cg = model.basis_state(n, 0).overlap(out)
-        ce = model.basis_state(n, 1).overlap(out)
+        cg = model.basis_state( 0,n).overlap(out)
+        ce = model.basis_state( 1,n).overlap(out)
         dtheta[n] = np.angle(cg * np.exp(-1j * target_phases[n]))
         dlambda[n] = np.abs(cg) - 1.0
         dalpha[n] = np.abs(ce)

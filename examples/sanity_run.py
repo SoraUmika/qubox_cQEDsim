@@ -33,7 +33,7 @@ def main():
     result = simulate_sequence(
         model,
         compiled,
-        model.basis_state(0, 0),
+        model.basis_state( 0,0),
         {"c": "cavity", "q": "qubit"},
         config=SimulationConfig(frame=FrameSpec()),
     )

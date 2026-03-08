@@ -43,19 +43,19 @@ def sqr_op(thetas: np.ndarray | list[float], phis: np.ndarray | list[float]) -> 
     if thetas.shape != phis.shape:
         raise ValueError("thetas and phis must have the same shape.")
     n_cav = thetas.size
-    out = 0 * qt.tensor(qt.qeye(n_cav), qt.qeye(2))
+    out = 0 * qt.tensor(qt.qeye(2), qt.qeye(n_cav))
     for n in range(n_cav):
         pn = qt.basis(n_cav, n) * qt.basis(n_cav, n).dag()
-        out += qt.tensor(pn, qubit_rotation_xy(float(thetas[n]), float(phis[n])))
+        out += qt.tensor(qubit_rotation_xy(float(thetas[n]), float(phis[n])), pn)
     return out
 
 
 def embed_qubit_op(op_q: qt.Qobj, n_cav: int) -> qt.Qobj:
-    return qt.tensor(qt.qeye(n_cav), op_q)
+    return qt.tensor(op_q, qt.qeye(n_cav))
 
 
 def embed_cavity_op(op_c: qt.Qobj, n_tr: int = 2) -> qt.Qobj:
-    return qt.tensor(op_c, qt.qeye(n_tr))
+    return qt.tensor(qt.qeye(n_tr), op_c)
 
 
 def beamsplitter_unitary(n_a: int, n_b: int, theta: float) -> qt.Qobj:

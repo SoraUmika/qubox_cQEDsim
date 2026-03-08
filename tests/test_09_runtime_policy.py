@@ -21,7 +21,7 @@ def test_fast_path_runtime_budget():
     )
     pulse = Pulse("q", 0.0, 1.0, _square, amp=np.pi / 3)
     compiled = SequenceCompiler(dt=0.02).compile([pulse], t_end=1.2)
-    simulate_sequence(model, compiled, model.basis_state(0, 0), {"q": "qubit"}, SimulationConfig())
+    simulate_sequence(model, compiled, model.basis_state( 0,0), {"q": "qubit"}, SimulationConfig())
     elapsed = time.perf_counter() - start
     assert elapsed < 1.0
 

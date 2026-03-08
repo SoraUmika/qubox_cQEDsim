@@ -20,7 +20,7 @@ def _run(model, amp, dt):
     t_p = 3.0
     pulse = Pulse(channel="cavity", t0=0.0, duration=t_p, envelope=_square, amp=amp)
     compiled = SequenceCompiler(dt=dt).compile([pulse], t_end=t_p)
-    psi0 = model.basis_state(0, 0)
+    psi0 = model.basis_state( 0,0)
     return simulate_sequence(
         model,
         compiled,

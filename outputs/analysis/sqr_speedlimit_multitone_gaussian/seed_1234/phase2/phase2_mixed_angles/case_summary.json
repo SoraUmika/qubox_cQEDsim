@@ -1,0 +1,137 @@
+{
+  "case_name": "phase2_mixed_angles",
+  "description": "Mixed pi/2 and pi rotations with nontrivial XY phases.",
+  "phase": "phase2",
+  "sweep": [
+    {
+      "duration_s": 5.0000000000000004e-08,
+      "duration_ns": 50.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8152904333521346,
+      "logical_fidelity_weighted": 0.7132133899376708,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9993174595539545,
+      "selected_run_id": "phase2_mixed_angles_T0050ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\T_0050ns\\summary.json"
+    },
+    {
+      "duration_s": 7.500000000000001e-08,
+      "duration_ns": 75.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8018205352479938,
+      "logical_fidelity_weighted": 0.6902824217413297,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9995769829847881,
+      "selected_run_id": "phase2_mixed_angles_T0075ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\T_0075ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000001e-07,
+      "duration_ns": 100.00000000000001,
+      "sigma_fraction": 0.2,
+      "subspace_fidelity": 0.8195889520016927,
+      "logical_fidelity_weighted": 0.7068919012486148,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9968300821377908,
+      "selected_run_id": "phase2_mixed_angles_T0100ns_sigma0p2_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\T_0100ns\\summary.json"
+    },
+    {
+      "duration_s": 1.5000000000000002e-07,
+      "duration_ns": 150.00000000000003,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8423936840029155,
+      "logical_fidelity_weighted": 0.731200606771377,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.919823321904989,
+      "selected_run_id": "phase2_mixed_angles_T0150ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\T_0150ns\\summary.json"
+    },
+    {
+      "duration_s": 2.0000000000000002e-07,
+      "duration_ns": 200.00000000000003,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8496435193076602,
+      "logical_fidelity_weighted": 0.7309572313284441,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.8870717656505459,
+      "selected_run_id": "phase2_mixed_angles_T0200ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\T_0200ns\\summary.json"
+    },
+    {
+      "duration_s": 3.0000000000000004e-07,
+      "duration_ns": 300.00000000000006,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9379799109255492,
+      "logical_fidelity_weighted": 0.8805514858764629,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.7899730268051877,
+      "selected_run_id": "phase2_mixed_angles_T0300ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\T_0300ns\\summary.json"
+    },
+    {
+      "duration_s": 5.000000000000001e-07,
+      "duration_ns": 500.00000000000006,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9931548580066628,
+      "logical_fidelity_weighted": 0.9863829805263054,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.026886508346107486,
+      "selected_run_id": "phase2_mixed_angles_T0500ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\T_0500ns\\summary.json"
+    },
+    {
+      "duration_s": 7.5e-07,
+      "duration_ns": 750.0,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9987659845765986,
+      "logical_fidelity_weighted": 0.9975339783738992,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.04949740192420117,
+      "selected_run_id": "phase2_mixed_angles_T0750ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\T_0750ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000002e-06,
+      "duration_ns": 1000.0000000000001,
+      "sigma_fraction": 0.25,
+      "subspace_fidelity": 0.999605618987415,
+      "logical_fidelity_weighted": 0.9992114773102364,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.08311189322957077,
+      "selected_run_id": "phase2_mixed_angles_T1000ns_sigma0p25_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\T_1000ns\\summary.json"
+    }
+  ],
+  "thresholds": [
+    {
+      "threshold": 0.99,
+      "min_duration_s": 5.000000000000001e-07,
+      "min_duration_ns": 500.00000000000006
+    },
+    {
+      "threshold": 0.999,
+      "min_duration_s": 1.0000000000000002e-06,
+      "min_duration_ns": 1000.0000000000001
+    },
+    {
+      "threshold": 0.9999,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    }
+  ],
+  "selected_visualization_duration_ns": 1000.0,
+  "curve_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\fidelity_leakage.png",
+  "waveform_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\selected_waveform.png",
+  "spectrum_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\selected_spectrum.png",
+  "per_n_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_mixed_angles\\selected_per_n.png"
+}

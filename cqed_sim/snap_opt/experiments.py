@@ -50,7 +50,7 @@ def run_snap_stage(
     out = res.final_state
     if cfg.apply_fast_reset:
         # Idealized global qubit X reset pulse approximation.
-        x = qt.tensor(qt.qeye(model.n_cav), qt.sigmax())
+        x = qt.tensor(qt.sigmax(), qt.qeye(model.n_cav))
         out = x * out if not out.isoper else x * out * x.dag()
     return out, compiled.tlist, compiled.channels["q"].baseband
 

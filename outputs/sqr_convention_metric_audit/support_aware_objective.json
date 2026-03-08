@@ -1,0 +1,1540 @@
+{
+  "support_sets": {
+    "S01": {
+      "targets": {
+        "x90_x90": {
+          "global": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1
+              ],
+              "active_weights": {
+                "0": 0.5,
+                "1": 0.5
+              },
+              "active_weighted_mean_process_fidelity": 0.8443674677886257,
+              "active_weighted_mean_infidelity": 0.15563253221137424,
+              "active_min_process_fidelity": 0.8300918597825938,
+              "active_theta_rms_rad": 0.23899124744393277,
+              "active_phase_axis_rms_rad": 0.3779899576669058,
+              "active_residual_pre_z_rms_rad": 0.7292686063674677,
+              "active_residual_post_z_rms_rad": 0.6276872641668447,
+              "inactive_mean_infidelity": 0.730628599512169,
+              "support_state_fidelity_mean": 0.8315528585033273,
+              "support_state_fidelity_min": 0.815408914661112,
+              "support_state_fidelities": {
+                "active_g,0": 0.8632977863945639,
+                "active_g,1": 0.8305516481119716,
+                "sup_g,(0+1)": 0.815408914661112,
+                "sup_g,uniform_active": 0.815408914661112,
+                "sup_ge,uniform_active": 0.8477016305711809,
+                "sup_g,weighted_active": 0.8154089146611126,
+                "sup_ge,weighted_active": 0.8477016305711815,
+                "coherent_active,+0.90+0.20j": 0.8169434283943837
+              },
+              "support_phase_superposition_rms_rad": 0.20202386914599996,
+              "support_state_leakage_mean": 1.4139750065256251e-09,
+              "support_state_leakage_max": 5.6459681374576576e-09,
+              "support_state_leakage_by_state": {
+                "active_g,0": 1.9864332401198226e-11,
+                "active_g,1": 0.0,
+                "sup_g,(0+1)": 0.0,
+                "sup_g,uniform_active": 0.0,
+                "sup_ge,uniform_active": 5.6459681374576576e-09,
+                "sup_g,weighted_active": 0.0,
+                "sup_ge,weighted_active": 5.645967582346145e-09,
+                "coherent_active,+0.90+0.20j": 0.0
+              },
+              "support_weighted_leakage_mean": 4.1427322947702395e-05,
+              "support_weighted_leakage_max": 4.1427322947702395e-05,
+              "support_worst_leakage_channel": {
+                "from_manifold": 1,
+                "to_manifold": 2,
+                "value": 4.1427322947702395e-05
+              },
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.5,
+                  "process_fidelity": 0.8586430757946577,
+                  "theta_error_rad": -0.33726168739310536,
+                  "phase_axis_error_rad": -0.3093516580584481,
+                  "residual_pre_z_rad": -0.8174604350729093,
+                  "residual_post_z_rad": 0.67047012097068
+                },
+                {
+                  "n": 1,
+                  "weight": 0.5,
+                  "process_fidelity": 0.8300918597825938,
+                  "theta_error_rad": -0.022094952508876275,
+                  "phase_axis_error_rad": 0.43595225409504135,
+                  "residual_pre_z_rad": 0.6288273511518936,
+                  "residual_post_z_rad": -0.5817666371321737
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.46103675625476254,
+              "min_process_fidelity": 0.028220932173823272,
+              "mean_process_infidelity": 0.5389632437452374,
+              "phase_axis_rms_rad": 1.09131321810203,
+              "residual_pre_z_rms_rad": 0.8645271330372788,
+              "residual_post_z_rms_rad": 1.2381321117393953,
+              "theta_error_rms_rad": 1.801003121503627,
+              "phase_sensitive_rms_rad": 1.8631540005813048
+            },
+            "loss_terms": {
+              "infidelity": 0.5389632437452374,
+              "phase_axis": 0.2977411350010522,
+              "theta": 0.6199130316495978,
+              "residual_z": 0.7101851682653508,
+              "state": 0.04874262988104768,
+              "off_block": 0.0,
+              "selectivity_mean": 3.951967127942807e-05,
+              "selectivity_max": 3.350102274615428e-05,
+              "regularization": 0.0005634152866116493
+            },
+            "boundary_spill": 0.6390423217963761,
+            "active_to_inactive_crosstalk_max": 1.381941186291956,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                0.8936196067960058,
+                0.6390423217963761
+              ],
+              [
+                1.381941186291956,
+                1.0800103483157146
+              ],
+              [
+                1.1941628341289638,
+                0.9789381243625886
+              ],
+              [
+                0.7176778254264863,
+                0.5900699050298794
+              ]
+            ]
+          },
+          "support": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1
+              ],
+              "active_weights": {
+                "0": 0.5,
+                "1": 0.5
+              },
+              "active_weighted_mean_process_fidelity": 0.8949665578222211,
+              "active_weighted_mean_infidelity": 0.10503344217777888,
+              "active_min_process_fidelity": 0.7910856172820254,
+              "active_theta_rms_rad": 0.11747650272845987,
+              "active_phase_axis_rms_rad": 0.3561113531750448,
+              "active_residual_pre_z_rms_rad": 0.36801135167542465,
+              "active_residual_post_z_rms_rad": 0.3995835346112338,
+              "inactive_mean_infidelity": 0.7301284104999751,
+              "support_state_fidelity_mean": 0.8495177956350887,
+              "support_state_fidelity_min": 0.7914811878953751,
+              "support_state_fidelities": {
+                "active_g,0": 0.9997076127631359,
+                "active_g,1": 0.7914811878953751,
+                "sup_g,(0+1)": 0.8300696237614472,
+                "sup_g,uniform_active": 0.8300696237614472,
+                "sup_ge,uniform_active": 0.837901936396086,
+                "sup_g,weighted_active": 0.830069623761448,
+                "sup_ge,weighted_active": 0.8379019363960865,
+                "coherent_active,+0.90+0.20j": 0.8389408203456832
+              },
+              "support_phase_superposition_rms_rad": 0.044921985166840796,
+              "support_state_leakage_mean": 2.9055659406251877e-09,
+              "support_state_leakage_max": 5.9698047616407734e-09,
+              "support_state_leakage_by_state": {
+                "active_g,0": 7.324885142878657e-11,
+                "active_g,1": 3.74466446739774e-09,
+                "sup_g,(0+1)": 1.9089568814578683e-09,
+                "sup_g,uniform_active": 1.9089568814578683e-09,
+                "sup_ge,uniform_active": 5.9698047616407734e-09,
+                "sup_g,weighted_active": 1.908956548390961e-09,
+                "sup_ge,weighted_active": 5.969804428573866e-09,
+                "coherent_active,+0.90+0.20j": 1.7601347046536375e-09
+              },
+              "support_weighted_leakage_mean": 9.223164709255865e-05,
+              "support_weighted_leakage_max": 9.223164709255865e-05,
+              "support_worst_leakage_channel": {
+                "from_manifold": 1,
+                "to_manifold": 2,
+                "value": 9.223164709255865e-05
+              },
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.5,
+                  "process_fidelity": 0.9988474983624168,
+                  "theta_error_rad": -0.025004474198061066,
+                  "phase_axis_error_rad": -0.018468606444338675,
+                  "residual_pre_z_rad": 0.029336176803638647,
+                  "residual_post_z_rad": 0.029336176803638647
+                },
+                {
+                  "n": 1,
+                  "weight": 0.5,
+                  "process_fidelity": 0.7910856172820254,
+                  "theta_error_rad": 0.16424443265054123,
+                  "phase_axis_error_rad": 0.5032787520811177,
+                  "residual_pre_z_rad": 0.5196191861878194,
+                  "residual_post_z_rad": -0.5643344673111503
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.47823657894075694,
+              "min_process_fidelity": 0.025777380219664886,
+              "mean_process_infidelity": 0.5217634210592431,
+              "phase_axis_rms_rad": 1.6421960158184772,
+              "residual_pre_z_rms_rad": 0.9041994259569495,
+              "residual_post_z_rms_rad": 0.9068337046903738,
+              "theta_error_rms_rad": 1.7980775128509061,
+              "phase_sensitive_rms_rad": 2.082482106581813
+            },
+            "loss_terms": {
+              "active_infidelity": 0.10503344217777888,
+              "active_theta": 0.0027601457386619683,
+              "active_phase_axis": 0.04438535355105651,
+              "active_pre_z": 0.033858088740493265,
+              "active_post_z": 0.03991675028310177,
+              "active_state_mean": 0.08276521240070124,
+              "active_state_min": 0.014341034823860855,
+              "phase_superposition": 0.0007062946629654526,
+              "leakage_mean": 1.9370069616748217e-05,
+              "leakage_max": 1.522052014510541e-05,
+              "worst_block": 0.02855091519817069,
+              "inactive_infidelity": 0.014602568209999502,
+              "regularization": 0.0
+            },
+            "boundary_spill": 1.0139190226229433,
+            "active_to_inactive_crosstalk_max": 1.8267957873475444,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                1.1966767473374909,
+                1.0139190226229433
+              ],
+              [
+                1.8267957873475444,
+                1.5920545425751966
+              ],
+              [
+                1.5497304918061234,
+                1.365685704796686
+              ],
+              [
+                0.9287140906160385,
+                0.8184070107872283
+              ]
+            ]
+          }
+        },
+        "x90_y90": {
+          "global": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1
+              ],
+              "active_weights": {
+                "0": 0.5,
+                "1": 0.5
+              },
+              "active_weighted_mean_process_fidelity": 0.9014938618665873,
+              "active_weighted_mean_infidelity": 0.09850613813341264,
+              "active_min_process_fidelity": 0.8126453869511909,
+              "active_theta_rms_rad": 0.12257352655252894,
+              "active_phase_axis_rms_rad": 0.36756169943735884,
+              "active_residual_pre_z_rms_rad": 0.2026987690926004,
+              "active_residual_post_z_rms_rad": 0.12217237009035181,
+              "inactive_mean_infidelity": 0.7279393625789077,
+              "support_state_fidelity_mean": 0.82975437455784,
+              "support_state_fidelity_min": 0.7705124537802402,
+              "support_state_fidelities": {
+                "active_g,0": 0.993975483480548,
+                "active_g,1": 0.8172138737159065,
+                "sup_g,(0+1)": 0.8195224815181477,
+                "sup_g,uniform_active": 0.8195224815181477,
+                "sup_ge,uniform_active": 0.7705124537802402,
+                "sup_g,weighted_active": 0.8195224815181485,
+                "sup_ge,weighted_active": 0.7705124537802408,
+                "coherent_active,+0.90+0.20j": 0.8272532871513404
+              },
+              "support_phase_superposition_rms_rad": 0.16640686733134796,
+              "support_state_leakage_mean": 2.1722133120016807e-09,
+              "support_state_leakage_max": 4.706484757477369e-09,
+              "support_state_leakage_by_state": {
+                "active_g,0": 3.191458208817721e-11,
+                "active_g,1": 2.6584874301960326e-09,
+                "sup_g,(0+1)": 1.3452011726755586e-09,
+                "sup_g,uniform_active": 1.3452011726755586e-09,
+                "sup_ge,uniform_active": 4.706484757477369e-09,
+                "sup_g,weighted_active": 1.3452008396086512e-09,
+                "sup_ge,weighted_active": 4.7064843133881595e-09,
+                "coherent_active,+0.90+0.20j": 1.2387322279039381e-09
+              },
+              "support_weighted_leakage_mean": 7.87214421274107e-05,
+              "support_weighted_leakage_max": 7.87214421274107e-05,
+              "support_worst_leakage_channel": {
+                "from_manifold": 1,
+                "to_manifold": 2,
+                "value": 7.87214421274107e-05
+              },
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.5,
+                  "process_fidelity": 0.9903423367819838,
+                  "theta_error_rad": 0.12929529556166353,
+                  "phase_axis_error_rad": -0.012659959824892653,
+                  "residual_pre_z_rad": 0.2767179493946359,
+                  "residual_post_z_rad": -0.1557286664710431
+                },
+                {
+                  "n": 1,
+                  "weight": 0.5,
+                  "process_fidelity": 0.8126453869511909,
+                  "theta_error_rad": 0.11546109894102474,
+                  "phase_axis_error_rad": 0.5196565511987612,
+                  "residual_pre_z_rad": -0.07483821527894952,
+                  "residual_post_z_rad": -0.07483821527894952
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.4818717122362573,
+              "min_process_fidelity": 0.029174947431194663,
+              "mean_process_infidelity": 0.5181282877637426,
+              "phase_axis_rms_rad": 1.15695561378304,
+              "residual_pre_z_rms_rad": 0.8988271967545692,
+              "residual_post_z_rms_rad": 1.2176168004029957,
+              "theta_error_rms_rad": 1.7925996828280462,
+              "phase_sensitive_rms_rad": 1.905000602234392
+            },
+            "loss_terms": {
+              "infidelity": 0.5181282877637426,
+              "phase_axis": 0.3346365730660226,
+              "theta": 0.6027221120589632,
+              "residual_z": 0.7070958767076311,
+              "state": 0.04317755957420689,
+              "off_block": 0.0,
+              "selectivity_mean": 5.851746828454219e-05,
+              "selectivity_max": 3.6027987145530715e-05,
+              "regularization": 7.28047368100557e-06
+            },
+            "boundary_spill": 1.0139190226228572,
+            "active_to_inactive_crosstalk_max": 1.6837288499205694,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                1.0995643147075727,
+                1.0139190226228572
+              ],
+              [
+                1.6837288499205694,
+                1.5920545425750663
+              ],
+              [
+                1.434711626868997,
+                1.3656857047969586
+              ],
+              [
+                0.8603813942135866,
+                0.8184070107876931
+              ]
+            ]
+          },
+          "support": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1
+              ],
+              "active_weights": {
+                "0": 0.5,
+                "1": 0.5
+              },
+              "active_weighted_mean_process_fidelity": 0.9932857922790858,
+              "active_weighted_mean_infidelity": 0.006714207720914245,
+              "active_min_process_fidelity": 0.9899443479133231,
+              "active_theta_rms_rad": 0.008168493180932622,
+              "active_phase_axis_rms_rad": 0.0391193895085173,
+              "active_residual_pre_z_rms_rad": 0.047363887267352044,
+              "active_residual_post_z_rms_rad": 0.047363887267352044,
+              "inactive_mean_infidelity": 0.7271493387678348,
+              "support_state_fidelity_mean": 0.9576739554715905,
+              "support_state_fidelity_min": 0.9188224372697104,
+              "support_state_fidelities": {
+                "active_g,0": 0.9992973575544263,
+                "active_g,1": 0.9917406062459155,
+                "sup_g,(0+1)": 0.9580390384822486,
+                "sup_g,uniform_active": 0.9580390384822486,
+                "sup_ge,uniform_active": 0.9188224372697104,
+                "sup_g,weighted_active": 0.958039038482249,
+                "sup_ge,weighted_active": 0.9188224372697108,
+                "coherent_active,+0.90+0.20j": 0.958591689986215
+              },
+              "support_phase_superposition_rms_rad": 0.1953430623965605,
+              "support_state_leakage_mean": 1.4313389640197016e-09,
+              "support_state_leakage_max": 5.699073213349948e-09,
+              "support_state_leakage_by_state": {
+                "active_g,0": 5.2565729546927287e-11,
+                "active_g,1": 0.0,
+                "sup_g,(0+1)": 0.0,
+                "sup_g,uniform_active": 0.0,
+                "sup_ge,uniform_active": 5.699073213349948e-09,
+                "sup_g,weighted_active": 0.0,
+                "sup_ge,weighted_active": 5.699072769260738e-09,
+                "coherent_active,+0.90+0.20j": 0.0
+              },
+              "support_weighted_leakage_mean": 7.706809422642411e-05,
+              "support_weighted_leakage_max": 7.706809422642411e-05,
+              "support_worst_leakage_channel": {
+                "from_manifold": 1,
+                "to_manifold": 2,
+                "value": 7.706809422642411e-05
+              },
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.5,
+                  "process_fidelity": 0.9966272366448484,
+                  "theta_error_rad": -0.009645980585997416,
+                  "phase_axis_error_rad": 0.026183322018820565,
+                  "residual_pre_z_rad": -0.05171439810012801,
+                  "residual_post_z_rad": -0.05171439810012801
+                },
+                {
+                  "n": 1,
+                  "weight": 0.5,
+                  "process_fidelity": 0.9899443479133231,
+                  "theta_error_rad": -0.006356384210260302,
+                  "phase_axis_error_rad": 0.048734863487004176,
+                  "residual_pre_z_rad": 0.04257107777928981,
+                  "residual_post_z_rad": 0.04257107777928981
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.5129957049144721,
+              "min_process_fidelity": 0.031725934416963385,
+              "mean_process_infidelity": 0.48700429508552795,
+              "phase_axis_rms_rad": 1.2894113037766652,
+              "residual_pre_z_rms_rad": 0.9510837741690714,
+              "residual_post_z_rms_rad": 0.990857063175396,
+              "theta_error_rms_rad": 1.788453567710941,
+              "phase_sensitive_rms_rad": 1.8838629396639492
+            },
+            "loss_terms": {
+              "active_infidelity": 0.006714207720914245,
+              "active_theta": 1.3344856169388549e-05,
+              "active_phase_axis": 0.0005356143224316827,
+              "active_pre_z": 0.0005608344542686083,
+              "active_post_z": 0.0005608344542686083,
+              "active_state_mean": 0.02327932449062522,
+              "active_state_min": 0.001178614317155728,
+              "phase_superposition": 0.013355619209263283,
+              "leakage_mean": 1.618500114364143e-05,
+              "leakage_max": 1.2718429690547118e-05,
+              "worst_block": 0.0,
+              "inactive_infidelity": 0.014542986775356696,
+              "regularization": 0.0005749536266171825
+            },
+            "boundary_spill": 1.0805384154597426,
+            "active_to_inactive_crosstalk_max": 1.85523868410335,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                1.2159531967480928,
+                1.0805384154597426
+              ],
+              [
+                1.85523868410335,
+                1.6851673412656514
+              ],
+              [
+                1.572654480737988,
+                1.4378338358483762
+              ],
+              [
+                0.9423389598410844,
+                0.8611405170040617
+              ]
+            ]
+          }
+        },
+        "x180_identity": {
+          "global": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1
+              ],
+              "active_weights": {
+                "0": 0.5,
+                "1": 0.5
+              },
+              "active_weighted_mean_process_fidelity": 0.76707997094894,
+              "active_weighted_mean_infidelity": 0.23292002905106002,
+              "active_min_process_fidelity": 0.5927660365798618,
+              "active_theta_rms_rad": 0.43407810455598206,
+              "active_phase_axis_rms_rad": 0.080869496036664,
+              "active_residual_pre_z_rms_rad": 0.4519573097521461,
+              "active_residual_post_z_rms_rad": 0.32125983897330707,
+              "inactive_mean_infidelity": 0.7279200890383497,
+              "support_state_fidelity_mean": 0.779857603198072,
+              "support_state_fidelity_min": 0.597819621347769,
+              "support_state_fidelities": {
+                "active_g,0": 0.597819621347769,
+                "active_g,1": 0.9999172677113433,
+                "sup_g,(0+1)": 0.7817639819109667,
+                "sup_g,uniform_active": 0.7817639819109667,
+                "sup_ge,uniform_active": 0.7651273854643726,
+                "sup_g,weighted_active": 0.7817639819109673,
+                "sup_ge,weighted_active": 0.7651273854643734,
+                "coherent_active,+0.90+0.20j": 0.7655772198638162
+              },
+              "support_phase_superposition_rms_rad": 0.2657293261654095,
+              "support_state_leakage_mean": 9.372079640135311e-10,
+              "support_state_leakage_max": 3.6723158958196223e-09,
+              "support_state_leakage_by_state": {
+                "active_g,0": 0.0,
+                "active_g,1": 5.5947579902237976e-11,
+                "sup_g,(0+1)": 2.49004150632004e-11,
+                "sup_g,uniform_active": 2.49004150632004e-11,
+                "sup_ge,uniform_active": 3.6723158958196223e-09,
+                "sup_g,weighted_active": 2.4900193018595473e-11,
+                "sup_ge,weighted_active": 3.672315562752715e-09,
+                "coherent_active,+0.90+0.20j": 2.238365048867763e-11
+              },
+              "support_weighted_leakage_mean": 0.0,
+              "support_weighted_leakage_max": 0.0,
+              "support_worst_leakage_channel": null,
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.5,
+                  "process_fidelity": 0.5927660365798618,
+                  "theta_error_rad": -0.37107261755149246,
+                  "phase_axis_error_rad": 0.092072190320454,
+                  "residual_pre_z_rad": -0.5807186223013829,
+                  "residual_post_z_rad": 0.39657270831213465
+                },
+                {
+                  "n": 1,
+                  "weight": 0.5,
+                  "process_fidelity": 0.9413939053180181,
+                  "theta_error_rad": 0.4890324265458396,
+                  "phase_axis_error_rad": 0.06784145154728138,
+                  "residual_pre_z_rad": 0.267014421687628,
+                  "residual_post_z_rad": 0.22168864494215512
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.43707993095741343,
+              "min_process_fidelity": 0.042008301562442826,
+              "mean_process_infidelity": 0.5629200690425865,
+              "phase_axis_rms_rad": 0.056281870069606874,
+              "residual_pre_z_rms_rad": 0.9297641464285689,
+              "residual_post_z_rms_rad": 0.9114413169694009,
+              "theta_error_rms_rad": 1.8022787236936626,
+              "phase_sensitive_rms_rad": 1.3032092276996405
+            },
+            "loss_terms": {
+              "infidelity": 0.5629200690425865,
+              "phase_axis": 0.0007919122246330275,
+              "theta": 0.6380255798123462,
+              "residual_z": 0.7104160617025383,
+              "state": 0.06250120832474439,
+              "off_block": 0.0,
+              "selectivity_mean": 6.464967926306334e-05,
+              "selectivity_max": 3.591648847947964e-05,
+              "regularization": 0.00017485003750670957
+            },
+            "boundary_spill": 0.0,
+            "active_to_inactive_crosstalk_max": 0.7926819008826874,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                0.4826640666752127,
+                0.0
+              ],
+              [
+                0.7926819008826874,
+                0.0
+              ],
+              [
+                0.7414762619742316,
+                0.0
+              ],
+              [
+                0.45082755696175786,
+                0.0
+              ]
+            ]
+          },
+          "support": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1
+              ],
+              "active_weights": {
+                "0": 0.5,
+                "1": 0.5
+              },
+              "active_weighted_mean_process_fidelity": 0.9711441951102251,
+              "active_weighted_mean_infidelity": 0.02885580488977485,
+              "active_min_process_fidelity": 0.9425073424796162,
+              "active_theta_rms_rad": 0.3424435914732873,
+              "active_phase_axis_rms_rad": 0.021367959688234323,
+              "active_residual_pre_z_rms_rad": 0.1714519913064567,
+              "active_residual_post_z_rms_rad": 0.17159167442395168,
+              "inactive_mean_infidelity": 0.7286006080526439,
+              "support_state_fidelity_mean": 0.9705423388734757,
+              "support_state_fidelity_min": 0.9150580609832999,
+              "support_state_fidelities": {
+                "active_g,0": 0.9999957390600466,
+                "active_g,1": 0.999995033309607,
+                "sup_g,(0+1)": 0.9835308939243134,
+                "sup_g,uniform_active": 0.9835308939243134,
+                "sup_ge,uniform_active": 0.9150580609832999,
+                "sup_g,weighted_active": 0.9835308939243138,
+                "sup_ge,weighted_active": 0.9150580609833003,
+                "coherent_active,+0.90+0.20j": 0.983639134878611
+              },
+              "support_phase_superposition_rms_rad": 0.1611842361172613,
+              "support_state_leakage_mean": 6.02582914122074e-10,
+              "support_state_leakage_max": 2.4103318230217496e-09,
+              "support_state_leakage_by_state": {
+                "active_g,0": 0.0,
+                "active_g,1": 0.0,
+                "sup_g,(0+1)": 0.0,
+                "sup_g,uniform_active": 0.0,
+                "sup_ge,uniform_active": 2.4103318230217496e-09,
+                "sup_g,weighted_active": 0.0,
+                "sup_ge,weighted_active": 2.4103314899548423e-09,
+                "coherent_active,+0.90+0.20j": 0.0
+              },
+              "support_weighted_leakage_mean": 0.0,
+              "support_weighted_leakage_max": 0.0,
+              "support_worst_leakage_channel": null,
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.5,
+                  "process_fidelity": 0.9997810477408341,
+                  "theta_error_rad": 0.004128415044356792,
+                  "phase_axis_error_rad": -0.01465290392124885,
+                  "residual_pre_z_rad": 0.014652886816351351,
+                  "residual_post_z_rad": 0.014652886816351351
+                },
+                {
+                  "n": 1,
+                  "weight": 0.5,
+                  "process_fidelity": 0.9425073424796162,
+                  "theta_error_rad": 0.48427077433133303,
+                  "phase_axis_error_rad": -0.026428617238718033,
+                  "residual_pre_z_rad": 0.24202657613131207,
+                  "residual_post_z_rad": 0.24222447929798108
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.5046476596683124,
+              "min_process_fidelity": 0.037633580958631105,
+              "mean_process_infidelity": 0.4953523403316875,
+              "phase_axis_rms_rad": 1.7666240810627711,
+              "residual_pre_z_rms_rad": 0.899286820740428,
+              "residual_post_z_rms_rad": 0.8990783727784201,
+              "theta_error_rms_rad": 1.7983298068671576,
+              "phase_sensitive_rms_rad": 2.176699186875899
+            },
+            "loss_terms": {
+              "active_infidelity": 0.02885580488977485,
+              "active_theta": 0.023453522668224737,
+              "active_phase_axis": 0.00015980639543330244,
+              "active_pre_z": 0.007348946330737325,
+              "active_post_z": 0.007360925682903858,
+              "active_state_mean": 0.016201713619588345,
+              "active_state_min": 0.0013583774983116558,
+              "phase_superposition": 0.009093125290446764,
+              "leakage_mean": 2.952656279198162e-10,
+              "leakage_max": 9.279777518633736e-10,
+              "worst_block": 0.0011245594943526322,
+              "inactive_infidelity": 0.014572012161052878,
+              "regularization": 2.1652409499198134e-07
+            },
+            "boundary_spill": 0.0,
+            "active_to_inactive_crosstalk_max": 0.8745624112551987,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                0.540986745191008,
+                0.0
+              ],
+              [
+                0.8745624112551987,
+                0.0
+              ],
+              [
+                0.8020004970921996,
+                0.0
+              ],
+              [
+                0.48625229165224604,
+                0.0
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "S0123": {
+      "targets": {
+        "x90_x90": {
+          "global": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "active_weights": {
+                "0": 0.25,
+                "1": 0.25,
+                "2": 0.25,
+                "3": 0.25
+              },
+              "active_weighted_mean_process_fidelity": 0.5307421128488917,
+              "active_weighted_mean_infidelity": 0.4692578871511083,
+              "active_min_process_fidelity": 0.028220932173823272,
+              "active_theta_rms_rad": 1.6638765995246085,
+              "active_phase_axis_rms_rad": 1.1636278817858405,
+              "active_residual_pre_z_rms_rad": 0.9752485151154644,
+              "active_residual_post_z_rms_rad": 0.9390121559062024,
+              "inactive_mean_infidelity": 0.6783739569334959,
+              "support_state_fidelity_mean": 0.8126834060110376,
+              "support_state_fidelity_min": 0.3945802202730015,
+              "support_state_fidelities": {
+                "active_g,0": 0.8632977863945639,
+                "active_g,1": 0.8305516481119716,
+                "active_g,2": 0.9999474766394704,
+                "active_g,3": 0.9999999315925489,
+                "sup_g,(0+1)": 0.815408914661112,
+                "sup_g,(0+3)": 0.9302903941757164,
+                "sup_g,(1+2)": 0.8821883268691735,
+                "sup_g,uniform_active": 0.896668946144747,
+                "sup_ge,uniform_active": 0.3945802202730015,
+                "sup_g,weighted_active": 0.896668946144747,
+                "sup_ge,weighted_active": 0.3945802202730015,
+                "coherent_active,+0.90+0.20j": 0.8480180608523998
+              },
+              "support_phase_superposition_rms_rad": 0.24465601142371793,
+              "support_state_leakage_mean": 8.844413514526768e-08,
+              "support_state_leakage_max": 5.305950623313294e-07,
+              "support_state_leakage_by_state": {
+                "active_g,0": 1.9864332401198226e-11,
+                "active_g,1": 0.0,
+                "active_g,2": 1.0522449578331816e-10,
+                "active_g,3": 2.9839464232850332e-12,
+                "sup_g,(0+1)": 0.0,
+                "sup_g,(0+3)": 1.1424305945695323e-11,
+                "sup_g,(1+2)": 0.0,
+                "sup_g,uniform_active": 0.0,
+                "sup_ge,uniform_active": 5.305950623313294e-07,
+                "sup_g,weighted_active": 0.0,
+                "sup_ge,weighted_active": 5.305950623313294e-07,
+                "coherent_active,+0.90+0.20j": 0.0
+              },
+              "support_weighted_leakage_mean": 0.0,
+              "support_weighted_leakage_max": 0.0,
+              "support_worst_leakage_channel": null,
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.25,
+                  "process_fidelity": 0.8586430757946577,
+                  "theta_error_rad": -0.33726168739310536,
+                  "phase_axis_error_rad": -0.3093516580584481,
+                  "residual_pre_z_rad": -0.8174604350729093,
+                  "residual_post_z_rad": 0.67047012097068
+                },
+                {
+                  "n": 1,
+                  "weight": 0.25,
+                  "process_fidelity": 0.8300918597825938,
+                  "theta_error_rad": -0.022094952508876275,
+                  "phase_axis_error_rad": 0.43595225409504135,
+                  "residual_pre_z_rad": 0.6288273511518936,
+                  "residual_post_z_rad": -0.5817666371321737
+                },
+                {
+                  "n": 2,
+                  "weight": 0.25,
+                  "process_fidelity": 0.4060125836444921,
+                  "theta_error_rad": 1.7598961414047545,
+                  "phase_axis_error_rad": -2.230602739025543,
+                  "residual_pre_z_rad": 0.8799253500948829,
+                  "residual_post_z_rad": 0.8799253500948829
+                },
+                {
+                  "n": 3,
+                  "weight": 0.25,
+                  "process_fidelity": 0.028220932173823272,
+                  "theta_error_rad": 2.804010216197748,
+                  "phase_axis_error_rad": 0.3934183441774084,
+                  "residual_pre_z_rad": 1.402321162478044,
+                  "residual_post_z_rad": 1.401686159888988
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.46103675625476254,
+              "min_process_fidelity": 0.028220932173823272,
+              "mean_process_infidelity": 0.5389632437452374,
+              "phase_axis_rms_rad": 1.09131321810203,
+              "residual_pre_z_rms_rad": 0.8645271330372788,
+              "residual_post_z_rms_rad": 1.2381321117393953,
+              "theta_error_rms_rad": 1.801003121503627,
+              "phase_sensitive_rms_rad": 1.8631540005813048
+            },
+            "loss_terms": {
+              "infidelity": 0.5389632437452374,
+              "phase_axis": 0.2977411350010522,
+              "theta": 0.6199130316495978,
+              "residual_z": 0.7101851682653508,
+              "state": 0.04874262988104768,
+              "off_block": 0.0,
+              "selectivity_mean": 3.951967127942807e-05,
+              "selectivity_max": 3.350102274615428e-05,
+              "regularization": 0.0005634152866116493
+            },
+            "boundary_spill": 0.0,
+            "active_to_inactive_crosstalk_max": 1.1941628341289638,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                1.1941628341289638,
+                0.9789381243625886,
+                0.0,
+                0.0
+              ],
+              [
+                0.7176778254264863,
+                0.5900699050298794,
+                0.0,
+                0.0
+              ]
+            ]
+          },
+          "support": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "active_weights": {
+                "0": 0.25,
+                "1": 0.25,
+                "2": 0.25,
+                "3": 0.25
+              },
+              "active_weighted_mean_process_fidelity": 0.5473857573343797,
+              "active_weighted_mean_infidelity": 0.45261424266562034,
+              "active_min_process_fidelity": 0.045740235775885235,
+              "active_theta_rms_rad": 1.5836529776234347,
+              "active_phase_axis_rms_rad": 0.7235515262059007,
+              "active_residual_pre_z_rms_rad": 0.976281642144143,
+              "active_residual_post_z_rms_rad": 1.2005023605044427,
+              "inactive_mean_infidelity": 0.7004540208406007,
+              "support_state_fidelity_mean": 0.7910253000123127,
+              "support_state_fidelity_min": 0.426881775847207,
+              "support_state_fidelities": {
+                "active_g,0": 0.8566318784185971,
+                "active_g,1": 0.969651951877341,
+                "active_g,2": 0.9998885536124431,
+                "active_g,3": 0.9999955394802629,
+                "sup_g,(0+1)": 0.6701812707267668,
+                "sup_g,(0+3)": 0.9009368475925968,
+                "sup_g,(1+2)": 0.8766158930823367,
+                "sup_g,uniform_active": 0.8190680663154698,
+                "sup_ge,uniform_active": 0.426881775847207,
+                "sup_g,weighted_active": 0.8190680663154698,
+                "sup_ge,weighted_active": 0.426881775847207,
+                "coherent_active,+0.90+0.20j": 0.7265019810320565
+              },
+              "support_phase_superposition_rms_rad": 0.30963042010865977,
+              "support_state_leakage_mean": 1.2369629357837178e-07,
+              "support_state_leakage_max": 7.357113702699536e-07,
+              "support_state_leakage_by_state": {
+                "active_g,0": 3.8583136685588215e-11,
+                "active_g,1": 4.387406993267007e-09,
+                "active_g,2": 6.576150735071451e-11,
+                "active_g,3": 4.7720272178253254e-11,
+                "sup_g,(0+1)": 2.212995231509751e-09,
+                "sup_g,(0+3)": 4.315203749882812e-11,
+                "sup_g,(1+2)": 2.2265844723534656e-09,
+                "sup_g,uniform_active": 1.1348680883926932e-09,
+                "sup_ge,uniform_active": 7.357113702699536e-07,
+                "sup_g,weighted_active": 1.1348680883926932e-09,
+                "sup_ge,weighted_active": 7.357113702699536e-07,
+                "coherent_active,+0.90+0.20j": 1.640842572925294e-09
+              },
+              "support_weighted_leakage_mean": 0.0,
+              "support_weighted_leakage_max": 0.0,
+              "support_worst_leakage_channel": null,
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.25,
+                  "process_fidelity": 0.8091855919708617,
+                  "theta_error_rad": -0.3387377849766311,
+                  "phase_axis_error_rad": -0.6575985479518369,
+                  "residual_pre_z_rad": -0.5319605250750739,
+                  "residual_post_z_rad": 1.0071027645799564
+                },
+                {
+                  "n": 1,
+                  "weight": 0.25,
+                  "process_fidelity": 0.8489815700901722,
+                  "theta_error_rad": -0.10794926581279984,
+                  "phase_axis_error_rad": 0.5291058149943226,
+                  "residual_pre_z_rad": 0.7814218430110302,
+                  "residual_post_z_rad": -1.5024829856217428
+                },
+                {
+                  "n": 2,
+                  "weight": 0.25,
+                  "process_fidelity": 0.4856356315005994,
+                  "theta_error_rad": 1.5995290170930188,
+                  "phase_axis_error_rad": -1.1243520351976972,
+                  "residual_pre_z_rad": 0.42541410928418966,
+                  "residual_post_z_rad": 1.1740051027763858
+                },
+                {
+                  "n": 3,
+                  "weight": 0.25,
+                  "process_fidelity": 0.045740235775885235,
+                  "theta_error_rad": 2.7105234931022695,
+                  "phase_axis_error_rad": 0.34285701322443174,
+                  "residual_pre_z_rad": 1.6546673737641937,
+                  "residual_post_z_rad": 1.0558525410560629
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.4647724979427195,
+              "min_process_fidelity": 0.045740235775885235,
+              "mean_process_infidelity": 0.5352275020572804,
+              "phase_axis_rms_rad": 1.7094229000466281,
+              "residual_pre_z_rms_rad": 1.0024544024494637,
+              "residual_post_z_rms_rad": 1.1533875754198593,
+              "theta_error_rms_rad": 1.774812421276945,
+              "phase_sensitive_rms_rad": 2.2928899623241925
+            },
+            "loss_terms": {
+              "active_infidelity": 0.45261424266562034,
+              "active_theta": 0.5015913507071142,
+              "active_phase_axis": 0.18323438387621085,
+              "active_pre_z": 0.23828146119691615,
+              "active_post_z": 0.3603014793941847,
+              "active_state_mean": 0.114936084993228,
+              "active_state_min": 0.1327398324330976,
+              "phase_superposition": 0.033554848969832796,
+              "leakage_mean": 6.061118385340217e-08,
+              "leakage_max": 2.832488775539321e-07,
+              "worst_block": 0.6982730456384788,
+              "inactive_infidelity": 0.014009080416812014,
+              "regularization": 0.002363080225639993
+            },
+            "boundary_spill": 0.0,
+            "active_to_inactive_crosstalk_max": 1.0829154114742285,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                1.0829154114742285,
+                0.8914381648939799,
+                0.0,
+                0.0
+              ],
+              [
+                0.6518199289092219,
+                0.5387029929958502,
+                0.0,
+                0.0
+              ]
+            ]
+          }
+        },
+        "x90_y90": {
+          "global": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "active_weights": {
+                "0": 0.25,
+                "1": 0.25,
+                "2": 0.25,
+                "3": 0.25
+              },
+              "active_weighted_mean_process_fidelity": 0.5621604009223732,
+              "active_weighted_mean_infidelity": 0.4378395990776268,
+              "active_min_process_fidelity": 0.029174947431194663,
+              "active_theta_rms_rad": 1.6494943068305652,
+              "active_phase_axis_rms_rad": 1.0362493262887167,
+              "active_residual_pre_z_rms_rad": 0.8495328586319466,
+              "active_residual_post_z_rms_rad": 0.8150167033416723,
+              "inactive_mean_infidelity": 0.6787056651359744,
+              "support_state_fidelity_mean": 0.8245121418308462,
+              "support_state_fidelity_min": 0.3741734259752098,
+              "support_state_fidelities": {
+                "active_g,0": 0.993975483480548,
+                "active_g,1": 0.8172138737159065,
+                "active_g,2": 0.9999796926759578,
+                "active_g,3": 0.9999980109328291,
+                "sup_g,(0+1)": 0.8195224815181477,
+                "sup_g,(0+3)": 0.9936472299802424,
+                "sup_g,(1+2)": 0.8594434653878087,
+                "sup_g,uniform_active": 0.9017686436886947,
+                "sup_ge,uniform_active": 0.3741734259752098,
+                "sup_g,weighted_active": 0.9017686436886947,
+                "sup_ge,weighted_active": 0.3741734259752098,
+                "coherent_active,+0.90+0.20j": 0.8584813249509062
+              },
+              "support_phase_superposition_rms_rad": 0.14681376436059512,
+              "support_state_leakage_mean": 8.779300954738407e-08,
+              "support_state_leakage_max": 5.228063435502861e-07,
+              "support_state_leakage_by_state": {
+                "active_g,0": 3.191458208817721e-11,
+                "active_g,1": 2.6584874301960326e-09,
+                "active_g,2": 8.197476031313045e-11,
+                "active_g,3": 5.011213666250569e-12,
+                "sup_g,(0+1)": 1.3452011726755586e-09,
+                "sup_g,(0+3)": 1.8463119921818816e-11,
+                "sup_g,(1+2)": 1.3702312617880352e-09,
+                "sup_g,uniform_active": 6.943470243214733e-10,
+                "sup_ge,uniform_active": 5.228063435502861e-07,
+                "sup_g,weighted_active": 6.943470243214733e-10,
+                "sup_ge,weighted_active": 5.228063435502861e-07,
+                "coherent_active,+0.90+0.20j": 1.0034498787447887e-09
+              },
+              "support_weighted_leakage_mean": 0.0,
+              "support_weighted_leakage_max": 0.0,
+              "support_worst_leakage_channel": null,
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.25,
+                  "process_fidelity": 0.9903423367819838,
+                  "theta_error_rad": 0.12929529556166353,
+                  "phase_axis_error_rad": -0.012659959824892653,
+                  "residual_pre_z_rad": 0.2767179493946359,
+                  "residual_post_z_rad": -0.1557286664710431
+                },
+                {
+                  "n": 1,
+                  "weight": 0.25,
+                  "process_fidelity": 0.8126453869511909,
+                  "theta_error_rad": 0.11546109894102474,
+                  "phase_axis_error_rad": 0.5196565511987612,
+                  "residual_pre_z_rad": -0.07483821527894952,
+                  "residual_post_z_rad": -0.07483821527894952
+                },
+                {
+                  "n": 2,
+                  "weight": 0.25,
+                  "process_fidelity": 0.4164789325251235,
+                  "theta_error_rad": 1.7386252126200408,
+                  "phase_axis_error_rad": 0.15336971282504397,
+                  "residual_pre_z_rad": 0.9203478733581996,
+                  "residual_post_z_rad": 0.8182580334304852
+                },
+                {
+                  "n": 3,
+                  "weight": 0.25,
+                  "process_fidelity": 0.029174947431194663,
+                  "theta_error_rad": 2.798295857175338,
+                  "phase_axis_error_rad": -2.0003812612441365,
+                  "residual_pre_z_rad": 1.3991463546045484,
+                  "residual_post_z_rad": 1.3991463546045484
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.4818717122362573,
+              "min_process_fidelity": 0.029174947431194663,
+              "mean_process_infidelity": 0.5181282877637426,
+              "phase_axis_rms_rad": 1.15695561378304,
+              "residual_pre_z_rms_rad": 0.8988271967545692,
+              "residual_post_z_rms_rad": 1.2176168004029957,
+              "theta_error_rms_rad": 1.7925996828280462,
+              "phase_sensitive_rms_rad": 1.905000602234392
+            },
+            "loss_terms": {
+              "infidelity": 0.5181282877637426,
+              "phase_axis": 0.3346365730660226,
+              "theta": 0.6027221120589632,
+              "residual_z": 0.7070958767076311,
+              "state": 0.04317755957420689,
+              "off_block": 0.0,
+              "selectivity_mean": 5.851746828454219e-05,
+              "selectivity_max": 3.6027987145530715e-05,
+              "regularization": 7.28047368100557e-06
+            },
+            "boundary_spill": 0.0,
+            "active_to_inactive_crosstalk_max": 1.434711626868997,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                1.434711626868997,
+                1.3656857047969586,
+                0.0,
+                0.0
+              ],
+              [
+                0.8603813942135866,
+                0.8184070107876931,
+                0.0,
+                0.0
+              ]
+            ]
+          },
+          "support": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "active_weights": {
+                "0": 0.25,
+                "1": 0.25,
+                "2": 0.25,
+                "3": 0.25
+              },
+              "active_weighted_mean_process_fidelity": 0.5415342062352224,
+              "active_weighted_mean_infidelity": 0.4584657937647776,
+              "active_min_process_fidelity": 0.028084479943877305,
+              "active_theta_rms_rad": 1.66651502060283,
+              "active_phase_axis_rms_rad": 0.537561095542618,
+              "active_residual_pre_z_rms_rad": 0.8723620703468155,
+              "active_residual_post_z_rms_rad": 0.8794465339640084,
+              "inactive_mean_infidelity": 0.6765960891910185,
+              "support_state_fidelity_mean": 0.8141286953018367,
+              "support_state_fidelity_min": 0.4238715917039541,
+              "support_state_fidelities": {
+                "active_g,0": 0.8852204387843108,
+                "active_g,1": 0.8491694660788479,
+                "active_g,2": 0.9999476973903895,
+                "active_g,3": 0.9999984557845807,
+                "sup_g,(0+1)": 0.7831214080720337,
+                "sup_g,(0+3)": 0.9372822798720185,
+                "sup_g,(1+2)": 0.8771475475506454,
+                "sup_g,uniform_active": 0.8828462344698361,
+                "sup_ge,uniform_active": 0.4238715917039541,
+                "sup_g,weighted_active": 0.8828462344698361,
+                "sup_ge,weighted_active": 0.4238715917039541,
+                "coherent_active,+0.90+0.20j": 0.8242213977416354
+              },
+              "support_phase_superposition_rms_rad": 0.2134534579594933,
+              "support_state_leakage_mean": 1.243873304357379e-07,
+              "support_state_leakage_max": 7.453229500242742e-07,
+              "support_state_leakage_by_state": {
+                "active_g,0": 5.5425886102966615e-11,
+                "active_g,1": 5.42349720689117e-10,
+                "active_g,2": 1.1382872422416312e-10,
+                "active_g,3": 1.9079071655880853e-11,
+                "sup_g,(0+1)": 2.9888802544064674e-10,
+                "sup_g,(0+3)": 3.725264541287743e-11,
+                "sup_g,(1+2)": 3.28089444501245e-10,
+                "sup_g,uniform_active": 1.8267098944590998e-10,
+                "sup_ge,uniform_active": 7.453229500242742e-07,
+                "sup_g,weighted_active": 1.8267098944590998e-10,
+                "sup_ge,weighted_active": 7.453229500242742e-07,
+                "coherent_active,+0.90+0.20j": 2.4180968338782804e-10
+              },
+              "support_weighted_leakage_mean": 0.0,
+              "support_weighted_leakage_max": 0.0,
+              "support_worst_leakage_channel": null,
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.25,
+                  "process_fidelity": 0.8787370223055241,
+                  "theta_error_rad": -0.42256205306260974,
+                  "phase_axis_error_rad": 0.21216068296504575,
+                  "residual_pre_z_rad": 0.6562984357665425,
+                  "residual_post_z_rad": -0.484929004372054
+                },
+                {
+                  "n": 1,
+                  "weight": 0.25,
+                  "process_fidelity": 0.845859901342796,
+                  "theta_error_rad": 0.1386980589897513,
+                  "phase_axis_error_rad": 0.455048031359258,
+                  "residual_pre_z_rad": -0.06246441576243278,
+                  "residual_post_z_rad": -0.06246441576243278
+                },
+                {
+                  "n": 2,
+                  "weight": 0.25,
+                  "process_fidelity": 0.41345542134869234,
+                  "theta_error_rad": 1.7447616362145273,
+                  "phase_axis_error_rad": -0.19483771275462658,
+                  "residual_pre_z_rad": 0.8071563764673058,
+                  "residual_post_z_rad": 0.9375595067693752
+                },
+                {
+                  "n": 3,
+                  "weight": 0.25,
+                  "process_fidelity": 0.028084479943877305,
+                  "theta_error_rad": 2.8048351552484148,
+                  "phase_axis_error_rad": -0.9305079930942739,
+                  "residual_pre_z_rad": 1.3992610446307525,
+                  "residual_post_z_rad": 1.4055707215056037
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.46882410775980876,
+              "min_process_fidelity": 0.028084479943877305,
+              "mean_process_infidelity": 0.5311758922401912,
+              "phase_axis_rms_rad": 1.486922747052402,
+              "residual_pre_z_rms_rad": 0.9807145993415507,
+              "residual_post_z_rms_rad": 1.1946704765296874,
+              "theta_error_rms_rad": 1.8010743673442178,
+              "phase_sensitive_rms_rad": 2.144755913514447
+            },
+            "loss_terms": {
+              "active_infidelity": 0.4584657937647776,
+              "active_theta": 0.5554544627789703,
+              "active_phase_axis": 0.10114017600434287,
+              "active_pre_z": 0.19025389544494556,
+              "active_post_z": 0.19335655152532694,
+              "active_state_mean": 0.1022292175839898,
+              "active_state_min": 0.13421530725658762,
+              "phase_superposition": 0.01594683255020281,
+              "leakage_mean": 6.094979191351157e-08,
+              "leakage_max": 2.869493357593456e-07,
+              "worst_block": 0.7249145258589749,
+              "inactive_infidelity": 0.013531921783820372,
+              "regularization": 0.0004681108843863654
+            },
+            "boundary_spill": 0.0,
+            "active_to_inactive_crosstalk_max": 1.9045104870648486,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                1.9045104870648486,
+                1.2894027361230138,
+                0.0,
+                0.0
+              ],
+              [
+                1.1397340338484923,
+                0.7732580502234266,
+                0.0,
+                0.0
+              ]
+            ]
+          }
+        },
+        "x180_identity": {
+          "global": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "active_weights": {
+                "0": 0.25,
+                "1": 0.25,
+                "2": 0.25,
+                "3": 0.25
+              },
+              "active_weighted_mean_process_fidelity": 0.505734290959766,
+              "active_weighted_mean_infidelity": 0.49426570904023404,
+              "active_min_process_fidelity": 0.042008301562442826,
+              "active_theta_rms_rad": 1.6307046006318862,
+              "active_phase_axis_rms_rad": 0.06517602001510794,
+              "active_residual_pre_z_rms_rad": 0.8622034350816037,
+              "active_residual_post_z_rms_rad": 0.8323650089960807,
+              "inactive_mean_infidelity": 0.7002287890472914,
+              "support_state_fidelity_mean": 0.791832937392326,
+              "support_state_fidelity_min": 0.3785111887146852,
+              "support_state_fidelities": {
+                "active_g,0": 0.597819621347769,
+                "active_g,1": 0.9999172677113433,
+                "active_g,2": 0.9999984149920033,
+                "active_g,3": 0.9999999079409431,
+                "sup_g,(0+1)": 0.7817639819109667,
+                "sup_g,(0+3)": 0.7860480589056099,
+                "sup_g,(1+2)": 0.9969596409085063,
+                "sup_g,uniform_active": 0.8863893709101801,
+                "sup_ge,uniform_active": 0.3785111887146852,
+                "sup_g,weighted_active": 0.8863893709101801,
+                "sup_ge,weighted_active": 0.3785111887146852,
+                "coherent_active,+0.90+0.20j": 0.8096872357410406
+              },
+              "support_phase_superposition_rms_rad": 0.7549082383420788,
+              "support_state_leakage_mean": 1.2336401531790978e-07,
+              "support_state_leakage_max": 7.401091677294858e-07,
+              "support_state_leakage_by_state": {
+                "active_g,0": 0.0,
+                "active_g,1": 5.5947579902237976e-11,
+                "active_g,2": 1.486255563065697e-12,
+                "active_g,3": 0.0,
+                "sup_g,(0+1)": 2.49004150632004e-11,
+                "sup_g,(0+3)": 0.0,
+                "sup_g,(1+2)": 2.87170287549543e-11,
+                "sup_g,uniform_active": 1.0536793659809973e-11,
+                "sup_ge,uniform_active": 7.401091677294858e-07,
+                "sup_g,weighted_active": 1.0536793659809973e-11,
+                "sup_ge,weighted_active": 7.401091677294858e-07,
+                "coherent_active,+0.90+0.20j": 1.7723489342813536e-11
+              },
+              "support_weighted_leakage_mean": 0.0,
+              "support_weighted_leakage_max": 0.0,
+              "support_worst_leakage_channel": null,
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.25,
+                  "process_fidelity": 0.5927660365798618,
+                  "theta_error_rad": -0.37107261755149246,
+                  "phase_axis_error_rad": 0.092072190320454,
+                  "residual_pre_z_rad": -0.5807186223013829,
+                  "residual_post_z_rad": 0.39657270831213465
+                },
+                {
+                  "n": 1,
+                  "weight": 0.25,
+                  "process_fidelity": 0.9413939053180181,
+                  "theta_error_rad": 0.4890324265458396,
+                  "phase_axis_error_rad": 0.06784145154728138,
+                  "residual_pre_z_rad": 0.267014421687628,
+                  "residual_post_z_rad": 0.22168864494215512
+                },
+                {
+                  "n": 2,
+                  "weight": 0.25,
+                  "process_fidelity": 0.44676892037874105,
+                  "theta_error_rad": 1.6774606291662841,
+                  "phase_axis_error_rad": 0.015360722592097975,
+                  "residual_pre_z_rad": 0.8387699362212029,
+                  "residual_post_z_rad": 0.838687604603328
+                },
+                {
+                  "n": 3,
+                  "weight": 0.25,
+                  "process_fidelity": 0.042008301562442826,
+                  "theta_error_rad": 2.7287484702653013,
+                  "phase_axis_error_rad": -0.06062962776596592,
+                  "residual_pre_z_rad": 1.364372833312344,
+                  "residual_post_z_rad": 1.3643728839340818
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.43707993095741343,
+              "min_process_fidelity": 0.042008301562442826,
+              "mean_process_infidelity": 0.5629200690425865,
+              "phase_axis_rms_rad": 0.056281870069606874,
+              "residual_pre_z_rms_rad": 0.9297641464285689,
+              "residual_post_z_rms_rad": 0.9114413169694009,
+              "theta_error_rms_rad": 1.8022787236936626,
+              "phase_sensitive_rms_rad": 1.3032092276996405
+            },
+            "loss_terms": {
+              "infidelity": 0.5629200690425865,
+              "phase_axis": 0.0007919122246330275,
+              "theta": 0.6380255798123462,
+              "residual_z": 0.7104160617025383,
+              "state": 0.06250120832474439,
+              "off_block": 0.0,
+              "selectivity_mean": 6.464967926306334e-05,
+              "selectivity_max": 3.591648847947964e-05,
+              "regularization": 0.00017485003750670957
+            },
+            "boundary_spill": 0.0,
+            "active_to_inactive_crosstalk_max": 0.7414762619742316,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                0.7414762619742316,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.45082755696175786,
+                0.0,
+                0.0,
+                0.0
+              ]
+            ]
+          },
+          "support": {
+            "case_used": "E",
+            "active_metrics": {
+              "active_levels": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "active_weights": {
+                "0": 0.25,
+                "1": 0.25,
+                "2": 0.25,
+                "3": 0.25
+              },
+              "active_weighted_mean_process_fidelity": 0.4093695427101802,
+              "active_weighted_mean_infidelity": 0.5906304572898198,
+              "active_min_process_fidelity": 0.03535523939170914,
+              "active_theta_rms_rad": 1.7834411399051076,
+              "active_phase_axis_rms_rad": 0.04050341537435059,
+              "active_residual_pre_z_rms_rad": 0.9228653722867995,
+              "active_residual_post_z_rms_rad": 0.9137250119488268,
+              "inactive_mean_infidelity": 0.6916527486222763,
+              "support_state_fidelity_mean": 0.6976517809876497,
+              "support_state_fidelity_min": 0.271318234118869,
+              "support_state_fidelities": {
+                "active_g,0": 0.271318234118869,
+                "active_g,1": 0.9999757043934158,
+                "active_g,2": 0.9999966992394963,
+                "active_g,3": 0.9999980924843485,
+                "sup_g,(0+1)": 0.5749392692209137,
+                "sup_g,(0+3)": 0.5779334002871744,
+                "sup_g,(1+2)": 0.9984662320575365,
+                "sup_g,uniform_active": 0.7724659593897321,
+                "sup_ge,uniform_active": 0.38922443207903623,
+                "sup_g,weighted_active": 0.7724659593897321,
+                "sup_ge,weighted_active": 0.38922443207903623,
+                "coherent_active,+0.90+0.20j": 0.625812957112506
+              },
+              "support_phase_superposition_rms_rad": 0.960729912236104,
+              "support_state_leakage_mean": 1.2348312959190957e-07,
+              "support_state_leakage_max": 7.408660986918392e-07,
+              "support_state_leakage_by_state": {
+                "active_g,0": 4.810152276490953e-12,
+                "active_g,1": 5.561107130347409e-13,
+                "active_g,2": 7.536860024970338e-12,
+                "active_g,3": 1.6341483721760142e-11,
+                "sup_g,(0+1)": 2.683298028216541e-12,
+                "sup_g,(0+3)": 1.0576206577184166e-11,
+                "sup_g,(1+2)": 4.046651902456233e-12,
+                "sup_g,uniform_active": 7.311040661761581e-12,
+                "sup_ge,uniform_active": 7.408660986918392e-07,
+                "sup_g,weighted_active": 7.311040661761581e-12,
+                "sup_ge,weighted_active": 7.408660986918392e-07,
+                "coherent_active,+0.90+0.20j": 4.184874669022065e-12
+              },
+              "support_weighted_leakage_mean": 0.0,
+              "support_weighted_leakage_max": 0.0,
+              "support_worst_leakage_channel": null,
+              "active_block_rows": [
+                {
+                  "n": 0,
+                  "weight": 0.25,
+                  "process_fidelity": 0.271187538826452,
+                  "theta_error_rad": -1.312034551395187,
+                  "phase_axis_error_rad": 0.021949536648352197,
+                  "residual_pre_z_rad": -0.8108698899214066,
+                  "residual_post_z_rad": 0.766970813749043
+                },
+                {
+                  "n": 1,
+                  "weight": 0.25,
+                  "process_fidelity": 0.910963556561075,
+                  "theta_error_rad": 0.6060102025899144,
+                  "phase_axis_error_rad": 0.0014327189344323088,
+                  "residual_pre_z_rad": 0.3029789974647641,
+                  "residual_post_z_rad": 0.30295445926583
+                },
+                {
+                  "n": 2,
+                  "weight": 0.25,
+                  "process_fidelity": 0.4199718360614847,
+                  "theta_error_rad": 1.7315440430298226,
+                  "phase_axis_error_rad": -0.03537413777836207,
+                  "residual_pre_z_rad": 0.8656303639017189,
+                  "residual_post_z_rad": 0.865909345585183
+                },
+                {
+                  "n": 3,
+                  "weight": 0.25,
+                  "process_fidelity": 0.03535523939170914,
+                  "theta_error_rad": 2.763280911412051,
+                  "phase_axis_error_rad": -0.06947619852700448,
+                  "residual_pre_z_rad": 1.3813398579892215,
+                  "residual_post_z_rad": 1.3819366705966862
+                }
+              ]
+            },
+            "global_metrics": {
+              "mean_process_fidelity": 0.37569544559936136,
+              "min_process_fidelity": 0.03535523939170914,
+              "mean_process_infidelity": 0.6243045544006386,
+              "phase_axis_rms_rad": 1.7398801401182955,
+              "residual_pre_z_rms_rad": 0.9637346432349915,
+              "residual_post_z_rms_rad": 0.9579107607541695,
+              "theta_error_rms_rad": 1.887971022273788,
+              "phase_sensitive_rms_rad": 2.207614185069023
+            },
+            "loss_terms": {
+              "active_infidelity": 0.5906304572898198,
+              "active_theta": 0.6361324599012059,
+              "active_phase_axis": 0.0005741843299455129,
+              "active_pre_z": 0.2129201238415133,
+              "active_post_z": 0.20872334936522094,
+              "active_state_mean": 0.16629152045679269,
+              "active_state_min": 0.21967029448864897,
+              "phase_superposition": 0.32305068749281723,
+              "leakage_mean": 6.050673350003568e-08,
+              "leakage_max": 2.8523344799635806e-07,
+              "worst_block": 0.7138829789957561,
+              "inactive_infidelity": 0.013833054972445526,
+              "regularization": 0.0022437168029844565
+            },
+            "boundary_spill": 0.0,
+            "active_to_inactive_crosstalk_max": 0.7897490137305426,
+            "active_to_inactive_crosstalk_matrix": [
+              [
+                0.7897490137305426,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.4790714233666985,
+                0.0,
+                0.0,
+                0.0
+              ]
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,137 @@
+{
+  "case_name": "phase2_cluster_like",
+  "description": "Cluster-relevant heuristic block pattern on n <= n_match.",
+  "phase": "phase2",
+  "sweep": [
+    {
+      "duration_s": 5.0000000000000004e-08,
+      "duration_ns": 50.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8349012611973535,
+      "logical_fidelity_weighted": 0.7227753657706888,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9993652748395608,
+      "selected_run_id": "phase2_cluster_like_T0050ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\T_0050ns\\summary.json"
+    },
+    {
+      "duration_s": 7.500000000000001e-08,
+      "duration_ns": 75.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8390634624452219,
+      "logical_fidelity_weighted": 0.7336573300075138,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9996195899823505,
+      "selected_run_id": "phase2_cluster_like_T0075ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\T_0075ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000001e-07,
+      "duration_ns": 100.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8242530460382325,
+      "logical_fidelity_weighted": 0.7079363989680413,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9999994996103627,
+      "selected_run_id": "phase2_cluster_like_T0100ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\T_0100ns\\summary.json"
+    },
+    {
+      "duration_s": 1.5000000000000002e-07,
+      "duration_ns": 150.00000000000003,
+      "sigma_fraction": 0.25,
+      "subspace_fidelity": 0.8848001746606492,
+      "logical_fidelity_weighted": 0.7914435038924965,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9073121125340661,
+      "selected_run_id": "phase2_cluster_like_T0150ns_sigma0p25_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\T_0150ns\\summary.json"
+    },
+    {
+      "duration_s": 2.0000000000000002e-07,
+      "duration_ns": 200.00000000000003,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8857755939537917,
+      "logical_fidelity_weighted": 0.7907766759918722,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.8518578669414473,
+      "selected_run_id": "phase2_cluster_like_T0200ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\T_0200ns\\summary.json"
+    },
+    {
+      "duration_s": 3.0000000000000004e-07,
+      "duration_ns": 300.00000000000006,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9417876248643262,
+      "logical_fidelity_weighted": 0.8871050910446501,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.7275088265361102,
+      "selected_run_id": "phase2_cluster_like_T0300ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\T_0300ns\\summary.json"
+    },
+    {
+      "duration_s": 5.000000000000001e-07,
+      "duration_ns": 500.00000000000006,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9929371698993511,
+      "logical_fidelity_weighted": 0.9859529544273287,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.033611802679206285,
+      "selected_run_id": "phase2_cluster_like_T0500ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\T_0500ns\\summary.json"
+    },
+    {
+      "duration_s": 7.5e-07,
+      "duration_ns": 750.0,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9981427286295547,
+      "logical_fidelity_weighted": 0.9962914774378062,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.013817080399431313,
+      "selected_run_id": "phase2_cluster_like_T0750ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\T_0750ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000002e-06,
+      "duration_ns": 1000.0000000000001,
+      "sigma_fraction": 0.25,
+      "subspace_fidelity": 0.9995997523349839,
+      "logical_fidelity_weighted": 0.9991997699722472,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.07608728326990734,
+      "selected_run_id": "phase2_cluster_like_T1000ns_sigma0p25_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\T_1000ns\\summary.json"
+    }
+  ],
+  "thresholds": [
+    {
+      "threshold": 0.99,
+      "min_duration_s": 5.000000000000001e-07,
+      "min_duration_ns": 500.00000000000006
+    },
+    {
+      "threshold": 0.999,
+      "min_duration_s": 1.0000000000000002e-06,
+      "min_duration_ns": 1000.0000000000001
+    },
+    {
+      "threshold": 0.9999,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    }
+  ],
+  "selected_visualization_duration_ns": 1000.0,
+  "curve_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\fidelity_leakage.png",
+  "waveform_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\selected_waveform.png",
+  "spectrum_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\selected_spectrum.png",
+  "per_n_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_cluster_like\\selected_per_n.png"
+}

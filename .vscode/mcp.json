@@ -1,0 +1,33 @@
+{
+  // MCP server configuration for cqed_sim development workflow.
+  // See SKILLS_AND_MCP_BLUEPRINT.md for full documentation.
+  //
+  // Phase 0 tools (Filesystem, Shell, Docs) are provided by VS Code built-ins.
+  // Only external MCP servers that add new capabilities are listed here.
+
+  "servers": {
+
+    // ── Phase 2: Git / Diff Access ─────────────────────────────────────
+    // Provides structured git operations: status, diff, log, blame.
+    // READ-ONLY by design — no push, reset, or checkout exposed.
+    "git": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git",
+        "--repository",
+        "${workspaceFolder}"
+      ]
+    }
+
+    // ── Phase 4 (optional): Dedicated Documentation Index ──────────────
+    // Uncomment when built-in semantic_search is insufficient.
+    //
+    // "docs": {
+    //   "type": "stdio",
+    //   "command": "mcp-server-docs",
+    //   "args": ["serve", "--index-dir", ".copilot/docs_index"]
+    // }
+  }
+}

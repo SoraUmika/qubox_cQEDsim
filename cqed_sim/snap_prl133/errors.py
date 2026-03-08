@@ -71,10 +71,10 @@ def compute_mean_squared_overlap(
     per_overlap = np.zeros(n_max + 1, dtype=float)
 
     for n in range(n_max + 1):
-        psi0 = model.basis_state(n, 0)
+        psi0 = model.basis_state( 0,n)
         out, _, _ = run_snap_stage(model, target_phases, params, cfg, psi0, frame=frame)
-        a_n = model.basis_state(n, 1).overlap(out)
-        b_n = model.basis_state(n, 0).overlap(out)
+        a_n = model.basis_state( 1,n).overlap(out)
+        b_n = model.basis_state( 0,n).overlap(out)
         a[n] = a_n
         b[n] = b_n
         dtheta_raw[n] = float(np.angle(a_n * np.exp(-1j * target_phases[n])))

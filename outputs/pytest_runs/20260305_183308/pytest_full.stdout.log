@@ -1,0 +1,29 @@
+....................F...........................s....................... [ 44%]
+........................................................................ [ 88%]
+...................                                                      [100%]
+================================== FAILURES ===================================
+_____________________ test_benchmark_cell_runtime_budget ______________________
+
+>   ???
+
+C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\tests\test_sqr_calibration.py:363: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+base_config = {'cavity_fock_cutoff': 6, 'd_alpha_bounds': (-3.141592653589793, 3.141592653589793), 'd_lambda_bounds': (-0.5, 0.5), 'd_omega_hz_bounds': (-2000000.0, 2000000.0), ...}
+
+>   ???
+E   AssertionError: Reduced benchmark runtime exceeded budget: 30.595 s
+
+C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\tests\test_sqr_calibration.py:274: AssertionError
+============================== warnings summary ===============================
+tests/test_12_pulse_semantics.py::test_same_area_different_shape_same_rotation_small_signal
+  C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\tests\test_12_pulse_semantics.py:73: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+    g_int = np.trapz(_gauss(t).real, t)
+
+tests/test_20_gaussian_iq_convention.py::test_single_tone_multitone_and_gaussian_match_iq_convention
+  C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\tests\test_20_gaussian_iq_convention.py:147: DeprecationWarning: `trapz` is deprecated. Use `trapezoid` instead, or one of the numerical integration functions in `scipy.integrate`.
+    area = float(np.trapz(np.real(base), np.asarray(t_rel, dtype=float)))
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED cqed_sim/tests/test_sqr_calibration.py::test_benchmark_cell_runtime_budget

@@ -1,0 +1,6 @@
+timestamp_utc=2026-03-06T00:57:01.6796861Z
+git_head=3ec5b41987be7ab033ae0577a3b358e1d5ef141a
+full_command=python -m pytest -q
+artifacts=outputs/pytest_runs/20260305_185117
+touched_file=cqed_sim/tests/test_sqr_calibration.py
+touched_file_status=M cqed_sim/tests/test_sqr_calibration.py

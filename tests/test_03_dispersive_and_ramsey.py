@@ -25,9 +25,9 @@ def test_chi_conditional_phase_scales_with_photon_number():
     compiled = SequenceCompiler(dt=0.1).compile([], t_end=t_end)
 
     def phase_for_n(n):
-        psi = (model.basis_state(n, 0) + model.basis_state(n, 1)).unit()
+        psi = (model.basis_state( 0,n) + model.basis_state( 1,n)).unit()
         res = simulate_sequence(model, compiled, psi, {}, config=SimulationConfig(frame=FrameSpec()))
-        rho_q = qt.ptrace(res.final_state, 1)
+        rho_q = qt.ptrace(res.final_state, 0)
         return np.angle(rho_q[0, 1])
 
     p1 = phase_for_n(1)
@@ -48,8 +48,8 @@ def test_ramsey_pull_with_cavity_photons():
     ph1 = []
     for tw in waits:
         compiled = SequenceCompiler(dt=0.05).compile([], t_end=tw)
-        psi0 = (model.basis_state(0, 0) + model.basis_state(0, 1)).unit()
-        psi1 = (model.basis_state(1, 0) + model.basis_state(1, 1)).unit()
+        psi0 = (model.basis_state( 0,0) + model.basis_state( 1,0)).unit()
+        psi1 = (model.basis_state( 0,1) + model.basis_state( 1,1)).unit()
         res0 = simulate_sequence(
             model,
             compiled,
@@ -64,8 +64,8 @@ def test_ramsey_pull_with_cavity_photons():
             {},
             config=SimulationConfig(frame=FrameSpec()),
         )
-        ph0.append(np.angle(qt.ptrace(res0.final_state, 1)[0, 1]))
-        ph1.append(np.angle(qt.ptrace(res1.final_state, 1)[0, 1]))
+        ph0.append(np.angle(qt.ptrace(res0.final_state, 0)[0, 1]))
+        ph1.append(np.angle(qt.ptrace(res1.final_state, 0)[0, 1]))
     slope0 = np.polyfit(waits, np.unwrap(ph0), 1)[0]
     slope1 = np.polyfit(waits, np.unwrap(ph1), 1)[0]
     # Under project convention omega_ge(n)=omega_ge(0)-n*chi, rho_ge phase slope decreases with n.

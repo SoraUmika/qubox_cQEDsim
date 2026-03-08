@@ -63,5 +63,6 @@ def multitone_gaussian_envelope(
     t = t_rel * duration_s
     coeff = np.zeros_like(t, dtype=np.complex128)
     for spec in tone_specs:
-        coeff += spec.amp_rad_s * np.exp(1j * spec.phase_rad) * np.exp(-1j * spec.omega_rad_s * t)
+        # Canonical convention: w(t) ~ exp(+i*omega*t) with phase carried as exp(+i*phase).
+        coeff += spec.amp_rad_s * np.exp(1j * spec.phase_rad) * np.exp(1j * spec.omega_rad_s * t)
     return env * coeff

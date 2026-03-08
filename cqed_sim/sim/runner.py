@@ -31,7 +31,7 @@ class SimulationResult:
 
 def default_observables(model: DispersiveTransmonCavityModel) -> dict[str, qt.Qobj]:
     ops = model.operators()
-    proj_e = qt.tensor(qt.qeye(model.n_cav), qt.basis(model.n_tr, 1) * qt.basis(model.n_tr, 1).dag())
+    proj_e = qt.tensor(qt.basis(model.n_tr, 1) * qt.basis(model.n_tr, 1).dag(), qt.qeye(model.n_cav))
     x_c = ops["a"] + ops["adag"]
     p_c = -1j * (ops["a"] - ops["adag"])
     return {"P_e": proj_e, "n_c": ops["n_c"], "x_c": x_c, "p_c": p_c}

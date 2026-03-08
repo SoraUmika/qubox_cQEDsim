@@ -23,12 +23,12 @@ def main():
     result = simulate_sequence(
         model,
         compiled,
-        model.basis_state(0, 1),
+        model.basis_state( 1,0),
         {"sb": "sideband"},
         config=SimulationConfig(),
     )
-    p_g1 = abs(model.basis_state(1, 0).overlap(result.final_state)) ** 2
-    p_e0 = abs(model.basis_state(0, 1).overlap(result.final_state)) ** 2
+    p_g1 = abs(model.basis_state( 0,1).overlap(result.final_state)) ** 2
+    p_e0 = abs(model.basis_state( 1,0).overlap(result.final_state)) ** 2
     print("P(g,1):", float(p_g1))
     print("P(e,0):", float(p_e0))
 

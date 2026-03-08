@@ -52,7 +52,7 @@ def _baseline_case_a(gates, config: dict[str, Any]) -> dict[str, np.ndarray]:
     def record(current_state):
         rho = current_state if current_state.isoper else current_state.proj()
         x, y, z = bloch_xyz_from_joint(rho)
-        rho_c = qt.ptrace(rho, 0)
+        rho_c = qt.ptrace(rho, 1)
         a = qt.destroy(int(config["n_cav_dim"]))
         xs.append(float(x))
         ys.append(float(y))
@@ -80,7 +80,7 @@ def _minimal_track_from_states(states: list[qt.Qobj], case: str, gate_type: str 
             {
                 "index": idx,
                 "state": rho,
-                "rho_c": qt.ptrace(rho, 0),
+                "rho_c": qt.ptrace(rho, 1),
                 "gate_type": "INIT" if idx == 0 else gate_type,
                 "top_label": "0:INIT" if idx == 0 else f"{idx}:{gate_type}",
             }
@@ -133,7 +133,7 @@ def _test_1_ideal_rotation_sanity(base_config: dict[str, Any]) -> None:
     config["n_cav_dim"] = 1
     gate = RotationGate(index=0, name="x90", theta=np.pi / 2.0, phi=0.0)
     out = ideal_gate_unitary(gate, 1) * build_initial_state(config, n_cav_dim=1)
-    _assert_close(np.asarray(bloch_xyz_from_joint(out)), np.array([0.0, -1.0, 0.0]), atol=2.0e-3, label="Test 1")
+    _assert_close(np.asarray(bloch_xyz_from_joint(out)), np.array([0.0, 1.0, 0.0]), atol=2.0e-3, label="Test 1")
     if not np.isclose(purity(out), 1.0, atol=1.0e-10):
         raise AssertionError("Test 1 purity was not preserved.")
 
@@ -162,7 +162,7 @@ def _test_2_case_b_displacement_sanity(base_config: dict[str, Any]) -> None:
 
 def _test_3_sqr_conditionality() -> None:
     gate = SQRGate(index=0, name="sqr", theta=(0.0, np.pi / 2.0), phi=(0.0, np.pi / 2.0))
-    psi = qt.tensor((qt.basis(4, 0) + qt.basis(4, 1)).unit(), qt.basis(2, 0))
+    psi = qt.tensor(qt.basis(2, 0), (qt.basis(4, 0) + qt.basis(4, 1)).unit())
     out = ideal_gate_unitary(gate, 4) * psi
     if not purity(reduced_qubit_state(out)) < 0.999:
         raise AssertionError("Test 3 expected qubit mixedness after conditional rotation.")
@@ -179,10 +179,10 @@ def _test_4_decoherence_limits() -> None:
         n_tr=2,
     )
     compiled = SequenceCompiler(dt=0.02).compile([], t_end=1.0)
-    res_t1 = simulate_sequence(model, compiled, model.basis_state(0, 1), {}, SimulationConfig(), noise=NoiseSpec(t1=1.0))
+    res_t1 = simulate_sequence(model, compiled, model.basis_state( 1,0), {}, SimulationConfig(), noise=NoiseSpec(t1=1.0))
     if not np.isclose(bloch_xyz_from_joint(res_t1.final_state)[2], 1.0 - 2.0 * math.e ** (-1.0), atol=0.06):
         raise AssertionError("Test 4 T1 decay mismatch.")
-    plus = qt.tensor(qt.basis(2, 0), (qt.basis(2, 0) + qt.basis(2, 1)).unit())
+    plus = qt.tensor((qt.basis(2, 0) + qt.basis(2, 1)).unit(), qt.basis(2, 0))
     res_tphi = simulate_sequence(model, compiled, plus, {}, SimulationConfig(), noise=NoiseSpec(tphi=1.0))
     if not np.isclose(bloch_xyz_from_joint(res_tphi.final_state)[0], math.e ** (-1.0), atol=0.06):
         raise AssertionError("Test 4 Tphi decay mismatch.")
@@ -370,8 +370,8 @@ def _test_9_phase_unwrap_continuity_across_branch_cut() -> None:
             dims=[[2], [2]],
         )
 
-    state_a = qt.tensor(qt.basis(n_cav, 0).proj(), qubit_dm(np.pi - 5.0e-2))
-    state_b = qt.tensor(qt.basis(n_cav, 0).proj(), qubit_dm(-np.pi + 4.0e-2))
+    state_a = qt.tensor( qubit_dm(np.pi - 5.0e-2),qt.basis(n_cav, 0).proj())
+    state_b = qt.tensor( qubit_dm(-np.pi + 4.0e-2),qt.basis(n_cav, 0).proj())
     track = _minimal_track_from_states([state_a, state_b], case="phase continuity test", gate_type="Rotation")
     diag = conditional_phase_diagnostics(track, max_n=0, probability_threshold=1.0e-8, unwrap=True, coherence_threshold=1.0e-8)
     delta = float(diag["phase"][0, 1] - diag["phase"][0, 0])
@@ -401,7 +401,7 @@ def _test_10_relative_phase_definition() -> None:
     n_cav = 4
     n_target = 2
     theta = 0.73
-    psi = (qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)) + np.exp(1j * theta) * qt.tensor(qt.basis(n_cav, n_target), qt.basis(2, 1))).unit()
+    psi = (qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 0)) + np.exp(1j * theta) * qt.tensor( qt.basis(2, 1),qt.basis(n_cav, n_target))).unit()
     diag = conditional_phase_diagnostics(
         _minimal_track_from_states([psi], case="relative phase definition test", gate_type="SQR"),
         max_n=n_target,
@@ -422,7 +422,7 @@ def _test_11_global_phase_invariance() -> None:
     n_target = 1
     theta = -1.11
     alpha = 0.42
-    psi = (qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)) + np.exp(1j * theta) * qt.tensor(qt.basis(n_cav, n_target), qt.basis(2, 1))).unit()
+    psi = (qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 0)) + np.exp(1j * theta) * qt.tensor( qt.basis(2, 1),qt.basis(n_cav, n_target))).unit()
     psi_shifted = np.exp(1j * alpha) * psi
     diag_a = conditional_phase_diagnostics(
         _minimal_track_from_states([psi], case="global phase baseline"),
@@ -449,7 +449,7 @@ def _test_11b_ground_relative_phase_definition() -> None:
     n_cav = 4
     n_target = 2
     theta = -0.37
-    psi = (qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)) + np.exp(1j * theta) * qt.tensor(qt.basis(n_cav, n_target), qt.basis(2, 0))).unit()
+    psi = (qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 0)) + np.exp(1j * theta) * qt.tensor( qt.basis(2, 0),qt.basis(n_cav, n_target))).unit()
     diag = relative_phase_family_diagnostics(
         _minimal_track_from_states([psi], case="ground relative phase definition test", gate_type="Displacement"),
         max_n=n_target,
@@ -468,7 +468,7 @@ def _test_11b_ground_relative_phase_definition() -> None:
 def _test_12_conditioned_bloch_matches_known_state() -> None:
     n_cav = 5
     rho_q = ((qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit()).proj()
-    state = qt.tensor(qt.basis(n_cav, 2).proj(), rho_q)
+    state = qt.tensor( rho_q,qt.basis(n_cav, 2).proj())
     conditioned = np.asarray(conditioned_bloch_xyz(state, n=2, fallback="nan")[:3], dtype=float)
     unconditional = np.asarray(bloch_xyz_from_joint(state), dtype=float)
     _assert_close(conditioned, unconditional, atol=1.0e-12, label="Conditioned Bloch known state")
@@ -476,7 +476,7 @@ def _test_12_conditioned_bloch_matches_known_state() -> None:
 
 def _test_13_bloch_bounds_or_masking() -> None:
     n_cav = 3
-    state = qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0))
+    state = qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 0))
     track = _minimal_track_from_states([state], case="bloch masking test")
     diagnostics = fock_resolved_bloch_diagnostics(track, max_n=1, probability_threshold=1.0e-6)
     if not diagnostics["valid"][0, 0]:
@@ -493,7 +493,7 @@ def _test_13_bloch_bounds_or_masking() -> None:
 def _test_14_manifold_isolation() -> None:
     n_cav = 4
     theta = -0.61
-    psi = (qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0)) + np.exp(1j * theta) * qt.tensor(qt.basis(n_cav, 1), qt.basis(2, 1))).unit()
+    psi = (qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 0)) + np.exp(1j * theta) * qt.tensor( qt.basis(2, 1),qt.basis(n_cav, 1))).unit()
     diag = conditional_phase_diagnostics(
         _minimal_track_from_states([psi], case="manifold isolation test", gate_type="SQR"),
         max_n=2,
@@ -512,9 +512,9 @@ def _test_15_phase_family_bundle_contains_both() -> None:
     theta_ground = 0.21
     theta_excited = -0.64
     psi = (
-        qt.tensor(qt.basis(n_cav, 0), qt.basis(2, 0))
-        + np.exp(1j * theta_ground) * qt.tensor(qt.basis(n_cav, 1), qt.basis(2, 0))
-        + np.exp(1j * theta_excited) * qt.tensor(qt.basis(n_cav, 2), qt.basis(2, 1))
+        qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 0))
+        + np.exp(1j * theta_ground) * qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 1))
+        + np.exp(1j * theta_excited) * qt.tensor( qt.basis(2, 1),qt.basis(n_cav, 2))
     ).unit()
     diag = relative_phase_family_diagnostics(
         _minimal_track_from_states([psi], case="phase family bundle test", gate_type="SQR"),

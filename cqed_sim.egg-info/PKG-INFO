@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: cqed-sim
+Version: 0.1.0
+Summary: Hardware-faithful time-domain cQED pulse simulator using QuTiP
+Requires-Python: >=3.10
+Requires-Dist: numpy>=1.24
+Requires-Dist: scipy>=1.10
+Requires-Dist: qutip>=5.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"

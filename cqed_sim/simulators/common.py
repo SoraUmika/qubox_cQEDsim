@@ -41,7 +41,7 @@ def build_initial_state(config: Mapping[str, Any], n_cav_dim: int | None = None)
         cavity_state = qt.Qobj(amplitudes.reshape((-1, 1)), dims=[[n_cav_dim], [1]]).unit()
     else:
         raise ValueError(f"Unsupported initial cavity kind '{cavity_kind}'.")
-    return qt.tensor(cavity_state, build_qubit_state(str(config["initial_qubit"])))
+    return qt.tensor(build_qubit_state(str(config["initial_qubit"])), cavity_state)
 
 
 def choose_t2_ns(config: Mapping[str, Any]) -> float:

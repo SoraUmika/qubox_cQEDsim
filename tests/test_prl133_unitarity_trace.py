@@ -24,7 +24,7 @@ def test_prl133_closed_system_unitarity_and_trace():
         channel="q",
     )
     compiled = SequenceCompiler(dt=0.25).compile([pulse], t_end=120.25)
-    psi0 = model.basis_state(0, 0)
+    psi0 = model.basis_state( 0,0)
     res_ket = simulate_sequence(model, compiled, psi0, {"q": "qubit"}, config=cfg)
     assert res_ket.states is not None
     norms = [float(s.norm()) for s in res_ket.states]

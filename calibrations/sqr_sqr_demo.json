@@ -113,7 +113,7 @@
     }
   ],
   "metadata": {
-    "timestamp": "2026-03-03T21:07:01.042865+00:00",
+    "timestamp": "2026-03-05T05:37:01.363042+00:00",
     "objective_type": "process_infidelity_plus_regularization",
     "config_snapshot": {
       "duration_sqr_s": 1e-06,
@@ -123,7 +123,7 @@
       "st_chi_hz": -2840421.354241756,
       "st_chi2_hz": 0.0,
       "st_chi3_hz": 0.0,
-      "max_n_cal": 2,
+      "max_n_cal": 8,
       "sqr_theta_cutoff": 1e-10,
       "optimizer_method_stage1": "Powell",
       "optimizer_method_stage2": "L-BFGS-B",
@@ -143,7 +143,7 @@
       "regularization_alpha": 1e-06,
       "regularization_omega": 1e-18
     },
-    "config_hash": "1e34016917f38930",
+    "config_hash": "cffc7b29de6f511b",
     "optimizer_method_stage1": "Powell",
     "optimizer_method_stage2": "L-BFGS-B",
     "cache_hit": false,

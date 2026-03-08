@@ -93,12 +93,14 @@ def build_sqr_multitone_pulse(
     duration_s = float(config["duration_sqr_s"])
     sigma_fraction = float(config["sqr_sigma_fraction"])
     frame = build_frame(model, config)
+    d_lambda_values = None if calibration is None else list(calibration.d_lambda)
     raw_tone_specs = build_sqr_tone_specs(
         model=model,
         frame=frame,
         theta_values=list(gate.theta),
         phi_values=list(gate.phi),
         duration_s=duration_s,
+        d_lambda_values=d_lambda_values,
         tone_cutoff=float(config["sqr_theta_cutoff"]),
     )
     tone_specs: list[MultitoneTone] = []
@@ -106,12 +108,14 @@ def build_sqr_multitone_pulse(
         if calibration is None:
             tone_specs.append(spec)
             continue
-        d_lambda, d_alpha, d_omega_rad_s = calibration.correction_for_n(spec.manifold)
+        _d_lambda, d_alpha, d_omega_rad_s = calibration.correction_for_n(spec.manifold)
         tone_specs.append(
             MultitoneTone(
                 manifold=spec.manifold,
                 omega_rad_s=float(spec.omega_rad_s + d_omega_rad_s),
-                amp_rad_s=float(spec.amp_rad_s * (1.0 + d_lambda)),
+                # Amplitude correction is already folded into build_sqr_tone_specs(...)
+                # via amp_n = theta/(2T) + lambda0*d_lambda_norm.
+                amp_rad_s=float(spec.amp_rad_s),
                 phase_rad=float(spec.phase_rad + d_alpha),
             )
         )
@@ -125,7 +129,11 @@ def build_sqr_multitone_pulse(
         )
 
     pulse = Pulse("qubit", 0.0, duration_s, envelope, amp=1.0, phase=0.0, label=gate.name)
-    mapping = "Simplified multitone Gaussian SQR using cqed_sim manifold_transition_frequency(...) and per-tone RWA area calibration."
+    mapping = (
+        "Simplified multitone Gaussian SQR with canonical waveform convention w(t)~exp(+i*omega*t); "
+        "tone amplitudes follow additive correction amp_n = theta/(2T) + lambda0*d_lambda_norm "
+        "(equivalent to coefficient theta/pi + d_lambda_norm)."
+    )
     if calibration is not None:
         mapping += " Applied cached/numerically optimized per-manifold corrections to amplitude, phase, and tone frequency."
     return [pulse], {"qubit": "qubit"}, {

@@ -1,0 +1,53 @@
+{
+  "case_name": "phase2_alternating_flips",
+  "description": "Alternating selective flips across Fock levels.",
+  "phase": "phase2",
+  "sweep": [
+    {
+      "duration_s": 5.0000000000000004e-08,
+      "duration_ns": 50.00000000000001,
+      "sigma_fraction": 0.15,
+      "subspace_fidelity": 0.32544398927983914,
+      "logical_fidelity_weighted": 0.33329780028766726,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.0005163777497251153,
+      "selected_run_id": "phase2_alternating_flips_T0050ns_sigma0p15_start00",
+      "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\T_0050ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000001e-07,
+      "duration_ns": 100.00000000000001,
+      "sigma_fraction": 0.25,
+      "subspace_fidelity": 0.32207150155253356,
+      "logical_fidelity_weighted": 0.32936030838560076,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.003027268047850972,
+      "selected_run_id": "phase2_alternating_flips_T0100ns_sigma0p25_start00",
+      "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\T_0100ns\\summary.json"
+    }
+  ],
+  "thresholds": [
+    {
+      "threshold": 0.99,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    },
+    {
+      "threshold": 0.999,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    },
+    {
+      "threshold": 0.9999,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    }
+  ],
+  "selected_visualization_duration_ns": 100.0,
+  "curve_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\fidelity_leakage.png",
+  "waveform_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\selected_waveform.png",
+  "spectrum_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\selected_spectrum.png",
+  "per_n_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_alternating_flips\\selected_per_n.png"
+}

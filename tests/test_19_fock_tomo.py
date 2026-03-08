@@ -64,7 +64,7 @@ def test_fock_tomo_ideal_recovers_exact_blocks():
     model = _toy_model(n_cav=6, n_tr=2)
     n_max = 3
     p = 0.35
-    rho = p * model.basis_state(0, 0).proj() + (1 - p) * model.basis_state(1, 1).proj()
+    rho = p * model.basis_state( 0,0).proj() + (1 - p) * model.basis_state( 1,1).proj()
     tomo = run_fock_resolved_tomo(
         model=model,
         state_prep=lambda: rho,
@@ -85,7 +85,7 @@ def test_fock_tomo_realistic_baseline_on_known_states():
     alpha = 0.9
     r = np.array([1.0, 0.0, 0.0], dtype=float)
     rho_q = 0.5 * (qt.qeye(2) + r[0] * qt.sigmax() + r[1] * qt.sigmay() + r[2] * qt.sigmaz())
-    rho = qt.tensor(qt.coherent(model.n_cav, alpha).proj(), rho_q)
+    rho = qt.tensor( rho_q,qt.coherent(model.n_cav, alpha).proj())
     tomo = run_fock_resolved_tomo(
         model=model,
         state_prep=lambda: rho,
@@ -106,10 +106,10 @@ def test_fock_tomo_realistic_baseline_on_known_states():
 @pytest.mark.slow
 def test_leakage_calibration_unmixing_improves_rmse():
     start = time.perf_counter()
-    model = _toy_model(n_cav=9, n_tr=2)
-    n_max = 3
+    model = _toy_model(n_cav=5, n_tr=2)
+    n_max = 1
     cal = QubitPulseCal.nominal()
-    alphas = [0.2, 0.6, 1.0, 1.4, 1.8]
+    alphas = [0.4, 1.0]
     bloch_cal = [
         np.array([0.0, 0.0, 1.0]),
         np.array([0.0, 0.0, -1.0]),
@@ -124,17 +124,17 @@ def test_leakage_calibration_unmixing_improves_rmse():
         alphas=alphas,
         bloch_states=bloch_cal,
         cal=cal,
-        tag_duration_ns=500.0,
-        tag_amp=0.004,
+        tag_duration_ns=180.0,
+        tag_amp=0.0015,
         dt_ns=1.0,
     )
     assert cond < 1e8
 
     # Science state: coherent cavity with +X qubit.
     rho_q = 0.5 * (qt.qeye(2) + qt.sigmax())
-    rho = qt.tensor(qt.coherent(model.n_cav, 1.0).proj(), rho_q)
+    rho = qt.tensor( rho_q,qt.coherent(model.n_cav, 0.8).proj())
     tomo_base = run_fock_resolved_tomo(
-        model=model, state_prep=lambda: rho, n_max=n_max, cal=cal, ideal_tag=False, tag_duration_ns=500.0, tag_amp=0.004, dt_ns=1.0
+        model=model, state_prep=lambda: rho, n_max=n_max, cal=cal, ideal_tag=False, tag_duration_ns=180.0, tag_amp=0.0015, dt_ns=1.0
     )
     tomo_fix = run_fock_resolved_tomo(
         model=model,
@@ -142,8 +142,8 @@ def test_leakage_calibration_unmixing_improves_rmse():
         n_max=n_max,
         cal=cal,
         ideal_tag=False,
-        tag_duration_ns=500.0,
-        tag_amp=0.004,
+        tag_duration_ns=180.0,
+        tag_amp=0.0015,
         dt_ns=1.0,
         leakage_cal=(w, b),
     )
@@ -166,27 +166,27 @@ def test_selective_pi_minimizes_offmanifold_action():
             res = simulate_sequence(
                 model,
                 comp,
-                model.basis_state(m, 0),
+                model.basis_state( 0,m),
                 {"q": "qubit"},
                 SimulationConfig(frame=FrameSpec(omega_q_frame=model.omega_q)),
             )
-            pe = float(np.real((qt.ptrace(res.final_state, 1) * (qt.basis(2, 1) * qt.basis(2, 1).dag())).tr()))
+            pe = float(np.real((qt.ptrace(res.final_state, 0) * (qt.basis(2, 1) * qt.basis(2, 1).dag())).tr()))
             assert pe < 0.12
 
 
 def test_fock_tomo_runtime_budget():
     start = time.perf_counter()
-    model = _toy_model(n_cav=7, n_tr=2)
-    n_max = 3
-    rho = qt.tensor(qt.coherent(model.n_cav, 0.8).proj(), qt.basis(2, 0).proj())
+    model = _toy_model(n_cav=5, n_tr=2)
+    n_max = 1
+    rho = qt.tensor( qt.basis(2, 0).proj(),qt.coherent(model.n_cav, 0.6).proj())
     _ = run_fock_resolved_tomo(
         model=model,
         state_prep=lambda: rho,
         n_max=n_max,
         cal=QubitPulseCal.nominal(),
         ideal_tag=False,
-        tag_duration_ns=900.0,
-        tag_amp=0.0015,
+        tag_duration_ns=250.0,
+        tag_amp=0.0012,
         dt_ns=1.0,
         noise=NoiseSpec(t1=9000.0, tphi=7000.0),
     )

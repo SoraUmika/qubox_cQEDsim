@@ -26,14 +26,14 @@ def test_detuned_drive_reduces_inversion():
     r_res = simulate_sequence(
         model,
         comp.compile([p_res], t_end=1.1),
-        model.basis_state(0, 0),
+        model.basis_state( 0,0),
         {"q": "qubit"},
         SimulationConfig(frame=FrameSpec(omega_q_frame=wq)),
     )
     r_det = simulate_sequence(
         model,
         comp.compile([p_det], t_end=1.1),
-        model.basis_state(0, 0),
+        model.basis_state( 0,0),
         {"q": "qubit"},
         SimulationConfig(frame=FrameSpec(omega_q_frame=wq)),
     )
@@ -49,14 +49,14 @@ def test_frame_invariance_for_observables():
     r_lab = simulate_sequence(
         model,
         compiler.compile([], t_end=1.5),
-        (model.basis_state(0, 0) + model.basis_state(0, 1)).unit(),
+        (model.basis_state( 0,0) + model.basis_state( 1,0)).unit(),
         {},
         SimulationConfig(frame=FrameSpec(omega_q_frame=0.0)),
     )
     r_rot = simulate_sequence(
         model,
         compiler.compile([], t_end=1.5),
-        (model.basis_state(0, 0) + model.basis_state(0, 1)).unit(),
+        (model.basis_state( 0,0) + model.basis_state( 1,0)).unit(),
         {},
         SimulationConfig(frame=FrameSpec(omega_q_frame=wq)),
     )

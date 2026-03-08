@@ -1,0 +1,8 @@
+started_utc=2026-03-06T00:31:30.8838704Z
+started_local=2026-03-05T18:31:30.8871506-06:00
+cwd=C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation
+python=C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\.venv\Scripts\python.exe
+pid=32848
+command=-m pytest -q
+stdout=outputs\pytest_runs\20260305_183130\pytest_full.stdout.log
+stderr=outputs\pytest_runs\20260305_183130\pytest_full.stderr.log

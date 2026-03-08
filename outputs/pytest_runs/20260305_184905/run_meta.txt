@@ -1,0 +1,7 @@
+started_utc=2026-03-06T00:49:05.1731560Z
+cwd=C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation
+run_dir=outputs\pytest_runs\20260305_184905
+script=outputs\pytest_runs\20260305_184905\run_pytest.ps1
+log=outputs\pytest_runs\20260305_184905\pytest_full.log
+exit_file=outputs\pytest_runs\20260305_184905\exit_code.txt
+summary_file=outputs\pytest_runs\20260305_184905\summary.txt

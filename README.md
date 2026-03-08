@@ -35,7 +35,7 @@ model = DispersiveTransmonCavityModel(
 pulses = [Pulse("q", 0.0, 1.0, square, amp=np.pi/4)]
 compiled = SequenceCompiler(dt=0.02).compile(pulses, t_end=1.2)
 res = simulate_sequence(
-    model, compiled, model.basis_state(0, 0), {"q": "qubit"},
+    model, compiled, model.basis_state( 0,0), {"q": "qubit"},
     config=SimulationConfig(frame=FrameSpec())
 )
 print(res.expectations["P_e"][-1])
@@ -102,6 +102,82 @@ python outputs/generate_sqr_calibration_notebook.py
   - `cqed_sim.plotting.plot_fock_resolved_bloch_heatmaps(...)`
   - `cqed_sim.plotting.plot_relative_phase_heatmap(...)`
   - `cqed_sim.plotting.plot_gate_bloch_trajectory(...)`
+
+## Unitary Synthesis (Subspace-Aware)
+- Module: `cqed_sim.unitary_synthesis`
+- Entrypoints:
+  - `Subspace.qubit_cavity_block(...)`
+  - `make_target("ghz"|"cluster"|"easy", ...)`
+  - `UnitarySynthesizer(...).fit(...)`
+- Basis convention in synthesis code:
+  - Full Hilbert-space ordering is `|q>_qubit tensor |n>_cavity` with `q=0 -> g`, `q=1 -> e`
+  - `Subspace.qubit_cavity_block(...)` returns the restricted block basis in per-Fock order: `|g,0>, |e,0>, |g,1>, |e,1>, ...`
+
+### Time Policy (Per Gate Type / Shared / Frozen)
+- Configure durations with `time_policy`, `time_mode`, and optional `time_groups`.
+- `time_mode`:
+  - `"per-type"`: one shared duration parameter per gate type
+  - `"per-instance"`: one duration parameter per gate instance
+  - `"hybrid"`: explicit sharing groups via `time_groups` or per-type `group` entries
+- Any missing gate type falls back to `time_policy["default"]`.
+- Frozen gate types (`optimize=False` or `frozen=True`) are excluded from the active optimizer vector.
+
+Example:
+```python
+time_policy = {
+    "default": {"optimize": True, "bounds": (20e-9, 2000e-9), "init": 400e-9},
+    "SQR": {"optimize": True, "bounds": (60e-9, 1200e-9), "init": 300e-9},
+    "Displacement": {"optimize": False, "bounds": (30e-9, 900e-9), "init": 150e-9},
+    "CondPhaseSQR": {"optimize": True, "bounds": (80e-9, 1500e-9), "init": 500e-9},
+}
+```
+
+### Conditional-Phase SQR Drift Model
+- `CondPhaseSQR` and optional drift-in-`SQR` use explicit drift coefficients:
+  - `chi`, `chi2`, `kerr` (`K`), `kerr2` (`K2`) in rad/s.
+- Rotating-frame convention used by default:
+  - frame `"rotating_omega_c_omega_q"` (bare `omega_c n` and `omega_q sigma_z/2` removed).
+- Drift energies:
+  - `E_g,n = delta_c*n - 0.5*delta_q - (chi*n + chi2*n(n-1)) + Kerr(n)`
+  - `E_e,n = delta_c*n + 0.5*delta_q + (chi*n + chi2*n(n-1)) + Kerr(n)`
+  - `Kerr(n) = 0.5*K*n(n-1) + (K2/6)*n(n-1)(n-2)`
+- Phases during gate time `t`:
+  - `Phi_g,n = E_g,n * t`, `Phi_e,n = E_e,n * t`
+  - Relative phase: `DeltaPhi_n = Phi_e,n - Phi_g,n`
+- Gate structure:
+  - `U_CondPhaseSQR = U_drift(t) * U_drive(t)`
+  - `SQR` can include the same drift factor via `include_conditional_phase_in_sqr=True`.
+
+### Free-Evolution Conditional Phase Gate
+- Primitive: `FreeEvolveCondPhase(wait_time)`
+- This is the drive-free version of conditional phase accumulation:
+  - `U_free(t_wait) = exp(-i H0 t_wait)` under the same drift model used by `CondPhaseSQR`.
+- Uses the same shared phase helpers as `CondPhaseSQR`:
+  - `drift_phase_table(...)`
+  - `drift_phase_unitary(...)` (ideal backend)
+  - `drift_hamiltonian_qobj(...)` / `drift_phase_from_hamiltonian(...)` (pulse backend)
+- Behavior when `chi=chi2=kerr=kerr2=0` and frame offsets are zero:
+  - `U_free` reduces to identity (up to global phase convention).
+- `FreeEvolveCondPhase` participates in time policy with gate type key:
+  - `"FreeEvolveCondPhase"`.
+
+### Hardware-Like Constraints and Parallelization
+- `UnitarySynthesizer` supports hardware-like limits and parallel execution:
+  - `hardware_limits`
+  - `time_grid`
+  - `constraints`
+  - `parallel`
+- Time-grid enforcement (DAC-like):
+  - default grid is `dt = 1e-9` (1 GHz sampling),
+  - `time_grid["mode"]` supports `"hard"` and `"soft"`,
+  - reports include raw times, snapped times, and integer tick counts.
+- Constraint hooks:
+  - amplitude/detuning bounds per channel and gate-type override,
+  - slew-rate checks on compiled piecewise-constant envelopes,
+  - SQR tone-spacing / tone-count / forbidden-band checks.
+- Parallelization:
+  - deterministic multi-start parallel workers with derived seeds,
+  - report includes worker seeds, per-start objectives, and selected start index.
 
 ## Numerical Settings
 - Solver defaults: `atol=1e-8`, `rtol=1e-7`, optional `max_step`.

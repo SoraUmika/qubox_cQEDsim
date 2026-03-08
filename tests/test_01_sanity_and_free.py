@@ -35,7 +35,7 @@ def test_free_evolution_phase_k0_chi0():
         n_cav=6,
         n_tr=2,
     )
-    psi0 = model.basis_state(2, 1)
+    psi0 = model.basis_state( 1,2)
     compiler = SequenceCompiler(dt=0.1)
     compiled = compiler.compile([], t_end=3.0)
     result = simulate_sequence(model, compiled, psi0, {}, config=SimulationConfig(frame=FrameSpec()))
@@ -47,7 +47,7 @@ def test_free_evolution_phase_k0_chi0():
 
 def test_no_drive_populations_constant(base_model):
     start = time.perf_counter()
-    psi0 = (base_model.basis_state(1, 0) + 1j * base_model.basis_state(2, 1)).unit()
+    psi0 = (base_model.basis_state( 0,1) + 1j * base_model.basis_state( 1,2)).unit()
     compiler = SequenceCompiler(dt=0.2)
     compiled = compiler.compile([], t_end=6.0)
     res = simulate_sequence(base_model, compiled, psi0, {}, config=SimulationConfig(frame=FrameSpec()))
@@ -71,7 +71,7 @@ def test_kerr_only_phase_matches_analytic():
     )
     n = 3
     t_end = 4.0
-    psi0 = model.basis_state(n, 0)
+    psi0 = model.basis_state( 0,n)
     compiled = SequenceCompiler(dt=0.1).compile([], t_end=t_end)
     res = simulate_sequence(model, compiled, psi0, {}, config=SimulationConfig(frame=FrameSpec()))
     energy = 0.5 * k * n * (n - 1)

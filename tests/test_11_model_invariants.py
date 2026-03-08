@@ -21,7 +21,7 @@ def test_unitarity_closed_system_sesolve():
     m = DispersiveTransmonCavityModel(omega_c=0.0, omega_q=0.0, alpha=0.0, chi=0.0, kerr=0.0, n_cav=8, n_tr=2)
     p = Pulse("q", 0.0, 1.0, _square, amp=np.pi / 3)
     c = SequenceCompiler(dt=0.02).compile([p], t_end=1.2)
-    r = simulate_sequence(m, c, m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig(store_states=True))
+    r = simulate_sequence(m, c, m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig(store_states=True))
     norms = [float(s.norm()) for s in r.states]
     assert max(abs(n - 1.0) for n in norms) < 1e-8
     assert (time.perf_counter() - start) < 1.2
@@ -33,7 +33,7 @@ def test_master_equation_trace_preserved_with_collapse_ops():
     ops = m.operators()
     c_ops = [np.sqrt(0.08) * ops["b"]]
     c = SequenceCompiler(dt=0.05).compile([], t_end=5.0)
-    r = simulate_sequence(m, c, m.basis_state(0, 1), {}, SimulationConfig(store_states=True), c_ops=c_ops)
+    r = simulate_sequence(m, c, m.basis_state( 1,0), {}, SimulationConfig(store_states=True), c_ops=c_ops)
     traces = [abs(s.tr() - 1.0) for s in r.states]
     assert max(traces) < 1e-8
     assert (time.perf_counter() - start) < 1.2
@@ -46,7 +46,7 @@ def test_energy_conservation_when_time_independent():
     )
     c = SequenceCompiler(dt=0.05).compile([], t_end=4.0)
     h = m.static_hamiltonian(FrameSpec())
-    r = simulate_sequence(m, c, (m.basis_state(1, 0) + 1j * m.basis_state(2, 1)).unit(), {}, SimulationConfig(store_states=True))
+    r = simulate_sequence(m, c, (m.basis_state( 0,1) + 1j * m.basis_state( 1,2)).unit(), {}, SimulationConfig(store_states=True))
     e = np.array([qt.expect(h, s) for s in r.states], dtype=float)
     assert np.max(np.abs(e - e[0])) < 4e-5
     assert (time.perf_counter() - start) < 1.3
@@ -57,13 +57,13 @@ def test_chi_zero_reduces_to_decoupled_tensor_evolution():
     m = DispersiveTransmonCavityModel(
         omega_c=2 * np.pi * 0.6, omega_q=2 * np.pi * 1.0, alpha=-2 * np.pi * 0.2, chi=0.0, kerr=0.0, n_cav=6, n_tr=3
     )
-    psi = qt.tensor((qt.basis(m.n_cav, 0) + qt.basis(m.n_cav, 1)).unit(), (qt.basis(m.n_tr, 0) + qt.basis(m.n_tr, 1)).unit())
+    psi = qt.tensor( (qt.basis(m.n_tr, 0) + qt.basis(m.n_tr, 1)).unit(),(qt.basis(m.n_cav, 0) + qt.basis(m.n_cav, 1)).unit())
     c = SequenceCompiler(dt=0.05).compile([], t_end=3.0)
     r = simulate_sequence(m, c, psi, {}, SimulationConfig())
     rho = r.final_state.proj()
-    rho_c = qt.ptrace(r.final_state, 0)
-    rho_q = qt.ptrace(r.final_state, 1)
-    prod = qt.tensor(rho_c, rho_q)
+    rho_c = qt.ptrace(r.final_state, 1)
+    rho_q = qt.ptrace(r.final_state, 0)
+    prod = qt.tensor( rho_q,rho_c)
     assert (rho - prod).norm() < 3e-5
     assert (time.perf_counter() - start) < 1.2
 
@@ -78,7 +78,7 @@ def test_truncation_monotonicity_cavity_cutoff():
         )
         pulses = [Pulse("c", 0.0, 2.0, _square, amp=0.14), Pulse("q", 0.6, 1.2, _square, amp=0.7)]
         c = SequenceCompiler(dt=0.03).compile(pulses, t_end=2.4)
-        r = simulate_sequence(m, c, m.basis_state(0, 0), {"c": "cavity", "q": "qubit"}, SimulationConfig())
+        r = simulate_sequence(m, c, m.basis_state( 0,0), {"c": "cavity", "q": "qubit"}, SimulationConfig())
         vals.append((float(r.expectations["n_c"][-1]), float(r.expectations["P_e"][-1])))
     d1 = abs(vals[0][0] - vals[1][0]) + abs(vals[0][1] - vals[1][1])
     d2 = abs(vals[1][0] - vals[2][0]) + abs(vals[1][1] - vals[2][1])

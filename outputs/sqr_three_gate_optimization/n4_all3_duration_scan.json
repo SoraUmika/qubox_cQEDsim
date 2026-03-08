@@ -1,0 +1,351 @@
+{
+  "config": {
+    "decomposition_path": "decomposition\\cluster_U_T_1-1e+03ns-3_sqr-no_phases",
+    "cavity_fock_cutoff": 12,
+    "n_cav_dim": 13,
+    "omega_c_hz": 0.0,
+    "omega_q_hz": 0.0,
+    "qubit_alpha_hz": 0.0,
+    "st_chi_hz": -2840421.354241756,
+    "st_chi2_hz": 0.0,
+    "st_chi3_hz": 0.0,
+    "st_K_hz": 0.0,
+    "st_K2_hz": 0.0,
+    "use_rotating_frame": true,
+    "duration_sqr_s": 1e-06,
+    "sqr_sigma_fraction": 0.16666666666666666,
+    "sqr_theta_cutoff": 1e-10,
+    "dt_s": 1e-09,
+    "max_step_s": 1e-09,
+    "dt_opt_s": 4e-09,
+    "max_step_opt_s": 4e-09,
+    "qutip_nsteps": 70000,
+    "active_support_n": 4,
+    "objective_scope": "support_aware",
+    "support_mode": "explicit",
+    "support_levels": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "support_max_level": 3,
+    "support_weights": [],
+    "support_infer_weights_from_state": true,
+    "control_manifold_mode": "support_plus_boundary",
+    "control_boundary_levels": 1,
+    "control_explicit_levels": [],
+    "include_zero_theta_tones": true,
+    "allow_zero_theta_corrections": true,
+    "envelope_kind": "gaussian",
+    "flat_top_rise_fraction": 0.12,
+    "optimizer_method_stage1": "Powell",
+    "optimizer_method_stage2": "L-BFGS-B",
+    "maxiter_stage1": 2,
+    "maxiter_stage2": 3,
+    "fine_pass_schedule": [
+      [
+        3,
+        5
+      ],
+      [
+        4,
+        7
+      ]
+    ],
+    "amp_delta_bounds": [
+      -0.8,
+      0.8
+    ],
+    "phase_delta_bounds": [
+      -3.141592653589793,
+      3.141592653589793
+    ],
+    "detuning_hz_bounds": [
+      -2200000.0,
+      2200000.0
+    ],
+    "phase_ramp_hz_bounds": [
+      -1500000.0,
+      1500000.0
+    ],
+    "reg_amp": 0.001,
+    "reg_phase": 0.001,
+    "reg_detuning": 0.0006,
+    "reg_phase_ramp": 0.0004,
+    "strategy_sweep": [
+      {
+        "name": "D_1.0",
+        "optimization_mode": "amp_phase_detuning",
+        "duration_sqr_s": 1e-06,
+        "envelope_kind": "gaussian",
+        "maxiter_stage1": 1,
+        "maxiter_stage2": 2
+      },
+      {
+        "name": "D_1.5",
+        "optimization_mode": "amp_phase_detuning",
+        "duration_sqr_s": 1.5e-06,
+        "envelope_kind": "gaussian",
+        "maxiter_stage1": 1,
+        "maxiter_stage2": 2
+      },
+      {
+        "name": "D_2.0",
+        "optimization_mode": "amp_phase_detuning",
+        "duration_sqr_s": 2e-06,
+        "envelope_kind": "gaussian",
+        "maxiter_stage1": 1,
+        "maxiter_stage2": 2
+      },
+      {
+        "name": "E_1.5",
+        "optimization_mode": "amp_phase_detuning_ramp",
+        "duration_sqr_s": 1.5e-06,
+        "envelope_kind": "gaussian",
+        "maxiter_stage1": 1,
+        "maxiter_stage2": 2
+      },
+      {
+        "name": "E_2.0",
+        "optimization_mode": "amp_phase_detuning_ramp",
+        "duration_sqr_s": 2e-06,
+        "envelope_kind": "gaussian",
+        "maxiter_stage1": 1,
+        "maxiter_stage2": 2
+      },
+      {
+        "name": "D_2.5",
+        "optimization_mode": "amp_phase_detuning",
+        "duration_sqr_s": 2.5e-06,
+        "envelope_kind": "gaussian",
+        "maxiter_stage1": 1,
+        "maxiter_stage2": 2
+      }
+    ],
+    "target_active_mean_fid": 0.9,
+    "target_active_min_fid": 0.75,
+    "duration_objective_enabled": true,
+    "duration_reference_s": 1e-06,
+    "duration_penalty_weight": 0.12,
+    "duration_selection_mode": "shortest_meeting_target",
+    "output_dir": "outputs/sqr_three_gate_optimization"
+  },
+  "strategy_records": [
+    {
+      "strategy": "D_1.0",
+      "mode": "amp_phase_detuning",
+      "duration_us": 1.0,
+      "mean_active_mean_fid": 0.9687009918470301,
+      "min_active_min_fid": 0.049135935231669176,
+      "mean_support_state_mean_fid": 0.9150762610994762,
+      "mean_support_leak_max": 1.656335576101971e-08,
+      "score_fidelity": 1.3233728345813438,
+      "duration_penalty": 0.0,
+      "strategy_score": 1.3233728345813438,
+      "elapsed_s": 147.70726108551025
+    },
+    {
+      "strategy": "D_1.5",
+      "mode": "amp_phase_detuning",
+      "duration_us": 1.5,
+      "mean_active_mean_fid": 0.5511534781715476,
+      "min_active_min_fid": 0.020034127700754606,
+      "mean_support_state_mean_fid": 0.8470258228242846,
+      "mean_support_leak_max": 2.6196109725873384e-08,
+      "score_fidelity": 0.8616364003113535,
+      "duration_penalty": 0.06,
+      "strategy_score": 0.8016364003113534,
+      "elapsed_s": 201.83939409255981
+    },
+    {
+      "strategy": "D_2.0",
+      "mode": "amp_phase_detuning",
+      "duration_us": 2.0,
+      "mean_active_mean_fid": 0.7814783916134953,
+      "min_active_min_fid": 0.04504354278355336,
+      "mean_support_state_mean_fid": 0.903430216616753,
+      "mean_support_leak_max": 3.334405766312424e-08,
+      "score_fidelity": 1.1292094407090347,
+      "duration_penalty": 0.12,
+      "strategy_score": 1.0092094407090348,
+      "elapsed_s": 241.1769576072693
+    },
+    {
+      "strategy": "E_1.5",
+      "mode": "amp_phase_detuning_ramp",
+      "duration_us": 1.5,
+      "mean_active_mean_fid": 0.5471787994421803,
+      "min_active_min_fid": 0.022327809889511788,
+      "mean_support_state_mean_fid": 0.8501712212280341,
+      "mean_support_leak_max": 2.565938158246202e-08,
+      "score_fidelity": 0.860368188662774,
+      "duration_penalty": 0.06,
+      "strategy_score": 0.800368188662774,
+      "elapsed_s": 323.7093040943146
+    },
+    {
+      "strategy": "E_2.0",
+      "mode": "amp_phase_detuning_ramp",
+      "duration_us": 2.0,
+      "mean_active_mean_fid": 0.7776930999267736,
+      "min_active_min_fid": 0.044863569328146426,
+      "mean_support_state_mean_fid": 0.8993763434079597,
+      "mean_support_leak_max": 3.385304259140298e-08,
+      "score_fidelity": 1.1238793118786534,
+      "duration_penalty": 0.12,
+      "strategy_score": 1.0038793118786535,
+      "elapsed_s": 272.67224884033203
+    },
+    {
+      "strategy": "D_2.5",
+      "mode": "amp_phase_detuning",
+      "duration_us": 2.5,
+      "mean_active_mean_fid": 0.8293773589270095,
+      "min_active_min_fid": 0.23619823416268876,
+      "mean_support_state_mean_fid": 0.9184400991092921,
+      "mean_support_leak_max": 4.0039311199890903e-08,
+      "score_fidelity": 1.3161701495212816,
+      "duration_penalty": 0.18000000000000005,
+      "strategy_score": 1.1361701495212815,
+      "elapsed_s": 226.06852674484253
+    }
+  ],
+  "fine_records": [
+    {
+      "pass": 1,
+      "maxiter_stage1": 3,
+      "maxiter_stage2": 5,
+      "mean_active_mean_fid": 0.9760233267435982,
+      "min_active_min_fid": 0.28582234689536545,
+      "mean_support_state_mean_fid": 0.8869958456340604,
+      "mean_support_leak_max": 2.3069643750872615e-08,
+      "duration_us": 1.0,
+      "score_fidelity": 1.4865475109283461,
+      "duration_penalty": 0.0,
+      "strategy_score": 1.4865475109283461,
+      "target_met": false,
+      "elapsed_s": 501.52213430404663
+    },
+    {
+      "pass": 2,
+      "maxiter_stage1": 4,
+      "maxiter_stage2": 7,
+      "mean_active_mean_fid": 0.9853211407408605,
+      "min_active_min_fid": 0.2180177938982378,
+      "mean_support_state_mean_fid": 0.8901789595993869,
+      "mean_support_leak_max": 1.7379820582696937e-08,
+      "duration_us": 1.0,
+      "score_fidelity": 1.449496228853448,
+      "duration_penalty": 0.0,
+      "strategy_score": 1.449496228853448,
+      "target_met": false,
+      "elapsed_s": 697.5538594722748
+    }
+  ],
+  "best_strategy": "D_1.0",
+  "best_final_cfg": {
+    "optimization_mode": "amp_phase_detuning",
+    "duration_sqr_s": 1e-06,
+    "maxiter_stage1": 3,
+    "maxiter_stage2": 5,
+    "objective_scope": "support_aware",
+    "control_manifold_mode": "support_plus_boundary",
+    "support_levels": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "final_aggregate": {
+    "mean_active_mean_fid": 0.9760233267435982,
+    "min_active_min_fid": 0.28582234689536545,
+    "mean_support_state_mean_fid": 0.8869958456340604,
+    "mean_support_leak_max": 2.3069643750872615e-08,
+    "duration_us": 1.0,
+    "score_fidelity": 1.4865475109283461,
+    "duration_penalty": 0.0,
+    "strategy_score": 1.4865475109283461
+  },
+  "summary_rows": [
+    {
+      "index": 2,
+      "name": "SQR_527e17733de113ecaead4876b2bcafeb",
+      "mode": "amp_phase_detuning",
+      "duration_s": 1e-06,
+      "objective_scope": "support_aware",
+      "baseline_mean_fid": 0.5380456229756125,
+      "optimized_mean_fid": 0.5234913369887331,
+      "baseline_min_fid": 0.018361901748203378,
+      "optimized_min_fid": 0.014773378218840259,
+      "baseline_phase_rms": 1.4707300511154873,
+      "optimized_phase_rms": 1.761217481071878,
+      "active_mean_fid": 0.9808028908853256,
+      "active_min_fid": 0.3148424047993088,
+      "support_state_mean_fid": 0.8852279262724115,
+      "support_state_min_fid": 0.509548777472228,
+      "support_leak_mean": 4.284553508278795e-09,
+      "support_leak_max": 2.25863734382159e-08,
+      "zero_theta_nonzero_correction_levels": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "objective_calls": 1057
+    },
+    {
+      "index": 5,
+      "name": "SQR_bc8194a85a260be4c0959c6c4d8d7ae1",
+      "mode": "amp_phase_detuning",
+      "duration_s": 1e-06,
+      "objective_scope": "support_aware",
+      "baseline_mean_fid": 0.5330093153046713,
+      "optimized_mean_fid": 0.5304423127727959,
+      "baseline_min_fid": 0.029001584706632954,
+      "optimized_min_fid": 0.021257291087503495,
+      "baseline_phase_rms": 1.7098887649621977,
+      "optimized_phase_rms": 1.504955222874418,
+      "active_mean_fid": 0.9602784058914583,
+      "active_min_fid": 0.28582234689536545,
+      "support_state_mean_fid": 0.8833764881833814,
+      "support_state_min_fid": 0.3675818570602404,
+      "support_leak_mean": 5.206327591267268e-09,
+      "support_leak_max": 3.102628443052424e-08,
+      "zero_theta_nonzero_correction_levels": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "objective_calls": 1469
+    },
+    {
+      "index": 8,
+      "name": "SQR_789278ba62949511b06e9d76a4bb8437",
+      "mode": "amp_phase_detuning",
+      "duration_s": 1e-06,
+      "objective_scope": "support_aware",
+      "baseline_mean_fid": 0.5359028410029554,
+      "optimized_mean_fid": 0.5340327307465623,
+      "baseline_min_fid": 0.02573184017981924,
+      "optimized_min_fid": 0.019855319942238863,
+      "baseline_phase_rms": 1.577832221651955,
+      "optimized_phase_rms": 1.767247939544674,
+      "active_mean_fid": 0.9869886834540106,
+      "active_min_fid": 0.31329223763681024,
+      "support_state_mean_fid": 0.8923831224463884,
+      "support_state_min_fid": 0.5369355752460921,
+      "support_leak_mean": 2.714117643594823e-09,
+      "support_leak_max": 1.55962733838777e-08,
+      "zero_theta_nonzero_correction_levels": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "objective_calls": 1353
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "duration_s": 1.6e-08,
+  "results": [
+    {
+      "n_validate": 1,
+      "subspace_fidelity": 0.9996791121527026,
+      "worst_block_fidelity": 0.9987276161987615,
+      "average_block_fidelity": 0.9993584268188002,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "amp_rad_s": 98177358.95056188,
+      "amp_hz": 15625411.976689259,
+      "detuning_hz": -64532.54434515972,
+      "sigma_fraction": 0.1200000330687361,
+      "history_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_1\\history.json",
+      "waveform_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_1\\waveform.png",
+      "spectrum_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_1\\spectrum.png"
+    },
+    {
+      "n_validate": 2,
+      "subspace_fidelity": 0.9989335808179639,
+      "worst_block_fidelity": 0.9949167990497113,
+      "average_block_fidelity": 0.997869453519176,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "amp_rad_s": 98171450.24887884,
+      "amp_hz": 15624471.577609146,
+      "detuning_hz": -128750.12237480645,
+      "sigma_fraction": 0.1200030002562526,
+      "history_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_2\\history.json",
+      "waveform_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_2\\waveform.png",
+      "spectrum_path": "outputs\\analysis\\smoke_study\\fast_pi_validation\\fast_pi_nmax_2\\spectrum.png"
+    }
+  ]
+}

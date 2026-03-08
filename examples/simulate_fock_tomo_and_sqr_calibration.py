@@ -181,18 +181,18 @@ def run_fock_tomo_custom(
             t_pre = sum(p.duration for p in pre)
             off_comp = SequenceCompiler(dt=dt_ns).compile(pre, t_end=t_pre + tag_duration_ns + dt_ns)
             off = simulate_sequence(model, off_comp, rho0, {"q": "qubit"} if pre else {}, SimulationConfig(frame=frame), noise=noise)
-            s_off = float(np.real((qt.ptrace(off.final_state, 1) * qt.sigmaz()).tr()))
+            s_off = float(np.real((qt.ptrace(off.final_state, 0) * qt.sigmaz()).tr()))
 
             tag = selective_pi_custom(n=n, t0_ns=t_pre, duration_ns=tag_duration_ns, amp=tag_amp, drag=cal.drag)
             on_comp = SequenceCompiler(dt=dt_ns).compile(pre + [tag], t_end=t_pre + tag_duration_ns + dt_ns)
             on = simulate_sequence(model, on_comp, rho0, {"q": "qubit"}, SimulationConfig(frame=frame), noise=noise)
-            s_on = float(np.real((qt.ptrace(on.final_state, 1) * qt.sigmaz()).tr()))
+            s_on = float(np.real((qt.ptrace(on.final_state, 0) * qt.sigmaz()).tr()))
             v_hat[a][n] = 0.5 * (s_off - s_on)
 
         rho_prep = state_prep()
         if not rho_prep.isoper:
             rho_prep = rho_prep.proj()
-        pn = qt.tensor(qt.basis(model.n_cav, n).proj(), qt.qeye(model.n_tr))
+        pn = qt.tensor( qt.qeye(model.n_tr),qt.basis(model.n_cav, n).proj())
         p_n[n] = float(np.real((rho_prep * pn).tr()))
 
     v_rec = None
@@ -220,18 +220,18 @@ def true_vectors(rho: qt.Qobj, n_max: int):
     out = {a: np.zeros(n_max + 1, float) for a in ("x", "y", "z")}
     pauli = {"x": qt.sigmax(), "y": qt.sigmay(), "z": qt.sigmaz()}
     for n in range(n_max + 1):
-        pn = qt.basis(rho.dims[0][0], n).proj()
+        pn = qt.basis(rho.dims[0][1], n).proj()
         for a in ("x", "y", "z"):
-            out[a][n] = float(np.real((rho * qt.tensor(pn, pauli[a])).tr()))
+            out[a][n] = float(np.real((rho * qt.tensor( pauli[a],pn)).tr()))
     return out
 
 
 def estimate_pn_from_selective_pe(model, rho, n_max, cal, noise, tag_duration_ns=900.0, tag_amp=0.01, dt_ns=1.0):
-    rho_c = qt.ptrace(rho if rho.isoper else rho.proj(), 0)
-    rho_g = qt.tensor(rho_c, qt.basis(model.n_tr, 0).proj())
+    rho_c = qt.ptrace(rho if rho.isoper else rho.proj(), 1)
+    rho_g = qt.tensor( qt.basis(model.n_tr, 0).proj(),rho_c)
     frame = FrameSpec(omega_q_frame=model.omega_q)
     p_est = np.zeros(n_max + 1, float)
-    proj_e = qt.tensor(qt.qeye(model.n_cav), qt.basis(model.n_tr, 1).proj())
+    proj_e = qt.tensor( qt.basis(model.n_tr, 1).proj(),qt.qeye(model.n_cav))
     for n in range(n_max + 1):
         tag = selective_pi_custom(n=n, t0_ns=0.0, duration_ns=tag_duration_ns, amp=tag_amp, drag=cal.drag)
         comp = SequenceCompiler(dt=dt_ns).compile([tag], t_end=tag_duration_ns + dt_ns)
@@ -247,7 +247,7 @@ def calibrate_leakage_custom(model, n_max, alphas, blochs, cal, noise):
         coh = qt.coherent(model.n_cav, alpha)
         for r in blochs:
             rho_q = 0.5 * (qt.qeye(2) + r[0] * qt.sigmax() + r[1] * qt.sigmay() + r[2] * qt.sigmaz())
-            rho = qt.tensor(coh.proj(), rho_q)
+            rho = qt.tensor( rho_q,coh.proj())
             vt = true_vectors(rho, n_max)
             meas = run_fock_tomo_custom(model, lambda rho=rho: rho, n_max, cal, noise)
             for a in ("x", "y", "z"):
@@ -295,12 +295,12 @@ def make_science_states(model, n_max):
     for n in range(n_max + 1):
         r = blochs[n]
         rq = 0.5 * (qt.qeye(2) + r[0] * qt.sigmax() + r[1] * qt.sigmay() + r[2] * qt.sigmaz())
-        rho_diag += probs[n] * qt.tensor(qt.basis(model.n_cav, n).proj(), rq)
+        rho_diag += probs[n] * qt.tensor( rq,qt.basis(model.n_cav, n).proj())
     states["fock_diagonal_correlated"] = rho_diag
 
     alpha = 1.05
     rq = 0.5 * (qt.qeye(2) + 0.4 * qt.sigmax() - 0.3 * qt.sigmay() + 0.6 * qt.sigmaz())
-    states["coherent_with_known_qubit"] = qt.tensor(qt.coherent(model.n_cav, alpha).proj(), rq)
+    states["coherent_with_known_qubit"] = qt.tensor( rq,qt.coherent(model.n_cav, alpha).proj())
 
     probs2 = np.array([0.10, 0.17, 0.22, 0.18, 0.13, 0.10, 0.06, 0.04], float)[: n_max + 1]
     probs2 = probs2 / np.sum(probs2)
@@ -308,7 +308,7 @@ def make_science_states(model, n_max):
     for n in range(n_max + 1):
         phi = 0.35 * n
         rq = 0.5 * (qt.qeye(2) + 0.7 * np.cos(phi) * qt.sigmax() + 0.5 * np.sin(phi) * qt.sigmay() + 0.25 * qt.sigmaz())
-        rho_mix += probs2[n] * qt.tensor(qt.basis(model.n_cav, n).proj(), rq)
+        rho_mix += probs2[n] * qt.tensor( rq,qt.basis(model.n_cav, n).proj())
     states["mixture_spanning_fock"] = rho_mix
     return states
 
@@ -728,7 +728,7 @@ def run_all(output_root: Path | str = "outputs"):
         rmse_before[name] = rmse_raw
         rmse_after[name] = rmse(rec_v, true_v)
 
-        p_true = np.array([float(np.real((rho * qt.tensor(qt.basis(model.n_cav, n).proj(), qt.qeye(2))).tr())) for n in range(n_max + 1)])
+        p_true = np.array([float(np.real((rho * qt.tensor( qt.qeye(2),qt.basis(model.n_cav, n).proj())).tr())) for n in range(n_max + 1)])
         p_est = estimate_pn_from_selective_pe(model, rho, n_max, cal, noise)
 
         results[name] = {

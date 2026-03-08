@@ -1,0 +1,76 @@
+{
+  "sign_scan": {
+    "duration": 1.0,
+    "dt": 0.002,
+    "phi_eff_test_rad": 0.73,
+    "omega_test_rad_s": 1.319468914507713,
+    "rotation_sign_scan": [
+      {
+        "phase_sign": 1,
+        "omega_sign": 1,
+        "process_fidelity_vs_qubox": 0.7684465742083696
+      },
+      {
+        "phase_sign": 1,
+        "omega_sign": -1,
+        "process_fidelity_vs_qubox": 0.9957868436694153
+      },
+      {
+        "phase_sign": -1,
+        "omega_sign": 1,
+        "process_fidelity_vs_qubox": 0.9999999999986275
+      },
+      {
+        "phase_sign": -1,
+        "omega_sign": -1,
+        "process_fidelity_vs_qubox": 0.8010801829326021
+      }
+    ],
+    "sqr_sign_scan": [
+      {
+        "phase_sign": 1,
+        "omega_sign": 1,
+        "process_fidelity_vs_qubox": 0.7684465742083691
+      },
+      {
+        "phase_sign": 1,
+        "omega_sign": -1,
+        "process_fidelity_vs_qubox": 0.9957868436694155
+      },
+      {
+        "phase_sign": -1,
+        "omega_sign": 1,
+        "process_fidelity_vs_qubox": 0.9999999999986278
+      },
+      {
+        "phase_sign": -1,
+        "omega_sign": -1,
+        "process_fidelity_vs_qubox": 0.8010801829326016
+      }
+    ],
+    "best_rotation_match": {
+      "phase_sign": -1,
+      "omega_sign": 1,
+      "process_fidelity_vs_qubox": 0.9999999999986275
+    },
+    "best_sqr_match": {
+      "phase_sign": -1,
+      "omega_sign": 1,
+      "process_fidelity_vs_qubox": 0.9999999999986278
+    }
+  },
+  "detuning_sign_check": {
+    "delta_test_rad_s": 1.5707963267948966,
+    "rotation_like": {
+      "+delta_axis_z": -0.4219872794537532,
+      "-delta_axis_z": 0.4219872794537532,
+      "flip": true
+    },
+    "sqr_like": {
+      "+delta_axis_z": -0.4219872794537532,
+      "-delta_axis_z": 0.4219872794537532,
+      "flip": true,
+      "relative_to_rotation_sign": "same"
+    }
+  }
+}

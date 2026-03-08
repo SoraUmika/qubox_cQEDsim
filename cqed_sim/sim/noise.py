@@ -43,7 +43,7 @@ def collapse_operators(model: DispersiveTransmonCavityModel, noise: NoiseSpec | 
 
     if noise.gamma_phi > 0.0:
         if model.n_tr == 2:
-            i_tot = qt.tensor(qt.qeye(model.n_cav), qt.qeye(model.n_tr))
+            i_tot = qt.tensor(qt.qeye(model.n_tr), qt.qeye(model.n_cav))
             sigma_z = i_tot - 2.0 * ops["n_q"]  # |g><g| - |e><e|
             c_ops.append(np.sqrt(noise.gamma_phi) * sigma_z)
         else:

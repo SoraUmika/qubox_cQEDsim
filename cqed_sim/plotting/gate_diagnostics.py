@@ -14,9 +14,9 @@ from cqed_sim.plotting.bloch_plots import add_gate_type_axis
 
 
 COMPONENT_LABELS = {
-    "x": r"$\langle \sigma_x \rangle_n$",
-    "y": r"$\langle \sigma_y \rangle_n$",
-    "z": r"$\langle \sigma_z \rangle_n$",
+    "x": r"$X_n$",
+    "y": r"$Y_n$ (qubox)",
+    "z": r"$Z_n$",
 }
 COMPONENT_COLORS = {"x": "tab:blue", "y": "tab:orange", "z": "tab:green"}
 FOCK_LEVEL_COLORS = ("tab:blue", "tab:orange", "tab:green", "tab:red", "tab:purple", "tab:brown")

@@ -33,8 +33,8 @@ def test_virtual_z_phase_shift_equivalence():
     seq_a = [Pulse("q", 0.0, 1.0, _square, amp=np.pi / 4.0, phase=phi)]
     seq_b = [Pulse("q", 0.0, 1.0, _square, amp=np.pi / 4.0, phase=phi)]
     c = SequenceCompiler(dt=0.02)
-    ra = simulate_sequence(m, c.compile(seq_a, t_end=1.1), m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig())
-    rb = simulate_sequence(m, c.compile(seq_b, t_end=1.1), m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig())
+    ra = simulate_sequence(m, c.compile(seq_a, t_end=1.1), m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig())
+    rb = simulate_sequence(m, c.compile(seq_b, t_end=1.1), m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig())
     assert abs(ra.final_state.overlap(rb.final_state)) > 1 - 1e-10
     assert (time.perf_counter() - start) < 0.8
 
@@ -49,12 +49,12 @@ def test_phase_continuity_across_wait_with_detuning():
     p2_equiv = Pulse("q", 1.0 + tau, 1.0, _square, amp=np.pi / 4.0, carrier=0.0, phase=delta * tau)
     c = SequenceCompiler(dt=0.01)
     r1 = simulate_sequence(
-        m, c.compile([p1, p2], t_end=2.1 + tau), m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig(frame=FrameSpec())
+        m, c.compile([p1, p2], t_end=2.1 + tau), m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig(frame=FrameSpec())
     )
     r2 = simulate_sequence(
         m,
         c.compile([Pulse("q", 0.0, 1.0, _square, amp=np.pi / 4.0), p2_equiv], t_end=2.1 + tau),
-        m.basis_state(0, 0),
+        m.basis_state( 0,0),
         {"q": "qubit"},
         SimulationConfig(frame=FrameSpec()),
     )
@@ -70,13 +70,13 @@ def test_same_area_different_shape_same_rotation_small_signal():
     amp_sq = area / dur
     # normalize Gaussian to same area numerically
     t = np.linspace(0, 1, 2000)
-    g_int = np.trapezoid(_gauss(t).real, t)
+    g_int = np.trapz(_gauss(t).real, t)
     amp_g = area / g_int
     sq = Pulse("q", 0.0, dur, _square, amp=amp_sq)
     ga = Pulse("q", 0.0, dur, _gauss, amp=amp_g)
     c = SequenceCompiler(dt=0.005)
-    rs = simulate_sequence(m, c.compile([sq], t_end=1.05), m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig())
-    rg = simulate_sequence(m, c.compile([ga], t_end=1.05), m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig())
+    rs = simulate_sequence(m, c.compile([sq], t_end=1.05), m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig())
+    rg = simulate_sequence(m, c.compile([ga], t_end=1.05), m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig())
     assert abs(rs.expectations["P_e"][-1] - rg.expectations["P_e"][-1]) < 0.03
     assert (time.perf_counter() - start) < 1.4
 
@@ -107,14 +107,14 @@ def test_idle_then_echo_cancels_static_detuning():
     rr = simulate_sequence(
         m,
         c.compile(ramsey, t_end=2.2 + tau),
-        m.basis_state(0, 0),
+        m.basis_state( 0,0),
         {"q": "qubit"},
         SimulationConfig(frame=FrameSpec(omega_q_frame=delta)),
     )
     re = simulate_sequence(
         m,
         c.compile(echo, t_end=3.2 + 2 * tau),
-        m.basis_state(0, 0),
+        m.basis_state( 0,0),
         {"q": "qubit"},
         SimulationConfig(frame=FrameSpec(omega_q_frame=delta)),
     )
@@ -131,7 +131,7 @@ def test_two_pulse_commutation_noncommuting_axes():
     y_first = Pulse("q", 0.0, 1.0, _square, amp=np.pi / 8.0, phase=np.pi / 2)
     x_second = Pulse("q", 1.0, 1.0, _square, amp=np.pi / 6.0, phase=0.0)
     c = SequenceCompiler(dt=0.02)
-    init = (m.basis_state(0, 0) + m.basis_state(0, 1)).unit()
+    init = (m.basis_state( 0,0) + m.basis_state( 1,0)).unit()
     rxy = simulate_sequence(m, c.compile([x90, y90], t_end=2.1), init, {"q": "qubit"}, SimulationConfig())
     ryx = simulate_sequence(m, c.compile([y_first, x_second], t_end=2.1), init, {"q": "qubit"}, SimulationConfig())
     assert abs(rxy.final_state.overlap(ryx.final_state)) < 0.995
@@ -145,12 +145,12 @@ def test_overlapping_pulses_commutativity_limit_small_dt():
     p_q = Pulse("q", 0.0, 1.5, _square, amp=0.25)
     seq = SequenceCompiler(dt=0.005)
     r_ov = simulate_sequence(
-        m, seq.compile([p_c, p_q], t_end=1.6), m.basis_state(0, 0), {"c": "cavity", "q": "qubit"}, SimulationConfig()
+        m, seq.compile([p_c, p_q], t_end=1.6), m.basis_state( 0,0), {"c": "cavity", "q": "qubit"}, SimulationConfig()
     )
     r_sq = simulate_sequence(
         m,
         seq.compile([Pulse("q", 0.0, 1.5, _square, amp=0.25), Pulse("c", 1.5, 1.5, _square, amp=0.1)], t_end=3.1),
-        m.basis_state(0, 0),
+        m.basis_state( 0,0),
         {"c": "cavity", "q": "qubit"},
         SimulationConfig(),
     )

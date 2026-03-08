@@ -8,7 +8,7 @@ from .basic import (
     sigma_x,
     sigma_y,
     sigma_z,
-    tensor_cavity_qubit,
+    tensor_qubit_cavity,
 )
 from .cavity import create_cavity, destroy_cavity, fock_projector, number_operator
 
@@ -16,7 +16,7 @@ __all__ = [
     "sigma_x",
     "sigma_y",
     "sigma_z",
-    "tensor_cavity_qubit",
+    "tensor_qubit_cavity",
     "embed_qubit_op",
     "embed_cavity_op",
     "build_qubit_state",

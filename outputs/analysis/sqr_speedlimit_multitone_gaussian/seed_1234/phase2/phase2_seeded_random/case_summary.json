@@ -1,0 +1,137 @@
+{
+  "case_name": "phase2_seeded_random",
+  "description": "Deterministic seeded random target over the matched subspace.",
+  "phase": "phase2",
+  "sweep": [
+    {
+      "duration_s": 5.0000000000000004e-08,
+      "duration_ns": 50.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.899205957321206,
+      "logical_fidelity_weighted": 0.8117849429247761,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9735234818316512,
+      "selected_run_id": "phase2_seeded_random_T0050ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\T_0050ns\\summary.json"
+    },
+    {
+      "duration_s": 7.500000000000001e-08,
+      "duration_ns": 75.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8548326048706948,
+      "logical_fidelity_weighted": 0.7397854704624689,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9812448576900307,
+      "selected_run_id": "phase2_seeded_random_T0075ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\T_0075ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000001e-07,
+      "duration_ns": 100.00000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8959711765612358,
+      "logical_fidelity_weighted": 0.8048804562211613,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.900984267599864,
+      "selected_run_id": "phase2_seeded_random_T0100ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\T_0100ns\\summary.json"
+    },
+    {
+      "duration_s": 1.5000000000000002e-07,
+      "duration_ns": 150.00000000000003,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8827985673000273,
+      "logical_fidelity_weighted": 0.7847781129804505,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.8761072238687388,
+      "selected_run_id": "phase2_seeded_random_T0150ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\T_0150ns\\summary.json"
+    },
+    {
+      "duration_s": 2.0000000000000002e-07,
+      "duration_ns": 200.00000000000003,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.8529410025976291,
+      "logical_fidelity_weighted": 0.7413697508765429,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.99384021972129,
+      "selected_run_id": "phase2_seeded_random_T0200ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\T_0200ns\\summary.json"
+    },
+    {
+      "duration_s": 3.0000000000000004e-07,
+      "duration_ns": 300.00000000000006,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.36141093787633966,
+      "logical_fidelity_weighted": 0.7550839131631737,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.48505530173116007,
+      "selected_run_id": "phase2_seeded_random_T0300ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\T_0300ns\\summary.json"
+    },
+    {
+      "duration_s": 5.000000000000001e-07,
+      "duration_ns": 500.00000000000006,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9984708061075233,
+      "logical_fidelity_weighted": 0.9969451830404341,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.08532656133095319,
+      "selected_run_id": "phase2_seeded_random_T0500ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\T_0500ns\\summary.json"
+    },
+    {
+      "duration_s": 7.5e-07,
+      "duration_ns": 750.0,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9983089726662774,
+      "logical_fidelity_weighted": 0.9966236712738966,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.07099464935734554,
+      "selected_run_id": "phase2_seeded_random_T0750ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\T_0750ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000002e-06,
+      "duration_ns": 1000.0000000000001,
+      "sigma_fraction": 0.3,
+      "subspace_fidelity": 0.9990598115873365,
+      "logical_fidelity_weighted": 0.9981208463092673,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.13795780399830315,
+      "selected_run_id": "phase2_seeded_random_T1000ns_sigma0p3_start00",
+      "summary_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\T_1000ns\\summary.json"
+    }
+  ],
+  "thresholds": [
+    {
+      "threshold": 0.99,
+      "min_duration_s": 5.000000000000001e-07,
+      "min_duration_ns": 500.00000000000006
+    },
+    {
+      "threshold": 0.999,
+      "min_duration_s": 1.0000000000000002e-06,
+      "min_duration_ns": 1000.0000000000001
+    },
+    {
+      "threshold": 0.9999,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    }
+  ],
+  "selected_visualization_duration_ns": 1000.0,
+  "curve_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\fidelity_leakage.png",
+  "waveform_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\selected_waveform.png",
+  "spectrum_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\selected_spectrum.png",
+  "per_n_path": "outputs\\analysis\\sqr_speedlimit_multitone_gaussian\\seed_1234\\phase2\\phase2_seeded_random\\selected_per_n.png"
+}

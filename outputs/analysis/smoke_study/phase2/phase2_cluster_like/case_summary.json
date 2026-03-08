@@ -1,0 +1,53 @@
+{
+  "case_name": "phase2_cluster_like",
+  "description": "Cluster-relevant heuristic block pattern on n <= n_match.",
+  "phase": "phase2",
+  "sweep": [
+    {
+      "duration_s": 5.0000000000000004e-08,
+      "duration_ns": 50.00000000000001,
+      "sigma_fraction": 0.25,
+      "subspace_fidelity": 0.8129949772563219,
+      "logical_fidelity_weighted": 0.6979726407360406,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.984696479014619,
+      "selected_run_id": "phase2_cluster_like_T0050ns_sigma0p25_start00",
+      "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\T_0050ns\\summary.json"
+    },
+    {
+      "duration_s": 1.0000000000000001e-07,
+      "duration_ns": 100.00000000000001,
+      "sigma_fraction": 0.25,
+      "subspace_fidelity": 0.7865891337602244,
+      "logical_fidelity_weighted": 0.6631219178804919,
+      "leakage_average": 0.0,
+      "leakage_worst": 0.0,
+      "guard_selectivity_error": 0.9670478420666309,
+      "selected_run_id": "phase2_cluster_like_T0100ns_sigma0p25_start00",
+      "summary_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\T_0100ns\\summary.json"
+    }
+  ],
+  "thresholds": [
+    {
+      "threshold": 0.99,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    },
+    {
+      "threshold": 0.999,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    },
+    {
+      "threshold": 0.9999,
+      "min_duration_s": null,
+      "min_duration_ns": null
+    }
+  ],
+  "selected_visualization_duration_ns": 100.0,
+  "curve_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\fidelity_leakage.png",
+  "waveform_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\selected_waveform.png",
+  "spectrum_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\selected_spectrum.png",
+  "per_n_path": "outputs\\analysis\\smoke_study\\phase2\\phase2_cluster_like\\selected_per_n.png"
+}

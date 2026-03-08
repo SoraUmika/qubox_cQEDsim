@@ -19,9 +19,9 @@ def test_solver_step_control_respects_max_step():
     m = DispersiveTransmonCavityModel(omega_c=0.0, omega_q=0.0, alpha=0.0, chi=0.0, kerr=0.0, n_cav=2, n_tr=2)
     p = Pulse("q", 0.0, 1.0, _square, amp=np.pi / 2.0, carrier=2 * np.pi * 6.0)
     c = SequenceCompiler(dt=0.002).compile([p], t_end=1.05)
-    ref = simulate_sequence(m, c, m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig(max_step=0.001))
-    coarse = simulate_sequence(m, c, m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig(max_step=0.08))
-    tight = simulate_sequence(m, c, m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig(max_step=0.004))
+    ref = simulate_sequence(m, c, m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig(max_step=0.001))
+    coarse = simulate_sequence(m, c, m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig(max_step=0.08))
+    tight = simulate_sequence(m, c, m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig(max_step=0.004))
     e_coarse = abs(coarse.expectations["P_e"][-1] - ref.expectations["P_e"][-1])
     e_tight = abs(tight.expectations["P_e"][-1] - ref.expectations["P_e"][-1])
     assert e_tight < e_coarse + 1e-5
@@ -52,7 +52,7 @@ def test_runtime_scales_reasonably_with_dimensionality_smoke():
         p = Pulse("q", 0.0, 0.8, _square, amp=0.6)
         c = SequenceCompiler(dt=0.02).compile([p], t_end=1.0)
         t0 = time.perf_counter()
-        simulate_sequence(m, c, m.basis_state(0, 0), {"q": "qubit"}, SimulationConfig())
+        simulate_sequence(m, c, m.basis_state( 0,0), {"q": "qubit"}, SimulationConfig())
         runtimes.append(time.perf_counter() - t0)
     assert runtimes[2] < 10.0 * runtimes[0]
     assert (time.perf_counter() - start) < 4.0

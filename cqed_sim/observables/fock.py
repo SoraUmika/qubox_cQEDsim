@@ -284,7 +284,7 @@ def relative_phase_debug_values(
         )
 
     return {
-        "basis_ordering": "|n>_cavity tensor |q>_qubit = qt.tensor(cavity, qubit)",
+        "basis_ordering": "|q>_qubit tensor |n>_cavity = qt.tensor(qubit, cavity)",
         "reference_label": "|g,0>",
         "ground_target_template": "|g,n>",
         "excited_target_template": "|e,n>",

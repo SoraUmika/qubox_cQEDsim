@@ -1,0 +1,1520 @@
+{
+  "params": {
+    "seed": 23,
+    "theta_max_rad": 2.8902652413026098,
+    "coherent_alpha": {
+      "real": 1.1,
+      "imag": 0.25
+    },
+    "include_case_e": true,
+    "run_profiles": [
+      "structured"
+    ],
+    "output_dir": "outputs\\sqr_multitone_study",
+    "system": {
+      "n_max": 1,
+      "omega_c_hz": 0.0,
+      "omega_q_hz": 0.0,
+      "qubit_alpha_hz": 0.0,
+      "chi_nominal_hz": -2840000.0,
+      "chi_easy_hz": -2840000.0,
+      "chi_hard_hz": -2840000.0,
+      "chi2_hz": 0.0,
+      "chi3_hz": 0.0,
+      "kerr_hz": 0.0,
+      "use_rotating_frame": true
+    },
+    "pulse": {
+      "duration_nominal_s": 1e-06,
+      "duration_short_s": 3.5e-07,
+      "duration_long_s": 1.7e-06,
+      "sigma_fraction": 0.16666666666666666,
+      "envelope_kind": "gaussian",
+      "flat_top_rise_fraction": 0.12,
+      "theta_cutoff": 1e-09,
+      "dt_eval_s": 2e-09,
+      "dt_opt_s": 5e-09,
+      "max_step_eval_s": 2e-09,
+      "max_step_opt_s": 4e-09,
+      "qutip_nsteps": 200000
+    },
+    "active_support": {
+      "mode": "contiguous",
+      "max_level_active": 1,
+      "active_levels": [],
+      "active_weights": [],
+      "inference_state_label": null,
+      "state_population_threshold": 0.0001,
+      "infer_weights_from_state": false,
+      "inactive_weight": 0.02,
+      "boundary_leakage_boost": 1.6,
+      "include_projected_coherent": true,
+      "include_qubit_superposition": true,
+      "coherent_alpha": {
+        "real": 0.9,
+        "imag": 0.2
+      }
+    },
+    "optimization": {
+      "method_stage1": "Powell",
+      "method_stage2": "L-BFGS-B",
+      "maxiter_stage1_basic": 12,
+      "maxiter_stage2_basic": 20,
+      "maxiter_stage1_extended": 14,
+      "maxiter_stage2_extended": 24,
+      "maxiter_stage1_chirp": 14,
+      "maxiter_stage2_chirp": 20,
+      "amp_delta_bounds": [
+        -0.8,
+        0.8
+      ],
+      "phase_delta_bounds": [
+        -3.141592653589793,
+        3.141592653589793
+      ],
+      "detuning_hz_bounds": [
+        -2400000.0,
+        2400000.0
+      ],
+      "phase_ramp_hz_bounds": [
+        -1800000.0,
+        1800000.0
+      ],
+      "w_infid": 1.0,
+      "w_phase": 0.25,
+      "w_theta": 0.18,
+      "w_residual_z": 0.22,
+      "w_state": 0.35,
+      "w_off_block": 0.18,
+      "w_selectivity_mean": 0.45,
+      "w_selectivity_max": 0.25,
+      "objective_scope": "global",
+      "support_weights": {
+        "w_active_infidelity": 1.0,
+        "w_active_theta": 0.2,
+        "w_active_phase_axis": 0.35,
+        "w_active_pre_z": 0.25,
+        "w_active_post_z": 0.25,
+        "w_active_state_mean": 0.55,
+        "w_active_state_min": 0.45,
+        "w_phase_superposition": 0.35,
+        "w_leak_mean": 0.7,
+        "w_leak_max": 0.55,
+        "w_worst_block": 0.8,
+        "active_block_fidelity_floor": 0.98,
+        "active_state_fidelity_floor": 0.97
+      },
+      "reg_amp": 0.001,
+      "reg_phase": 0.001,
+      "reg_detuning": 0.0006,
+      "reg_phase_ramp": 0.0004
+    }
+  },
+  "targets": {
+    "x90_x90": {
+      "profile": {
+        "name": "x90_x90",
+        "mode": "manual",
+        "seed": 0,
+        "theta": [
+          1.5707963267948966,
+          1.5707963267948966
+        ],
+        "phi": [
+          0.0,
+          0.0
+        ]
+      },
+      "objective_scope": "global",
+      "active_support": null,
+      "corrected_metrics": {
+        "B": {
+          "summary": {
+            "mean_process_fidelity": 0.8949665442532844,
+            "min_process_fidelity": 0.791085612065106,
+            "mean_process_infidelity": 0.10503345574671558,
+            "phase_axis_rms_rad": 0.3561114677660871,
+            "residual_pre_z_rms_rad": 0.1800660681777366,
+            "residual_post_z_rms_rad": 0.21150580542907066,
+            "theta_error_rms_rad": 0.11747604697070257,
+            "phase_sensitive_rms_rad": 0.4516346666429693
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9988474764414629,
+              "process_infidelity": 0.0011525235585371219,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.5457911167652032,
+              "theta_error_rad": -0.02500521002969336,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 6.264716493642038,
+              "phi_axis_error_rad": -0.01846881353754881,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9989907605967278,
+              "axis_simulated_y": -0.018452272136245337,
+              "axis_simulated_z": 0.04095087172920128,
+              "residual_pre_z_rad": 0.029336381987628002,
+              "residual_post_z_rad": 0.029336381987628002,
+              "mismatch_middle_theta_rad": 0.0,
+              "mismatch_middle_phi_rad": 0.0,
+              "mismatch_decomposition_fidelity": 0.9997076029348705
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.791085612065106,
+              "process_infidelity": 0.20891438793489403,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.735039995455507,
+              "theta_error_rad": 0.16424366866061035,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.5032789066467509,
+              "phi_axis_error_rad": 0.5032789066467509,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.8012348392300759,
+              "axis_simulated_y": 0.4411339662939127,
+              "axis_simulated_z": 0.40425679485415633,
+              "residual_pre_z_rad": 0.25295642808565777,
+              "residual_post_z_rad": -0.2976722831441916,
+              "mismatch_middle_theta_rad": 0.9484277355096131,
+              "mismatch_middle_phi_rad": 1.350627048971262,
+              "mismatch_decomposition_fidelity": 0.999999999996311
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.8949665442532844,
+            "min_process_fidelity": 0.791085612065106,
+            "mean_infidelity": 0.10503345574671558,
+            "mean_population_error": 0.013318937364607791,
+            "phase_rms_rad": 0.3561114677660871,
+            "phase_axis_rms_rad": 0.3561114677660871,
+            "relative_block_phase_rms_rad": 0.3428128587518557,
+            "theta_rms_rad": 0.673042265561049,
+            "residual_z_rms_rad": 0.05073714261865991,
+            "max_abs_phase_axis_error_rad": 0.5032789066467509,
+            "max_abs_relative_phase_rad": 0.4848105942027665,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": {
+              "n": 1,
+              "population_error": 0.013319049980893727,
+              "process_infidelity": 0.20891438793489403,
+              "phi_axis_error_rad": 0.5032789066467509,
+              "relative_block_phase_rad": 0.4848105942027665,
+              "residual_conditional_z_rad": -0.04131206531744198
+            },
+            "neighbor_overlap_proxy_mean": 0.00014411194858212286,
+            "neighbor_overlap_proxy_max": 0.00014411194858212286,
+            "state_fidelity_mean": 0.8499166330995068,
+            "state_fidelity_min": 0.7904228820209472
+          },
+          "legacy_phase_rms_rad": 0.3428128587518557,
+          "state_fidelities": {
+            "g,0": 0.9997076025923459,
+            "g,1": 0.7914811783052141,
+            "g x (|0>+|1>)/sqrt2": 0.8300695750985537,
+            "g x |alpha=+1.10+0.25j>": 0.7904228820209472,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.837901927480473
+          }
+        },
+        "C": {
+          "summary": {
+            "mean_process_fidelity": 0.9514270606442605,
+            "min_process_fidelity": 0.9048155050121319,
+            "mean_process_infidelity": 0.048572939355739475,
+            "phase_axis_rms_rad": 0.044332657594298344,
+            "residual_pre_z_rms_rad": 0.22212184241689345,
+            "residual_post_z_rms_rad": 0.058724872721440925,
+            "theta_error_rms_rad": 0.19504265551991912,
+            "phase_sensitive_rms_rad": 0.23399168379281768
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9980386162763891,
+              "process_infidelity": 0.0019613837236108767,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.638231963784618,
+              "theta_error_rad": 0.06743563698972155,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.009232122375164924,
+              "phi_axis_error_rad": 0.00923212237516502,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9992009210573839,
+              "axis_simulated_y": 0.009225007270932001,
+              "axis_simulated_z": 0.03888982641934901,
+              "residual_pre_z_rad": -0.03727841144836308,
+              "residual_post_z_rad": 0.06795271104576583,
+              "mismatch_middle_theta_rad": 0.08312737569888728,
+              "mismatch_middle_phi_rad": 0.6938380322667292,
+              "mismatch_decomposition_fidelity": 0.999999999998991
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.9048155050121319,
+              "process_infidelity": 0.09518449498786807,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.83825793115768,
+              "theta_error_rad": 0.26746160436278354,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.062012393722517975,
+              "phi_axis_error_rad": 0.06201239372251788,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9291118639176067,
+              "axis_simulated_y": 0.05769041989729603,
+              "axis_simulated_z": 0.36527107711893114,
+              "residual_pre_z_rad": 0.3119079123671553,
+              "residual_post_z_rad": 0.04774568476657892,
+              "mismatch_middle_theta_rad": 0.5167376715100432,
+              "mismatch_middle_phi_rad": 1.0641562866270933,
+              "mismatch_decomposition_fidelity": 0.9999999999999409
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.9514270606442605,
+            "min_process_fidelity": 0.9048155050121319,
+            "mean_infidelity": 0.048572939355739475,
+            "mean_population_error": 0.04034245503826234,
+            "phase_rms_rad": 0.044332657594298344,
+            "phase_axis_rms_rad": 0.044332657594298344,
+            "relative_block_phase_rms_rad": 0.3428128577744185,
+            "theta_rms_rad": 0.4479521613210651,
+            "residual_z_rms_rad": 0.2495484613315543,
+            "max_abs_phase_axis_error_rad": 0.06201239372251788,
+            "max_abs_relative_phase_rad": 0.48481059282046157,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": null,
+            "neighbor_overlap_proxy_mean": 0.0001416158008165345,
+            "neighbor_overlap_proxy_max": 0.00014411194858212286,
+            "state_fidelity_mean": 0.9440958218215242,
+            "state_fidelity_min": 0.9143212015973233,
+            "objective_scope": "global",
+            "loss_terms": {
+              "infidelity": 0.048572939355739475,
+              "phase_axis": 0.0004913461323433247,
+              "theta": 0.03611900498979843,
+              "residual_z": 0.013700375601648176,
+              "state": 0.019566462362466536,
+              "off_block": 0.0,
+              "selectivity_mean": 6.372711036744052e-05,
+              "selectivity_max": 3.6027987145530715e-05,
+              "regularization": 0.00019167460040898072
+            },
+            "loss_total": 0.1187415581399179
+          },
+          "legacy_phase_rms_rad": 0.3428128577744185,
+          "state_fidelities": {
+            "g,0": 0.9982734405958347,
+            "g,1": 0.9347176714059081,
+            "g x (|0>+|1>)/sqrt2": 0.9416667724544024,
+            "g x |alpha=+1.10+0.25j>": 0.9315000230541525,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.9143212015973233
+          }
+        },
+        "D": {
+          "summary": {
+            "mean_process_fidelity": 0.8959386661588732,
+            "min_process_fidelity": 0.7932788053652816,
+            "mean_process_infidelity": 0.10406133384112681,
+            "phase_axis_rms_rad": 0.3556641704879502,
+            "residual_pre_z_rms_rad": 0.2870552401486757,
+            "residual_post_z_rms_rad": 0.3019497501596244,
+            "theta_error_rms_rad": 0.11682820362049892,
+            "phase_sensitive_rms_rad": 0.547787700379586
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9985985269524648,
+              "process_infidelity": 0.00140147304753524,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.6154909410665073,
+              "theta_error_rad": 0.0446946142716107,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.02173208390774273,
+              "phi_axis_error_rad": 0.021732083907742616,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.999116929050074,
+              "axis_simulated_y": 0.021716311795112395,
+              "axis_simulated_z": 0.035968929474853764,
+              "residual_pre_z_rad": 0.31785991844430805,
+              "residual_post_z_rad": -0.30328454501195434,
+              "mismatch_middle_theta_rad": 0.07346086791795528,
+              "mismatch_middle_phi_rad": 0.6212076094303898,
+              "mismatch_decomposition_fidelity": 0.9999999999338807
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.7932788053652816,
+              "process_infidelity": 0.20672119463471839,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.7298562204749108,
+              "theta_error_rad": 0.15905989368001427,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.5025153936615178,
+              "phi_axis_error_rad": 0.5025153936615179,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.8026970046687905,
+              "axis_simulated_y": 0.44114067717581185,
+              "axis_simulated_z": 0.40133828827638424,
+              "residual_pre_z_rad": 0.2525202844133627,
+              "residual_post_z_rad": -0.300609028473549,
+              "mismatch_middle_theta_rad": 0.9428598440286567,
+              "mismatch_middle_phi_rad": 1.3531260811603616,
+              "mismatch_decomposition_fidelity": 0.9999999999984728
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.8959386661588732,
+            "min_process_fidelity": 0.7932788053652816,
+            "mean_infidelity": 0.10406133384112681,
+            "mean_population_error": 0.017880704322538493,
+            "phase_rms_rad": 0.3556641704879502,
+            "phase_axis_rms_rad": 0.3556641704879502,
+            "relative_block_phase_rms_rad": 0.34281285803525957,
+            "theta_rms_rad": 0.6696021050520486,
+            "residual_z_rms_rad": 0.033091102648549885,
+            "max_abs_phase_axis_error_rad": 0.5025153936615179,
+            "max_abs_relative_phase_rad": 0.4848105931893465,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": {
+              "n": 1,
+              "population_error": 0.014097325419304363,
+              "process_infidelity": 0.20672119463471839,
+              "phi_axis_error_rad": 0.5025153936615179,
+              "relative_block_phase_rad": 0.4848105931893465,
+              "residual_conditional_z_rad": -0.04447167317196308
+            },
+            "neighbor_overlap_proxy_mean": 0.00013802384783554448,
+            "neighbor_overlap_proxy_max": 0.00014411194858212286,
+            "state_fidelity_mean": 0.8506914195481723,
+            "state_fidelity_min": 0.7937375903093306,
+            "objective_scope": "global",
+            "loss_terms": {
+              "infidelity": 0.10406133384112681,
+              "phase_axis": 0.03162425054222042,
+              "theta": 0.08070605623622426,
+              "residual_z": 0.00024090463638931032,
+              "state": 0.05225800315813969,
+              "off_block": 0.0,
+              "selectivity_mean": 6.211073152599501e-05,
+              "selectivity_max": 3.6027987145530715e-05,
+              "regularization": 3.5856042040540327e-06
+            },
+            "loss_total": 0.26899227273697607
+          },
+          "legacy_phase_rms_rad": 0.34281285803525957,
+          "state_fidelities": {
+            "g,0": 0.9986515799034703,
+            "g,1": 0.7937375903093306,
+            "g x (|0>+|1>)/sqrt2": 0.8352652363935197,
+            "g x |alpha=+1.10+0.25j>": 0.7948259490307322,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.8309767421038092
+          }
+        },
+        "E": {
+          "summary": {
+            "mean_process_fidelity": 0.993567363005101,
+            "min_process_fidelity": 0.9874386804920827,
+            "mean_process_infidelity": 0.006432636994898988,
+            "phase_axis_rms_rad": 0.022121750015991322,
+            "residual_pre_z_rms_rad": 0.31340362873658184,
+            "residual_post_z_rms_rad": 0.30319890798189475,
+            "theta_error_rms_rad": 0.10039384320213557,
+            "phase_sensitive_rms_rad": 0.4366243054737571
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9996960455181193,
+              "process_infidelity": 0.0003039544818806972,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.5799600317240852,
+              "theta_error_rad": 0.00916370492918861,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.010693754338704032,
+              "phi_axis_error_rad": 0.010693754338704231,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.999718303483296,
+              "axis_simulated_y": 0.010691149482187527,
+              "axis_simulated_z": 0.021189926928375593,
+              "residual_pre_z_rad": 0.43844434003549315,
+              "residual_post_z_rad": -0.42789753079636084,
+              "mismatch_middle_theta_rad": 0.03323584446376783,
+              "mismatch_middle_phi_rad": 0.866597545313974,
+              "mismatch_decomposition_fidelity": 0.9999999999202898
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.9874386804920827,
+              "process_infidelity": 0.012561319507917279,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.7124786263871912,
+              "theta_error_rad": 0.1416822995922946,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.029400463698443166,
+              "phi_axis_error_rad": 0.02940046369844307,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9929000914171044,
+              "axis_simulated_y": 0.029200136987615064,
+              "axis_simulated_z": 0.11531157992071088,
+              "residual_pre_z_rad": 0.06488628284433684,
+              "residual_post_z_rad": 0.027619897559629347,
+              "mismatch_middle_theta_rad": 0.20477133029631361,
+              "mismatch_middle_phi_rad": 0.8371539964632988,
+              "mismatch_decomposition_fidelity": 0.9999999994162945
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.993567363005101,
+            "min_process_fidelity": 0.9874386804920827,
+            "mean_infidelity": 0.006432636994898988,
+            "mean_population_error": 0.03368620650000159,
+            "phase_rms_rad": 0.022121750015991322,
+            "phase_axis_rms_rad": 0.022121750015991322,
+            "relative_block_phase_rms_rad": 0.3428128716228739,
+            "theta_rms_rad": 0.16073739827293212,
+            "residual_z_rms_rad": 0.06560939877370568,
+            "max_abs_phase_axis_error_rad": 0.02940046369844307,
+            "max_abs_relative_phase_rad": 0.484810612405135,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": null,
+            "neighbor_overlap_proxy_mean": 0.00010716613471735522,
+            "neighbor_overlap_proxy_max": 0.0001621809963429473,
+            "state_fidelity_mean": 0.9700823288623596,
+            "state_fidelity_min": 0.9464495531022553,
+            "objective_scope": "global",
+            "loss_terms": {
+              "infidelity": 0.006432636994898988,
+              "phase_axis": 0.000122342955942503,
+              "theta": 0.004650572016639216,
+              "residual_z": 0.0009470105056383693,
+              "state": 0.010471184898174151,
+              "off_block": 0.0,
+              "selectivity_mean": 4.8224760622809845e-05,
+              "selectivity_max": 4.0545249085736824e-05,
+              "regularization": 0.0005624021500847348
+            },
+            "loss_total": 0.02327491953108651
+          },
+          "legacy_phase_rms_rad": 0.3428128716228739,
+          "state_fidelities": {
+            "g,0": 0.9997238537484021,
+            "g,1": 0.9895542629673718,
+            "g x (|0>+|1>)/sqrt2": 0.9464495531022553,
+            "g x |alpha=+1.10+0.25j>": 0.9625348690160991,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.9521491054776696
+          }
+        }
+      },
+      "crosstalk": {
+        "case_B": {
+          "theta_matrix_rad": [
+            [
+              1.5707428899982305,
+              0.12559303845015543
+            ],
+            [
+              0.8450655149168346,
+              1.7896926427346898
+            ]
+          ],
+          "relative_leakage_matrix": [
+            [
+              0.0,
+              0.07017575836834558
+            ],
+            [
+              0.5380037180482075,
+              0.0
+            ]
+          ],
+          "mean_neighbor_leakage": 0.3040897382082765,
+          "max_neighbor_leakage": 0.5380037180482075
+        },
+        "case_D": {
+          "theta_matrix_rad": [
+            [
+              1.6416249753516499,
+              0.12559303845015543
+            ],
+            [
+              0.8336941874003133,
+              1.7896926427346898
+            ]
+          ],
+          "relative_leakage_matrix": [
+            [
+              0.0,
+              0.07017575836834558
+            ],
+            [
+              0.5078469199225779,
+              0.0
+            ]
+          ],
+          "mean_neighbor_leakage": 0.28901133914546173,
+          "max_neighbor_leakage": 0.5078469199225779
+        }
+      }
+    },
+    "x90_y90": {
+      "profile": {
+        "name": "x90_y90",
+        "mode": "manual",
+        "seed": 1,
+        "theta": [
+          1.5707963267948966,
+          1.5707963267948966
+        ],
+        "phi": [
+          0.0,
+          1.5707963267948966
+        ]
+      },
+      "objective_scope": "global",
+      "active_support": null,
+      "corrected_metrics": {
+        "B": {
+          "summary": {
+            "mean_process_fidelity": 0.9012788766707078,
+            "min_process_fidelity": 0.8087816165192149,
+            "mean_process_infidelity": 0.09872112332929212,
+            "phase_axis_rms_rad": 0.3665609266578235,
+            "residual_pre_z_rms_rad": 0.9589951304189311,
+            "residual_post_z_rms_rad": 0.8642981853876811,
+            "theta_error_rms_rad": 0.09092139448796882,
+            "phase_sensitive_rms_rad": 1.3420320139191553
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9937761368222009,
+              "process_infidelity": 0.006223863177799105,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.5726112414122273,
+              "theta_error_rad": 0.0018149146173307429,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 6.250623972418251,
+              "phi_axis_error_rad": -0.03256133476133627,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.993772894196596,
+              "axis_simulated_y": -0.03237001269308021,
+              "axis_simulated_z": 0.10661902756249048,
+              "residual_pre_z_rad": 0.06733783182684538,
+              "residual_post_z_rad": 0.07198581281173899,
+              "mismatch_middle_theta_rad": 0.07446458804029236,
+              "mismatch_middle_phi_rad": 1.6325679721827777,
+              "mismatch_decomposition_fidelity": 0.9999999999928897
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.8087816165192149,
+              "process_infidelity": 0.19121838348078513,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.6993657867618945,
+              "theta_error_rad": 0.12856945996699798,
+              "phi_target_rad": 1.5707963267948966,
+              "phi_simulated_rad": 2.0881681325429917,
+              "phi_axis_error_rad": 0.5173718057480952,
+              "axis_target_x": 0.0,
+              "axis_target_y": 1.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": -0.46341179805245786,
+              "axis_simulated_y": 0.8143213859718587,
+              "axis_simulated_z": 0.34947129463613924,
+              "residual_pre_z_rad": -1.354551193842191,
+              "residual_post_z_rad": 1.2201806215813749,
+              "mismatch_middle_theta_rad": 0.8958100338137801,
+              "mismatch_middle_phi_rad": -1.7747762186847011,
+              "mismatch_decomposition_fidelity": 0.9999999999990377
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.9012788766707078,
+            "min_process_fidelity": 0.8087816165192149,
+            "mean_infidelity": 0.09872112332929212,
+            "mean_population_error": 0.004786741714943893,
+            "phase_rms_rad": 0.3665609266578235,
+            "phase_axis_rms_rad": 0.3665609266578235,
+            "relative_block_phase_rms_rad": 0.3428128661625813,
+            "theta_rms_rad": 0.6497129629550836,
+            "residual_z_rms_rad": 0.1324436773569352,
+            "max_abs_phase_axis_error_rad": 0.5173718057480952,
+            "max_abs_relative_phase_rad": 0.4848106046831151,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": {
+              "n": 1,
+              "population_error": 0.004786816099685842,
+              "process_infidelity": 0.19121838348078513,
+              "phi_axis_error_rad": 0.5173718057480952,
+              "relative_block_phase_rad": 0.4848106046831151,
+              "residual_conditional_z_rad": -0.1252571660074965
+            },
+            "neighbor_overlap_proxy_mean": 0.00014411194858212286,
+            "neighbor_overlap_proxy_max": 0.00014411194858212286,
+            "state_fidelity_mean": 0.8438080802927315,
+            "state_fidelity_min": 0.794439019107268
+          },
+          "legacy_phase_rms_rad": 0.3428128661625813,
+          "state_fidelities": {
+            "g,0": 0.9986143896899407,
+            "g,1": 0.8124433559150772,
+            "g x (|0>+|1>)/sqrt2": 0.8188731271267797,
+            "g x |alpha=+1.10+0.25j>": 0.7946705096245912,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.794439019107268
+          }
+        },
+        "C": {
+          "summary": {
+            "mean_process_fidelity": 0.9602200992883312,
+            "min_process_fidelity": 0.9260916657502622,
+            "mean_process_infidelity": 0.03977990071166887,
+            "phase_axis_rms_rad": 0.0439355183857706,
+            "residual_pre_z_rms_rad": 0.11301471100681533,
+            "residual_post_z_rms_rad": 0.11246962339806565,
+            "theta_error_rms_rad": 0.1657800531135873,
+            "phase_sensitive_rms_rad": 0.16538461496488446
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9943485328264,
+              "process_infidelity": 0.005651467173599989,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.6444003425410472,
+              "theta_error_rad": 0.07360401574615061,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.006908314929617581,
+              "phi_axis_error_rad": 0.006908314929617632,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9958448308536622,
+              "axis_simulated_y": 0.006879719157358793,
+              "axis_simulated_z": 0.09080606987617548,
+              "residual_pre_z_rad": 0.04498428229269713,
+              "residual_post_z_rad": 0.042163588795150364,
+              "mismatch_middle_theta_rad": 0.12272988767283179,
+              "mismatch_middle_phi_rad": 0.969288856885429,
+              "mismatch_decomposition_fidelity": 0.9999999999036271
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.9260916657502622,
+              "process_infidelity": 0.07390833424973775,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.793391252358639,
+              "theta_error_rad": 0.2225949255637425,
+              "phi_target_rad": 1.5707963267948966,
+              "phi_simulated_rad": 1.6325452922638497,
+              "phi_axis_error_rad": 0.061748965468953365,
+              "axis_target_x": 0.0,
+              "axis_target_y": 1.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": -0.0583048322358251,
+              "axis_simulated_y": 0.9430232357159521,
+              "axis_simulated_z": 0.32757857597493756,
+              "residual_pre_z_rad": 0.15336578547550594,
+              "residual_post_z_rad": 0.15336578547550594,
+              "mismatch_middle_theta_rad": 0.0,
+              "mismatch_middle_phi_rad": 0.0,
+              "mismatch_decomposition_fidelity": 0.9482205117643815
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.9602200992883312,
+            "min_process_fidelity": 0.9260916657502622,
+            "mean_infidelity": 0.03977990071166887,
+            "mean_population_error": 0.03861240373756275,
+            "phase_rms_rad": 0.0439355183857706,
+            "phase_axis_rms_rad": 0.0439355183857706,
+            "relative_block_phase_rms_rad": 0.3428128618872314,
+            "theta_rms_rad": 0.4036500126594457,
+            "residual_z_rms_rad": 0.22176814416816562,
+            "max_abs_phase_axis_error_rad": 0.061748965468953365,
+            "max_abs_relative_phase_rad": 0.4848105986368574,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": null,
+            "neighbor_overlap_proxy_mean": 0.00014199168959272163,
+            "neighbor_overlap_proxy_max": 0.00014411194858212286,
+            "state_fidelity_mean": 0.9350368001284656,
+            "state_fidelity_min": 0.8557175157490265,
+            "objective_scope": "global",
+            "loss_terms": {
+              "infidelity": 0.03977990071166887,
+              "phase_axis": 0.00048258244395659665,
+              "theta": 0.02932799988959472,
+              "residual_z": 0.010819844148914303,
+              "state": 0.02273711995503705,
+              "off_block": 0.0,
+              "selectivity_mean": 6.389626031672473e-05,
+              "selectivity_max": 3.6027987145530715e-05,
+              "regularization": 0.00022491827376084982
+            },
+            "loss_total": 0.10347228967039465
+          },
+          "legacy_phase_rms_rad": 0.3428128618872314,
+          "state_fidelities": {
+            "g,0": 0.9962389332348194,
+            "g,1": 0.9482205158476162,
+            "g x (|0>+|1>)/sqrt2": 0.9383070624090736,
+            "g x |alpha=+1.10+0.25j>": 0.9366999734017918,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.8557175157490265
+          }
+        },
+        "D": {
+          "summary": {
+            "mean_process_fidelity": 0.9991737638980056,
+            "min_process_fidelity": 0.9983984075589872,
+            "mean_process_infidelity": 0.0008262361019944486,
+            "phase_axis_rms_rad": 0.014911222061031145,
+            "residual_pre_z_rms_rad": 0.01116985383212424,
+            "residual_post_z_rms_rad": 0.01116985383212424,
+            "theta_error_rms_rad": 0.021867023337495583,
+            "phase_sensitive_rms_rad": 0.02172270270052562
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9999491202370239,
+              "process_infidelity": 5.0879762976130394e-05,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.56540949239113,
+              "theta_error_rad": -0.005386834403766638,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.009326490970660536,
+              "phi_axis_error_rad": 0.009326490970660739,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9999562561025639,
+              "axis_simulated_y": 0.009326353407912349,
+              "axis_simulated_z": -0.0007106429866876384,
+              "residual_pre_z_rad": -0.005005046154075821,
+              "residual_post_z_rad": -0.005005046154075821,
+              "mismatch_middle_theta_rad": 0.0,
+              "mismatch_middle_phi_rad": 0.0,
+              "mismatch_decomposition_fidelity": 0.9999741698926656
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.9983984075589872,
+              "process_infidelity": 0.0016015924410127669,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.6012481811619388,
+              "theta_error_rad": 0.03045185436704223,
+              "phi_target_rad": 1.5707963267948966,
+              "phi_simulated_rad": 1.5897094347595053,
+              "phi_axis_error_rad": 0.018913107964608766,
+              "axis_target_x": 0.0,
+              "axis_target_y": 1.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": -0.01888982742937061,
+              "axis_simulated_y": 0.9986499880567689,
+              "axis_simulated_z": 0.04838776471282976,
+              "residual_pre_z_rad": 0.014982682745677156,
+              "residual_post_z_rad": 0.014982682745677156,
+              "mismatch_middle_theta_rad": 0.0,
+              "mismatch_middle_phi_rad": 0.0,
+              "mismatch_decomposition_fidelity": 0.9986225628663318
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.9991737638980056,
+            "min_process_fidelity": 0.9983984075589872,
+            "mean_infidelity": 0.0008262361019944486,
+            "mean_population_error": 0.008355448707035251,
+            "phase_rms_rad": 0.014911222061031145,
+            "phase_axis_rms_rad": 0.014911222061031145,
+            "relative_block_phase_rms_rad": 0.34281285391208244,
+            "theta_rms_rad": 0.057503544774535086,
+            "residual_z_rms_rad": 0.022330479557960258,
+            "max_abs_phase_axis_error_rad": 0.018913107964608766,
+            "max_abs_relative_phase_rad": 0.4848105873582935,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": null,
+            "neighbor_overlap_proxy_mean": 0.001451189364590808,
+            "neighbor_overlap_proxy_max": 0.002893270830418511,
+            "state_fidelity_mean": 0.969317808182887,
+            "state_fidelity_min": 0.9346126972792198,
+            "objective_scope": "global",
+            "loss_terms": {
+              "infidelity": 0.0008262361019944486,
+              "phase_axis": 5.558613583834548e-05,
+              "theta": 0.000595198379094653,
+              "residual_z": 0.00010970306980346581,
+              "state": 0.010738767135989535,
+              "off_block": 0.0,
+              "selectivity_mean": 0.0006530352140658636,
+              "selectivity_max": 0.0007233177076046278,
+              "regularization": 0.006114092523761441
+            },
+            "loss_total": 0.01981593626815238
+          },
+          "legacy_phase_rms_rad": 0.34281285391208244,
+          "state_fidelities": {
+            "g,0": 0.9999741693068656,
+            "g,1": 0.9986225217978775,
+            "g x (|0>+|1>)/sqrt2": 0.94628596320395,
+            "g x |alpha=+1.10+0.25j>": 0.9670936893265221,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.9346126972792198
+          }
+        },
+        "E": {
+          "summary": {
+            "mean_process_fidelity": 0.9937247585311846,
+            "min_process_fidelity": 0.9881373458786035,
+            "mean_process_infidelity": 0.006275241468815418,
+            "phase_axis_rms_rad": 0.04463948000481112,
+            "residual_pre_z_rms_rad": 0.3164064844184068,
+            "residual_post_z_rms_rad": 0.30113767944333136,
+            "theta_error_rms_rad": 0.012922531091626546,
+            "phase_sensitive_rms_rad": 0.439078180439008
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9993121711837657,
+              "process_infidelity": 0.0006878288162343038,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.583992230359153,
+              "theta_error_rad": 0.013195903564256373,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.012127147643616434,
+              "phi_axis_error_rad": 0.012127147643616443,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9993597957469439,
+              "axis_simulated_y": 0.01211997795041036,
+              "axis_simulated_z": 0.033661621753982435,
+              "residual_pre_z_rad": 0.44567753612166516,
+              "residual_post_z_rad": -0.4239930935763887,
+              "mismatch_middle_theta_rad": 0.04777251714350966,
+              "mismatch_middle_phi_rad": 0.8698501267442467,
+              "mismatch_decomposition_fidelity": 0.9999999999601159
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.9881373458786035,
+              "process_infidelity": 0.011862654121396532,
+              "theta_target_rad": 1.5707963267948966,
+              "theta_simulated_rad": 1.5581530776574732,
+              "theta_error_rad": -0.012643249137423318,
+              "phi_target_rad": 1.5707963267948966,
+              "phi_simulated_rad": 1.632750331025695,
+              "phi_axis_error_rad": 0.06195400423079844,
+              "axis_target_x": 0.0,
+              "axis_target_y": 1.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": -0.061293100440049264,
+              "axis_simulated_y": 0.9880662391071982,
+              "axis_simulated_z": 0.1413091043599216,
+              "residual_pre_z_rad": 0.039970746309681005,
+              "residual_post_z_rad": 0.039970746309681005,
+              "mismatch_middle_theta_rad": 0.0,
+              "mismatch_middle_phi_rad": 0.0,
+              "mismatch_decomposition_fidelity": 0.9897177493454706
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.9937247585311846,
+            "min_process_fidelity": 0.9881373458786035,
+            "mean_infidelity": 0.006275241468815418,
+            "mean_population_error": 0.011101545546611385,
+            "phase_rms_rad": 0.04463948000481112,
+            "phase_axis_rms_rad": 0.04463948000481112,
+            "relative_block_phase_rms_rad": 0.3428128517996989,
+            "theta_rms_rad": 0.1587315171843384,
+            "residual_z_rms_rad": 0.05838254794849897,
+            "max_abs_phase_axis_error_rad": 0.06195400423079844,
+            "max_abs_relative_phase_rad": 0.48481058437093205,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": null,
+            "neighbor_overlap_proxy_mean": 8.119233808840611e-05,
+            "neighbor_overlap_proxy_max": 0.00016238467213210294,
+            "state_fidelity_mean": 0.9615752861697053,
+            "state_fidelity_min": 0.9138233504944177,
+            "objective_scope": "global",
+            "loss_terms": {
+              "infidelity": 0.006275241468815418,
+              "phase_axis": 0.000498170793774983,
+              "theta": 0.004535225018575544,
+              "residual_z": 0.0007498748190909318,
+              "state": 0.013448649840603132,
+              "off_block": 0.0,
+              "selectivity_mean": 3.653655213978275e-05,
+              "selectivity_max": 4.0596168033025735e-05,
+              "regularization": 0.004164285961830665
+            },
+            "loss_total": 0.029748580622863483
+          },
+          "legacy_phase_rms_rad": 0.3428128517996989,
+          "state_fidelities": {
+            "g,0": 0.999429712098356,
+            "g,1": 0.9897177295902585,
+            "g x (|0>+|1>)/sqrt2": 0.9438252195556196,
+            "g x |alpha=+1.10+0.25j>": 0.9610804191098758,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.9138233504944177
+          }
+        }
+      },
+      "crosstalk": {
+        "case_B": {
+          "theta_matrix_rad": [
+            [
+              1.5707428899982305,
+              0.12559303845015543
+            ],
+            [
+              0.8450655149168346,
+              1.7896926427346989
+            ]
+          ],
+          "relative_leakage_matrix": [
+            [
+              0.0,
+              0.07017575836834523
+            ],
+            [
+              0.5380037180482075,
+              0.0
+            ]
+          ],
+          "mean_neighbor_leakage": 0.30408973820827634,
+          "max_neighbor_leakage": 0.5380037180482075
+        },
+        "case_D": {
+          "theta_matrix_rad": [
+            [
+              1.6935628088630763,
+              0.21931202524607915
+            ],
+            [
+              0.8250571808148663,
+              2.2210008025246717
+            ]
+          ],
+          "relative_leakage_matrix": [
+            [
+              0.0,
+              0.0987446852773674
+            ],
+            [
+              0.4871724724332747,
+              0.0
+            ]
+          ],
+          "mean_neighbor_leakage": 0.29295857885532106,
+          "max_neighbor_leakage": 0.4871724724332747
+        }
+      }
+    },
+    "x180_identity": {
+      "profile": {
+        "name": "x180_identity",
+        "mode": "manual",
+        "seed": 2,
+        "theta": [
+          3.141592653589793,
+          0.0
+        ],
+        "phi": [
+          0.0,
+          0.0
+        ]
+      },
+      "objective_scope": "global",
+      "active_support": null,
+      "corrected_metrics": {
+        "B": {
+          "summary": {
+            "mean_process_fidelity": 0.9711072727749437,
+            "min_process_fidelity": 0.9422145483240048,
+            "mean_process_infidelity": 0.028892727225056314,
+            "phase_axis_rms_rad": 0.00822097323876471,
+            "residual_pre_z_rms_rad": 0.17162309430512582,
+            "residual_post_z_rms_rad": 0.17168316363321093,
+            "theta_error_rms_rad": 0.3433194995291537,
+            "phase_sensitive_rms_rad": 0.24289335020738312
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9999999972258826,
+              "process_infidelity": 2.7741173802553476e-09,
+              "theta_target_rad": 3.141592653589793,
+              "theta_simulated_rad": 3.141487313803506,
+              "theta_error_rad": -0.00010533978628712859,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.0,
+              "phi_axis_error_rad": 0.0,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 1.0,
+              "axis_simulated_y": 0.0,
+              "axis_simulated_z": 0.0,
+              "residual_pre_z_rad": 0.0,
+              "residual_post_z_rad": 0.0,
+              "mismatch_middle_theta_rad": 0.0,
+              "mismatch_middle_phi_rad": 0.0,
+              "mismatch_decomposition_fidelity": 0.9999999972258826
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.9422145483240048,
+              "process_infidelity": 0.05778545167599525,
+              "theta_target_rad": 0.0,
+              "theta_simulated_rad": 0.485527081034031,
+              "theta_error_rad": 0.485527081034031,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 6.271559095329419,
+              "phi_axis_error_rad": -0.011626211850167323,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.009040101153482015,
+              "axis_simulated_y": -0.00010510686692309233,
+              "axis_simulated_z": 0.999959131926741,
+              "residual_pre_z_rad": 0.24271170758274563,
+              "residual_post_z_rad": 0.24279665844120624,
+              "mismatch_middle_theta_rad": 0.00434620648057788,
+              "mismatch_middle_phi_rad": -8.495275383824108e-05,
+              "mismatch_decomposition_fidelity": 0.9999999993755018
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.9711072727749437,
+            "min_process_fidelity": 0.9422145483240048,
+            "mean_infidelity": 0.028892727225056314,
+            "mean_population_error": 2.362918874477489e-06,
+            "phase_rms_rad": 0.00822097323876471,
+            "phase_axis_rms_rad": 0.00822097323876471,
+            "relative_block_phase_rms_rad": 0.3428128622314836,
+            "theta_rms_rad": 0.3433194995291529,
+            "residual_z_rms_rad": 0.3433054606427459,
+            "max_abs_phase_axis_error_rad": 0.011626211850167323,
+            "max_abs_relative_phase_rad": 0.4848105991237035,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": {
+              "n": 1,
+              "population_error": 4.7230636315747225e-06,
+              "process_infidelity": 0.05778545167599525,
+              "phi_axis_error_rad": -0.011626211850167323,
+              "relative_block_phase_rad": 0.4848105991237035,
+              "residual_conditional_z_rad": 0.4855072384777141
+            },
+            "neighbor_overlap_proxy_mean": 0.00014411194858212286,
+            "neighbor_overlap_proxy_max": 0.00014411194858212286,
+            "state_fidelity_mean": 0.9784316148381464,
+            "state_fidelity_min": 0.9154829251631822
+          },
+          "legacy_phase_rms_rad": 0.3428128622314836,
+          "state_fidelities": {
+            "g,0": 0.9999999972364502,
+            "g,1": 0.9999952769528931,
+            "g x (|0>+|1>)/sqrt2": 0.9854212030684658,
+            "g x |alpha=+1.10+0.25j>": 0.9912586717697406,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.9154829251631822
+          }
+        },
+        "C": {
+          "summary": {
+            "mean_process_fidelity": 0.9733717801005441,
+            "min_process_fidelity": 0.9517084137681603,
+            "mean_process_infidelity": 0.026628219899455796,
+            "phase_axis_rms_rad": 0.0073359187537640575,
+            "residual_pre_z_rms_rad": 0.15669294289487865,
+            "residual_post_z_rms_rad": 0.1567636242186898,
+            "theta_error_rms_rad": 0.32865956870363017,
+            "phase_sensitive_rms_rad": 0.22176863604937044
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9950351464329281,
+              "process_infidelity": 0.004964853567071881,
+              "theta_target_rad": 3.141592653589793,
+              "theta_simulated_rad": 3.2818630457184326,
+              "theta_error_rad": 0.14027039212863945,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.007364456067420393,
+              "phi_axis_error_rad": 0.0073644560674202,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9999728825159762,
+              "axis_simulated_y": 0.007364389498793464,
+              "axis_simulated_z": -8.671026093388618e-18,
+              "residual_pre_z_rad": -0.007364355763370245,
+              "residual_post_z_rad": -0.007364357347326322,
+              "mismatch_middle_theta_rad": 0.14026948056350416,
+              "mismatch_middle_phi_rad": -1.847916353270307e-08,
+              "mismatch_decomposition_fidelity": 0.9999999999997824
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.9517084137681603,
+              "process_infidelity": 0.04829158623183971,
+              "theta_target_rad": 0.0,
+              "theta_simulated_rad": 0.4431235056877373,
+              "theta_error_rad": 0.4431235056877373,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 6.275878037186305,
+              "phi_axis_error_rad": -0.00730726999328013,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.018610939031243782,
+              "axis_simulated_y": -0.00013599757692277573,
+              "axis_simulated_z": 0.9998267922260509,
+              "residual_pre_z_rad": 0.2214748811271967,
+              "residual_post_z_rad": 0.22157489478101544,
+              "mismatch_middle_theta_rad": 0.008179645394897385,
+              "mismatch_middle_phi_rad": -0.00010001454699271051,
+              "mismatch_decomposition_fidelity": 0.9999999991430562
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.9733717801005441,
+            "min_process_fidelity": 0.9517084137681603,
+            "mean_infidelity": 0.026628219899455796,
+            "mean_population_error": 0.002463806590004476,
+            "phase_rms_rad": 0.0073359187537640575,
+            "phase_axis_rms_rad": 0.0073359187537640575,
+            "relative_block_phase_rms_rad": 0.34281286180098247,
+            "theta_rms_rad": 0.3288242761938672,
+            "residual_z_rms_rad": 0.3134538684967374,
+            "max_abs_phase_axis_error_rad": 0.0073644560674202,
+            "max_abs_relative_phase_rad": 0.48481059851488295,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": {
+              "n": 1,
+              "population_error": 1.672750751075244e-05,
+              "process_infidelity": 0.04829158623183971,
+              "phi_axis_error_rad": -0.00730726999328013,
+              "relative_block_phase_rad": 0.48481059851488295,
+              "residual_conditional_z_rad": 0.4430467532517326
+            },
+            "neighbor_overlap_proxy_mean": 0.00014411194858212286,
+            "neighbor_overlap_proxy_max": 0.00014411194858212286,
+            "state_fidelity_mean": 0.9738538302572376,
+            "state_fidelity_min": 0.9035600251281418,
+            "objective_scope": "global",
+            "loss_terms": {
+              "infidelity": 0.026628219899455796,
+              "phase_axis": 1.3453925990456801e-05,
+              "theta": 0.01946257283059572,
+              "residual_z": 0.02161573208862539,
+              "state": 0.00915115940996684,
+              "off_block": 0.0,
+              "selectivity_mean": 6.485037686195529e-05,
+              "selectivity_max": 3.6027987145530715e-05,
+              "regularization": 2.0509351568196655e-06
+            },
+            "loss_total": 0.0769740674537985
+          },
+          "legacy_phase_rms_rad": 0.34281286180098247,
+          "state_fidelities": {
+            "g,0": 0.9950891143168327,
+            "g,1": 0.9999832724844914,
+            "g x (|0>+|1>)/sqrt2": 0.9812900816016156,
+            "g x |alpha=+1.10+0.25j>": 0.9893466577551071,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.9035600251281418
+          }
+        },
+        "D": {
+          "summary": {
+            "mean_process_fidelity": 0.9733721443279384,
+            "min_process_fidelity": 0.951694766887626,
+            "mean_process_infidelity": 0.026627855672061607,
+            "phase_axis_rms_rad": 0.007334696378378073,
+            "residual_pre_z_rms_rad": 0.15671567310762397,
+            "residual_post_z_rms_rad": 0.15678622441328952,
+            "theta_error_rms_rad": 0.32865834749372114,
+            "phase_sensitive_rms_rad": 0.2218006315011592
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9950495217682508,
+              "process_infidelity": 0.004950478231749211,
+              "theta_target_rad": 3.141592653589793,
+              "theta_simulated_rad": 3.2816560728954527,
+              "theta_error_rad": 0.14006341930565958,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.007370035185848595,
+              "phi_axis_error_rad": 0.007370035185848778,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9999728414136121,
+              "axis_simulated_y": 0.007369968465815367,
+              "axis_simulated_z": 2.337596823893545e-18,
+              "residual_pre_z_rad": -0.007369935570766817,
+              "residual_post_z_rad": -0.007369935577371756,
+              "mismatch_middle_theta_rad": 0.14006250668247697,
+              "mismatch_middle_phi_rad": -7.277169977726317e-10,
+              "mismatch_decomposition_fidelity": 0.9999999999997817
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.951694766887626,
+              "process_infidelity": 0.048305233112374,
+              "theta_target_rad": 0.0,
+              "theta_simulated_rad": 0.4431871583507515,
+              "theta_error_rad": 0.4431871583507515,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 6.275886120698524,
+              "phi_axis_error_rad": -0.007299186481063202,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.01859492864160346,
+              "axis_simulated_y": -0.00013573026225022284,
+              "axis_simulated_z": 0.9998270901541474,
+              "residual_pre_z_rad": 0.2215068586857618,
+              "residual_post_z_rad": 0.22160668848465326,
+              "mismatch_middle_theta_rad": 0.008173763277145783,
+              "mismatch_middle_phi_rad": -9.983055636730853e-05,
+              "mismatch_decomposition_fidelity": 0.9999999991461535
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.9733721443279384,
+            "min_process_fidelity": 0.951694766887626,
+            "mean_infidelity": 0.026627855672061607,
+            "mean_population_error": 0.00245656560483248,
+            "phase_rms_rad": 0.007334696378378073,
+            "phase_axis_rms_rad": 0.007334696378378073,
+            "relative_block_phase_rms_rad": 0.3428128618028446,
+            "theta_rms_rad": 0.3288233059838581,
+            "residual_z_rms_rad": 0.31349920151518545,
+            "max_abs_phase_axis_error_rad": 0.007370035185848778,
+            "max_abs_relative_phase_rad": 0.4848105985175164,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": {
+              "n": 1,
+              "population_error": 1.6703456601756224e-05,
+              "process_infidelity": 0.048305233112374,
+              "phi_axis_error_rad": -0.007299186481063202,
+              "relative_block_phase_rad": 0.4848105985175164,
+              "residual_conditional_z_rad": 0.44311052692751723
+            },
+            "neighbor_overlap_proxy_mean": 0.00014411194858212286,
+            "neighbor_overlap_proxy_max": 0.00014411194858212286,
+            "state_fidelity_mean": 0.9738640298179867,
+            "state_fidelity_min": 0.9035792366041904,
+            "objective_scope": "global",
+            "loss_terms": {
+              "infidelity": 0.026627855672061607,
+              "phase_axis": 1.3449442740748104e-05,
+              "theta": 0.019462457980467716,
+              "residual_z": 0.02162198485714495,
+              "state": 0.009147589563704655,
+              "off_block": 0.0,
+              "selectivity_mean": 6.485037686195529e-05,
+              "selectivity_max": 3.6027987145530715e-05,
+              "regularization": 2.0451337540730345e-06
+            },
+            "loss_total": 0.07697626101388123
+          },
+          "legacy_phase_rms_rad": 0.3428128618028446,
+          "state_fidelities": {
+            "g,0": 0.9951035722362676,
+            "g,1": 0.9999832965354003,
+            "g x (|0>+|1>)/sqrt2": 0.9813019430358388,
+            "g x |alpha=+1.10+0.25j>": 0.9893521006782363,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.9035792366041904
+          }
+        },
+        "E": {
+          "summary": {
+            "mean_process_fidelity": 0.9733721443279384,
+            "min_process_fidelity": 0.951694766887626,
+            "mean_process_infidelity": 0.026627855672061607,
+            "phase_axis_rms_rad": 0.007334696378378073,
+            "residual_pre_z_rms_rad": 0.15671567310762397,
+            "residual_post_z_rms_rad": 0.15678622441328952,
+            "theta_error_rms_rad": 0.32865834749372114,
+            "phase_sensitive_rms_rad": 0.2218006315011592
+          },
+          "rows": [
+            {
+              "n": 0,
+              "process_fidelity": 0.9950495217682508,
+              "process_infidelity": 0.004950478231749211,
+              "theta_target_rad": 3.141592653589793,
+              "theta_simulated_rad": 3.2816560728954527,
+              "theta_error_rad": 0.14006341930565958,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 0.007370035185848595,
+              "phi_axis_error_rad": 0.007370035185848778,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.9999728414136121,
+              "axis_simulated_y": 0.007369968465815367,
+              "axis_simulated_z": 2.337596823893545e-18,
+              "residual_pre_z_rad": -0.007369935570766817,
+              "residual_post_z_rad": -0.007369935577371756,
+              "mismatch_middle_theta_rad": 0.14006250668247697,
+              "mismatch_middle_phi_rad": -7.277169977726317e-10,
+              "mismatch_decomposition_fidelity": 0.9999999999997817
+            },
+            {
+              "n": 1,
+              "process_fidelity": 0.951694766887626,
+              "process_infidelity": 0.048305233112374,
+              "theta_target_rad": 0.0,
+              "theta_simulated_rad": 0.4431871583507515,
+              "theta_error_rad": 0.4431871583507515,
+              "phi_target_rad": 0.0,
+              "phi_simulated_rad": 6.275886120698524,
+              "phi_axis_error_rad": -0.007299186481063202,
+              "axis_target_x": 1.0,
+              "axis_target_y": 0.0,
+              "axis_target_z": 0.0,
+              "axis_simulated_x": 0.01859492864160346,
+              "axis_simulated_y": -0.00013573026225022284,
+              "axis_simulated_z": 0.9998270901541474,
+              "residual_pre_z_rad": 0.2215068586857618,
+              "residual_post_z_rad": 0.22160668848465326,
+              "mismatch_middle_theta_rad": 0.008173763277145783,
+              "mismatch_middle_phi_rad": -9.983055636730853e-05,
+              "mismatch_decomposition_fidelity": 0.9999999991461535
+            }
+          ],
+          "old_summary": {
+            "n_levels": 2,
+            "mean_process_fidelity": 0.9733721443279384,
+            "min_process_fidelity": 0.951694766887626,
+            "mean_infidelity": 0.026627855672061607,
+            "mean_population_error": 0.00245656560483248,
+            "phase_rms_rad": 0.007334696378378073,
+            "phase_axis_rms_rad": 0.007334696378378073,
+            "relative_block_phase_rms_rad": 0.3428128618028446,
+            "theta_rms_rad": 0.3288233059838581,
+            "residual_z_rms_rad": 0.31349920151518545,
+            "max_abs_phase_axis_error_rad": 0.007370035185848778,
+            "max_abs_relative_phase_rad": 0.4848105985175164,
+            "off_block_norm": 0.0,
+            "population_phase_mismatch_example": {
+              "n": 1,
+              "population_error": 1.6703456601756224e-05,
+              "process_infidelity": 0.048305233112374,
+              "phi_axis_error_rad": -0.007299186481063202,
+              "relative_block_phase_rad": 0.4848105985175164,
+              "residual_conditional_z_rad": 0.44311052692751723
+            },
+            "neighbor_overlap_proxy_mean": 0.00014411194858212286,
+            "neighbor_overlap_proxy_max": 0.00014411194858212286,
+            "state_fidelity_mean": 0.9738640298179867,
+            "state_fidelity_min": 0.9035792366041904,
+            "objective_scope": "global",
+            "loss_terms": {
+              "infidelity": 0.026627855672061607,
+              "phase_axis": 1.3449442740748104e-05,
+              "theta": 0.019462457980467716,
+              "residual_z": 0.02162198485714495,
+              "state": 0.009147589563704655,
+              "off_block": 0.0,
+              "selectivity_mean": 6.485037686195529e-05,
+              "selectivity_max": 3.6027987145530715e-05,
+              "regularization": 2.0451337540730345e-06
+            },
+            "loss_total": 0.07697626101388123
+          },
+          "legacy_phase_rms_rad": 0.3428128618028446,
+          "state_fidelities": {
+            "g,0": 0.9951035722362676,
+            "g,1": 0.9999832965354003,
+            "g x (|0>+|1>)/sqrt2": 0.9813019430358388,
+            "g x |alpha=+1.10+0.25j>": 0.9893521006782363,
+            "(|g>+|e>)/sqrt2 x cavity_superposition": 0.9035792366041904
+          }
+        }
+      },
+      "crosstalk": {
+        "case_B": {
+          "theta_matrix_rad": [
+            [
+              3.141487313803506,
+              0.0
+            ],
+            [
+              0.485527081034031,
+              0.0
+            ]
+          ],
+          "relative_leakage_matrix": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              0.15455325218110996,
+              0.0
+            ]
+          ],
+          "mean_neighbor_leakage": 0.07727662609055498,
+          "max_neighbor_leakage": 0.15455325218110996
+        },
+        "case_D": {
+          "theta_matrix_rad": [
+            [
+              3.2816560728954527,
+              0.0
+            ],
+            [
+              0.4431871583507515,
+              0.0
+            ]
+          ],
+          "relative_leakage_matrix": [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              0.13504984937672676,
+              0.0
+            ]
+          ],
+          "mean_neighbor_leakage": 0.06752492468836338,
+          "max_neighbor_leakage": 0.13504984937672676
+        }
+      }
+    }
+  }
+}

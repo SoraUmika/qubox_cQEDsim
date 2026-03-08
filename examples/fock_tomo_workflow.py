@@ -56,7 +56,7 @@ def main():
     rho = 0
     for n in range(n_max + 1):
         rho_q = 0.5 * (qt.qeye(2) + blochs[n][0] * qt.sigmax() + blochs[n][1] * qt.sigmay() + blochs[n][2] * qt.sigmaz())
-        rho += probs[n] * qt.tensor(qt.basis(model.n_cav, n).proj(), rho_q)
+        rho += probs[n] * qt.tensor( rho_q,qt.basis(model.n_cav, n).proj())
     base = run_fock_resolved_tomo(
         model=model, state_prep=lambda: rho, n_max=n_max, cal=cal, ideal_tag=False, tag_duration_ns=1200.0, tag_amp=0.0014, dt_ns=1.0
     )
@@ -72,7 +72,7 @@ def main():
         leakage_cal=(w, b),
     )
     true_v = true_fock_resolved_vectors(rho, n_max)
-    true_p = np.array([np.real((rho * qt.tensor(qt.basis(model.n_cav, n).proj(), qt.qeye(2))).tr()) for n in range(n_max + 1)], dtype=float)
+    true_p = np.array([np.real((rho * qt.tensor( qt.qeye(2),qt.basis(model.n_cav, n).proj())).tr()) for n in range(n_max + 1)], dtype=float)
 
     idx = np.arange(len(allxy_before["measured_z"]))
     _save_plot(out_dir / "allxy.png", idx, [allxy_before["measured_z"], allxy_after["measured_z"], allxy_after["expected_z"]], ["before", "after", "ideal"], "ALL_XY", "Z")

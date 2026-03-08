@@ -4,6 +4,9 @@ from .calibration import (
     pad_parameter_array,
     pad_sqr_angles,
     rotation_gaussian_amplitude,
+    sqr_lambda0_rad_s,
+    sqr_rotation_coefficient,
+    sqr_tone_amplitude_rad_s,
 )
 from .envelopes import (
     MultitoneTone,
@@ -29,6 +32,9 @@ __all__ = [
     "cosine_rise_envelope",
     "displacement_square_amplitude",
     "rotation_gaussian_amplitude",
+    "sqr_lambda0_rad_s",
+    "sqr_rotation_coefficient",
+    "sqr_tone_amplitude_rad_s",
     "pad_parameter_array",
     "pad_sqr_angles",
     "build_sqr_tone_specs",

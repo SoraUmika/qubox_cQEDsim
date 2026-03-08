@@ -28,7 +28,7 @@ def _simulate_qubit(pulses):
     return simulate_sequence(
         model,
         compiled,
-        model.basis_state(0, 0),
+        model.basis_state( 0,0),
         {"q": "qubit"},
         config=SimulationConfig(frame=FrameSpec()),
     )
@@ -50,7 +50,7 @@ def test_x_then_y_composition_phase_shift():
     p1 = Pulse("q", 0.0, 1.0, _square, amp=amp, phase=0.0)
     p2 = Pulse("q", 1.0, 1.0, _square, amp=amp, phase=np.pi / 2)
     res = _simulate_qubit([p1, p2])
-    rho_q = qt.ptrace(res.final_state, 1)
+    rho_q = qt.ptrace(res.final_state, 0)
     bloch_y = 2 * np.imag(rho_q[1, 0])
     assert bloch_y < -0.6
     assert (time.perf_counter() - start) < 1.2

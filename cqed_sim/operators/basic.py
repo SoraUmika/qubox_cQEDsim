@@ -19,8 +19,8 @@ def sigma_z() -> qt.Qobj:
     return qt.sigmaz()
 
 
-def tensor_cavity_qubit(op_c: qt.Qobj, op_q: qt.Qobj) -> qt.Qobj:
-    return qt.tensor(op_c, op_q)
+def tensor_qubit_cavity(op_q: qt.Qobj, op_c: qt.Qobj) -> qt.Qobj:
+    return qt.tensor(op_q, op_c)
 
 
 def embed_qubit_op(op_q: qt.Qobj, n_cav: int) -> qt.Qobj:
@@ -58,4 +58,4 @@ def build_qubit_state(label: str) -> qt.Qobj:
 
 def joint_basis_state(n_cav_dim: int, qubit_label: str, n: int) -> qt.Qobj:
     qubit_index = 0 if qubit_label == "g" else 1
-    return qt.tensor(qt.basis(n_cav_dim, n), qt.basis(2, qubit_index))
+    return qt.tensor(qt.basis(2, qubit_index), qt.basis(n_cav_dim, n))

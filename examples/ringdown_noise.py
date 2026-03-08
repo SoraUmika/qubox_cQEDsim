@@ -13,7 +13,7 @@ def main():
     model = DispersiveTransmonCavityModel(
         omega_c=0.0, omega_q=0.0, alpha=0.0, chi=0.0, kerr=0.0, n_cav=16, n_tr=2
     )
-    psi0 = qt.tensor(qt.coherent(model.n_cav, 1.2), qt.basis(model.n_tr, 0))
+    psi0 = qt.tensor( qt.basis(model.n_tr, 0),qt.coherent(model.n_cav, 1.2))
     compiled = SequenceCompiler(dt=0.05).compile([], t_end=8.0)
     result = simulate_sequence(
         model,

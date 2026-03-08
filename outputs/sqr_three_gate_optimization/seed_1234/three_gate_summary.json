@@ -1,0 +1,188 @@
+{
+  "seed": 1234,
+  "fidelity_threshold": 0.96,
+  "durations_ns": [
+    200,
+    300,
+    500,
+    750,
+    1000
+  ],
+  "sigma_fractions": [
+    0.2,
+    0.3
+  ],
+  "results": [
+    {
+      "gate_index": 1,
+      "gate_name": "SQR_527e17733de113ecaead4876b2bcafeb",
+      "selected_duration_ns": 1000,
+      "selected_sigma_fraction": 0.2,
+      "selected_fidelity": 0.9330076667972387,
+      "baseline_fidelity": 0.9202699419880968,
+      "selection_reason": "threshold not reached on grid; using best scanned duration",
+      "threshold_row": null,
+      "sweep_rows": [
+        {
+          "duration_ns": 200.00000000000003,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.5989625106032758,
+          "guard_selectivity_error": 0.0010438066836972962,
+          "logical_fidelity_weighted": 0.4290832007153924,
+          "objective_loss_total": 0.5711027223966568,
+          "selected_run_id": "gate_01_T0200ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 300.00000000000006,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.764830679887546,
+          "guard_selectivity_error": 0.207649681963373,
+          "logical_fidelity_weighted": 0.5994793911303925,
+          "objective_loss_total": 0.42133682140355116,
+          "selected_run_id": "gate_01_T0300ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 500.00000000000006,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.8636704128494594,
+          "guard_selectivity_error": 0.053716985731285034,
+          "logical_fidelity_weighted": 0.7569432058786315,
+          "objective_loss_total": 0.2484845850170521,
+          "selected_run_id": "gate_01_T0500ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 750.0,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.9290621833331133,
+          "guard_selectivity_error": 0.08607518294310984,
+          "logical_fidelity_weighted": 0.8657543500303195,
+          "objective_loss_total": 0.14286886154237355,
+          "selected_run_id": "gate_01_T0750ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 1000.0000000000001,
+          "sigma_fraction": 0.2,
+          "subspace_fidelity": 0.9330076667972387,
+          "guard_selectivity_error": 0.017018992021046384,
+          "logical_fidelity_weighted": 0.8734557500878646,
+          "objective_loss_total": 0.12824722928845067,
+          "selected_run_id": "gate_01_T1000ns_sigma0p2_start00"
+        }
+      ]
+    },
+    {
+      "gate_index": 2,
+      "gate_name": "SQR_bc8194a85a260be4c0959c6c4d8d7ae1",
+      "selected_duration_ns": 500,
+      "selected_sigma_fraction": 0.3,
+      "selected_fidelity": 0.9522398624145222,
+      "baseline_fidelity": 0.9376890015050288,
+      "selection_reason": "threshold not reached on grid; using best scanned duration",
+      "threshold_row": null,
+      "sweep_rows": [
+        {
+          "duration_ns": 200.00000000000003,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.8297601597722409,
+          "guard_selectivity_error": 0.23565852385121822,
+          "logical_fidelity_weighted": 0.6935330316945811,
+          "objective_loss_total": 0.3302096326940042,
+          "selected_run_id": "gate_02_T0200ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 300.00000000000006,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.8988752399572365,
+          "guard_selectivity_error": 0.1170199978865861,
+          "logical_fidelity_weighted": 0.8088451526394717,
+          "objective_loss_total": 0.20286610199038962,
+          "selected_run_id": "gate_02_T0300ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 500.00000000000006,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.9522398624145222,
+          "guard_selectivity_error": 0.017107552721153847,
+          "logical_fidelity_weighted": 0.9075922393342601,
+          "objective_loss_total": 0.09418159378801533,
+          "selected_run_id": "gate_02_T0500ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 750.0,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.49330699529142685,
+          "guard_selectivity_error": 0.03763017556873397,
+          "logical_fidelity_weighted": 0.722200995875786,
+          "objective_loss_total": 0.28161385483618573,
+          "selected_run_id": "gate_02_T0750ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 1000.0000000000001,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.4931915829320798,
+          "guard_selectivity_error": 0.03832608158889822,
+          "logical_fidelity_weighted": 0.740588135193476,
+          "objective_loss_total": 0.2633701386144122,
+          "selected_run_id": "gate_02_T1000ns_sigma0p3_start00"
+        }
+      ]
+    },
+    {
+      "gate_index": 3,
+      "gate_name": "SQR_789278ba62949511b06e9d76a4bb8437",
+      "selected_duration_ns": 500,
+      "selected_sigma_fraction": 0.3,
+      "selected_fidelity": 0.9309370068295147,
+      "baseline_fidelity": 0.9073105035110527,
+      "selection_reason": "threshold not reached on grid; using best scanned duration",
+      "threshold_row": null,
+      "sweep_rows": [
+        {
+          "duration_ns": 200.00000000000003,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.7548019945762542,
+          "guard_selectivity_error": 0.004049945259092404,
+          "logical_fidelity_weighted": 0.5936270582607951,
+          "objective_loss_total": 0.4069520800842088,
+          "selected_run_id": "gate_03_T0200ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 300.00000000000006,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.8655485091187204,
+          "guard_selectivity_error": 0.17062825457861783,
+          "logical_fidelity_weighted": 0.7512788948440248,
+          "objective_loss_total": 0.2657990683339108,
+          "selected_run_id": "gate_03_T0300ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 500.00000000000006,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.9309370068295147,
+          "guard_selectivity_error": 0.022952077666331165,
+          "logical_fidelity_weighted": 0.8687491116587146,
+          "objective_loss_total": 0.13360240787937377,
+          "selected_run_id": "gate_03_T0500ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 750.0,
+          "sigma_fraction": 0.3,
+          "subspace_fidelity": 0.48972574121435514,
+          "guard_selectivity_error": 0.05275672652858861,
+          "logical_fidelity_weighted": 0.7117864101387468,
+          "objective_loss_total": 0.29354913415986594,
+          "selected_run_id": "gate_03_T0750ns_sigma0p3_start00"
+        },
+        {
+          "duration_ns": 1000.0000000000001,
+          "sigma_fraction": 0.2,
+          "subspace_fidelity": 0.4793162406065365,
+          "guard_selectivity_error": 0.012430943950876064,
+          "logical_fidelity_weighted": 0.7218072825479722,
+          "objective_loss_total": 0.27948266212850403,
+          "selected_run_id": "gate_03_T1000ns_sigma0p2_start00"
+        }
+      ]
+    }
+  ]
+}

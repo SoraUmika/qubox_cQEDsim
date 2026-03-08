@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 import math
 from typing import Sequence
 
-import numpy as np
 import qutip as qt
 
 from .frame import FrameSpec
@@ -33,8 +32,8 @@ class DispersiveTransmonCavityModel:
     n_tr: int = 3
 
     def operators(self) -> dict[str, qt.Qobj]:
-        a = qt.tensor(qt.destroy(self.n_cav), qt.qeye(self.n_tr))
-        b = qt.tensor(qt.qeye(self.n_cav), qt.destroy(self.n_tr))
+        a = qt.tensor(qt.qeye(self.n_tr), qt.destroy(self.n_cav))
+        b = qt.tensor(qt.destroy(self.n_tr), qt.qeye(self.n_cav))
         adag = a.dag()
         bdag = b.dag()
         n_c = adag * a
@@ -61,17 +60,18 @@ class DispersiveTransmonCavityModel:
             order = i + 1
             h += coeff * _falling_factorial_number_op(n_c, order) / math.factorial(order)
 
-        # Project convention: omega_ge(n) = omega_ge(0) - n*chi, implemented as -chi*n_c*n_q.
+        # qubox convention: omega_ge(n) = omega_ge(0) - chi*n - chi2*n(n-1) - chi3*n(n-1)(n-2) - ...
         if self.chi != 0.0:
             h += -self.chi * n_c * n_q
         for i, coeff in enumerate(self.chi_higher, start=2):
-            h += -coeff * n_c * (n_q ** i)
+            h += -coeff * _falling_factorial_number_op(n_c, i) * n_q
         return h
 
-    def basis_state(self, n_cav: int, n_tr: int) -> qt.Qobj:
-        return qt.tensor(qt.basis(self.n_cav, n_cav), qt.basis(self.n_tr, n_tr))
+    def basis_state(self, n_tr: int, n_cav: int) -> qt.Qobj:
+        """Return the joint basis ket |q> ⊗ |n> with qubit first, cavity second."""
+        return qt.tensor(qt.basis(self.n_tr, n_tr), qt.basis(self.n_cav, n_cav))
 
     def coherent_qubit_superposition(self, n_cav: int = 0) -> qt.Qobj:
-        g = self.basis_state(n_cav, 0)
-        e = self.basis_state(n_cav, 1)
+        g = self.basis_state(0, n_cav)
+        e = self.basis_state(1, n_cav)
         return (g + e).unit()

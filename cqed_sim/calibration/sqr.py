@@ -7,6 +7,7 @@ import json
 import math
 from pathlib import Path
 import re
+import time
 from typing import Any, Mapping, Sequence
 
 import numpy as np
@@ -15,8 +16,9 @@ from scipy.optimize import Bounds, minimize
 
 from cqed_sim.core.ideal_gates import qubit_rotation_xy
 from cqed_sim.io.gates import Gate, SQRGate
-from cqed_sim.pulses.calibration import pad_sqr_angles
+from cqed_sim.pulses.calibration import pad_sqr_angles, sqr_lambda0_rad_s
 from cqed_sim.pulses.envelopes import gaussian_envelope
+from cqed_sim.unitary_synthesis.progress import NullReporter, ProgressEvent, ProgressReporter
 
 
 def default_calibration_config_keys() -> tuple[str, ...]:
@@ -30,6 +32,7 @@ def default_calibration_config_keys() -> tuple[str, ...]:
         "st_chi3_hz",
         "max_n_cal",
         "sqr_theta_cutoff",
+        "allow_zero_theta_corrections",
         "optimizer_method_stage1",
         "optimizer_method_stage2",
         "d_lambda_bounds",
@@ -240,8 +243,8 @@ def _gaussian_area(duration_s: float, sigma_fraction: float, tlist: np.ndarray |
 def _conditional_detuning_rad_s(n: int, config: Mapping[str, Any]) -> float:
     detuning_hz = (
         float(config.get("st_chi_hz", 0.0)) * n
-        + float(config.get("st_chi2_hz", 0.0)) * (n**2)
-        + float(config.get("st_chi3_hz", 0.0)) * (n**3)
+        + float(config.get("st_chi2_hz", 0.0)) * (n * (n - 1))
+        + float(config.get("st_chi3_hz", 0.0)) * (n * (n - 1) * (n - 2))
     )
     return float(2.0 * np.pi * detuning_hz)
 
@@ -265,7 +268,10 @@ def _drive_components(
     t_rel = tlist / duration_s
     env = np.asarray(gaussian_envelope(t_rel, sigma=sigma_fraction), dtype=np.complex128)
     base_amp = _initial_drive_amplitude(theta_target, duration_s, sigma_fraction, tlist)
-    omega = base_amp * (1.0 + d_lambda) * np.real(env)
+    # Lab-aligned additive amplitude correction in normalized lambda0 units:
+    #   amp = theta/(2T) + lambda0*d_lambda_norm
+    lam0 = sqr_lambda0_rad_s(duration_s)
+    omega = (base_amp + float(d_lambda) * lam0) * np.real(env)
     phi = float(phi_target + d_alpha)
     return omega * np.cos(phi), omega * np.sin(phi), float(base_amp)
 
@@ -426,6 +432,7 @@ def calibrate_sqr_gate(gate: SQRGate, config: Mapping[str, Any]) -> SQRCalibrati
     theta, phi = pad_sqr_angles(gate.theta, gate.phi, int(config["n_cav_dim"]))
     max_n = _calibration_max_n(gate, config)
     theta_cutoff = float(config.get("sqr_theta_cutoff", 1.0e-10))
+    allow_zero_theta_corrections = bool(config.get("allow_zero_theta_corrections", True))
     bounds = _optimizer_bounds(config)
     method_stage1 = str(config.get("optimizer_method_stage1", "Powell"))
     method_stage2 = str(config.get("optimizer_method_stage2", "L-BFGS-B"))
@@ -443,7 +450,7 @@ def calibrate_sqr_gate(gate: SQRGate, config: Mapping[str, Any]) -> SQRCalibrati
         x0 = np.zeros(3, dtype=float)
         loss0 = conditional_loss(x0, n=n, theta_target=theta_n, phi_target=phi_n, config=config)
         initial_loss[n] = float(loss0)
-        if abs(theta_n) < theta_cutoff:
+        if (not allow_zero_theta_corrections) and abs(theta_n) < theta_cutoff:
             levels.append(
                 SQRLevelCalibration(
                     n=n,
@@ -525,6 +532,7 @@ def calibrate_sqr_gate(gate: SQRGate, config: Mapping[str, Any]) -> SQRCalibrati
         metadata={
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "objective_type": "process_infidelity_plus_regularization",
+            "amplitude_correction_convention": "amp = theta/(2T) + lambda0*d_lambda_norm",
             "config_snapshot": _relevant_config_snapshot(config),
             "config_hash": _config_hash(config),
             "optimizer_method_stage1": str(config.get("optimizer_method_stage1", "Powell")),
@@ -716,11 +724,10 @@ def _bloch_from_unitary_on_ground(unitary: np.ndarray) -> tuple[float, float, fl
     ket = np.asarray(unitary[:, 0], dtype=np.complex128).reshape((2, 1))
     rho = ket @ ket.conj().T
     sx = np.array([[0.0, 1.0], [1.0, 0.0]], dtype=np.complex128)
-    sy = np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=np.complex128)
     sz = np.array([[1.0, 0.0], [0.0, -1.0]], dtype=np.complex128)
     return (
         float(np.real(np.trace(rho @ sx))),
-        float(np.real(np.trace(rho @ sy))),
+        2.0 * float(np.imag(rho[0, 1])),
         float(np.real(np.trace(rho @ sz))),
     )
 
@@ -747,7 +754,13 @@ def _unitary_rotation_parameters(unitary: np.ndarray) -> tuple[float, float, flo
     return theta, phi, nz
 
 
-def _benchmark_active_levels(target: RandomSQRTarget, theta_cutoff: float) -> list[int]:
+def _benchmark_active_levels(
+    target: RandomSQRTarget,
+    theta_cutoff: float,
+    include_zero_theta_levels: bool = True,
+) -> list[int]:
+    if bool(include_zero_theta_levels):
+        return [n for n in range(int(target.logical_n))]
     return [n for n in range(int(target.logical_n)) if abs(float(target.theta[n])) >= float(theta_cutoff)]
 
 
@@ -795,6 +808,98 @@ def _benchmark_regularization(config: Mapping[str, Any], x: np.ndarray) -> float
     return float(value)
 
 
+def _max_active_drive_amplitude_rad_s(
+    target: RandomSQRTarget,
+    config: Mapping[str, Any],
+    corrections: Mapping[int, tuple[float, float, float]] | None,
+    active_levels: Sequence[int],
+) -> float:
+    duration_s = float(config["duration_sqr_s"])
+    tlist = _build_time_grid(duration_s, float(config["dt_s"]))
+    sigma_fraction = float(config["sqr_sigma_fraction"])
+    lam0 = sqr_lambda0_rad_s(duration_s)
+    max_amp = 0.0
+    for level in active_levels:
+        theta_level = float(target.theta[int(level)])
+        base_amp = _initial_drive_amplitude(theta_level, duration_s, sigma_fraction, tlist)
+        d_lambda = 0.0
+        if corrections is not None:
+            d_lambda = float(corrections.get(int(level), (0.0, 0.0, 0.0))[0])
+        max_amp = max(max_amp, abs(float(base_amp + d_lambda * lam0)))
+    return float(max_amp)
+
+
+def _max_active_detuning_rad_s(
+    config: Mapping[str, Any],
+    corrections: Mapping[int, tuple[float, float, float]] | None,
+    active_levels: Sequence[int],
+) -> float:
+    max_detuning = 0.0
+    for level in active_levels:
+        correction = 0.0
+        if corrections is not None:
+            correction = float(corrections.get(int(level), (0.0, 0.0, 0.0))[2])
+        detuning = abs(float(_conditional_detuning_rad_s(int(level), config) + correction))
+        max_detuning = max(max_detuning, detuning)
+    return float(max_detuning)
+
+
+def _emit_guarded_progress_event(
+    *,
+    reporter: ProgressReporter,
+    run_id: str,
+    iteration: int,
+    metrics: Mapping[str, Any],
+    best_loss: float,
+    best_iteration: int,
+    target: RandomSQRTarget,
+    config: Mapping[str, Any],
+    backend_label: str,
+) -> None:
+    active_levels = [int(level) for level in metrics.get("active_levels", [])]
+    corrections = metrics.get("corrections")
+    regularization = 0.0
+    if corrections is not None:
+        vector: list[float] = []
+        for level in active_levels:
+            vector.extend(corrections.get(int(level), (0.0, 0.0, 0.0)))
+        regularization = _benchmark_regularization(config, np.asarray(vector, dtype=float))
+    event = ProgressEvent(
+        run_id=str(run_id),
+        iteration=int(iteration),
+        timestamp=float(time.time()),
+        objective_total=float(metrics["loss_total"]),
+        objective_terms={
+            "infidelity": float(1.0 - float(metrics["logical_fidelity"])),
+            "leakage": float(float(metrics.get("lambda_guard", 0.0)) * float(metrics["epsilon_guard"])),
+            "time_reg": float(regularization),
+            "grid_penalty": 0.0,
+            "constraint_penalty": 0.0,
+        },
+        metrics={
+            "fidelity_subspace": float(metrics["logical_fidelity"]),
+            "leakage_avg": float(np.mean(metrics.get("guard_xy", [0.0])) if metrics.get("guard_xy") else 0.0),
+            "leakage_worst": float(metrics["epsilon_guard"]),
+        },
+        best_so_far={
+            "objective_total": float(best_loss),
+            "iteration": int(best_iteration),
+        },
+        params_summary={
+            "max_amp": _max_active_drive_amplitude_rad_s(target, config, corrections, active_levels),
+            "max_detuning": _max_active_detuning_rad_s(config, corrections, active_levels),
+            "times": {"SQR": float(config["duration_sqr_s"])},
+        },
+        backend=str(backend_label),
+        solver_stats={
+            "n_steps": int(max(1, len(_build_time_grid(float(config["duration_sqr_s"]), float(config["dt_s"]))))),
+            "dt": float(config["dt_s"]),
+            "solver_time_sec": 0.0,
+        },
+    )
+    reporter.on_event(event.to_dict())
+
+
 def extract_multitone_effective_qubit_unitary(
     manifold_n: int,
     target: RandomSQRTarget,
@@ -805,7 +910,11 @@ def extract_multitone_effective_qubit_unitary(
     tlist = _build_time_grid(duration_s, float(config["dt_s"]))
     sigma_fraction = float(config["sqr_sigma_fraction"])
     theta_cutoff = float(config.get("sqr_theta_cutoff", 1.0e-10))
-    active_levels = _benchmark_active_levels(target, theta_cutoff)
+    active_levels = _benchmark_active_levels(
+        target,
+        theta_cutoff,
+        include_zero_theta_levels=bool(config.get("allow_zero_theta_corrections", True)),
+    )
     if not active_levels:
         return np.eye(2, dtype=np.complex128), {
             "tlist": tlist,
@@ -816,6 +925,7 @@ def extract_multitone_effective_qubit_unitary(
 
     t_rel = tlist / duration_s
     env = np.real(np.asarray(gaussian_envelope(t_rel, sigma=sigma_fraction), dtype=np.complex128))
+    lam0 = sqr_lambda0_rad_s(duration_s)
     omega_x = np.zeros_like(tlist, dtype=float)
     omega_y = np.zeros_like(tlist, dtype=float)
     omega_eval = _conditional_detuning_rad_s(int(manifold_n), config)
@@ -825,10 +935,11 @@ def extract_multitone_effective_qubit_unitary(
         theta_level = float(target.theta[level])
         phi_level = float(target.phi[level])
         base_amp = _initial_drive_amplitude(theta_level, duration_s, sigma_fraction, tlist)
-        if abs(base_amp) < 1.0e-15:
-            continue
         d_lambda, d_alpha, d_omega = (0.0, 0.0, 0.0) if corrections is None else corrections.get(int(level), (0.0, 0.0, 0.0))
-        amp_env = float(base_amp * (1.0 + d_lambda)) * env
+        amp_nominal = float(base_amp + float(d_lambda) * lam0)
+        if abs(amp_nominal) < 1.0e-15:
+            continue
+        amp_env = amp_nominal * env
         phase = float(phi_level + d_alpha)
         delta = float(_conditional_detuning_rad_s(int(level), config) + d_omega - omega_eval)
         omega_x += amp_env * np.cos(delta * tlist + phase)
@@ -837,7 +948,8 @@ def extract_multitone_effective_qubit_unitary(
             {
                 "level": int(level),
                 "base_amp_rad_s": float(base_amp),
-                "amp_scale": float(1.0 + d_lambda),
+                "amp_correction_norm": float(d_lambda),
+                "amp_nominal_rad_s": float(amp_nominal),
                 "phase_rad": float(phase),
                 "relative_detuning_rad_s": float(delta),
             }
@@ -869,7 +981,11 @@ def evaluate_guarded_sqr_target(
     total_levels = int(target.total_levels)
     weights = _logical_weights(logical_n, weight_mode=weight_mode, poisson_alpha=poisson_alpha)
     theta_cutoff = float(config.get("sqr_theta_cutoff", 1.0e-10))
-    active_levels = _benchmark_active_levels(target, theta_cutoff)
+    active_levels = _benchmark_active_levels(
+        target,
+        theta_cutoff,
+        include_zero_theta_levels=bool(config.get("allow_zero_theta_corrections", True)),
+    )
     rows: list[dict[str, Any]] = []
     logical_fidelities = np.zeros(logical_n, dtype=float)
     guard_xy: list[float] = []
@@ -943,8 +1059,31 @@ def calibrate_guarded_sqr_target(
     poisson_alpha: complex | None = None,
     fidelity_threshold: float = 0.99,
     guard_threshold: float = 1.0e-2,
+    initial_vector: np.ndarray | None = None,
+    reporter: ProgressReporter | None = None,
+    progress_every: int = 1,
+    run_id: str | None = None,
+    backend_label: str = "pulse",
 ) -> GuardedBenchmarkResult:
-    active_levels = _benchmark_active_levels(target, float(config.get("sqr_theta_cutoff", 1.0e-10)))
+    run_reporter = reporter or NullReporter()
+    emit_every = max(1, int(progress_every))
+    run_label = str(run_id or target.target_id)
+    active_levels = _benchmark_active_levels(
+        target,
+        float(config.get("sqr_theta_cutoff", 1.0e-10)),
+        include_zero_theta_levels=bool(config.get("allow_zero_theta_corrections", True)),
+    )
+    run_reporter.on_start(
+        {
+            "progress_schema_version": 1,
+            "run_id": run_label,
+            "backend": str(backend_label),
+            "target_id": target.target_id,
+            "duration_s": float(config["duration_sqr_s"]),
+            "emit_every": emit_every,
+            "timestamp": float(time.time()),
+        }
+    )
     if not active_levels:
         zero_result = SQRCalibrationResult(
             sqr_name=target.target_id,
@@ -960,6 +1099,31 @@ def calibrate_guarded_sqr_target(
             metadata={"benchmark_mode": True, "config_snapshot": _relevant_config_snapshot(config)},
         )
         metrics = evaluate_guarded_sqr_target(target, config, corrections={}, lambda_guard=lambda_guard, weight_mode=weight_mode, poisson_alpha=poisson_alpha)
+        metrics["lambda_guard"] = float(lambda_guard)
+        metrics["corrections"] = {}
+        _emit_guarded_progress_event(
+            reporter=run_reporter,
+            run_id=run_label,
+            iteration=0,
+            metrics=metrics,
+            best_loss=float(metrics["loss_total"]),
+            best_iteration=0,
+            target=target,
+            config=config,
+            backend_label=backend_label,
+        )
+        run_reporter.on_end(
+            {
+                "progress_schema_version": 1,
+                "run_id": run_label,
+                "success": True,
+                "message": "No active levels; identity benchmark.",
+                "nit": 0,
+                "best_objective_total": float(metrics["loss_total"]),
+                "best_iteration": 0,
+                "timestamp": float(time.time()),
+            }
+        )
         return GuardedBenchmarkResult(
             target_id=target.target_id,
             target_class=target.target_class,
@@ -985,10 +1149,15 @@ def calibrate_guarded_sqr_target(
     bounds = _benchmark_bounds(config, len(active_levels))
     method_stage1 = str(config.get("optimizer_method_stage1", "Powell"))
     method_stage2 = str(config.get("optimizer_method_stage2", "L-BFGS-B"))
-    x0 = np.zeros(3 * len(active_levels), dtype=float)
+    x0 = (
+        np.zeros(3 * len(active_levels), dtype=float)
+        if initial_vector is None
+        else np.asarray(initial_vector, dtype=float).reshape((3 * len(active_levels),))
+    )
     trace: list[dict[str, float]] = []
     best_metrics: dict[str, Any] | None = None
     best_loss = float("inf")
+    best_iteration = 0
 
     def evaluate_vector(x: np.ndarray) -> dict[str, Any]:
         corrections = _corrections_from_vector(active_levels, x)
@@ -1001,15 +1170,17 @@ def calibrate_guarded_sqr_target(
             poisson_alpha=poisson_alpha,
         )
         metrics["corrections"] = corrections
+        metrics["lambda_guard"] = float(lambda_guard)
         return metrics
 
     def objective(x: np.ndarray) -> float:
-        nonlocal best_metrics, best_loss
+        nonlocal best_metrics, best_loss, best_iteration
         metrics = evaluate_vector(np.asarray(x, dtype=float))
         current_loss = float(metrics["loss_total"])
         if current_loss <= best_loss:
             best_loss = current_loss
             best_metrics = metrics
+            best_iteration = int(len(trace))
         trace.append(
             {
                 "iteration": float(len(trace)),
@@ -1018,6 +1189,18 @@ def calibrate_guarded_sqr_target(
                 "best_epsilon_guard": float(best_metrics["epsilon_guard"]) if best_metrics is not None else float("nan"),
             }
         )
+        if (len(trace) - 1) % emit_every == 0:
+            _emit_guarded_progress_event(
+                reporter=run_reporter,
+                run_id=run_label,
+                iteration=int(len(trace) - 1),
+                metrics=metrics,
+                best_loss=float(best_loss),
+                best_iteration=int(best_iteration),
+                target=target,
+                config=config,
+                backend_label=backend_label,
+            )
         return current_loss
 
     stage1 = minimize(
@@ -1037,6 +1220,18 @@ def calibrate_guarded_sqr_target(
 
     best_x = np.asarray(stage2.x if stage2.fun <= stage1.fun else stage1.x, dtype=float)
     final_metrics = evaluate_vector(best_x)
+    if not trace or int(trace[-1]["iteration"]) != len(trace):
+        _emit_guarded_progress_event(
+            reporter=run_reporter,
+            run_id=run_label,
+            iteration=int(len(trace)),
+            metrics=final_metrics,
+            best_loss=float(min(best_loss, float(final_metrics["loss_total"]))),
+            best_iteration=int(best_iteration if best_loss <= float(final_metrics["loss_total"]) else len(trace)),
+            target=target,
+            config=config,
+            backend_label=backend_label,
+        )
     final_corrections = final_metrics["corrections"]
     d_lambda, d_alpha, d_omega = _full_correction_arrays(active_levels, final_corrections, target.total_levels)
     initial_eval = evaluate_guarded_sqr_target(
@@ -1085,6 +1280,7 @@ def calibrate_guarded_sqr_target(
         levels=levels,
         metadata={
             "benchmark_mode": True,
+            "amplitude_correction_convention": "amp = theta/(2T) + lambda0*d_lambda_norm",
             "config_snapshot": _relevant_config_snapshot(config),
             "logical_n": int(target.logical_n),
             "guard_levels": int(target.guard_levels),
@@ -1100,6 +1296,21 @@ def calibrate_guarded_sqr_target(
     nit_stage1 = int(getattr(stage1, "nit", 0) or 0)
     nit_stage2 = int(getattr(stage2, "nit", 0) or 0)
     objective_evaluations = int(getattr(stage1, "nfev", 0) or 0) + int(getattr(stage2, "nfev", 0) or 0)
+    final_best_loss = float(min(best_loss, float(final_metrics["loss_total"])))
+    if float(final_metrics["loss_total"]) <= best_loss:
+        best_iteration = int(len(trace))
+    run_reporter.on_end(
+        {
+            "progress_schema_version": 1,
+            "run_id": run_label,
+            "success": bool(stage1.success or stage2.success),
+            "message": str(stage2.message if stage2.fun <= stage1.fun else stage1.message),
+            "nit": int(nit_stage1 + nit_stage2),
+            "best_objective_total": float(final_best_loss),
+            "best_iteration": int(best_iteration),
+            "timestamp": float(time.time()),
+        }
+    )
     return GuardedBenchmarkResult(
         target_id=target.target_id,
         target_class=target.target_class,
@@ -1127,6 +1338,7 @@ def calibrate_guarded_sqr_target(
             "stage2_message": str(stage2.message),
             "stage1_nit": nit_stage1,
             "stage2_nit": nit_stage2,
+            "run_id": run_label,
         },
     )
 

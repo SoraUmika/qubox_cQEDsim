@@ -1,0 +1,74 @@
+[
+  {
+    "file": "tests\\test_01_sanity_and_free.py",
+    "returncode": 0,
+    "stdout_tail": "....                                                                     [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_02_cavity_drive_and_kerr.py",
+    "returncode": 0,
+    "stdout_tail": "..                                                                       [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_03_dispersive_and_ramsey.py",
+    "returncode": 0,
+    "stdout_tail": "..                                                                       [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_04_xy_phase_and_overlap.py",
+    "returncode": 0,
+    "stdout_tail": "...                                                                      [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_05_detuning_and_frames.py",
+    "returncode": 0,
+    "stdout_tail": "..                                                                       [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_06_leakage_drag_and_higher_order.py",
+    "returncode": 0,
+    "stdout_tail": "..                                                                       [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_07_convergence_regression.py",
+    "returncode": 0,
+    "stdout_tail": ".                                                                        [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_08_timeline_and_hardware.py",
+    "returncode": 0,
+    "stdout_tail": "...                                                                      [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_09_runtime_policy.py",
+    "returncode": 0,
+    "stdout_tail": ".                                                                        [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_10_chi_convention.py",
+    "returncode": 0,
+    "stdout_tail": "....                                                                     [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_11_model_invariants.py",
+    "returncode": 0,
+    "stdout_tail": ".....                                                                    [100%]",
+    "stderr_tail": ""
+  },
+  {
+    "file": "tests\\test_12_pulse_semantics.py",
+    "returncode": 1,
+    "stdout_tail": "                f\"In the future `np.{attr}` will be defined as the \"\n                \"corresponding NumPy scalar.\", FutureWarning, stacklevel=2)\n    \n        if attr in __former_attrs__:\n            raise AttributeError(__former_attrs__[attr])\n    \n        if attr == 'testing':\n            import numpy.testing as testing\n            return testing\n        elif attr == 'Tester':\n            \"Removed in NumPy 1.25.0\"\n            raise RuntimeError(\"Tester was removed in NumPy 1.25.\")\n    \n>       raise AttributeError(\"module {!r} has no attribute \"\n                             \"{!r}\".format(__name__, attr))\nE       AttributeError: module 'numpy' has no attribute 'trapezoid'\n\nE:\\Program Files\\Python311\\Lib\\site-packages\\numpy\\__init__.py:347: AttributeError\n=========================== short test summary info ===========================\nFAILED tests/test_12_pulse_semantics.py::test_same_area_different_shape_same_rotation_small_signal",
+    "stderr_tail": ""
+  }
+]

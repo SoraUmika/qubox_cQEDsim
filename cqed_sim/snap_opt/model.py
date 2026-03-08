@@ -9,6 +9,13 @@ from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 
 
+def _falling_factorial_scalar(n: int, order: int) -> float:
+    out = 1.0
+    for k in range(order):
+        out *= float(n - k)
+    return out
+
+
 @dataclass(frozen=True)
 class SnapModelConfig:
     """SNAP optimization model wrapper.
@@ -44,16 +51,16 @@ class SnapModelConfig:
 def manifold_transition_frequency(model: DispersiveTransmonCavityModel, n: int, frame: FrameSpec | None = None) -> float:
     """Return targeted |g,n> <-> |e,n> transition frequency in current frame.
 
-    With project convention, omega_ge(n) = omega_ge(0) - n*chi - n*chi2 - n*chi3...
+    With qubox convention, omega_ge(n) = omega_ge(0) - chi*n - chi2*n(n-1) - chi3*n(n-1)(n-2) - ...
     """
     frame = frame or FrameSpec()
     base = model.omega_q - frame.omega_q_frame
     out = base - n * model.chi
     for i, coeff in enumerate(model.chi_higher, start=2):
-        out -= (n**i) * coeff
+        out -= _falling_factorial_scalar(n, i) * coeff
     return out
 
 
 def manifold_basis(model: DispersiveTransmonCavityModel, n: int) -> tuple[qt.Qobj, qt.Qobj]:
-    return model.basis_state(n, 0), model.basis_state(n, 1)
+    return model.basis_state( 0,n), model.basis_state( 1,n)
 

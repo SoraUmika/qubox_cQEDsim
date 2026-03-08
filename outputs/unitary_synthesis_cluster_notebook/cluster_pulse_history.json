@@ -1,0 +1,306 @@
+[
+  {
+    "run_id": "run_000",
+    "iteration": 0,
+    "timestamp": 1772774256.4568653,
+    "objective_total": 0.7641184035788409,
+    "objective_terms": {
+      "infidelity": 0.7641184035788402,
+      "leakage": 6.661338147750939e-16,
+      "time_reg": 0.0,
+      "grid_penalty": 0.0,
+      "constraint_penalty": 0.0
+    },
+    "metrics": {
+      "fidelity_subspace": 0.23588159642115983,
+      "leakage_avg": 3.3306690738754696e-16,
+      "leakage_worst": 6.661338147750939e-16
+    },
+    "best_so_far": {
+      "objective_total": 0.7641184035788409,
+      "iteration": 0
+    },
+    "params_summary": {
+      "max_amp": 0.3,
+      "max_detuning": 0.0,
+      "times": {
+        "QubitRotation": 1.6e-08,
+        "SQR": 1.0000000000000002e-06,
+        "Displacement": 4.8000000000000006e-08
+      }
+    },
+    "backend": "pulse",
+    "solver_stats": {
+      "n_steps": 3192,
+      "dt": 1e-09,
+      "solver_time_sec": 0.005052900000009686
+    },
+    "progress_schema_version": 1
+  },
+  {
+    "run_id": "run_000",
+    "iteration": 5,
+    "timestamp": 1772774260.5680037,
+    "objective_total": 0.01126264289246115,
+    "objective_terms": {
+      "infidelity": 0.011262642892460928,
+      "leakage": 2.220446049250313e-16,
+      "time_reg": 0.0,
+      "grid_penalty": 0.0,
+      "constraint_penalty": 0.0
+    },
+    "metrics": {
+      "fidelity_subspace": 0.9887373571075391,
+      "leakage_avg": 1.1102230246251565e-16,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    "best_so_far": {
+      "objective_total": 0.01126264289246115,
+      "iteration": 5
+    },
+    "params_summary": {
+      "max_amp": 55.95782319071673,
+      "max_detuning": 0.0,
+      "times": {
+        "QubitRotation": 1.6e-08,
+        "SQR": 1.0000000000000002e-06,
+        "Displacement": 4.8000000000000006e-08
+      }
+    },
+    "backend": "pulse",
+    "solver_stats": {
+      "n_steps": 3192,
+      "dt": 1e-09,
+      "solver_time_sec": 0.00266840000404045
+    },
+    "progress_schema_version": 1
+  },
+  {
+    "run_id": "run_000",
+    "iteration": 10,
+    "timestamp": 1772774265.0414908,
+    "objective_total": 0.010068536254262073,
+    "objective_terms": {
+      "infidelity": 0.01006853625426185,
+      "leakage": 2.220446049250313e-16,
+      "time_reg": 0.0,
+      "grid_penalty": 0.0,
+      "constraint_penalty": 0.0
+    },
+    "metrics": {
+      "fidelity_subspace": 0.9899314637457381,
+      "leakage_avg": 7.401486830834377e-17,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    "best_so_far": {
+      "objective_total": 0.010068536254262073,
+      "iteration": 10
+    },
+    "params_summary": {
+      "max_amp": 57.611919614334916,
+      "max_detuning": 0.0,
+      "times": {
+        "QubitRotation": 1.6e-08,
+        "SQR": 1.0000000000000002e-06,
+        "Displacement": 4.8000000000000006e-08
+      }
+    },
+    "backend": "pulse",
+    "solver_stats": {
+      "n_steps": 3192,
+      "dt": 1e-09,
+      "solver_time_sec": 0.0022994000028120354
+    },
+    "progress_schema_version": 1
+  },
+  {
+    "run_id": "run_000",
+    "iteration": 11,
+    "timestamp": 1772774266.1903708,
+    "objective_total": 0.01006676671642992,
+    "objective_terms": {
+      "infidelity": 0.010066766716429143,
+      "leakage": 7.771561172376096e-16,
+      "time_reg": 0.0,
+      "grid_penalty": 0.0,
+      "constraint_penalty": 0.0
+    },
+    "metrics": {
+      "fidelity_subspace": 0.9899332332835709,
+      "leakage_avg": 1.6653345369377348e-16,
+      "leakage_worst": 7.771561172376096e-16
+    },
+    "best_so_far": {
+      "objective_total": 0.01006676671642992,
+      "iteration": 11
+    },
+    "params_summary": {
+      "max_amp": 57.60971764949269,
+      "max_detuning": 0.0,
+      "times": {
+        "QubitRotation": 1.6e-08,
+        "SQR": 1.0000000000000002e-06,
+        "Displacement": 4.8000000000000006e-08
+      }
+    },
+    "backend": "pulse",
+    "solver_stats": {
+      "n_steps": 3192,
+      "dt": 1e-09,
+      "solver_time_sec": 0.0026581999991321936
+    },
+    "progress_schema_version": 1
+  },
+  {
+    "run_id": "run_001",
+    "iteration": 0,
+    "timestamp": 1772774266.5023685,
+    "objective_total": 0.7821497641604309,
+    "objective_terms": {
+      "infidelity": 0.7821497641604305,
+      "leakage": 4.440892098500626e-16,
+      "time_reg": 0.0,
+      "grid_penalty": 0.0,
+      "constraint_penalty": 0.0
+    },
+    "metrics": {
+      "fidelity_subspace": 0.2178502358395695,
+      "leakage_avg": 7.401486830834377e-17,
+      "leakage_worst": 4.440892098500626e-16
+    },
+    "best_so_far": {
+      "objective_total": 0.7821497641604309,
+      "iteration": 0
+    },
+    "params_summary": {
+      "max_amp": 0.5641747788856679,
+      "max_detuning": 0.0,
+      "times": {
+        "QubitRotation": 1.6e-08,
+        "SQR": 1.0000000000000002e-06,
+        "Displacement": 4.8000000000000006e-08
+      }
+    },
+    "backend": "pulse",
+    "solver_stats": {
+      "n_steps": 3192,
+      "dt": 1e-09,
+      "solver_time_sec": 0.00337289999879431
+    },
+    "progress_schema_version": 1
+  },
+  {
+    "run_id": "run_001",
+    "iteration": 5,
+    "timestamp": 1772774270.0585923,
+    "objective_total": 0.0133045965902433,
+    "objective_terms": {
+      "infidelity": 0.013304596590243079,
+      "leakage": 2.220446049250313e-16,
+      "time_reg": 0.0,
+      "grid_penalty": 0.0,
+      "constraint_penalty": 0.0
+    },
+    "metrics": {
+      "fidelity_subspace": 0.9866954034097569,
+      "leakage_avg": 7.401486830834377e-17,
+      "leakage_worst": 2.220446049250313e-16
+    },
+    "best_so_far": {
+      "objective_total": 0.0133045965902433,
+      "iteration": 5
+    },
+    "params_summary": {
+      "max_amp": 79.90975198365219,
+      "max_detuning": 0.0,
+      "times": {
+        "QubitRotation": 1.6e-08,
+        "SQR": 1.0000000000000002e-06,
+        "Displacement": 4.8000000000000006e-08
+      }
+    },
+    "backend": "pulse",
+    "solver_stats": {
+      "n_steps": 3192,
+      "dt": 1e-09,
+      "solver_time_sec": 0.00220610000542365
+    },
+    "progress_schema_version": 1
+  },
+  {
+    "run_id": "run_001",
+    "iteration": 10,
+    "timestamp": 1772774273.6394396,
+    "objective_total": 0.010107953620851262,
+    "objective_terms": {
+      "infidelity": 0.010107953620851151,
+      "leakage": 1.1102230246251565e-16,
+      "time_reg": 0.0,
+      "grid_penalty": 0.0,
+      "constraint_penalty": 0.0
+    },
+    "metrics": {
+      "fidelity_subspace": 0.9898920463791488,
+      "leakage_avg": 1.850371707708594e-17,
+      "leakage_worst": 1.1102230246251565e-16
+    },
+    "best_so_far": {
+      "objective_total": 0.010107953620851262,
+      "iteration": 10
+    },
+    "params_summary": {
+      "max_amp": 81.03183264327608,
+      "max_detuning": 0.0,
+      "times": {
+        "QubitRotation": 1.6e-08,
+        "SQR": 1.0000000000000002e-06,
+        "Displacement": 4.8000000000000006e-08
+      }
+    },
+    "backend": "pulse",
+    "solver_stats": {
+      "n_steps": 3192,
+      "dt": 1e-09,
+      "solver_time_sec": 0.0024418999964836985
+    },
+    "progress_schema_version": 1
+  },
+  {
+    "run_id": "run_001",
+    "iteration": 13,
+    "timestamp": 1772774275.9805279,
+    "objective_total": 0.010066769739172754,
+    "objective_terms": {
+      "infidelity": 0.010066769739172088,
+      "leakage": 6.661338147750939e-16,
+      "time_reg": 0.0,
+      "grid_penalty": 0.0,
+      "constraint_penalty": 0.0
+    },
+    "metrics": {
+      "fidelity_subspace": 0.9899332302608279,
+      "leakage_avg": 1.6653345369377348e-16,
+      "leakage_worst": 6.661338147750939e-16
+    },
+    "best_so_far": {
+      "objective_total": 0.010066769739172754,
+      "iteration": 13
+    },
+    "params_summary": {
+      "max_amp": 79.44560672069447,
+      "max_detuning": 0.0,
+      "times": {
+        "QubitRotation": 1.6e-08,
+        "SQR": 1.0000000000000002e-06,
+        "Displacement": 4.8000000000000006e-08
+      }
+    },
+    "backend": "pulse",
+    "solver_stats": {
+      "n_steps": 3192,
+      "dt": 1e-09,
+      "solver_time_sec": 0.0027153999981237575
+    },
+    "progress_schema_version": 1
+  }
+]

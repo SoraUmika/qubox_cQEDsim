@@ -33,7 +33,7 @@ def test_ideal_rotation_mapping_x90_and_y90():
     uy = embed_qubit_op(qubit_rotation_axis(np.pi / 2, "y"), 4)
     x = bloch_xyz_from_joint(ux * psi)
     y = bloch_xyz_from_joint(uy * psi)
-    assert np.allclose(x, (0.0, 1.0, 0.0), atol=2e-3)
+    assert np.allclose(x, (0.0, -1.0, 0.0), atol=2e-3)
     assert np.allclose(y, (1.0, 0.0, 0.0), atol=2e-3)
     assert (time.perf_counter() - start) < 0.8
 
@@ -157,7 +157,7 @@ def test_sqr_applies_rotation_only_on_target_fock():
     psi = qt.tensor( qt.basis(2, 0),qt.basis(n_cav, n0))
     out = u * psi
     x, y, z = bloch_xyz_from_joint(out)
-    assert np.allclose((x, y, z), (0.0, 1.0, 0.0), atol=2e-3)
+    assert np.allclose((x, y, z), (0.0, -1.0, 0.0), atol=2e-3)
     # Mixed-n input: n=1 branch unchanged.
     rho = 0.5 * qt.tensor( qt.basis(2, 0),qt.basis(n_cav, 1)).proj() + 0.5 * psi.proj()
     rho_out = u * rho * u.dag()
@@ -193,7 +193,7 @@ def test_bloch_extractor_for_known_pure_states():
     plus_x = qt.tensor( (qt.basis(2, 0) + qt.basis(2, 1)).unit(),qt.basis(n_cav, 0))
     plus_y = qt.tensor( (qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit(),qt.basis(n_cav, 0))
     assert np.allclose(bloch_xyz_from_joint(plus_x), (1.0, 0.0, 0.0), atol=2e-3)
-    assert np.allclose(bloch_xyz_from_joint(plus_y), (0.0, -1.0, 0.0), atol=2e-3)
+    assert np.allclose(bloch_xyz_from_joint(plus_y), (0.0, 1.0, 0.0), atol=2e-3)
 
 
 def test_conditional_bloch_extractor_matches_postselection():

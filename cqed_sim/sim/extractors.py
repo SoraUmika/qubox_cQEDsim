@@ -27,22 +27,17 @@ def reduced_cavity_state(state: qt.Qobj) -> qt.Qobj:
 
 
 def bloch_xyz_from_qubit_state(rho_q: qt.Qobj) -> tuple[float, float, float]:
-    """Return Bloch coordinates in the qubox convention.
-
-    The Y component follows qubox storage-tomography outputs and is defined as
-    2 * Im(rho_ge), which is the negative of Tr(rho sigma_y) in the standard
-    physics convention.
-    """
+    """Return standard Pauli Bloch coordinates."""
     return (
         float(np.real((rho_q * qt.sigmax()).tr())),
-        2.0 * float(np.imag(rho_q[0, 1])),
+        float(np.real((rho_q * qt.sigmay()).tr())),
         float(np.real((rho_q * qt.sigmaz()).tr())),
     )
 
 
 def qubit_density_from_bloch_xyz(x: float, y: float, z: float) -> qt.Qobj:
-    """Build a qubit density matrix from Bloch coordinates in the qubox convention."""
-    return 0.5 * (qt.qeye(2) + float(x) * qt.sigmax() - float(y) * qt.sigmay() + float(z) * qt.sigmaz())
+    """Build a qubit density matrix from standard Pauli Bloch coordinates."""
+    return 0.5 * (qt.qeye(2) + float(x) * qt.sigmax() + float(y) * qt.sigmay() + float(z) * qt.sigmaz())
 
 
 def bloch_xyz_from_joint(state: qt.Qobj) -> tuple[float, float, float]:

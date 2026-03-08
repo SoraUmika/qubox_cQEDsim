@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ProcessPoolExecutor
 import json
 import math
 from dataclasses import asdict, dataclass
@@ -9,22 +10,16 @@ from typing import Any, Mapping, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
-import qutip as qt
-from scipy.optimize import Bounds, minimize
 
 from cqed_sim.calibration.sqr import (
     GuardedBenchmarkResult,
     RandomSQRTarget,
     calibrate_guarded_sqr_target,
+    evaluate_guarded_sqr_target,
     extract_multitone_effective_qubit_unitary,
 )
-from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.ideal_gates import qubit_rotation_xy
-from cqed_sim.core.model import DispersiveTransmonCavityModel
-from cqed_sim.pulses.envelopes import gaussian_envelope, normalized_gaussian
-from cqed_sim.pulses.pulse import Pulse
-from cqed_sim.sequence.scheduler import SequenceCompiler
-from cqed_sim.sim.runner import hamiltonian_time_slices
+from cqed_sim.pulses.envelopes import gaussian_envelope
 from cqed_sim.unitary_synthesis.metrics import subspace_unitary_fidelity
 from cqed_sim.unitary_synthesis.progress import (
     CompositeReporter,
@@ -38,6 +33,12 @@ from cqed_sim.unitary_synthesis.progress import (
 
 
 TRAPEZOID = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+
+
+def _coerce_numeric_tuple(values: Any, cast: type[int] | type[float]) -> tuple[int, ...] | tuple[float, ...]:
+    if isinstance(values, (int, float, np.integer, np.floating)):
+        return (cast(values),)
+    return tuple(cast(x) for x in values)
 
 
 @dataclass(frozen=True)
@@ -58,12 +59,21 @@ class SQRSpeedLimitConfig:
     chi2_hz: float = 0.0
     chi3_hz: float = 0.0
     kerr_hz: float = 0.0
+    kerr2_hz: float = 0.0
     omega_q_hz: float = 0.0
     omega_c_hz: float = 0.0
     qubit_alpha_hz: float = 0.0
+    use_rotating_frame: bool = True
+    qb_t1_relax_ns: float | None = None
+    qb_t2_ramsey_ns: float | None = None
+    qb_t2_echo_ns: float | None = None
+    t2_source: str = "ramsey"
+    cavity_kappa_1_per_s: float = 0.0
     durations_ns: tuple[int, ...] = (50, 75, 100, 150, 200, 300, 500, 750, 1000)
     sigma_fractions: tuple[float, ...] = (0.15, 0.20, 0.25, 0.30)
     multistart: int = 2
+    parallel_enabled: bool = False
+    parallel_n_jobs: int = 1
     dt_s: float = 2.0e-9
     max_step_s: float = 2.0e-9
     optimizer_maxiter_stage1: int = 6
@@ -74,18 +84,16 @@ class SQRSpeedLimitConfig:
     lambda_guard: float = 0.10
     weight_mode: str = "uniform"
     fidelity_thresholds: tuple[float, ...] = (0.99, 0.999, 0.9999)
-    fast_pi_duration_s: float = 16.0e-9
-    fast_pi_dt_s: float = 0.25e-9
-    fast_pi_sigma_bounds: tuple[float, float] = (0.12, 0.30)
-    fast_pi_detuning_hz_bounds: tuple[float, float] = (-6.0e6, 6.0e6)
-    fast_pi_multistart: int = 10
-    fast_pi_validate_levels: tuple[int, ...] = (1, 2)
     representative_duration_ns: int = 200
     output_root: Path = Path("outputs/analysis/sqr_speedlimit_multitone_gaussian")
     report_path: Path = Path("cqed_sim/analysis/reports/sqr_speedlimit_report.md")
     progress_every: int = 1
     qutip_nsteps_sqr_calibration: int = 100000
-    fast_pi_qutip_nsteps: int = 250000
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "durations_ns", _coerce_numeric_tuple(self.durations_ns, int))
+        object.__setattr__(self, "sigma_fractions", _coerce_numeric_tuple(self.sigma_fractions, float))
+        object.__setattr__(self, "fidelity_thresholds", _coerce_numeric_tuple(self.fidelity_thresholds, float))
 
     @property
     def logical_n(self) -> int:
@@ -276,14 +284,25 @@ def _base_calibration_config(study: SQRSpeedLimitConfig, duration_s: float, sigm
         "sqr_sigma_fraction": float(sigma_fraction),
         "dt_s": float(study.dt_s),
         "max_step_s": float(study.max_step_s),
+        "omega_q_hz": float(study.omega_q_hz),
+        "omega_c_hz": float(study.omega_c_hz),
+        "qubit_alpha_hz": float(study.qubit_alpha_hz),
         "st_chi_hz": float(study.chi_hz),
         "st_chi2_hz": float(study.chi2_hz),
         "st_chi3_hz": float(study.chi3_hz),
+        "st_K_hz": float(study.kerr_hz),
+        "st_K2_hz": float(study.kerr2_hz),
+        "use_rotating_frame": bool(study.use_rotating_frame),
         "cavity_fock_cutoff": int(study.cavity_fock_cutoff),
         "n_cav_dim": int(study.total_levels),
         "max_n_cal": int(study.cavity_fock_cutoff),
         "sqr_theta_cutoff": 1.0e-10,
         "allow_zero_theta_corrections": True,
+        "qb_T1_relax_ns": None if study.qb_t1_relax_ns is None else float(study.qb_t1_relax_ns),
+        "qb_T2_ramsey_ns": None if study.qb_t2_ramsey_ns is None else float(study.qb_t2_ramsey_ns),
+        "qb_T2_echo_ns": None if study.qb_t2_echo_ns is None else float(study.qb_t2_echo_ns),
+        "t2_source": str(study.t2_source),
+        "cavity_kappa_1_per_s": float(study.cavity_kappa_1_per_s),
         "optimizer_method_stage1": "Powell",
         "optimizer_method_stage2": "L-BFGS-B",
         "optimizer_maxiter_stage1": int(study.optimizer_maxiter_stage1),
@@ -296,6 +315,18 @@ def _base_calibration_config(study: SQRSpeedLimitConfig, duration_s: float, sigm
         "regularization_omega": 1.0e-18,
         "qutip_nsteps_sqr_calibration": int(study.qutip_nsteps_sqr_calibration),
     }
+
+
+def _study_uses_dissipation(study: SQRSpeedLimitConfig) -> bool:
+    return any(
+        value not in (None, 0, 0.0)
+        for value in (
+            study.qb_t1_relax_ns,
+            study.qb_t2_ramsey_ns,
+            study.qb_t2_echo_ns,
+            study.cavity_kappa_1_per_s,
+        )
+    )
 
 
 def _benchmark_bounds(config: Mapping[str, Any], n_active: int) -> tuple[np.ndarray, np.ndarray]:
@@ -368,6 +399,24 @@ def _logical_block_unitaries(
     return actual_blocks, target_blocks
 
 
+def _per_n_rows_from_manifolds(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        out.append(
+            {
+                "n": int(row["n"]),
+                "theta_target_rad": float(row["theta_target"]),
+                "phi_target_rad": float(row["phi_target"]),
+                "theta_achieved_rad": float(row.get("achieved_theta", float("nan"))),
+                "phi_achieved_rad": float(row.get("achieved_phi", float("nan"))),
+                "theta_error_rad": float(row.get("achieved_theta", float("nan")) - float(row["theta_target"])),
+                "phi_error_rad": float(wrap_pi(float(row.get("achieved_phi", float("nan")) - float(row["phi_target"])))),
+                "block_process_fidelity": float(row["process_fidelity"]),
+            }
+        )
+    return out
+
+
 def _blocks_to_qb_first(blocks: Sequence[np.ndarray]) -> np.ndarray:
     n_levels = int(len(blocks))
     out = np.zeros((2 * n_levels, 2 * n_levels), dtype=np.complex128)
@@ -388,6 +437,23 @@ def _point_metrics(
     config: Mapping[str, Any],
     result: GuardedBenchmarkResult,
 ) -> dict[str, Any]:
+    simulation_mode = str(result.per_manifold[0].get("simulation_mode", "unitary")) if result.per_manifold else "unitary"
+    if simulation_mode == "channel":
+        return {
+            "subspace_fidelity": float(result.logical_fidelity),
+            "logical_fidelity_weighted": float(result.logical_fidelity),
+            "leakage_average": 0.0,
+            "leakage_worst": 0.0,
+            "guard_selectivity_error": float(result.epsilon_guard),
+            "actual_unitary_qb_first": None,
+            "target_unitary_qb_first": None,
+            "actual_sqr_unitary_qb_first": None,
+            "target_sqr_unitary_qb_first": None,
+            "per_n_rows": _per_n_rows_from_manifolds(result.per_manifold[: int(case.target.logical_n)]),
+            "simulation_mode": "channel",
+            "execution_path": result.metadata.get("execution_path", "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.mesolve"),
+        }
+
     actual_blocks, target_blocks = _logical_block_unitaries(target=case.target, config=config, result=result)
     actual_unitary = _blocks_to_qb_first(actual_blocks)
     target_unitary = _blocks_to_qb_first(target_blocks)
@@ -429,6 +495,8 @@ def _point_metrics(
         "actual_sqr_unitary_qb_first": actual_unitary,
         "target_sqr_unitary_qb_first": target_unitary,
         "per_n_rows": per_n_rows,
+        "simulation_mode": "unitary",
+        "execution_path": result.metadata.get("execution_path", "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.propagator"),
     }
 
 
@@ -440,6 +508,48 @@ def evaluate_nominal_case(
     sigma_fraction: float,
 ) -> dict[str, Any]:
     calib_cfg = _base_calibration_config(study, duration_s=float(duration_s), sigma_fraction=float(sigma_fraction))
+    if _study_uses_dissipation(study):
+        nominal_eval = evaluate_guarded_sqr_target(
+            target=case.target,
+            config=calib_cfg,
+            corrections={},
+            lambda_guard=float(study.lambda_guard),
+            weight_mode=str(study.weight_mode),
+        )
+        metrics = {
+            "subspace_fidelity": float(nominal_eval["logical_fidelity"]),
+            "leakage_average": 0.0,
+            "leakage_worst": 0.0,
+            "guard_selectivity_error": float(nominal_eval["epsilon_guard"]),
+            "actual_unitary_qb_first": None,
+            "target_unitary_qb_first": None,
+            "actual_sqr_unitary_qb_first": None,
+            "target_sqr_unitary_qb_first": None,
+            "per_n_rows": _per_n_rows_from_manifolds(nominal_eval["per_manifold"][: int(case.target.logical_n)]),
+            "simulation_mode": str(nominal_eval.get("simulation_mode", "channel")),
+            "execution_path": str(nominal_eval.get("execution_path", "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.mesolve")),
+        }
+        return {
+            "calibration_config": calib_cfg,
+            "subspace_fidelity": float(metrics["subspace_fidelity"]),
+            "leakage_average": float(metrics["leakage_average"]),
+            "leakage_worst": float(metrics["leakage_worst"]),
+            "guard_selectivity_error": float(metrics["guard_selectivity_error"]),
+            "actual_unitary_qb_first": metrics["actual_unitary_qb_first"],
+            "target_unitary_qb_first": metrics["target_unitary_qb_first"],
+            "actual_sqr_unitary_qb_first": metrics["actual_sqr_unitary_qb_first"],
+            "target_sqr_unitary_qb_first": metrics["target_sqr_unitary_qb_first"],
+            "waveform": _waveform_from_corrections(
+                target=case.target,
+                config=calib_cfg,
+                corrections={},
+                dt_s=float(study.dt_s),
+            ),
+            "per_n_rows": metrics["per_n_rows"],
+            "simulation_mode": str(metrics["simulation_mode"]),
+            "execution_path": str(metrics["execution_path"]),
+        }
+
     actual_blocks: list[np.ndarray] = []
     target_blocks: list[np.ndarray] = []
     for n in range(int(case.target.logical_n)):
@@ -491,6 +601,44 @@ def evaluate_nominal_case(
             dt_s=float(study.dt_s),
         ),
         "per_n_rows": per_n_rows,
+        "simulation_mode": "unitary",
+        "execution_path": "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.propagator",
+    }
+
+
+def _run_sweep_candidate(payload: Mapping[str, Any]) -> dict[str, Any]:
+    case = payload["case"]
+    study = payload["study"]
+    duration_s = float(payload["duration_s"])
+    sigma_fraction = float(payload["sigma_fraction"])
+    sigma_index = int(payload["sigma_index"])
+    start_index = int(payload["start_index"])
+    calib_cfg = _base_calibration_config(study, duration_s=duration_s, sigma_fraction=sigma_fraction)
+    run_seed = int(study.seed + 100000 * (sigma_index + 1) + 997 * start_index + int(round(duration_s * 1.0e9)))
+    init = _initial_vector_for_start(target=case.target, config=calib_cfg, seed=run_seed, start_index=start_index)
+    history = HistoryReporter()
+    run_id = f"{case.name}_T{int(round(duration_s * 1.0e9)):04d}ns_sigma{str(sigma_fraction).replace('.', 'p')}_start{start_index:02d}"
+    result = calibrate_guarded_sqr_target(
+        target=case.target,
+        config=calib_cfg,
+        lambda_guard=float(study.lambda_guard),
+        weight_mode=str(study.weight_mode),
+        initial_vector=init,
+        reporter=history,
+        progress_every=int(study.progress_every),
+        run_id=run_id,
+        backend_label="pulse",
+    )
+    metrics = _point_metrics(case=case, config=calib_cfg, result=result)
+    return {
+        "run_id": run_id,
+        "seed": int(run_seed),
+        "sigma_fraction": float(sigma_fraction),
+        "start_index": int(start_index),
+        "calibration_config": calib_cfg,
+        "result": result,
+        "metrics": metrics,
+        "history": list(history.events),
     }
 
 
@@ -683,22 +831,39 @@ def run_speedlimit_sweep_point(
     reporter: ProgressReporter | None = None,
     point_output_dir: Path | None = None,
 ) -> dict[str, Any]:
-    sigma_values = tuple(float(x) for x in (study.sigma_fractions if sigma_fractions is None else sigma_fractions))
+    sigma_values = _coerce_numeric_tuple(study.sigma_fractions if sigma_fractions is None else sigma_fractions, float)
     n_starts = int(study.multistart if multistart is None else multistart)
     combined_history: list[dict[str, Any]] = []
     history_by_run: dict[str, list[dict[str, Any]]] = {}
     start_rows: list[dict[str, Any]] = []
     best_payload: dict[str, Any] | None = None
     best_score = float("inf")
-    live_reporter = reporter or NullReporter()
+    candidate_payloads = [
+        {
+            "case": case,
+            "study": study,
+            "duration_s": float(duration_s),
+            "sigma_fraction": float(sigma_fraction),
+            "sigma_index": int(sigma_index),
+            "start_index": int(start_index),
+        }
+        for sigma_index, sigma_fraction in enumerate(sigma_values)
+        for start_index in range(max(1, n_starts))
+    ]
 
-    for sigma_index, sigma_fraction in enumerate(sigma_values):
-        calib_cfg = _base_calibration_config(study, duration_s=float(duration_s), sigma_fraction=float(sigma_fraction))
-        for start_index in range(max(1, n_starts)):
-            run_seed = int(study.seed + 100000 * (sigma_index + 1) + 997 * start_index + int(round(duration_s * 1.0e9)))
-            init = _initial_vector_for_start(target=case.target, config=calib_cfg, seed=run_seed, start_index=start_index)
+    can_parallel = bool(study.parallel_enabled) and int(study.parallel_n_jobs) > 1 and len(candidate_payloads) > 1 and reporter is None
+    if can_parallel:
+        with ProcessPoolExecutor(max_workers=int(study.parallel_n_jobs)) as executor:
+            candidate_results = list(executor.map(_run_sweep_candidate, candidate_payloads))
+    else:
+        candidate_results = []
+        live_reporter = reporter or NullReporter()
+        for payload in candidate_payloads:
+            calib_cfg = _base_calibration_config(study, duration_s=float(payload["duration_s"]), sigma_fraction=float(payload["sigma_fraction"]))
+            run_seed = int(study.seed + 100000 * (int(payload["sigma_index"]) + 1) + 997 * int(payload["start_index"]) + int(round(float(payload["duration_s"]) * 1.0e9)))
+            init = _initial_vector_for_start(target=case.target, config=calib_cfg, seed=run_seed, start_index=int(payload["start_index"]))
             history = HistoryReporter()
-            run_id = f"{case.name}_T{int(round(duration_s * 1.0e9)):04d}ns_sigma{str(sigma_fraction).replace('.', 'p')}_start{start_index:02d}"
+            run_id = f"{case.name}_T{int(round(float(payload['duration_s']) * 1.0e9)):04d}ns_sigma{str(payload['sigma_fraction']).replace('.', 'p')}_start{int(payload['start_index']):02d}"
             run_reporter = CompositeReporter([history, live_reporter])
             result = calibrate_guarded_sqr_target(
                 target=case.target,
@@ -711,33 +876,37 @@ def run_speedlimit_sweep_point(
                 run_id=run_id,
                 backend_label="pulse",
             )
-            metrics = _point_metrics(case=case, config=calib_cfg, result=result)
-            score = float(1.0 - metrics["subspace_fidelity"])
-            history_by_run[run_id] = history.events
-            combined_history.extend(history.events)
-            start_row = {
-                "run_id": run_id,
-                "seed": int(run_seed),
-                "sigma_fraction": float(sigma_fraction),
-                "start_index": int(start_index),
-                "subspace_fidelity": float(metrics["subspace_fidelity"]),
-                "logical_fidelity_weighted": float(metrics["logical_fidelity_weighted"]),
-                "guard_selectivity_error": float(metrics["guard_selectivity_error"]),
-                "objective_loss_total": float(result.loss_total),
-            }
-            start_rows.append(start_row)
-            if score < best_score:
-                best_score = score
-                best_payload = {
+            candidate_results.append(
+                {
                     "run_id": run_id,
                     "seed": int(run_seed),
-                    "sigma_fraction": float(sigma_fraction),
-                    "start_index": int(start_index),
+                    "sigma_fraction": float(payload["sigma_fraction"]),
+                    "start_index": int(payload["start_index"]),
                     "calibration_config": calib_cfg,
                     "result": result,
-                    "metrics": metrics,
+                    "metrics": _point_metrics(case=case, config=calib_cfg, result=result),
                     "history": list(history.events),
                 }
+            )
+
+    for worker_result in candidate_results:
+        score = float(1.0 - worker_result["metrics"]["subspace_fidelity"])
+        history_by_run[worker_result["run_id"]] = list(worker_result["history"])
+        combined_history.extend(worker_result["history"])
+        start_row = {
+            "run_id": worker_result["run_id"],
+            "seed": int(worker_result["seed"]),
+            "sigma_fraction": float(worker_result["sigma_fraction"]),
+            "start_index": int(worker_result["start_index"]),
+            "subspace_fidelity": float(worker_result["metrics"]["subspace_fidelity"]),
+            "logical_fidelity_weighted": float(worker_result["metrics"]["logical_fidelity_weighted"]),
+            "guard_selectivity_error": float(worker_result["metrics"]["guard_selectivity_error"]),
+            "objective_loss_total": float(worker_result["result"].loss_total),
+        }
+        start_rows.append(start_row)
+        if score < best_score:
+            best_score = score
+            best_payload = worker_result
 
     if best_payload is None:
         raise RuntimeError("No sweep candidates were evaluated.")
@@ -775,6 +944,10 @@ def run_speedlimit_sweep_point(
         "target_unitary_qb_first": best_payload["metrics"]["target_unitary_qb_first"],
         "actual_sqr_unitary_qb_first": best_payload["metrics"]["actual_sqr_unitary_qb_first"],
         "target_sqr_unitary_qb_first": best_payload["metrics"]["target_sqr_unitary_qb_first"],
+        "simulation_mode": best_payload["metrics"].get("simulation_mode", "unitary"),
+        "execution_path": best_payload["metrics"].get("execution_path", "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.propagator"),
+        "parallel_used": bool(can_parallel),
+        "parallel_n_jobs": int(study.parallel_n_jobs if can_parallel else 1),
         "waveform": waveform,
     }
 
@@ -785,213 +958,6 @@ def run_speedlimit_sweep_point(
         save_history_csv(combined_history, point_output_dir / "history.csv")
 
     return point_summary
-
-
-def _full_pi_target_qb_first(n_levels: int) -> np.ndarray:
-    return np.kron(np.asarray(qubit_rotation_xy(np.pi, 0.0).full(), dtype=np.complex128), np.eye(int(n_levels), dtype=np.complex128))
-
-
-def _extract_qubit_cavity_blocks(unitary: np.ndarray, n_levels: int) -> list[np.ndarray]:
-    matrix = np.asarray(unitary, dtype=np.complex128)
-    return [
-        normalize_unitary(matrix[np.ix_([n, int(n_levels) + n], [n, int(n_levels) + n])])
-        for n in range(int(n_levels))
-    ]
-
-
-def _compile_pulse_unitary(
-    *,
-    model: DispersiveTransmonCavityModel,
-    frame: FrameSpec,
-    pulse: Pulse,
-    dt_s: float,
-    max_step_s: float,
-    qutip_nsteps: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    compiled = SequenceCompiler(dt=float(dt_s)).compile([pulse], t_end=float(pulse.t1 + dt_s))
-    h = hamiltonian_time_slices(model, compiled, {"qubit": "qubit"}, frame=frame)
-    options = {"atol": 1.0e-8, "rtol": 1.0e-7, "nsteps": int(qutip_nsteps), "max_step": float(max_step_s)}
-    propagators = qt.propagator(h, compiled.tlist, options=options, tlist=compiled.tlist)
-    final = propagators[-1] if isinstance(propagators, list) else propagators
-    return normalize_unitary(np.asarray(final.full(), dtype=np.complex128)), np.asarray(compiled.tlist, dtype=float)
-
-
-def _fast_pi_objective(
-    vector: np.ndarray,
-    *,
-    study: SQRSpeedLimitConfig,
-    n_validate: int,
-) -> tuple[float, dict[str, Any]]:
-    amp_rad_s, detuning_rad_s, sigma_fraction = map(float, vector)
-    model = DispersiveTransmonCavityModel(
-        omega_c=hz_to_rad_s(float(study.omega_c_hz)),
-        omega_q=hz_to_rad_s(float(study.omega_q_hz)),
-        alpha=hz_to_rad_s(float(study.qubit_alpha_hz)),
-        chi=hz_to_rad_s(float(study.chi_hz)),
-        chi_higher=tuple(x for x in (hz_to_rad_s(float(study.chi2_hz)), hz_to_rad_s(float(study.chi3_hz))) if abs(x) > 0.0),
-        kerr=hz_to_rad_s(float(study.kerr_hz)),
-        n_cav=int(n_validate + 1),
-        n_tr=2,
-    )
-    frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
-
-    def envelope(t_rel: np.ndarray) -> np.ndarray:
-        return normalized_gaussian(np.asarray(t_rel, dtype=float), sigma_fraction=float(sigma_fraction))
-
-    pulse = Pulse(
-        channel="qubit",
-        t0=0.0,
-        duration=float(study.fast_pi_duration_s),
-        envelope=envelope,
-        carrier=float(detuning_rad_s),
-        phase=0.0,
-        amp=float(amp_rad_s),
-        label="fast_pi_validation",
-    )
-    unitary, tlist = _compile_pulse_unitary(
-        model=model,
-        frame=frame,
-        pulse=pulse,
-        dt_s=float(study.fast_pi_dt_s),
-        max_step_s=float(study.fast_pi_dt_s),
-        qutip_nsteps=int(study.fast_pi_qutip_nsteps),
-    )
-    blocks = _extract_qubit_cavity_blocks(unitary, n_levels=int(n_validate + 1))
-    target_block = np.asarray(qubit_rotation_xy(np.pi, 0.0).full(), dtype=np.complex128)
-    block_fid = [float(np.abs(np.trace(target_block.conj().T @ block)) ** 2 / 4.0) for block in blocks]
-    qb_first_actual = _blocks_to_qb_first(blocks)
-    qb_first_target = _full_pi_target_qb_first(int(n_validate + 1))
-    fidelity = float(subspace_unitary_fidelity(qb_first_actual, qb_first_target, gauge="global"))
-    t_rel = tlist / max(float(study.fast_pi_duration_s), 1.0e-18)
-    coeff = float(amp_rad_s) * np.asarray(normalized_gaussian(t_rel, sigma_fraction=float(sigma_fraction)), dtype=np.complex128) * np.exp(
-        1j * float(detuning_rad_s) * tlist
-    )
-    score = float(1.0 - fidelity)
-    return score, {
-        "subspace_fidelity": fidelity,
-        "block_fidelities": block_fid,
-        "worst_block_fidelity": float(min(block_fid)),
-        "average_block_fidelity": float(np.mean(block_fid)),
-        "leakage_average": 0.0,
-        "leakage_worst": 0.0,
-        "amp_rad_s": float(amp_rad_s),
-        "amp_hz": float(rad_s_to_hz(amp_rad_s)),
-        "detuning_rad_s": float(detuning_rad_s),
-        "detuning_hz": float(rad_s_to_hz(detuning_rad_s)),
-        "sigma_fraction": float(sigma_fraction),
-        "tlist_s": tlist,
-        "waveform_coeff": coeff,
-        "unitary_cavity_first": unitary,
-    }
-
-
-def validate_fast_pi_pulse(
-    study: SQRSpeedLimitConfig,
-    *,
-    output_dir: Path | None = None,
-) -> dict[str, Any]:
-    output_root = Path("." if output_dir is None else output_dir)
-    output_root.mkdir(parents=True, exist_ok=True)
-    base_amp = float(np.pi / (2.0 * float(study.fast_pi_duration_s)))
-    summaries: list[dict[str, Any]] = []
-    for n_validate in study.fast_pi_validate_levels:
-        bounds = Bounds(
-            np.asarray(
-                [
-                    0.55 * base_amp,
-                    hz_to_rad_s(float(study.fast_pi_detuning_hz_bounds[0])),
-                    float(study.fast_pi_sigma_bounds[0]),
-                ],
-                dtype=float,
-            ),
-            np.asarray(
-                [
-                    2.20 * base_amp,
-                    hz_to_rad_s(float(study.fast_pi_detuning_hz_bounds[1])),
-                    float(study.fast_pi_sigma_bounds[1]),
-                ],
-                dtype=float,
-            ),
-        )
-        best: dict[str, Any] | None = None
-        best_score = float("inf")
-        best_history: list[dict[str, Any]] = []
-        for start_index in range(max(1, int(study.fast_pi_multistart))):
-            rng = np.random.default_rng(int(study.seed + 5000 + 37 * int(n_validate) + 131 * start_index))
-            x0 = np.asarray(
-                [
-                    float(base_amp * rng.uniform(0.8, 1.4)),
-                    hz_to_rad_s(float(rng.uniform(-2.0e6, 2.0e6))),
-                    float(rng.uniform(float(study.fast_pi_sigma_bounds[0]), float(study.fast_pi_sigma_bounds[1]))),
-                ],
-                dtype=float,
-            )
-            if start_index == 0:
-                x0 = np.asarray([base_amp, 0.0, 0.18], dtype=float)
-            history: list[dict[str, Any]] = []
-
-            def objective(x: np.ndarray) -> float:
-                value, detail = _fast_pi_objective(np.asarray(x, dtype=float), study=study, n_validate=int(n_validate))
-                history.append(
-                    {
-                        "iteration": int(len(history)),
-                        "objective_total": float(value),
-                        "metrics.fidelity_subspace": float(detail["subspace_fidelity"]),
-                        "params.amp_rad_s": float(detail["amp_rad_s"]),
-                        "params.detuning_hz": float(detail["detuning_hz"]),
-                        "params.sigma_fraction": float(detail["sigma_fraction"]),
-                    }
-                )
-                return float(value)
-
-            opt = minimize(objective, x0=x0, method="Powell", bounds=bounds, options={"maxiter": 24, "disp": False})
-            score, detail = _fast_pi_objective(np.asarray(opt.x, dtype=float), study=study, n_validate=int(n_validate))
-            if float(score) < best_score:
-                best_score = float(score)
-                best = {
-                    "n_validate": int(n_validate),
-                    "start_index": int(start_index),
-                    "x": np.asarray(opt.x, dtype=float),
-                    "detail": detail,
-                    "success": bool(opt.success),
-                    "message": str(opt.message),
-                    "history": history,
-                }
-                best_history = history
-        if best is None:
-            raise RuntimeError("Fast-pi validation failed to produce a result.")
-        waveform = {
-            "tlist_s": best["detail"]["tlist_s"],
-            "coeff": best["detail"]["waveform_coeff"],
-            "tones": [{"n": "avg", "omega_hz": float(best["detail"]["detuning_hz"])}],
-        }
-        point_dir = output_root / f"fast_pi_nmax_{int(n_validate)}"
-        point_dir.mkdir(parents=True, exist_ok=True)
-        _write_json(point_dir / "summary.json", best)
-        save_history_json(best_history, point_dir / "history.json")
-        save_history_csv(best_history, point_dir / "history.csv")
-        _plot_waveform(waveform, point_dir / "waveform.png", title=f"Fast pi validation, n <= {int(n_validate)}")
-        _plot_spectrum(waveform, point_dir / "spectrum.png", title=f"Fast pi spectrum, n <= {int(n_validate)}")
-        summaries.append(
-            {
-                "n_validate": int(n_validate),
-                "subspace_fidelity": float(best["detail"]["subspace_fidelity"]),
-                "worst_block_fidelity": float(best["detail"]["worst_block_fidelity"]),
-                "average_block_fidelity": float(best["detail"]["average_block_fidelity"]),
-                "leakage_average": 0.0,
-                "leakage_worst": 0.0,
-                "amp_rad_s": float(best["detail"]["amp_rad_s"]),
-                "amp_hz": float(best["detail"]["amp_hz"]),
-                "detuning_hz": float(best["detail"]["detuning_hz"]),
-                "sigma_fraction": float(best["detail"]["sigma_fraction"]),
-                "history_path": str(point_dir / "history.json"),
-                "waveform_path": str(point_dir / "waveform.png"),
-                "spectrum_path": str(point_dir / "spectrum.png"),
-            }
-        )
-    payload = {"duration_s": float(study.fast_pi_duration_s), "results": summaries}
-    _write_json(output_root / "fast_pi_summary.json", payload)
-    return payload
 
 
 def _render_markdown_report(study: SQRSpeedLimitConfig, summary: Mapping[str, Any]) -> str:
@@ -1005,7 +971,7 @@ def _render_markdown_report(study: SQRSpeedLimitConfig, summary: Mapping[str, An
     lines.append(f"- Dispersive parameter: `chi = {float(study.chi_hz) / 1.0e6:.6f} MHz`")
     lines.append(
         "- Phase-1 ordering convention: "
-        + "`U_test = U_pi,ideal @ U_SQR`, meaning the selective SQR acts first on the state and the ideal fast pi is applied after it."
+        + "`U_test = U_pi_ideal @ U_SQR`, meaning the selective SQR acts first on the state and the ideal fast pi is applied after it."
     )
     lines.append(
         "- Leakage note: in the minimal dispersive qubit-drive-only model used for the main sweep, photon number is conserved, so subspace leakage for `n<=n_match` probe states is identically zero. "
@@ -1039,16 +1005,6 @@ def _render_markdown_report(study: SQRSpeedLimitConfig, summary: Mapping[str, An
             else:
                 lines.append(f"  - `F >= {row['threshold']:.4f}`: `{row['min_duration_ns']:.1f} ns`")
         lines.append("")
-    lines.append("## 16 ns Unconditional Pi Validation")
-    for row in summary["fast_pi"]["results"]:
-        lines.append(
-            f"- `n <= {row['n_validate']}`: "
-            + f"`F_subspace = {row['subspace_fidelity']:.6f}`, "
-            + f"`worst block = {row['worst_block_fidelity']:.6f}`, "
-            + f"`detuning = {row['detuning_hz'] / 1.0e6:.3f} MHz`, "
-            + f"`sigma = {row['sigma_fraction']:.3f}`"
-        )
-    lines.append("")
     lines.append("## Configuration Snapshot")
     lines.append("```json")
     lines.append(json.dumps(_jsonify(asdict(study)), indent=2))
@@ -1133,9 +1089,6 @@ def run_speedlimit_study(
             }
             summary[phase_key].append(case_payload)
             _write_json(case_dir / "case_summary.json", case_payload)
-
-    fast_pi = validate_fast_pi_pulse(study, output_dir=out_dir / "fast_pi_validation")
-    summary["fast_pi"] = fast_pi
 
     report_text = _render_markdown_report(study, summary)
     study.report_path.parent.mkdir(parents=True, exist_ok=True)

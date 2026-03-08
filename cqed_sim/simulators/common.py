@@ -47,10 +47,12 @@ def build_initial_state(config: Mapping[str, Any], n_cav_dim: int | None = None)
 def choose_t2_ns(config: Mapping[str, Any]) -> float:
     source = str(config["t2_source"]).lower()
     if source == "echo":
-        return float(config["qb_T2_echo_ns"])
+        value = config.get("qb_T2_echo_ns")
+        return None if value is None else float(value)
     if source != "ramsey":
         raise ValueError(f"Unsupported t2_source '{config['t2_source']}'.")
-    return float(config["qb_T2_ramsey_ns"])
+    value = config.get("qb_T2_ramsey_ns")
+    return None if value is None else float(value)
 
 
 def derive_tphi_seconds(t1_ns: float | None, t2_ns: float | None) -> float | None:
@@ -99,6 +101,8 @@ def build_noise_spec(config: Mapping[str, Any], enabled: bool) -> NoiseSpec | No
     t1_s = ns_to_s(float(config["qb_T1_relax_ns"])) if config.get("qb_T1_relax_ns") is not None else None
     tphi_s = derive_tphi_seconds(config.get("qb_T1_relax_ns"), choose_t2_ns(config))
     kappa = float(config.get("cavity_kappa_1_per_s", 0.0))
+    if t1_s is None and tphi_s is None and kappa <= 0.0:
+        return None
     return NoiseSpec(t1=t1_s, tphi=tphi_s, kappa=kappa if kappa > 0.0 else None)
 
 

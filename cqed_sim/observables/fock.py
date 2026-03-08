@@ -242,7 +242,7 @@ def relative_phase_debug_values(
     coherence_threshold: float | None = None,
 ) -> dict[str, Any]:
     rho = state if state.isoper else state.proj()
-    n_cav_dim = int(rho.dims[0][0])
+    n_cav_dim = int(rho.dims[0][1])
     available_max_n = min(int(max_n), n_cav_dim - 1)
     threshold = float(probability_threshold if coherence_threshold is None else coherence_threshold)
     reference_ket = joint_basis_state(n_cav_dim, "g", 0)

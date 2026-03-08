@@ -28,7 +28,18 @@ from cqed_sim.observables.bloch import bloch_xyz_from_joint
 def _normalized_config(base_config: dict[str, Any]) -> dict[str, Any]:
     config = copy.deepcopy(base_config)
     config["n_cav_dim"] = int(config.get("n_cav_dim", int(config["cavity_fock_cutoff"]) + 1))
+    config.setdefault("omega_q_hz", 0.0)
+    config.setdefault("omega_c_hz", 0.0)
+    config.setdefault("qubit_alpha_hz", 0.0)
     config.setdefault("max_n_cal", min(2, int(config["cavity_fock_cutoff"])))
+    config.setdefault("st_K_hz", 0.0)
+    config.setdefault("st_K2_hz", 0.0)
+    config.setdefault("use_rotating_frame", True)
+    config.setdefault("qb_T1_relax_ns", None)
+    config.setdefault("qb_T2_ramsey_ns", None)
+    config.setdefault("qb_T2_echo_ns", None)
+    config.setdefault("t2_source", "ramsey")
+    config.setdefault("cavity_kappa_1_per_s", 0.0)
     config.setdefault("optimizer_method_stage1", "Powell")
     config.setdefault("optimizer_method_stage2", "L-BFGS-B")
     config.setdefault("d_lambda_bounds", (-0.5, 0.5))
@@ -121,7 +132,7 @@ def _test_rotation_convention_sanity(base_config: dict[str, Any]) -> None:
     )
     final_state = qt.Qobj(unitary @ np.array([[1.0], [0.0]], dtype=np.complex128), dims=[[2], [1]])
     bloch = np.asarray(bloch_xyz_from_joint(qt.tensor(final_state, qt.basis(1, 0))))
-    _assert_close(bloch, np.array([0.0, 1.0, 0.0]), atol=5.0e-2, label="Rotation convention")
+    _assert_close(bloch, np.array([0.0, -1.0, 0.0]), atol=5.0e-2, label="Rotation convention")
 
 
 def _test_process_fidelity_sanity(base_config: dict[str, Any]) -> None:
@@ -263,6 +274,28 @@ def _test_iteration_cap_respected(base_config: dict[str, Any]) -> None:
         raise AssertionError("Stage 2 exceeded iteration cap.")
 
 
+def _test_dissipative_guarded_path_uses_channel_solver(base_config: dict[str, Any]) -> None:
+    config = _benchmark_config(base_config)
+    config.update(
+        {
+            "qb_T1_relax_ns": 400.0,
+            "qb_T2_ramsey_ns": 260.0,
+            "t2_source": "ramsey",
+        }
+    )
+    target = _boundary_target(theta=np.pi / 2.0)
+    coherent = evaluate_guarded_sqr_target(target, _benchmark_config(base_config), corrections={}, lambda_guard=0.1)
+    dissipative = evaluate_guarded_sqr_target(target, config, corrections={}, lambda_guard=0.1)
+    if dissipative["simulation_mode"] != "channel":
+        raise AssertionError("Dissipative guarded evaluation did not switch to channel mode.")
+    if "mesolve" not in str(dissipative["execution_path"]):
+        raise AssertionError("Dissipative guarded evaluation did not use the shared mesolve path.")
+    if not (0.0 <= dissipative["logical_fidelity"] <= 1.0):
+        raise AssertionError("Dissipative logical fidelity left [0,1].")
+    if not dissipative["logical_fidelity"] <= coherent["logical_fidelity"] + 1.0e-9:
+        raise AssertionError("Dissipation unexpectedly improved logical fidelity.")
+
+
 def _test_benchmark_cell_runtime_budget(base_config: dict[str, Any]) -> None:
     config = _benchmark_config(base_config)
     config.update({"optimizer_maxiter_stage1": 3, "optimizer_maxiter_stage2": 4})
@@ -364,3 +397,7 @@ def test_iteration_cap_respected():
 
 def test_benchmark_cell_runtime_budget():
     _test_benchmark_cell_runtime_budget(_benchmark_config({"cavity_fock_cutoff": 6}))
+
+
+def test_dissipative_guarded_path_uses_channel_solver():
+    _test_dissipative_guarded_path_uses_channel_solver(_benchmark_config({"cavity_fock_cutoff": 6}))

@@ -14,10 +14,17 @@ import numpy as np
 import qutip as qt
 from scipy.optimize import Bounds, minimize
 
+from cqed_sim.core.conventions import qubit_cavity_block_indices
+from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.ideal_gates import qubit_rotation_xy
+from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.io.gates import Gate, SQRGate
-from cqed_sim.pulses.calibration import pad_sqr_angles, sqr_lambda0_rad_s
-from cqed_sim.pulses.envelopes import gaussian_envelope
+from cqed_sim.pulses.calibration import build_sqr_tone_specs, pad_sqr_angles, sqr_lambda0_rad_s
+from cqed_sim.pulses.envelopes import MultitoneTone, gaussian_envelope, multitone_gaussian_envelope
+from cqed_sim.pulses.pulse import Pulse
+from cqed_sim.sequence.scheduler import SequenceCompiler
+from cqed_sim.sim.noise import NoiseSpec, collapse_operators
+from cqed_sim.sim.runner import hamiltonian_time_slices
 from cqed_sim.unitary_synthesis.progress import NullReporter, ProgressEvent, ProgressReporter
 
 
@@ -27,12 +34,23 @@ def default_calibration_config_keys() -> tuple[str, ...]:
         "sqr_sigma_fraction",
         "dt_s",
         "max_step_s",
+        "omega_q_hz",
+        "omega_c_hz",
+        "qubit_alpha_hz",
         "st_chi_hz",
         "st_chi2_hz",
         "st_chi3_hz",
+        "st_K_hz",
+        "st_K2_hz",
+        "use_rotating_frame",
         "max_n_cal",
         "sqr_theta_cutoff",
         "allow_zero_theta_corrections",
+        "qb_T1_relax_ns",
+        "qb_T2_ramsey_ns",
+        "qb_T2_echo_ns",
+        "t2_source",
+        "cavity_kappa_1_per_s",
         "optimizer_method_stage1",
         "optimizer_method_stage2",
         "d_lambda_bounds",
@@ -188,6 +206,13 @@ class GuardedBenchmarkResult:
             "success": bool(self.success),
             "lambda_guard": float(self.lambda_guard),
             "weight_mode": self.weight_mode,
+            "simulation_mode": str(self.metadata.get("simulation_mode", "unitary")),
+            "execution_path": str(
+                self.metadata.get(
+                    "execution_path",
+                    "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.propagator",
+                )
+            ),
         }
 
 
@@ -283,6 +308,295 @@ def _normalized_unitary(matrix: np.ndarray) -> np.ndarray:
     return matrix
 
 
+def _project_to_unitary(matrix: np.ndarray) -> np.ndarray:
+    u, _, vh = np.linalg.svd(np.asarray(matrix, dtype=np.complex128))
+    return _normalized_unitary(u @ vh)
+
+
+def _benchmark_simulation_config(config: Mapping[str, Any], total_levels: int) -> dict[str, Any]:
+    return {
+        "omega_c_hz": float(config.get("omega_c_hz", 0.0)),
+        "omega_q_hz": float(config.get("omega_q_hz", 0.0)),
+        "qubit_alpha_hz": float(config.get("qubit_alpha_hz", 0.0)),
+        "st_chi_hz": float(config.get("st_chi_hz", 0.0)),
+        "st_chi2_hz": float(config.get("st_chi2_hz", 0.0)),
+        "st_chi3_hz": float(config.get("st_chi3_hz", 0.0)),
+        "st_K_hz": float(config.get("st_K_hz", 0.0)),
+        "st_K2_hz": float(config.get("st_K2_hz", 0.0)),
+        "n_cav_dim": int(config.get("n_cav_dim", total_levels)),
+        "use_rotating_frame": bool(config.get("use_rotating_frame", True)),
+        "qb_T1_relax_ns": None if config.get("qb_T1_relax_ns") is None else float(config.get("qb_T1_relax_ns")),
+        "qb_T2_ramsey_ns": None if config.get("qb_T2_ramsey_ns") is None else float(config.get("qb_T2_ramsey_ns")),
+        "qb_T2_echo_ns": None if config.get("qb_T2_echo_ns") is None else float(config.get("qb_T2_echo_ns")),
+        "t2_source": str(config.get("t2_source", "ramsey")),
+        "cavity_kappa_1_per_s": float(config.get("cavity_kappa_1_per_s", 0.0)),
+    }
+
+
+def _hz_to_rad_s(hz: float) -> float:
+    return float(2.0 * np.pi * hz)
+
+
+def _ns_to_s(ns: float | None) -> float | None:
+    return None if ns is None else float(ns) * 1.0e-9
+
+
+def _choose_t2_ns(config: Mapping[str, Any]) -> float | None:
+    source = str(config.get("t2_source", "ramsey")).lower()
+    if source == "echo":
+        value = config.get("qb_T2_echo_ns")
+        return None if value is None else float(value)
+    if source != "ramsey":
+        raise ValueError(f"Unsupported t2_source '{config.get('t2_source')}'.")
+    value = config.get("qb_T2_ramsey_ns")
+    return None if value is None else float(value)
+
+
+def _derive_tphi_seconds(t1_ns: float | None, t2_ns: float | None) -> float | None:
+    if t2_ns is None:
+        return None
+    t2_s = _ns_to_s(t2_ns)
+    if t1_ns is None:
+        return t2_s
+    t1_s = _ns_to_s(t1_ns)
+    inv_tphi = max(0.0, 1.0 / t2_s - 1.0 / (2.0 * t1_s))
+    return None if inv_tphi <= 0.0 else 1.0 / inv_tphi
+
+
+def _build_benchmark_model(config: Mapping[str, Any]) -> DispersiveTransmonCavityModel:
+    chi_higher = tuple(
+        value
+        for value in (
+            _hz_to_rad_s(float(config.get("st_chi2_hz", 0.0))),
+            _hz_to_rad_s(float(config.get("st_chi3_hz", 0.0))),
+        )
+        if value != 0.0
+    )
+    kerr_higher = tuple(value for value in (_hz_to_rad_s(float(config.get("st_K2_hz", 0.0))),) if value != 0.0)
+    return DispersiveTransmonCavityModel(
+        omega_c=_hz_to_rad_s(float(config.get("omega_c_hz", 0.0))),
+        omega_q=_hz_to_rad_s(float(config.get("omega_q_hz", 0.0))),
+        alpha=_hz_to_rad_s(float(config.get("qubit_alpha_hz", 0.0))),
+        chi=_hz_to_rad_s(float(config.get("st_chi_hz", 0.0))),
+        chi_higher=chi_higher,
+        kerr=_hz_to_rad_s(float(config.get("st_K_hz", 0.0))),
+        kerr_higher=kerr_higher,
+        n_cav=int(config["n_cav_dim"]),
+        n_tr=2,
+    )
+
+
+def _build_benchmark_frame(model: DispersiveTransmonCavityModel, config: Mapping[str, Any]) -> FrameSpec:
+    if bool(config.get("use_rotating_frame", True)):
+        return FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
+    return FrameSpec()
+
+
+def _build_benchmark_noise(config: Mapping[str, Any]) -> NoiseSpec | None:
+    if not _noise_enabled(config):
+        return None
+    t1_s = _ns_to_s(float(config["qb_T1_relax_ns"])) if config.get("qb_T1_relax_ns") is not None else None
+    tphi_s = _derive_tphi_seconds(config.get("qb_T1_relax_ns"), _choose_t2_ns(config))
+    kappa = float(config.get("cavity_kappa_1_per_s", 0.0))
+    if t1_s is None and tphi_s is None and kappa <= 0.0:
+        return None
+    return NoiseSpec(t1=t1_s, tphi=tphi_s, kappa=kappa if kappa > 0.0 else None)
+
+
+def _noise_enabled(config: Mapping[str, Any]) -> bool:
+    return any(
+        value not in (None, 0, 0.0)
+        for value in (
+            config.get("qb_T1_relax_ns"),
+            config.get("qb_T2_ramsey_ns"),
+            config.get("qb_T2_echo_ns"),
+            config.get("cavity_kappa_1_per_s", 0.0),
+        )
+    )
+
+
+def _solver_options(config: Mapping[str, Any]) -> dict[str, Any]:
+    options = {
+        "atol": 1.0e-8,
+        "rtol": 1.0e-7,
+        "store_states": True,
+        "nsteps": int(config.get("qutip_nsteps_sqr_calibration", 100000)),
+    }
+    if float(config.get("max_step_s", 0.0)) > 0.0:
+        options["max_step"] = float(config["max_step_s"])
+    return options
+
+
+def _vectorize_operator(matrix: np.ndarray) -> np.ndarray:
+    return np.asarray(matrix, dtype=np.complex128).reshape((-1,), order="F")
+
+
+def _devectorize_operator(vector: np.ndarray, dim: int) -> np.ndarray:
+    return np.asarray(vector, dtype=np.complex128).reshape((int(dim), int(dim)), order="F")
+
+
+def _bloch_from_density_matrix(rho: np.ndarray) -> tuple[float, float, float]:
+    rho = np.asarray(rho, dtype=np.complex128)
+    return (
+        2.0 * float(np.real(rho[0, 1])),
+        2.0 * float(np.imag(rho[0, 1])),
+        float(np.real(rho[0, 0] - rho[1, 1])),
+    )
+
+
+def _build_multitone_simulation(
+    target: RandomSQRTarget,
+    config: Mapping[str, Any],
+    corrections: Mapping[int, tuple[float, float, float]] | None = None,
+) -> dict[str, Any]:
+    sim_config = _benchmark_simulation_config(config, int(target.total_levels))
+    model = _build_benchmark_model(sim_config)
+    frame = _build_benchmark_frame(model, sim_config)
+    correction_map = {} if corrections is None else {int(k): tuple(float(x) for x in values) for k, values in corrections.items()}
+    d_lambda_values = [0.0] * int(target.total_levels)
+    for level, (d_lambda, _d_alpha, _d_omega) in correction_map.items():
+        if 0 <= int(level) < len(d_lambda_values):
+            d_lambda_values[int(level)] = float(d_lambda)
+    raw_tones = build_sqr_tone_specs(
+        model=model,
+        frame=frame,
+        theta_values=list(target.theta),
+        phi_values=list(target.phi),
+        duration_s=float(config["duration_sqr_s"]),
+        d_lambda_values=d_lambda_values,
+        include_all_levels=bool(config.get("allow_zero_theta_corrections", True)),
+        tone_cutoff=float(config.get("sqr_theta_cutoff", 1.0e-10)),
+    )
+    tone_specs: list[MultitoneTone] = []
+    for tone in raw_tones:
+        _d_lambda, d_alpha, d_omega = correction_map.get(int(tone.manifold), (0.0, 0.0, 0.0))
+        tone_specs.append(
+            MultitoneTone(
+                manifold=int(tone.manifold),
+                omega_rad_s=float(tone.omega_rad_s + d_omega),
+                amp_rad_s=float(tone.amp_rad_s),
+                phase_rad=float(tone.phase_rad + d_alpha),
+            )
+        )
+
+    duration_s = float(config["duration_sqr_s"])
+    sigma_fraction = float(config["sqr_sigma_fraction"])
+
+    def envelope(t_rel: np.ndarray) -> np.ndarray:
+        return multitone_gaussian_envelope(
+            t_rel,
+            duration_s=duration_s,
+            sigma_fraction=sigma_fraction,
+            tone_specs=tone_specs,
+        )
+
+    pulse = Pulse("qubit", 0.0, duration_s, envelope, amp=1.0, phase=0.0, label=target.target_id)
+    compiled = SequenceCompiler(dt=float(config["dt_s"])).compile([pulse], t_end=duration_s + float(config["dt_s"]))
+    drive_ops = {"qubit": "qubit"}
+    hamiltonian = hamiltonian_time_slices(model, compiled, drive_ops, frame=frame)
+    noise = _build_benchmark_noise(sim_config)
+    c_ops = collapse_operators(model, noise)
+    return {
+        "model": model,
+        "frame": frame,
+        "compiled": compiled,
+        "hamiltonian": hamiltonian,
+        "c_ops": c_ops,
+        "tone_specs": [tone.as_dict() for tone in tone_specs],
+        "active_levels": [int(tone.manifold) for tone in tone_specs],
+        "noise_enabled": bool(c_ops),
+        "config_snapshot": sim_config,
+    }
+
+
+def _final_full_unitary(prepared: Mapping[str, Any], config: Mapping[str, Any]) -> np.ndarray:
+    propagators = qt.propagator(
+        prepared["hamiltonian"],
+        prepared["compiled"].tlist,
+        options=_solver_options(config),
+        tlist=prepared["compiled"].tlist,
+    )
+    final = propagators[-1] if isinstance(propagators, list) else propagators
+    return np.asarray(final.full(), dtype=np.complex128)
+
+
+def _project_manifold_unitary(prepared: Mapping[str, Any], manifold_n: int, config: Mapping[str, Any]) -> tuple[np.ndarray, dict[str, Any]]:
+    if prepared["c_ops"]:
+        raise ValueError("Dissipative configurations require channel extraction, not unitary extraction.")
+    full = _final_full_unitary(prepared, config)
+    indices = qubit_cavity_block_indices(int(prepared["model"].n_cav), int(manifold_n))
+    block = np.asarray(full[np.ix_(indices, indices)], dtype=np.complex128)
+    return _normalized_unitary(block), {
+        "tlist": np.asarray(prepared["compiled"].tlist, dtype=float),
+        "active_levels": list(prepared["active_levels"]),
+        "tone_specs": list(prepared["tone_specs"]),
+        "noise_enabled": False,
+        "simulation_path": "cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.propagator",
+    }
+
+
+def _evolve_with_shared_solver(
+    prepared: Mapping[str, Any],
+    initial_state: qt.Qobj,
+    config: Mapping[str, Any],
+) -> qt.Qobj:
+    options = _solver_options(config)
+    if prepared["c_ops"] or initial_state.isoper:
+        result = qt.mesolve(
+            prepared["hamiltonian"],
+            initial_state,
+            prepared["compiled"].tlist,
+            c_ops=prepared["c_ops"],
+            e_ops=[],
+            options=options,
+        )
+    else:
+        result = qt.sesolve(
+            prepared["hamiltonian"],
+            initial_state,
+            prepared["compiled"].tlist,
+            e_ops=[],
+            options=options,
+        )
+    return result.states[-1]
+
+
+def _project_manifold_channel(prepared: Mapping[str, Any], manifold_n: int, config: Mapping[str, Any]) -> tuple[np.ndarray, dict[str, Any]]:
+    model = prepared["model"]
+    indices = qubit_cavity_block_indices(int(model.n_cav), int(manifold_n))
+    basis_states = [model.basis_state(0, int(manifold_n)), model.basis_state(1, int(manifold_n))]
+    superoperator = np.zeros((4, 4), dtype=np.complex128)
+    for column, (bra_state, ket_state) in enumerate(
+        (
+            (basis_states[0], basis_states[0]),
+            (basis_states[0], basis_states[1]),
+            (basis_states[1], basis_states[0]),
+            (basis_states[1], basis_states[1]),
+        )
+    ):
+        final = _evolve_with_shared_solver(prepared, bra_state * ket_state.dag(), config)
+        matrix = np.asarray(final.full(), dtype=np.complex128)
+        block = np.asarray(matrix[np.ix_(indices, indices)], dtype=np.complex128)
+        superoperator[:, column] = _vectorize_operator(block)
+    return superoperator, {
+        "tlist": np.asarray(prepared["compiled"].tlist, dtype=float),
+        "active_levels": list(prepared["active_levels"]),
+        "tone_specs": list(prepared["tone_specs"]),
+        "noise_enabled": bool(prepared["c_ops"]),
+        "simulation_path": "cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.mesolve",
+    }
+
+
+def extract_multitone_effective_qubit_channel(
+    manifold_n: int,
+    target: RandomSQRTarget,
+    config: Mapping[str, Any],
+    corrections: Mapping[int, tuple[float, float, float]] | None = None,
+) -> tuple[np.ndarray, dict[str, Any]]:
+    prepared = _build_multitone_simulation(target, config, corrections=corrections)
+    return _project_manifold_channel(prepared, manifold_n, config)
+
+
 def _final_unitary_from_hamiltonian(
     hamiltonian: Any,
     tlist: np.ndarray,
@@ -341,8 +655,18 @@ def target_qubit_unitary(theta_target: float, phi_target: float) -> np.ndarray:
 
 
 def conditional_process_fidelity(target_unitary: np.ndarray, simulated_unitary: np.ndarray) -> float:
-    overlap = np.trace(target_unitary.conj().T @ simulated_unitary)
-    return float(np.abs(overlap) ** 2 / 4.0)
+    target = np.asarray(target_unitary, dtype=np.complex128)
+    simulated = np.asarray(simulated_unitary, dtype=np.complex128)
+    if simulated.shape == target.shape:
+        overlap = np.trace(target.conj().T @ simulated)
+        return float(np.clip(np.abs(overlap) ** 2 / 4.0, 0.0, 1.0))
+    if simulated.shape == (target.shape[0] ** 2, target.shape[1] ** 2):
+        target_super = np.kron(target.conj(), target)
+        fidelity = np.trace(target_super.conj().T @ simulated) / float(target.shape[0] ** 2)
+        return float(np.clip(np.real_if_close(fidelity).real, 0.0, 1.0))
+    raise ValueError(
+        f"Unsupported simulated operator shape {simulated.shape}; expected {target.shape} or {(target.shape[0] ** 2, target.shape[1] ** 2)}."
+    )
 
 
 def _objective_regularization(config: Mapping[str, Any], d_lambda: float, d_alpha: float, d_omega_rad_s: float) -> float:
@@ -906,67 +1230,8 @@ def extract_multitone_effective_qubit_unitary(
     config: Mapping[str, Any],
     corrections: Mapping[int, tuple[float, float, float]] | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    duration_s = float(config["duration_sqr_s"])
-    tlist = _build_time_grid(duration_s, float(config["dt_s"]))
-    sigma_fraction = float(config["sqr_sigma_fraction"])
-    theta_cutoff = float(config.get("sqr_theta_cutoff", 1.0e-10))
-    active_levels = _benchmark_active_levels(
-        target,
-        theta_cutoff,
-        include_zero_theta_levels=bool(config.get("allow_zero_theta_corrections", True)),
-    )
-    if not active_levels:
-        return np.eye(2, dtype=np.complex128), {
-            "tlist": tlist,
-            "active_levels": [],
-            "omega_x": np.zeros_like(tlist, dtype=float),
-            "omega_y": np.zeros_like(tlist, dtype=float),
-        }
-
-    t_rel = tlist / duration_s
-    env = np.real(np.asarray(gaussian_envelope(t_rel, sigma=sigma_fraction), dtype=np.complex128))
-    lam0 = sqr_lambda0_rad_s(duration_s)
-    omega_x = np.zeros_like(tlist, dtype=float)
-    omega_y = np.zeros_like(tlist, dtype=float)
-    omega_eval = _conditional_detuning_rad_s(int(manifold_n), config)
-    tone_specs = []
-
-    for level in active_levels:
-        theta_level = float(target.theta[level])
-        phi_level = float(target.phi[level])
-        base_amp = _initial_drive_amplitude(theta_level, duration_s, sigma_fraction, tlist)
-        d_lambda, d_alpha, d_omega = (0.0, 0.0, 0.0) if corrections is None else corrections.get(int(level), (0.0, 0.0, 0.0))
-        amp_nominal = float(base_amp + float(d_lambda) * lam0)
-        if abs(amp_nominal) < 1.0e-15:
-            continue
-        amp_env = amp_nominal * env
-        phase = float(phi_level + d_alpha)
-        delta = float(_conditional_detuning_rad_s(int(level), config) + d_omega - omega_eval)
-        omega_x += amp_env * np.cos(delta * tlist + phase)
-        omega_y += amp_env * np.sin(delta * tlist + phase)
-        tone_specs.append(
-            {
-                "level": int(level),
-                "base_amp_rad_s": float(base_amp),
-                "amp_correction_norm": float(d_lambda),
-                "amp_nominal_rad_s": float(amp_nominal),
-                "phase_rad": float(phase),
-                "relative_detuning_rad_s": float(delta),
-            }
-        )
-
-    h = [
-        [0.5 * qt.sigmax(), omega_x],
-        [0.5 * qt.sigmay(), omega_y],
-    ]
-    unitary = _final_unitary_from_hamiltonian(h, tlist, config)
-    return unitary, {
-        "tlist": tlist,
-        "omega_x": omega_x,
-        "omega_y": omega_y,
-        "active_levels": active_levels,
-        "tone_specs": tone_specs,
-    }
+    prepared = _build_multitone_simulation(target, config, corrections=corrections)
+    return _project_manifold_unitary(prepared, manifold_n, config)
 
 
 def evaluate_guarded_sqr_target(
@@ -990,13 +1255,24 @@ def evaluate_guarded_sqr_target(
     logical_fidelities = np.zeros(logical_n, dtype=float)
     guard_xy: list[float] = []
     guard_z: list[float] = []
+    prepared = _build_multitone_simulation(target, config, corrections=corrections)
+    use_channel = bool(prepared["c_ops"])
 
     for n in range(total_levels):
-        simulated, extra = extract_multitone_effective_qubit_unitary(n, target, config, corrections=corrections)
         target_unitary = target_qubit_unitary(float(target.theta[n]), float(target.phi[n]))
-        fidelity = conditional_process_fidelity(target_unitary, simulated)
-        x, y, z = _bloch_from_unitary_on_ground(simulated)
-        achieved_theta, achieved_phi, achieved_axis_z = _unitary_rotation_parameters(simulated)
+        if use_channel:
+            simulated, extra = _project_manifold_channel(prepared, n, config)
+            fidelity = conditional_process_fidelity(target_unitary, simulated)
+            ground_state = _devectorize_operator(simulated[:, 0], 2)
+            x, y, z = _bloch_from_density_matrix(ground_state)
+            achieved_theta = float("nan")
+            achieved_phi = float("nan")
+            achieved_axis_z = float("nan")
+        else:
+            simulated, extra = _project_manifold_unitary(prepared, n, config)
+            fidelity = conditional_process_fidelity(target_unitary, simulated)
+            x, y, z = _bloch_from_unitary_on_ground(simulated)
+            achieved_theta, achieved_phi, achieved_axis_z = _unitary_rotation_parameters(simulated)
         row = {
             "n": int(n),
             "theta_target": float(target.theta[n]),
@@ -1008,6 +1284,7 @@ def evaluate_guarded_sqr_target(
             "achieved_theta": float(achieved_theta),
             "achieved_phi": float(achieved_phi),
             "achieved_axis_z": float(achieved_axis_z),
+            "simulation_mode": "channel" if use_channel else "unitary",
             **extra,
         }
         if n < logical_n:
@@ -1047,6 +1324,8 @@ def evaluate_guarded_sqr_target(
         "guard_xy": guard_xy,
         "guard_z": guard_z,
         "loss_total": loss_total,
+        "simulation_mode": "channel" if use_channel else "unitary",
+        "execution_path": "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.mesolve" if use_channel else "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.propagator",
         "per_manifold": rows,
     }
 
@@ -1143,7 +1422,12 @@ def calibrate_guarded_sqr_target(
             calibration=zero_result,
             per_manifold=metrics["per_manifold"],
             convergence_trace=[{"iteration": 0, "best_loss_total": float(metrics["loss_total"]), "best_logical_fidelity": float(metrics["logical_fidelity"]), "best_epsilon_guard": float(metrics["epsilon_guard"])}],
-            metadata={"active_levels": [], "weight_mode": weight_mode},
+            metadata={
+                "active_levels": [],
+                "weight_mode": weight_mode,
+                "simulation_mode": str(metrics.get("simulation_mode", "unitary")),
+                "execution_path": str(metrics.get("execution_path", "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.propagator")),
+            },
         )
 
     bounds = _benchmark_bounds(config, len(active_levels))
@@ -1339,6 +1623,8 @@ def calibrate_guarded_sqr_target(
             "stage1_nit": nit_stage1,
             "stage2_nit": nit_stage2,
             "run_id": run_label,
+            "simulation_mode": str(final_metrics.get("simulation_mode", "unitary")),
+            "execution_path": str(final_metrics.get("execution_path", "cqed_sim.pulses.calibration.build_sqr_tone_specs -> cqed_sim.sim.runner.hamiltonian_time_slices -> qutip.propagator")),
         },
     )
 

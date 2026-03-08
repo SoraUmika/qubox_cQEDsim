@@ -133,7 +133,7 @@ def _test_1_ideal_rotation_sanity(base_config: dict[str, Any]) -> None:
     config["n_cav_dim"] = 1
     gate = RotationGate(index=0, name="x90", theta=np.pi / 2.0, phi=0.0)
     out = ideal_gate_unitary(gate, 1) * build_initial_state(config, n_cav_dim=1)
-    _assert_close(np.asarray(bloch_xyz_from_joint(out)), np.array([0.0, 1.0, 0.0]), atol=2.0e-3, label="Test 1")
+    _assert_close(np.asarray(bloch_xyz_from_joint(out)), np.array([0.0, -1.0, 0.0]), atol=2.0e-3, label="Test 1")
     if not np.isclose(purity(out), 1.0, atol=1.0e-10):
         raise AssertionError("Test 1 purity was not preserved.")
 

@@ -6,10 +6,10 @@ import qutip as qt
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.io.gates import RotationGate
+from cqed_sim.pulses.builders import build_rotation_pulse
 from cqed_sim.pulses.pulse import Pulse
 from cqed_sim.sequence.scheduler import SequenceCompiler
 from cqed_sim.sim.runner import SimulationConfig, hamiltonian_time_slices, simulate_sequence
-from cqed_sim.simulators.pulse_unitary import build_rotation_pulse
 
 
 def _normalize_unitary(matrix: np.ndarray) -> np.ndarray:

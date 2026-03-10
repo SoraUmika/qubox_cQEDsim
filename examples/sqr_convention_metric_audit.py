@@ -168,7 +168,7 @@ def _corrected_block_metrics(case: sms.CaseResult, profile: sms.TargetProfile) -
 
 
 def _qubox_coeff(t: np.ndarray, env: np.ndarray, amp: float, phi_eff: float, omega: float) -> np.ndarray:
-    return float(amp) * np.asarray(env, dtype=np.complex128) * np.exp(-1j * float(phi_eff)) * np.exp(1j * float(omega) * t)
+    return float(amp) * np.asarray(env, dtype=np.complex128) * np.exp(1j * float(phi_eff)) * np.exp(1j * float(omega) * t)
 
 
 def _rotation_coeff(t: np.ndarray, env: np.ndarray, amp: float, phase: float, carrier: float) -> np.ndarray:
@@ -447,10 +447,10 @@ def _write_convention_note(out_dir: Path, sign_scan: dict[str, Any], detuning: d
     rows = [
         {
             "quantity": "waveform phase factor",
-            "lab_qubox": "exp(-i phi_eff)",
+            "lab_qubox": "exp(+i phi_eff)",
             "cQED_rotation": "exp(+i phase)",
             "cQED_sqr": "exp(+i phase)",
-            "mapping_to_match_lab": "phase_cqed = -phi_eff",
+            "mapping_to_match_lab": "phase_cqed = phi_eff",
         },
         {
             "quantity": "time modulation",
@@ -472,13 +472,13 @@ def _write_convention_note(out_dir: Path, sign_scan: dict[str, Any], detuning: d
     lines.append("# Convention Reconciliation: qubox vs cQED_sim")
     lines.append("")
     lines.append("## Lab-side Reference")
-    lines.append("- QubitRotation waveform: `w = s*(I+iQ)*exp(-i*phi_eff)*exp(+i*omega*t)`")
-    lines.append("- SQR tone waveform: `w_n = s_n*w0*exp(-i*phi_eff_n)*exp(+i*omega_n*t)` and `w = sum_n w_n`")
+    lines.append("- QubitRotation waveform: `w = s*(I+iQ)*exp(+i*phi_eff)*exp(+i*omega*t)`")
+    lines.append("- SQR tone waveform: `w_n = s_n*w0*exp(+i*phi_eff_n)*exp(+i*omega_n*t)` and `w = sum_n w_n`")
     lines.append("")
     lines.append("## Derived Mapping")
-    lines.append("- Positive `phi_eff` rotates the IQ phasor clockwise (negative complex-plane angle).")
-    lines.append("- With `H_drive = Re[w]*sigma_x/2 + Im[w]*sigma_y/2`, axis phase is `phi_axis = arg(w) = -phi_eff`.")
-    lines.append("- Therefore to implement `R_xy(theta, phi_axis)`, lab waveform needs `phi_eff = -phi_axis`.")
+    lines.append("- Positive `phi_eff` rotates the IQ phasor counterclockwise in the complex plane.")
+    lines.append("- With `H_drive = Re[w]*sigma_x/2 + Im[w]*sigma_y/2`, axis phase is `phi_axis = arg(w) = phi_eff`.")
+    lines.append("- Therefore `R_xy(theta, phi_axis)` uses the same numeric phase in both the lab waveform and the canonical simulator builders.")
     lines.append("")
     lines.append("## Direct Numerical Equivalence (Two-level)")
     lines.append(
@@ -555,7 +555,7 @@ def _write_implementation_note(out_dir: Path, sign_scan: dict[str, Any], detunin
     lines.append("| Quantity | Canonical meaning |")
     lines.append("|---|---|")
     lines.append("| Waveform phasor | `w(t)=I(t)+iQ(t)` |")
-    lines.append("| Pulse phase knob | implemented as `exp(+i*phase)` so matching lab `exp(-i*phi_eff)` requires `phase=-phi_eff` |")
+    lines.append("| Pulse phase knob | implemented as `exp(+i*phase)` and matches lab `exp(+i*phi_eff)` directly via `phase=phi_eff` |")
     lines.append("| Detuning knob `d_omega` | increases IQ phase slope via `exp(+i*d_omega*t)` |")
     lines.append("| Effective detuning sign in rotating-frame block extraction | frame-dependent; use the block-unitary sign check, not IQ slope alone |")
     lines.append("| Target axis mapping | `R_xy(theta,phi_axis)` with `phi_axis=arg(w)` and `I->+x`, `Q->+y` |")

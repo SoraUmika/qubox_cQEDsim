@@ -8,18 +8,18 @@
 ## Results
 | Target | Case | mean process fidelity | phase_sensitive_rms_rad |
 |---|---|---:|---:|
-| x90_x90 | B | 0.894967 | 0.451635 |
-| x90_x90 | C | 0.951427 | 0.233992 |
-| x90_x90 | D | 0.895939 | 0.547788 |
-| x90_x90 | E | 0.993567 | 0.436624 |
-| x90_y90 | B | 0.901279 | 1.342032 |
-| x90_y90 | C | 0.960220 | 0.165385 |
-| x90_y90 | D | 0.999174 | 0.021723 |
-| x90_y90 | E | 0.993725 | 0.439078 |
-| x180_identity | B | 0.971107 | 0.242893 |
-| x180_identity | C | 0.973372 | 0.221769 |
-| x180_identity | D | 0.973372 | 0.221801 |
-| x180_identity | E | 0.973372 | 0.221801 |
+| x90_x90 | B | 0.453299 | 1.458488 |
+| x90_x90 | C | 0.446175 | 1.657309 |
+| x90_x90 | D | 0.462295 | 1.606632 |
+| x90_x90 | E | 0.466140 | 1.600545 |
+| x90_y90 | B | 0.463059 | 1.722209 |
+| x90_y90 | C | 0.446656 | 1.854572 |
+| x90_y90 | D | 0.467902 | 1.699844 |
+| x90_y90 | E | 0.470554 | 1.680904 |
+| x180_identity | B | 0.436699 | 1.200978 |
+| x180_identity | C | 0.393805 | 1.276097 |
+| x180_identity | D | 0.499435 | 0.897431 |
+| x180_identity | E | 0.499466 | 0.897087 |
 
-- Best optimized tiny-case fidelity: target=x90_y90, case=D, fidelity=0.999174, phase_sensitive_rms=0.021723
-- Conclusion: tiny benchmark reaches high blockwise fidelity (>=0.95), so optimizer/pipeline is trustworthy at small manifold size.
+- Best optimized tiny-case fidelity: target=x180_identity, case=E, fidelity=0.499466, phase_sensitive_rms=0.897087
+- Conclusion: tiny benchmark does not reach 0.95; likely limited by pulse ansatz/optimizer settings in this configuration.

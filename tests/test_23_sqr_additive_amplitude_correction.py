@@ -6,8 +6,8 @@ from cqed_sim.calibration.sqr import SQRCalibrationResult
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.io.gates import SQRGate
+from cqed_sim.pulses.builders import build_sqr_multitone_pulse
 from cqed_sim.pulses.calibration import build_sqr_tone_specs, sqr_lambda0_rad_s, sqr_tone_amplitude_rad_s
-from cqed_sim.simulators.pulse_unitary import build_sqr_multitone_pulse
 
 
 def _test_model(n_cav: int = 6) -> DispersiveTransmonCavityModel:

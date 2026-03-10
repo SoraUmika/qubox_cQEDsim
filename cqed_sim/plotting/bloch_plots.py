@@ -31,7 +31,7 @@ def add_gate_type_axis(ax, track: dict[str, Any], label_stride: int, xlabel: str
 def plot_bloch_track(track: dict[str, Any], title: str, label_stride: int):
     fig, ax = plt.subplots(figsize=(11.0, 4.8))
     ax.plot(track["indices"], track["x"], "o-", label="X")
-    ax.plot(track["indices"], track["y"], "o-", label="Y (qubox)")
+    ax.plot(track["indices"], track["y"], "o-", label="Y")
     ax.plot(track["indices"], track["z"], "o-", label="Z")
     for snapshot in track["snapshots"][1:]:
         ax.axvline(

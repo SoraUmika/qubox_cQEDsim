@@ -1,0 +1,49 @@
+case_id,duration_ns,predicted_lambda_relative_rad,predicted_phase_distance_rad,target_lambda_relative_rad,title
+uniform_pi_zero,450.0,"[0.0, -0.8912070039703535, 1.4443786384144408, 0.7235716199748001]",0.9225014179212306,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,500.0,"[0.0, -1.3373131607801048, 0.5615911027557079, -0.5864725165721456]",0.7822629144642663,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,550.0,"[0.0, 1.358173335999938, -0.32119643290302413, 1.2450760004707053]",0.9351492135053842,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,600.0,"[0.0, 0.9120671791901875, -1.2039839685617562, -0.06496813607624041]",0.7559207621528334,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,650.0,"[0.0, 0.46596102238043713, 1.054821149369305, -1.3750122726231808]",0.897277281752827,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,700.0,"[0.0, 0.01985486557068583, 0.1720336137105729, 0.45653624441966834]",0.24413885516339046,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,750.0,"[0.0, -0.4262512912390646, -0.7107539219481591, -0.8535078921272738]",0.5948396890699211,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,800.0,"[0.0, -0.8723574480488159, 1.548051195982902, 0.97804062491557]",1.0141540177083033,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,850.0,"[0.0, -1.3184636048585654, 0.66526366032417, -0.3320035116313722]",0.756826985978321,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,900.0,"[0.0, 1.3770228919214755, -0.21752387533456208, 1.4995450054114787]",1.0237362825052727,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,950.0,"[0.0, 0.930916735111726, -1.1003114109932923, 0.18950086886453654]",0.7268427870202641,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+uniform_pi_zero,1000.0,"[0.0, 0.4848105783019747, 1.1584937069377634, -1.1205432676824127]",0.8415411725810382,"[0.0, 0.0, 0.0, 0.0]",Uniform pi rotations with zero target block phase
+structured_zero,450.0,"[0.0, -0.8912070039703535, 1.4443786384144408, 0.7235716199748001]",0.9225014179212306,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,500.0,"[0.0, -1.3373131607801048, 0.5615911027557079, -0.5864725165721456]",0.7822629144642663,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,550.0,"[0.0, 1.358173335999938, -0.32119643290302413, 1.2450760004707053]",0.9351492135053842,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,600.0,"[0.0, 0.9120671791901875, -1.2039839685617562, -0.06496813607624041]",0.7559207621528334,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,650.0,"[0.0, 0.46596102238043713, 1.054821149369305, -1.3750122726231808]",0.897277281752827,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,700.0,"[0.0, 0.01985486557068583, 0.1720336137105729, 0.45653624441966834]",0.24413885516339046,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,750.0,"[0.0, -0.4262512912390646, -0.7107539219481591, -0.8535078921272738]",0.5948396890699211,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,800.0,"[0.0, -0.8723574480488159, 1.548051195982902, 0.97804062491557]",1.0141540177083033,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,850.0,"[0.0, -1.3184636048585654, 0.66526366032417, -0.3320035116313722]",0.756826985978321,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,900.0,"[0.0, 1.3770228919214755, -0.21752387533456208, 1.4995450054114787]",1.0237362825052727,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,950.0,"[0.0, 0.930916735111726, -1.1003114109932923, 0.18950086886453654]",0.7268427870202641,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+structured_zero,1000.0,"[0.0, 0.4848105783019747, 1.1584937069377634, -1.1205432676824127]",0.8415411725810382,"[0.0, 0.0, 0.0, 0.0]",Structured conditional rotations with zero target block phase
+uniform_pi_quadratic,450.0,"[0.0, -0.8912070039703535, 1.4443786384144408, 0.7235716199748001]",0.7578578898773889,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,500.0,"[0.0, -1.3373131607801048, 0.5615911027557079, -0.5864725165721456]",0.9298904110226153,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,550.0,"[0.0, 1.358173335999938, -0.32119643290302413, 1.2450760004707053]",0.7873757546329063,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,600.0,"[0.0, 0.9120671791901875, -1.2039839685617562, -0.06496813607624041]",0.9199423460742924,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,650.0,"[0.0, 0.46596102238043713, 1.054821149369305, -1.3750122726231808]",1.1242020476252337,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,700.0,"[0.0, 0.01985486557068583, 0.1720336137105729, 0.45653624441966834]",0.10499105882806105,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,750.0,"[0.0, -0.4262512912390646, -0.7107539219481591, -0.8535078921272738]",0.9136053806261751,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,800.0,"[0.0, -0.8723574480488159, 1.548051195982902, 0.97804062491557]",0.8102279517849507,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,850.0,"[0.0, -1.3184636048585654, 0.66526366032417, -0.3320035116313722]",0.8544994107123327,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,900.0,"[0.0, 1.3770228919214755, -0.21752387533456208, 1.4995450054114787]",0.8355320165132688,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,950.0,"[0.0, 0.930916735111726, -1.1003114109932923, 0.18950086886453654]",0.8413081513496408,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_quadratic,1000.0,"[0.0, 0.4848105783019747, 1.1584937069377634, -1.1205432676824127]",1.035150479747322,"[-0.0, 0.0, 0.22, 0.66]",Uniform pi rotations with quadratic target block phase
+uniform_pi_random,450.0,"[0.0, -0.8912070039703535, 1.4443786384144408, 0.7235716199748001]",0.933970227739143,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,500.0,"[0.0, -1.3373131607801048, 0.5615911027557079, -0.5864725165721456]",0.4422702012768831,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,550.0,"[0.0, 1.358173335999938, -0.32119643290302413, 1.2450760004707053]",1.3803997430526869,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,600.0,"[0.0, 0.9120671791901875, -1.2039839685617562, -0.06496813607624041]",1.0792551788658913,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,650.0,"[0.0, 0.46596102238043713, 1.054821149369305, -1.3750122726231808]",0.6997280243932941,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,700.0,"[0.0, 0.01985486557068583, 0.1720336137105729, 0.45653624441966834]",0.6372206372077573,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,750.0,"[0.0, -0.4262512912390646, -0.7107539219481591, -0.8535078921272738]",0.5125004965175277,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,800.0,"[0.0, -0.8723574480488159, 1.548051195982902, 0.97804062491557]",1.0620854715815973,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,850.0,"[0.0, -1.3184636048585654, 0.66526366032417, -0.3320035116313722]",0.48443823896424865,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,900.0,"[0.0, 1.3770228919214755, -0.21752387533456208, 1.4995450054114787]",1.468761734350499,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,950.0,"[0.0, 0.930916735111726, -1.1003114109932923, 0.18950086886453654]",1.0954002175337094,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern
+uniform_pi_random,1000.0,"[0.0, 0.4848105783019747, 1.1584937069377634, -1.1205432676824127]",0.6862433897641954,"[0.0, -0.5, 0.3, -0.7]",Uniform pi rotations with a designed non-drift phase pattern

@@ -445,7 +445,7 @@ def _enlarged_control_scan(
 def _write_csv(rows: list[dict[str, Any]], path: Path) -> None:
     if not rows:
         return
-    fieldnames = sorted(rows[0].keys())
+    fieldnames = sorted({key for row in rows for key in row.keys()})
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()

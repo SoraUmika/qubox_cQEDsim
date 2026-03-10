@@ -16,9 +16,11 @@ from cqed_sim.core.ideal_gates import (
 )
 from cqed_sim.sim.extractors import (
     bloch_xyz_from_joint,
+    bloch_xyz_from_qubit_state,
     cavity_moments,
     cavity_wigner,
     conditioned_bloch_xyz,
+    conditioned_qubit_state,
 )
 
 
@@ -190,10 +192,44 @@ def test_sqr_reduces_to_global_rotation_when_theta_phi_constant():
 
 def test_bloch_extractor_for_known_pure_states():
     n_cav = 4
+    g = qt.tensor(qt.basis(2, 0), qt.basis(n_cav, 0))
+    e = qt.tensor(qt.basis(2, 1), qt.basis(n_cav, 0))
     plus_x = qt.tensor( (qt.basis(2, 0) + qt.basis(2, 1)).unit(),qt.basis(n_cav, 0))
     plus_y = qt.tensor( (qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit(),qt.basis(n_cav, 0))
+    assert np.allclose(bloch_xyz_from_joint(g), (0.0, 0.0, 1.0), atol=2e-3)
+    assert np.allclose(bloch_xyz_from_joint(e), (0.0, 0.0, -1.0), atol=2e-3)
     assert np.allclose(bloch_xyz_from_joint(plus_x), (1.0, 0.0, 0.0), atol=2e-3)
     assert np.allclose(bloch_xyz_from_joint(plus_y), (0.0, 1.0, 0.0), atol=2e-3)
+
+
+def test_bloch_y_matches_sigma_y_expectation():
+    rho_q = ((qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit()).proj()
+    x, y, z = bloch_xyz_from_qubit_state(rho_q)
+    assert np.allclose((x, y, z), (0.0, 1.0, 0.0), atol=1e-12)
+    assert np.isclose(y, float(np.real((rho_q * qt.sigmay()).tr())), atol=1e-12)
+
+
+def test_fock_weighted_bloch_contributions_sum_to_joint_trace():
+    n_cav = 5
+    psi_q0 = (qt.basis(2, 0) + qt.basis(2, 1)).unit()
+    psi_q2 = (qt.basis(2, 0) + 1j * qt.basis(2, 1)).unit()
+    psi = (
+        np.sqrt(0.35) * qt.tensor(psi_q0, qt.basis(n_cav, 0))
+        + np.sqrt(0.65) * qt.tensor(psi_q2, qt.basis(n_cav, 2))
+    ).unit()
+    rho = psi.proj()
+    total = np.array(bloch_xyz_from_joint(rho), dtype=float)
+    weighted = np.zeros(3, dtype=float)
+    population_sum = 0.0
+
+    for n in range(n_cav):
+        rho_q_n, p_n, valid = conditioned_qubit_state(rho, n=n, fallback="zero")
+        population_sum += p_n
+        if valid:
+            weighted += p_n * np.array(bloch_xyz_from_qubit_state(rho_q_n), dtype=float)
+
+    assert np.isclose(population_sum, 1.0, atol=1e-12)
+    assert np.allclose(weighted, total, atol=1e-12)
 
 
 def test_conditional_bloch_extractor_matches_postselection():

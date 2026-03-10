@@ -14,18 +14,18 @@ import qutip as qt
 from scipy.optimize import Bounds, minimize
 
 from cqed_sim.core.frame import FrameSpec
+from cqed_sim.core.frequencies import manifold_transition_frequency
 from cqed_sim.core.ideal_gates import qubit_rotation_xy, sqr_op
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.io.gates import RotationGate
 from cqed_sim.observables.trajectories import bloch_trajectory_from_states
 from cqed_sim.pulses.calibration import build_sqr_tone_specs, sqr_lambda0_rad_s
 from cqed_sim.pulses.envelopes import cosine_rise_envelope, normalized_gaussian
+from cqed_sim.pulses.builders import build_rotation_pulse
 from cqed_sim.pulses.pulse import Pulse
 from cqed_sim.sequence.scheduler import CompiledSequence, SequenceCompiler
 from cqed_sim.sim.extractors import conditioned_bloch_xyz
 from cqed_sim.sim.runner import SimulationConfig, hamiltonian_time_slices, simulate_sequence
-from cqed_sim.simulators.pulse_unitary import build_rotation_pulse
-from cqed_sim.snap_opt.model import manifold_transition_frequency
 
 
 MODE_BASIC = "amp_phase"

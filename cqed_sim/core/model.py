@@ -7,6 +7,7 @@ from typing import Sequence
 import qutip as qt
 
 from .frame import FrameSpec
+from .frequencies import manifold_transition_frequency
 
 
 def _falling_factorial_number_op(n_op: qt.Qobj, order: int) -> qt.Qobj:
@@ -67,11 +68,14 @@ class DispersiveTransmonCavityModel:
             h += -coeff * _falling_factorial_number_op(n_c, i) * n_q
         return h
 
-    def basis_state(self, n_tr: int, n_cav: int) -> qt.Qobj:
-        """Return the joint basis ket |q> ⊗ |n> with qubit first, cavity second."""
-        return qt.tensor(qt.basis(self.n_tr, n_tr), qt.basis(self.n_cav, n_cav))
+    def basis_state(self, q_level: int, cavity_level: int) -> qt.Qobj:
+        """Return the joint basis ket |q> tensor |n> with qubit first, cavity second."""
+        return qt.tensor(qt.basis(self.n_tr, q_level), qt.basis(self.n_cav, cavity_level))
 
     def coherent_qubit_superposition(self, n_cav: int = 0) -> qt.Qobj:
         g = self.basis_state(0, n_cav)
         e = self.basis_state(1, n_cav)
         return (g + e).unit()
+
+    def manifold_transition_frequency(self, n: int, frame: FrameSpec | None = None) -> float:
+        return manifold_transition_frequency(self, n=n, frame=frame)

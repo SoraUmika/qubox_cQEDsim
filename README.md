@@ -1,279 +1,261 @@
-# cQED Time-Domain Pulse Simulator (`cqed_sim`)
+# `cqed_sim`
 
-Hardware-faithful transmon+cavity pulse simulation in the dispersive regime using QuTiP for state evolution, while keeping pulse compilation and hardware waveform realism explicit in Python.
+`cqed_sim` is the reusable cQED simulator library in this repository. It contains the core qubit-cavity Hamiltonian, frame handling, pulse primitives, sequence compilation, solver path, standard ideal gates, observables, calibration helpers, tomography utilities, and unitary-synthesis tools.
 
-## Features
-- Dispersive transmon+cavity model with Duffing nonlinearity, Kerr, dispersive `chi`, and higher-order `kerr_higher` / `chi_higher`.
-- Explicit pulse timeline compiler with overlap summation on a global sample grid.
-- Hardware pipeline controls: IQ gain/skew/DC offsets, LO/IF, image leakage, channel gain, ZOH, simple low-pass filtering, timing quantization, detuning.
-- Open-system Lindblad noise via `NoiseSpec`: qubit `T1`, qubit `Tphi`, cavity `kappa`, thermal occupancy `nth`.
-- Sideband interaction primitive channel (`"sideband"`) implementing `H_sb = g(t) (a^\dagger sigma_- + a sigma_+)`.
-- QuTiP-based solver wrapper with explicit tolerances and frame specification.
-- Deterministic pytest suite covering physics signatures, timeline correctness, convergence/regression, and runtime budgets.
+Study code, audits, paper reproductions, and workflow-specific helpers are no longer part of the core package. Those now live under `examples/`.
 
-## Install
-```bash
-pip install -e .[dev]
-```
+## Package layout
 
-## Quick Start
+Core library:
+
+- `cqed_sim/core`
+  - Hilbert-space conventions, frames, static model, ideal gates, manifold-frequency helpers.
+- `cqed_sim/pulses`
+  - `Pulse`, standard envelopes, standard pulse builders, calibration formulas, hardware distortion models.
+- `cqed_sim/sequence`
+  - `SequenceCompiler` and compiled-channel timeline assembly.
+- `cqed_sim/sim`
+  - Hamiltonian assembly, solver entry points, noise model, extractors.
+- `cqed_sim/calibration`
+  - Reusable SQR calibration and guarded-benchmark helpers.
+- `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`
+  - Diagnostics, operator helpers, tomography, gate I/O, plotting.
+- `cqed_sim/unitary_synthesis`
+  - Subspace-aware synthesis, drift-phase abstractions, reporting, constraints, optimization.
+
+Example-side code:
+
+- `examples/workflows`
+  - Sequential workflow helpers and SQR transfer artifacts.
+- `examples/audits`
+  - Convention-audit utilities.
+- `examples/studies`
+  - SNAP optimization studies and speed-limit studies.
+- `examples/paper_reproductions`
+  - PRL-133-specific reproduction code.
+- `examples/smoke_tests`
+  - Smoke and integration checks for the moved example paths.
+
+## Core conventions
+
+- Tensor ordering is qubit first, cavity second: `|q,n> = |q> tensor |n>`.
+- Computational basis is `|g> = |0>`, `|e> = |1>`.
+- Internal Hamiltonian and frame frequencies are in `rad/s`; times are in `s`.
+- Complex drive envelopes use `exp(+i * (omega * t + phase))`.
+- The runtime Hamiltonian uses `n_q = |e><e|` rather than writing the qubit term directly as `sigma_z / 2`.
+- Runtime `chi` means the per-photon downward pull of the `|g,n> <-> |e,n>` transition frequency.
+
+The canonical reference for physics conventions and caveats is:
+
+- `physics_and_conventions/physics_conventions_report.tex`
+
+## Common API
+
+### Build a model and frame
+
 ```python
 import numpy as np
-from cqed_sim.core.model import DispersiveTransmonCavityModel
-from cqed_sim.core.frame import FrameSpec
-from cqed_sim.pulses.pulse import Pulse
-from cqed_sim.sequence.scheduler import SequenceCompiler
-from cqed_sim.sim.runner import simulate_sequence, SimulationConfig
 
-def square(x):
-    return np.ones_like(x, dtype=np.complex128)
+from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec
 
 model = DispersiveTransmonCavityModel(
-    omega_c=0.0, omega_q=0.0, alpha=-2*np.pi*0.25, chi=2*np.pi*0.02, kerr=-2*np.pi*0.005,
-    n_cav=12, n_tr=3
+    omega_c=2.0 * np.pi * 5.0e9,
+    omega_q=2.0 * np.pi * 6.0e9,
+    alpha=2.0 * np.pi * (-200.0e6),
+    chi=2.0 * np.pi * (-2.84e6),
+    kerr=2.0 * np.pi * (-2.0e3),
+    n_cav=8,
+    n_tr=2,
 )
-pulses = [Pulse("q", 0.0, 1.0, square, amp=np.pi/4)]
-compiled = SequenceCompiler(dt=0.02).compile(pulses, t_end=1.2)
-res = simulate_sequence(
-    model, compiled, model.basis_state( 0,0), {"q": "qubit"},
-    config=SimulationConfig(frame=FrameSpec())
+
+frame = FrameSpec(
+    omega_c_frame=model.omega_c,
+    omega_q_frame=model.omega_q,
 )
-print(res.expectations["P_e"][-1])
 ```
 
-## Sequential Simulation Notebook
-- Notebook: `sequential_simulation.ipynb`
-- Generator: `outputs/generate_sequential_simulation_notebook.py`
-- Additional calibration notebook: `SQR_calibration.ipynb`
-- Calibration notebook generator: `outputs/generate_sqr_calibration_notebook.py`
-- Repo-local demo gate list fallback: `examples/sequences/sequential_demo.json`
-- Refactored reusable APIs live under:
-  - `cqed_sim.io.gates`
-  - `cqed_sim.calibration`
-  - `cqed_sim.simulators`
-  - `cqed_sim.observables`
-  - `cqed_sim.plotting`
-  - `cqed_sim.tests.test_sanity`
-  - `cqed_sim.tests.test_sqr_calibration`
-- Regenerate the notebooks after changing the generators:
-```bash
-python outputs/generate_sequential_simulation_notebook.py
-python outputs/generate_sqr_calibration_notebook.py
-```
-- Run the notebooks top-to-bottom in a kernel with `qutip`, `matplotlib`, `scipy`, and the editable package installed.
-- The notebook includes:
-  - Case A ideal gates
-  - Case B pulse-level unitary simulation
-  - Case C pulse-level dissipative simulation
-  - Case D calibrated-SQR pulse-level simulation with cache-backed SQR optimization
-  - compact Wigner grids, relative phase tracking, gate-indexed Fock-resolved Bloch heatmaps, selected-gate pulse trajectories, weakness metrics, and a baseline-vs-refactor sanity check
-  - saved figures under `outputs/figures/`, including:
-    - `fock_resolved_bloch_heatmaps.png`
-    - `relative_phase_heatmap.png`
-    - `bloch_trajectory_gate_<i>.png`
-    - `combined_gate_diagnostics.png`
-- `SQR_calibration.ipynb` performs per-manifold SQR fitting and exports `sqr_calibration_result.json` plus reusable cache files under `calibrations/`
+Useful entry points:
 
-## API Summary
-- `DispersiveTransmonCavityModel`: static Hamiltonian and basis state utilities.
-- `FrameSpec(omega_c_frame, omega_q_frame)`: per-mode rotating frame frequencies.
-- `Pulse(channel, t0, duration, envelope, carrier, phase, amp, drag, ...)`: analytic or sampled envelope pulse.
-- `HardwareConfig`: per-channel distortion and mixer settings.
-- `SequenceCompiler(dt, hardware).compile(...)`: timeline + overlap + hardware distortion output.
-- `simulate_sequence(...)`: QuTiP `sesolve` / `mesolve` integration wrapper.
-- `NoiseSpec(t1, tphi, kappa, nth)`: optional Lindblad noise specification.
-- Sideband pulse convention: for constant `g`, swap `|e,0> -> |g,1>` at `T_pi = pi / (2g)`.
-- Sequential notebook entry points:
-  - `cqed_sim.io.gates.load_gate_sequence(...)`
-  - `cqed_sim.calibration.sqr.calibrate_sqr_gate(...)`
-  - `cqed_sim.calibration.sqr.load_or_calibrate_sqr_gate(...)`
-  - `cqed_sim.simulators.run_case_a(...)`
-  - `cqed_sim.simulators.run_case_b(...)`
-  - `cqed_sim.simulators.run_case_c(...)`
-  - `cqed_sim.simulators.run_case_d(...)`
-  - `cqed_sim.simulators.simulate_gate_bloch_trajectory(...)`
-  - `cqed_sim.observables.attach_weakness_metrics(...)`
-  - `cqed_sim.observables.fock_resolved_bloch_diagnostics(...)`
-  - `cqed_sim.observables.conditional_phase_diagnostics(...)`
-  - `cqed_sim.plotting.plot_bloch_track(...)`
-  - `cqed_sim.plotting.plot_wigner_grid(...)`
-  - `cqed_sim.plotting.plot_relative_phase_track(...)`
-  - `cqed_sim.plotting.plot_sqr_calibration_result(...)`
-  - `cqed_sim.plotting.plot_fock_resolved_bloch_heatmaps(...)`
-  - `cqed_sim.plotting.plot_relative_phase_heatmap(...)`
-  - `cqed_sim.plotting.plot_gate_bloch_trajectory(...)`
+- `DispersiveTransmonCavityModel.static_hamiltonian(frame=...)`
+- `DispersiveTransmonCavityModel.basis_state(q_level, cavity_level)`
+- `manifold_transition_frequency(model, n, frame=...)`
 
-## Unitary Synthesis (Subspace-Aware)
-- Module: `cqed_sim.unitary_synthesis`
-- Entrypoints:
-  - `Subspace.qubit_cavity_block(...)`
-  - `make_target("ghz"|"cluster"|"easy", ...)`
-  - `UnitarySynthesizer(...).fit(...)`
-- Basis convention in synthesis code:
-  - Full Hilbert-space ordering is `|q>_qubit tensor |n>_cavity` with `q=0 -> g`, `q=1 -> e`
-  - `Subspace.qubit_cavity_block(...)` returns the restricted block basis in per-Fock order: `|g,0>, |e,0>, |g,1>, |e,1>, ...`
+### Build standard pulses
 
-### Time Policy (Per Gate Type / Shared / Frozen)
-- Configure durations with `time_policy`, `time_mode`, and optional `time_groups`.
-- `time_mode`:
-  - `"per-type"`: one shared duration parameter per gate type
-  - `"per-instance"`: one duration parameter per gate instance
-  - `"hybrid"`: explicit sharing groups via `time_groups` or per-type `group` entries
-- Any missing gate type falls back to `time_policy["default"]`.
-- Frozen gate types (`optimize=False` or `frozen=True`) are excluded from the active optimizer vector.
-
-Example:
 ```python
-time_policy = {
-    "default": {"optimize": True, "bounds": (20e-9, 2000e-9), "init": 400e-9},
-    "SQR": {"optimize": True, "bounds": (60e-9, 1200e-9), "init": 300e-9},
-    "Displacement": {"optimize": False, "bounds": (30e-9, 900e-9), "init": 150e-9},
-    "CondPhaseSQR": {"optimize": True, "bounds": (80e-9, 1500e-9), "init": 500e-9},
-}
+import numpy as np
+
+from cqed_sim.io import RotationGate
+from cqed_sim.pulses import build_rotation_pulse
+
+gate = RotationGate(index=0, name="x90", theta=np.pi / 2.0, phi=0.0)
+pulses, drive_ops, meta = build_rotation_pulse(
+    gate,
+    {
+        "duration_rotation_s": 100.0e-9,
+        "rotation_sigma_fraction": 0.18,
+    },
+)
 ```
 
-### Conditional-Phase SQR Drift Model
-- `CondPhaseSQR` and optional drift-in-`SQR` use explicit drift coefficients:
-  - `chi`, `chi2`, `kerr` (`K`), `kerr2` (`K2`) in rad/s.
-- Rotating-frame convention used by default:
-  - frame `"rotating_omega_c_omega_q"` (bare `omega_c n` and `omega_q sigma_z/2` removed).
-- Drift energies:
-  - `E_g,n = delta_c*n - 0.5*delta_q - (chi*n + chi2*n(n-1)) + Kerr(n)`
-  - `E_e,n = delta_c*n + 0.5*delta_q + (chi*n + chi2*n(n-1)) + Kerr(n)`
-  - `Kerr(n) = 0.5*K*n(n-1) + (K2/6)*n(n-1)(n-2)`
-- Phases during gate time `t`:
-  - `Phi_g,n = E_g,n * t`, `Phi_e,n = E_e,n * t`
-  - Relative phase: `DeltaPhi_n = Phi_e,n - Phi_g,n`
-- Gate structure:
-  - `U_CondPhaseSQR = U_drift(t) * U_drive(t)`
-  - `SQR` can include the same drift factor via `include_conditional_phase_in_sqr=True`.
+Common builders:
 
-### Free-Evolution Conditional Phase Gate
-- Primitive: `FreeEvolveCondPhase(wait_time)`
-- This is the drive-free version of conditional phase accumulation:
-  - `U_free(t_wait) = exp(-i H0 t_wait)` under the same drift model used by `CondPhaseSQR`.
-- Uses the same shared phase helpers as `CondPhaseSQR`:
-  - `drift_phase_table(...)`
-  - `drift_phase_unitary(...)` (ideal backend)
-  - `drift_hamiltonian_qobj(...)` / `drift_phase_from_hamiltonian(...)` (pulse backend)
-- Behavior when `chi=chi2=kerr=kerr2=0` and frame offsets are zero:
-  - `U_free` reduces to identity (up to global phase convention).
-- `FreeEvolveCondPhase` participates in time policy with gate type key:
-  - `"FreeEvolveCondPhase"`.
+- `build_rotation_pulse(...)`
+- `build_displacement_pulse(...)`
+- `build_sqr_multitone_pulse(...)`
 
-### Hardware-Like Constraints and Parallelization
-- `UnitarySynthesizer` supports hardware-like limits and parallel execution:
-  - `hardware_limits`
-  - `time_grid`
-  - `constraints`
-  - `parallel`
-- Time-grid enforcement (DAC-like):
-  - default grid is `dt = 1e-9` (1 GHz sampling),
-  - `time_grid["mode"]` supports `"hard"` and `"soft"`,
-  - reports include raw times, snapped times, and integer tick counts.
-- Constraint hooks:
-  - amplitude/detuning bounds per channel and gate-type override,
-  - slew-rate checks on compiled piecewise-constant envelopes,
-  - SQR tone-spacing / tone-count / forbidden-band checks.
-- Parallelization:
-  - deterministic multi-start parallel workers with derived seeds,
-  - report includes worker seeds, per-start objectives, and selected start index.
+If you need a custom pulse family, construct `Pulse(...)` directly.
 
-## Numerical Settings
-- Solver defaults: `atol=1e-8`, `rtol=1e-7`, optional `max_step`.
-- Piecewise sampled drives are passed as explicit coefficient arrays on the compiled time grid.
-- Determinism: tests pin NumPy random seed; no nondeterministic noise path is enabled by default.
-- Units: `t1/tphi` in seconds, `kappa` in `1/s`, Hamiltonian couplings in angular-rate units compatible with time grid.
+### Compile a sequence
+
+```python
+from cqed_sim.sequence import SequenceCompiler
+
+compiled = SequenceCompiler(dt=2.0e-9).compile(
+    pulses,
+    t_end=max(pulse.t1 for pulse in pulses) + 2.0e-9,
+)
+```
+
+`SequenceCompiler` is the normal entry point for:
+
+- overlap summation on a global time grid,
+- timing quantization,
+- IF/LO and IQ distortion,
+- crosstalk mixing,
+- optional compile caching.
+
+### Run a simulation
+
+```python
+from cqed_sim.sim import SimulationConfig, simulate_sequence
+
+result = simulate_sequence(
+    model,
+    compiled,
+    model.basis_state(0, 0),
+    drive_ops,
+    config=SimulationConfig(frame=frame, max_step=2.0e-9),
+)
+```
+
+Useful runtime entry points:
+
+- `simulate_sequence(...)`
+- `hamiltonian_time_slices(...)`
+- `SimulationConfig(...)`
+- `NoiseSpec(...)`
+
+### Extract common observables
+
+```python
+from cqed_sim.sim import reduced_qubit_state, reduced_cavity_state, conditioned_bloch_xyz
+
+rho_q = reduced_qubit_state(result.final_state)
+rho_c = reduced_cavity_state(result.final_state)
+bloch_n0 = conditioned_bloch_xyz(result.final_state, n=0)
+```
+
+Also see:
+
+- `bloch_xyz_from_joint(...)`
+- `cavity_moments(...)`
+- `cavity_wigner(...)`
+- `cqed_sim.observables.*` for higher-level phase, trajectory, and weakness diagnostics
+
+### Use standard ideal gates
+
+```python
+import numpy as np
+
+from cqed_sim.core import displacement_op, qubit_rotation_xy, sqr_op
+
+u_rot = qubit_rotation_xy(np.pi / 2.0, 0.0)
+u_disp = displacement_op(8, 0.3 + 0.1j)
+u_sqr = sqr_op(
+    theta=[np.pi / 2.0, 0.0, 0.0],
+    phi=[0.0, 0.0, 0.0],
+)
+```
+
+### Calibration and tomography helpers
+
+Reusable calibration entry points:
+
+- `calibrate_sqr_gate(...)`
+- `load_or_calibrate_sqr_gate(...)`
+- `calibrate_guarded_sqr_target(...)`
+- `benchmark_random_sqr_targets_vs_duration(...)`
+
+Reusable tomography entry points:
+
+- `run_all_xy(...)`
+- `autocalibrate_all_xy(...)`
+- `selective_pi_pulse(...)`
+- `run_fock_resolved_tomo(...)`
+- `calibrate_leakage_matrix(...)`
+
+### Unitary synthesis
+
+Main synthesis entry points:
+
+- `Subspace.qubit_cavity_block(...)`
+- `make_target(...)`
+- `UnitarySynthesizer(...).fit(...)`
+
+Important caveat: `cqed_sim/unitary_synthesis` has its own drift-phase abstraction. Its `sigma_z` sign and `chi` normalization are not identical to the runtime Hamiltonian. Use the conventions report before translating parameters between the runtime and synthesis layers.
+
+## Normal usage patterns
+
+Typical library use is:
+
+1. Construct `DispersiveTransmonCavityModel` and `FrameSpec`.
+2. Create `Pulse` objects directly or use the standard builders in `cqed_sim.pulses`.
+3. Compile the pulses with `SequenceCompiler`.
+4. Run `simulate_sequence`.
+5. Extract reduced states, Bloch vectors, or phase diagnostics with `cqed_sim.sim` and `cqed_sim.observables`.
+
+For gate-sequence JSON workflows, use:
+
+- `cqed_sim.io.load_gate_sequence(...)`
+- the pulse builders in `cqed_sim.pulses`
+- the example-side sequential workflow helpers in `examples/workflows/sequential`
+
+## Examples
+
+Example entry points are intentionally outside the core library:
+
+- `examples/workflows/sequential`
+  - Case-style sequential workflows and gate-by-gate trajectories.
+- `examples/workflows/sqr_transfer.py`
+  - SQR transfer artifact construction and replay.
+- `examples/audits/experiment_convention_audit.py`
+  - Convention-audit utilities and sign scans.
+- `examples/studies/snap_opt`
+  - SNAP optimization study code.
+- `examples/studies/sqr_speedlimit_multitone_gaussian.py`
+  - SQR speed-limit study code.
+- `examples/paper_reproductions/snap_prl133`
+  - PRL-133 reproduction code.
+
+These are example or study APIs, not part of the canonical `cqed_sim` library surface.
 
 ## Tests
-Run all:
+
+Core reusable-library suite:
+
 ```bash
-pytest -q
+pytest tests -q
 ```
 
-Run only the notebook refactor sanity coverage:
+Example-side verification:
+
 ```bash
-pytest -q cqed_sim/tests/test_sanity.py
-pytest -q cqed_sim/tests/test_sqr_calibration.py
+pytest examples/audits/tests \
+  examples/workflows/tests \
+  examples/studies/tests \
+  examples/paper_reproductions/tests \
+  examples/smoke_tests/tests -q
 ```
 
-Skip slow tests:
-```bash
-pytest -q -m "not slow"
-```
-
-Runtime budget policy:
-- Fast tests: target `< 1 s` each.
-- Integration tests: target `< 2-5 s` each.
-- Full suite target on laptop: `< 60-120 s`.
-
-## Trust Checklist (Requirement -> Test)
-- Hermiticity / operator sanity -> `tests/test_01_sanity_and_free.py::test_hamiltonian_hermitian_over_grid`
-- Free evolution / conserved populations -> `tests/test_01_sanity_and_free.py`
-- Kerr-only analytic phase -> `tests/test_01_sanity_and_free.py::test_kerr_only_phase_matches_analytic`
-- Linear cavity coherent signature -> `tests/test_02_cavity_drive_and_kerr.py::test_linear_cavity_drive_coherent_signature`
-- Kerr distortion + timestep refinement -> `tests/test_02_cavity_drive_and_kerr.py::test_kerr_signature_and_timestep_refinement`
-- Dispersive conditional phase scaling -> `tests/test_03_dispersive_and_ramsey.py::test_chi_conditional_phase_scales_with_photon_number`
-- Ramsey pull with photons -> `tests/test_03_dispersive_and_ramsey.py::test_ramsey_pull_with_cavity_photons`
-- XY phase coherence and overlap cancellation -> `tests/test_04_xy_phase_and_overlap.py`
-- Detuning response and frame invariance -> `tests/test_05_detuning_and_frames.py`
-- Multi-level leakage and DRAG directionality -> `tests/test_06_leakage_drag_and_higher_order.py::test_multilevel_leakage_and_drag_directionality`
-- Higher-order smoke test -> `tests/test_06_leakage_drag_and_higher_order.py::test_higher_order_terms_smoke`
-- Convergence + golden regression -> `tests/test_07_convergence_regression.py::test_numerical_convergence_and_regression`
-- Timeline compiler alignment/overlap -> `tests/test_08_timeline_and_hardware.py::test_timeline_overlap_boundaries_alignment`
-- IQ imbalance image and LO leakage from DC -> `tests/test_08_timeline_and_hardware.py`
-- Runtime policy enforcement -> `tests/test_09_runtime_policy.py`
-
-## Updating Regression Golden Data
-- File: `tests/golden/hard_sequence.json`
-- Recompute expected values by running the helper in `tests/test_07_convergence_regression.py` at the finest timestep and updating JSON only when a physics-model change is intentional.
-
-## Diagnostics
-- `cqed_sim.sim.diagnostics.channel_norms(...)`
-- `cqed_sim.sim.diagnostics.instantaneous_phase_frequency(...)`
-- Example sanity script: `examples/sanity_run.py`
-- Example cavity ringdown with noise: `examples/ringdown_noise.py`
-- Example sideband swap: `examples/sideband_swap.py`
-
-## Fock-Resolved Tomography
-- Driver: `cqed_sim.tomo.protocol.run_fock_resolved_tomo(...)`
-- ALL_XY tools: `run_all_xy(...)`, `autocalibrate_all_xy(...)`
-- Leakage calibration: `calibrate_leakage_matrix(...)` returns `(W, b, condition_number)` where:
-  - `W` is the manifold-mixing matrix in `v_hat ~= W v_true + b`
-  - `b` is axis-wise additive bias
-- Unmixing uses pseudoinverse by default: `v_rec = pinv(W) @ (v_hat - b)`.
-- Example workflow and saved diagnostics/plots: `examples/fock_tomo_workflow.py`.
-
-## SNAP Optimization (Landgraf-Inspired)
-- Module: `cqed_sim.snap_opt`
-- Implements an interpretable multi-tone selective-stage SNAP ansatz with only per-tone:
-  - amplitude `A_n`
-  - detuning `delta_n`
-  - phase `phi_n`
-- Optimization loop updates `(A_n, delta_n, phi_n)` iteratively using coherent-error components:
-  - phase-like error `dtheta_n`
-  - longitudinal amplitude error `dlambda_n`
-  - transversal leakage error `dalpha_n`
-- Uses backtracking for stable convergence.
-- References:
-  - J. Landgraf et al., “Fast quantum control of cavities using an improved protocol without coherent errors”, arXiv:2310.10498, PRL 133, 260802 (2024).
-- Example scripts:
-  - `examples/run_snap_optimization_demo.py`
-  - `examples/make_figures_like_paper.py`
-
-## PRL 133 Reproduction Pipeline
-- Module: `cqed_sim.snap_prl133`
-- Paper mapping/citations: `cqed_sim/snap_prl133/paper_notes.md` (PRL DOI, arXiv, supplemental reference).
-- Reproduction entrypoint:
-```bash
-python -m cqed_sim.snap_prl133.reproduce
-```
-- Outputs:
-  - Figures/data: `outputs/figures/`
-  - Summary JSON: `outputs/reproduce_summary.json`
-  - Markdown report: `outputs/report.md`
-  - Auto-generated PDF report: `outputs/report/report.pdf`
-- Headline metric:
-  - `F` (mean squared overlap, bounded in `[0,1]`)
-  - `epsilon_coh = 1 - F` (bounded in `[0,1]`)
-  - Legacy `error_vector_norm` is retained only as a secondary diagnostic.
+The core suite is the canonical validation path for the reusable library. The example-side suites validate the moved workflow, study, audit, and reproduction code separately.

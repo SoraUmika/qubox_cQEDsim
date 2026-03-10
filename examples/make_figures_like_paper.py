@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from cqed_sim.snap_opt import SnapModelConfig, SnapRunConfig, optimize_snap_parameters, target_difficulty_metric
+from examples.studies.snap_opt import SnapModelConfig, SnapRunConfig, optimize_snap_parameters, target_difficulty_metric
 
 
 def _plot_or_dump(path: Path, x, ys, labels, title, ylabel):

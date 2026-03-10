@@ -10,13 +10,13 @@ def test_qubox_rotation_and_sqr_sign_mapping():
     best_rot = scan["best_rotation_match"]
     best_sqr = scan["best_sqr_match"]
 
-    # qubox: exp(-i phi_eff) exp(+i omega t)
-    assert best_rot["phase_sign"] == -1
+    # qubox: exp(+i phi_eff) exp(+i omega t)
+    assert best_rot["phase_sign"] == 1
     assert best_rot["omega_sign"] == 1
     assert best_rot["process_fidelity_vs_qubox"] > 0.999999
 
     # unified SQR path now matches qubox with same omega sign semantics as Rotation.
-    assert best_sqr["phase_sign"] == -1
+    assert best_sqr["phase_sign"] == 1
     assert best_sqr["omega_sign"] == 1
     assert best_sqr["process_fidelity_vs_qubox"] > 0.999999
 

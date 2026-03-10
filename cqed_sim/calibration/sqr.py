@@ -42,6 +42,7 @@ def default_calibration_config_keys() -> tuple[str, ...]:
         "st_chi3_hz",
         "st_K_hz",
         "st_K2_hz",
+        "fock_fqs_hz",
         "use_rotating_frame",
         "max_n_cal",
         "sqr_theta_cutoff",
@@ -323,6 +324,7 @@ def _benchmark_simulation_config(config: Mapping[str, Any], total_levels: int) -
         "st_chi3_hz": float(config.get("st_chi3_hz", 0.0)),
         "st_K_hz": float(config.get("st_K_hz", 0.0)),
         "st_K2_hz": float(config.get("st_K2_hz", 0.0)),
+        "fock_fqs_hz": None if config.get("fock_fqs_hz") is None else [float(value) for value in config.get("fock_fqs_hz")],
         "n_cav_dim": int(config.get("n_cav_dim", total_levels)),
         "use_rotating_frame": bool(config.get("use_rotating_frame", True)),
         "qb_T1_relax_ns": None if config.get("qb_T1_relax_ns") is None else float(config.get("qb_T1_relax_ns")),
@@ -464,6 +466,7 @@ def _build_multitone_simulation(
         phi_values=list(target.phi),
         duration_s=float(config["duration_sqr_s"]),
         d_lambda_values=d_lambda_values,
+        fock_fqs_hz=sim_config.get("fock_fqs_hz"),
         include_all_levels=bool(config.get("allow_zero_theta_corrections", True)),
         tone_cutoff=float(config.get("sqr_theta_cutoff", 1.0e-10)),
     )

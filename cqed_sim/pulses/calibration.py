@@ -3,9 +3,9 @@ from __future__ import annotations
 import numpy as np
 
 from cqed_sim.core.frame import FrameSpec
+from cqed_sim.core.frequencies import manifold_transition_frequency
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.envelopes import MultitoneTone
-from cqed_sim.snap_opt.model import manifold_transition_frequency
 
 
 def displacement_square_amplitude(alpha: complex, duration_s: float) -> complex:
@@ -54,6 +54,21 @@ def pad_sqr_angles(
     return pad_parameter_array(theta_values, n_cav_dim), pad_parameter_array(phi_values, n_cav_dim)
 
 
+def _manifold_frequency_in_frame_rad_s(
+    model: DispersiveTransmonCavityModel,
+    n: int,
+    frame: FrameSpec,
+    fock_fqs_hz: list[float] | tuple[float, ...] | None,
+) -> float:
+    if fock_fqs_hz is None:
+        return float(manifold_transition_frequency(model, n, frame=frame))
+    fock = np.asarray(fock_fqs_hz, dtype=float).reshape(-1)
+    if int(n) >= int(fock.size) or not np.isfinite(fock[int(n)]):
+        return float(manifold_transition_frequency(model, n, frame=frame))
+    omega_abs = float(2.0 * np.pi * fock[int(n)])
+    return float(omega_abs - float(getattr(frame, "omega_q_frame", 0.0)))
+
+
 def build_sqr_tone_specs(
     model: DispersiveTransmonCavityModel,
     frame: FrameSpec,
@@ -61,6 +76,7 @@ def build_sqr_tone_specs(
     phi_values: list[float] | tuple[float, ...],
     duration_s: float,
     d_lambda_values: list[float] | tuple[float, ...] | None = None,
+    fock_fqs_hz: list[float] | tuple[float, ...] | None = None,
     include_all_levels: bool = False,
     tone_cutoff: float = 1.0e-10,
 ) -> list[MultitoneTone]:
@@ -83,7 +99,7 @@ def build_sqr_tone_specs(
         # Canonical waveform convention uses exp(+i*omega*t), so SQR tone frequency
         # parameter is the negative of manifold_transition_frequency(...), which was
         # previously paired with exp(-i*omega*t).
-        omega_waveform = -float(manifold_transition_frequency(model, n, frame=frame))
+        omega_waveform = -_manifold_frequency_in_frame_rad_s(model, n, frame, fock_fqs_hz)
         tone_specs.append(
             MultitoneTone(
                 manifold=int(n),

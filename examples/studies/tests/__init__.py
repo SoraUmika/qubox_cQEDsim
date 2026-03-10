@@ -1,0 +1,1 @@
+"""Example-side study tests."""

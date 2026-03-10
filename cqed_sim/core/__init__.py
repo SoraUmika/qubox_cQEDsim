@@ -1,5 +1,6 @@
 from .conventions import qubit_cavity_block_indices, qubit_cavity_dims, qubit_cavity_index
 from .frame import FrameSpec
+from .frequencies import falling_factorial_scalar, manifold_transition_frequency
 from .ideal_gates import (
     displacement_op,
     beamsplitter_unitary,
@@ -18,6 +19,8 @@ __all__ = [
     "qubit_cavity_dims",
     "qubit_cavity_index",
     "qubit_cavity_block_indices",
+    "falling_factorial_scalar",
+    "manifold_transition_frequency",
     "qubit_rotation_xy",
     "qubit_rotation_axis",
     "displacement_op",

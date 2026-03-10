@@ -1,0 +1,164 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex.fmt)
+ restricted \write18 enabled.
+entering extended mode
+(physics_conventions_report.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2025-12-24>
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/base\article.cls
+Document Class: article 2025/01/22 v1.4n Standard LaTeX document class
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/base\size11.clo))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cfg))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+For additional information on amsmath, use the `?' option.
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty))
+ (C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
+)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefine
+keys.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.s
+ty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds
+.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.s
+ty)))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\gettit
+lestring.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
+)))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.s
+ty) (C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
+) (C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
+) (C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcalc
+.sty)))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfil
+echeck.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\uniquec
+ounter.sty)))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/enumitem\enumitem.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/tools\verbatim.sty)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdf
+tex.def) (physics_conventions_report.aux)
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/graphics\color.sty
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg)
+
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.def
+
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mk
+ii
+[Loading MPS to PDF converter (version 2006.09.02).]
+))
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/graphics\mathcolor.ltx)
+) (physics_conventions_report.out) (physics_conventions_report.out)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd)
+(C:\Users\dazzl\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd)
+Overfull \hbox (89.90125pt too wide) in paragraph at lines 41--61
+ []\T1/cmr/bx/n/10.95 Primary files in-spected.[] \T1/cmtt/m/n/10.95 cqed_sim/c
+ore/conventions.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10.95 cqed_sim/core/model.py
+\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10.95 cqed_sim/core/frame.py\T1/cmr/m/n/10.95 
+,
+
+Overfull \hbox (155.78526pt too wide) in paragraph at lines 41--61
+\T1/cmtt/m/n/10.95 cqed_sim/core/ideal_gates.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n
+/10.95 cqed_sim/operators/basic.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10.95 cqed_s
+im/pulses/pulse.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10.95 cqed_sim/pulses/envelo
+pes.py\T1/cmr/m/n/10.95 ,
+
+Overfull \hbox (36.92834pt too wide) in paragraph at lines 41--61
+\T1/cmtt/m/n/10.95 cqed_sim/pulses/hardware.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/
+10.95 cqed_sim/pulses/calibration.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10.95 cqed
+_sim/sequence/scheduler.py\T1/cmr/m/n/10.95 ,
+
+Overfull \hbox (104.85992pt too wide) in paragraph at lines 41--61
+\T1/cmtt/m/n/10.95 cqed_sim/sim/runner.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10.95
+ cqed_sim/sim/noise.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10.95 cqed_sim/sim/extra
+ctors.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10.95 cqed_sim/simulators/common.py\T1
+/cmr/m/n/10.95 ,
+
+Overfull \hbox (172.72925pt too wide) in paragraph at lines 41--61
+\T1/cmtt/m/n/10.95 cqed_sim/simulators/pulse_unitary.py\T1/cmr/m/n/10.95 , \T1/
+cmtt/m/n/10.95 cqed_sim/calibration/sqr.py\T1/cmr/m/n/10.95 , \T1/cmtt/m/n/10.9
+5 cqed_sim/analysis/experiment_convention_audit.py\T1/cmr/m/n/10.95 ,
+
+Overfull \hbox (8.623pt too wide) in paragraph at lines 41--61
+\T1/cmtt/m/n/10.95 cqed_sim/unitary_synthesis/subspace.py\T1/cmr/m/n/10.95 , \T
+1/cmtt/m/n/10.95 cqed_sim/unitary_synthesis/sequence.py\T1/cmr/m/n/10.95 , plus
+ the
+[1{C:/Users/dazzl/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
+Overfull \hbox (25.17776pt too wide) in paragraph at lines 82--88
+\T1/cmtt/m/n/10.95 tensor(qeye(n_tr), destroy(n_cav)) \T1/cmr/m/n/10.95 and the
+ trans-mon low-er-ing op-er-a-tor as \T1/cmtt/m/n/10.95 tensor(destroy(n_tr),
+
+Overfull \hbox (83.55365pt too wide) in paragraph at lines 82--88
+\T1/cmtt/m/n/10.95 qeye(n_cav))\T1/cmr/m/n/10.95 . The basis-state helper in \T
+1/cmtt/m/n/10.95 cqed_sim/core/model.py:70--72 \T1/cmr/m/n/10.95 re-turns \T1/c
+mtt/m/n/10.95 qt.tensor(qt.basis(self.n_tr,
+
+Overfull \hbox (156.42822pt too wide) in paragraph at lines 93--97
+\T1/cmr/m/n/10.95 This is ex-plicit in \T1/cmtt/m/n/10.95 cqed_sim/operators/ba
+sic.py:43--56 \T1/cmr/m/n/10.95 and re-in-forced by \T1/cmtt/m/n/10.95 tests/te
+st_25_tensor_product_convention.py:19--33
+
+Overfull \hbox (29.51967pt too wide) in paragraph at lines 99--103
+ []\T1/cmr/bx/n/10.95 Flattened block or-der-ing.[] \T1/cmr/m/n/10.95 Within th
+e full $\OT1/cmr/m/n/10.95 2\OML/cmm/m/it/10.95 n[]$\T1/cmr/m/n/10.95 -dimensio
+nal qubit-cavity space, the pair $\OMS/cmsy/m/n/10.95 fj\OML/cmm/m/it/10.95 g; 
+n\OMS/cmsy/m/n/10.95 i\OML/cmm/m/it/10.95 ; \OMS/cmsy/m/n/10.95 j\OML/cmm/m/it/
+10.95 e; n\OMS/cmsy/m/n/10.95 ig$
+
+Overfull \hbox (23.27261pt too wide) in paragraph at lines 128--130
+ []\T1/cmr/bx/n/10.95 Pauli op-er-a-tors.[] \T1/cmtt/m/n/10.95 cqed_sim/operato
+rs/basic.py:10--19 \T1/cmr/m/n/10.95 re-turns the QuTiP Pauli ma-tri-ces \T1/cm
+tt/m/n/10.95 sigmax()\T1/cmr/m/n/10.95 ,
+[2]
+Overfull \hbox (93.1731pt too wide) in paragraph at lines 132--136
+\T1/cmr/m/n/10.95 This is not only im-plicit from QuTiP; it is ex-plic-itly che
+cked in \T1/cmtt/m/n/10.95 tests/test_25_tensor_product_convention.py:34--43
+
+Overfull \hbox (63.91042pt too wide) in paragraph at lines 138--142
+ []\T1/cmr/bx/n/10.95 Qubit low-er-ing and rais-ing.[] \T1/cmr/m/n/10.95 The tr
+ans-mon low-er-ing op-er-a-tor is named \T1/cmtt/m/n/10.95 b \T1/cmr/m/n/10.95 
+in \T1/cmtt/m/n/10.95 cqed_sim/core/model.py:34--41\T1/cmr/m/n/10.95 .
+
+Overfull \hbox (189.9859pt too wide) in paragraph at lines 180--182
+\T1/cmr/m/n/10.95 space as-so-ci-ated with cav-ity Fock state $\OML/cmm/m/it/10
+.95 n$\T1/cmr/m/n/10.95 . This is ex-plicit and is tested in \T1/cmtt/m/n/10.95
+ tests/test_16_ideal_primitives_and_extractors.py:152--191\T1/cmr/m/n/10.95 . 
+[3]
+Overfull \hbox (41.0899pt too wide) in paragraph at lines 199--201
+ []\T1/cmr/bx/n/10.95 Core static Hamil-to-nian.[] \T1/cmr/m/n/10.95 The main r
+un-time Hamil-to-nian is de-fined in \T1/cmtt/m/n/10.95 cqed_sim/core/model.py:
+43--66\T1/cmr/m/n/10.95 : 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.222 \texttt{n\_q = |e\rangle \langle e|}
+                                          , not by $\sigma_z/2$. Consequentl...
+
+!  ==> Fatal error occurred, no output PDF file produced!
+Transcript written on physics_conventions_report.log.

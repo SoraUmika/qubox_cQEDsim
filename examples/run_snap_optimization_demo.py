@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from cqed_sim.snap_opt import SnapModelConfig, SnapRunConfig, SnapToneParameters, optimize_snap_parameters
+from examples.studies.snap_opt import SnapModelConfig, SnapRunConfig, SnapToneParameters, optimize_snap_parameters
 
 
 def main():

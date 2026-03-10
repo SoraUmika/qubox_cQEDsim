@@ -1,3 +1,4 @@
+from .builders import build_displacement_pulse, build_rotation_pulse, build_sqr_multitone_pulse
 from .calibration import (
     build_sqr_tone_specs,
     displacement_square_amplitude,
@@ -24,6 +25,9 @@ __all__ = [
     "Pulse",
     "HardwareConfig",
     "MultitoneTone",
+    "build_displacement_pulse",
+    "build_rotation_pulse",
+    "build_sqr_multitone_pulse",
     "square_envelope",
     "gaussian_envelope",
     "gaussian_area_fraction",

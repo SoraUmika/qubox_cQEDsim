@@ -8,53 +8,53 @@
       {
         "phase_sign": 1,
         "omega_sign": 1,
-        "process_fidelity_vs_qubox": 0.7684465742083696
+        "process_fidelity_vs_qubox": 0.9999999999986282
       },
       {
         "phase_sign": 1,
         "omega_sign": -1,
-        "process_fidelity_vs_qubox": 0.9957868436694153
+        "process_fidelity_vs_qubox": 0.8010801829326014
       },
       {
         "phase_sign": -1,
         "omega_sign": 1,
-        "process_fidelity_vs_qubox": 0.9999999999986275
+        "process_fidelity_vs_qubox": 0.7684465742083689
       },
       {
         "phase_sign": -1,
         "omega_sign": -1,
-        "process_fidelity_vs_qubox": 0.8010801829326021
+        "process_fidelity_vs_qubox": 0.534067462022465
       }
     ],
     "sqr_sign_scan": [
       {
         "phase_sign": 1,
         "omega_sign": 1,
-        "process_fidelity_vs_qubox": 0.7684465742083691
+        "process_fidelity_vs_qubox": 0.9999999999986278
       },
       {
         "phase_sign": 1,
         "omega_sign": -1,
-        "process_fidelity_vs_qubox": 0.9957868436694155
+        "process_fidelity_vs_qubox": 0.8010801829326016
       },
       {
         "phase_sign": -1,
         "omega_sign": 1,
-        "process_fidelity_vs_qubox": 0.9999999999986278
+        "process_fidelity_vs_qubox": 0.7684465742083691
       },
       {
         "phase_sign": -1,
         "omega_sign": -1,
-        "process_fidelity_vs_qubox": 0.8010801829326016
+        "process_fidelity_vs_qubox": 0.5340674620224647
       }
     ],
     "best_rotation_match": {
-      "phase_sign": -1,
+      "phase_sign": 1,
       "omega_sign": 1,
-      "process_fidelity_vs_qubox": 0.9999999999986275
+      "process_fidelity_vs_qubox": 0.9999999999986282
     },
     "best_sqr_match": {
-      "phase_sign": -1,
+      "phase_sign": 1,
       "omega_sign": 1,
       "process_fidelity_vs_qubox": 0.9999999999986278
     }

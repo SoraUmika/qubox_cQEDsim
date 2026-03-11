@@ -1,0 +1,7 @@
+{
+  "model": "storage-readout cross-Kerr free evolution",
+  "chi_sr_rad_s": 0.14,
+  "evolution_time_s": 8.0,
+  "simulated_relative_phase_rad": -1.1200010113680068,
+  "expected_relative_phase_rad": -1.12
+}

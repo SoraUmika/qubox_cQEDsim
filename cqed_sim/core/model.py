@@ -64,6 +64,45 @@ class DispersiveTransmonCavityModel:
             "sideband": (ops["adag"] * ops["b"], ops["a"] * ops["bdag"]),
         }
 
+    def transmon_level_projector(self, level: int) -> qt.Qobj:
+        level = int(level)
+        projector = qt.basis(self.n_tr, level) * qt.basis(self.n_tr, level).dag()
+        return qt.tensor(projector, qt.qeye(self.n_cav))
+
+    def transmon_transition_operators(self, lower_level: int, upper_level: int) -> tuple[qt.Qobj, qt.Qobj]:
+        lower_level = int(lower_level)
+        upper_level = int(upper_level)
+        transition_up = qt.basis(self.n_tr, upper_level) * qt.basis(self.n_tr, lower_level).dag()
+        transition_down = transition_up.dag()
+        return (
+            qt.tensor(transition_up, qt.qeye(self.n_cav)),
+            qt.tensor(transition_down, qt.qeye(self.n_cav)),
+        )
+
+    def mode_operators(self, mode: str = "storage") -> tuple[qt.Qobj, qt.Qobj]:
+        ops = self.operators()
+        mode_key = str(mode).strip().lower()
+        if mode_key not in {"storage", "cavity"}:
+            raise ValueError(f"Unsupported bosonic mode '{mode}'.")
+        return ops["a"], ops["adag"]
+
+    def sideband_drive_operators(
+        self,
+        *,
+        mode: str = "storage",
+        lower_level: int = 0,
+        upper_level: int = 1,
+        sideband: str = "red",
+    ) -> tuple[qt.Qobj, qt.Qobj]:
+        mode_lowering, mode_raising = self.mode_operators(mode)
+        transmon_up, transmon_down = self.transmon_transition_operators(lower_level, upper_level)
+        sideband_key = str(sideband).strip().lower()
+        if sideband_key == "red":
+            return 1j * transmon_up * mode_lowering, -1j * transmon_down * mode_raising
+        if sideband_key == "blue":
+            return 1j * transmon_up * mode_raising, -1j * transmon_down * mode_lowering
+        raise ValueError(f"Unsupported sideband '{sideband}'.")
+
     def static_hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
         frame = frame or FrameSpec()
         key = (
@@ -146,3 +185,43 @@ class DispersiveTransmonCavityModel:
 
     def manifold_transition_frequency(self, n: int, frame: FrameSpec | None = None) -> float:
         return manifold_transition_frequency(self, n=n, frame=frame)
+
+    def transmon_transition_frequency(
+        self,
+        cavity_level: int = 0,
+        *,
+        lower_level: int = 0,
+        upper_level: int = 1,
+        frame: FrameSpec | None = None,
+    ) -> float:
+        return float(
+            self.basis_energy(int(upper_level), int(cavity_level), frame=frame)
+            - self.basis_energy(int(lower_level), int(cavity_level), frame=frame)
+        )
+
+    def sideband_transition_frequency(
+        self,
+        cavity_level: int = 0,
+        *,
+        lower_level: int = 0,
+        upper_level: int = 1,
+        sideband: str = "red",
+        frame: FrameSpec | None = None,
+    ) -> float:
+        cavity_level = int(cavity_level)
+        sideband_key = str(sideband).strip().lower()
+        if sideband_key == "red":
+            if cavity_level + 1 >= self.n_cav:
+                raise IndexError("red sideband requires cavity_level + 1 to be within the cavity dimension.")
+            return float(
+                self.basis_energy(int(upper_level), cavity_level, frame=frame)
+                - self.basis_energy(int(lower_level), cavity_level + 1, frame=frame)
+            )
+        if sideband_key == "blue":
+            if cavity_level + 1 >= self.n_cav:
+                raise IndexError("blue sideband requires cavity_level + 1 to be within the cavity dimension.")
+            return float(
+                self.basis_energy(int(upper_level), cavity_level + 1, frame=frame)
+                - self.basis_energy(int(lower_level), cavity_level, frame=frame)
+            )
+        raise ValueError(f"Unsupported sideband '{sideband}'.")

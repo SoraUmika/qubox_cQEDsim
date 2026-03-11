@@ -6,11 +6,15 @@ from .conventions import (
     qubit_storage_readout_dims,
     qubit_storage_readout_index,
 )
+from .drive_targets import SidebandDriveSpec, TransmonTransitionDriveSpec
 from .frame import FrameSpec
 from .frequencies import (
     carrier_for_transition_frequency,
+    effective_sideband_rabi_frequency,
     falling_factorial_scalar,
     manifold_transition_frequency,
+    sideband_transition_frequency,
+    transmon_transition_frequency,
     transition_frequency_from_carrier,
 )
 from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec
@@ -31,6 +35,8 @@ __all__ = [
     "DispersiveTransmonCavityModel",
     "DispersiveReadoutTransmonStorageModel",
     "FrameSpec",
+    "TransmonTransitionDriveSpec",
+    "SidebandDriveSpec",
     "CrossKerrSpec",
     "SelfKerrSpec",
     "ExchangeSpec",
@@ -42,6 +48,9 @@ __all__ = [
     "qubit_storage_readout_block_indices",
     "falling_factorial_scalar",
     "manifold_transition_frequency",
+    "transmon_transition_frequency",
+    "sideband_transition_frequency",
+    "effective_sideband_rabi_frequency",
     "carrier_for_transition_frequency",
     "transition_frequency_from_carrier",
     "qubit_rotation_xy",

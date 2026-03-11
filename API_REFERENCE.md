@@ -165,11 +165,17 @@ n_c(n_c−1)···(n_c−i), **not** n_c^(i+1).
 |---|---|---|
 | `operators()` | `-> dict[str, qt.Qobj]` | Cached dict of ladder/number operators: `a`, `adag`, `b`, `bdag`, `n_c`, `n_q` |
 | `drive_coupling_operators()` | `-> dict[str, tuple[qt.Qobj, qt.Qobj]]` | `(raising, lowering)` pairs keyed by `"cavity"`, `"storage"`, `"qubit"`, `"sideband"` |
+| `transmon_level_projector(level)` | `(int) -> qt.Qobj` | Projector onto a transmon level in the full tensor-product space |
+| `transmon_transition_operators(lower_level, upper_level)` | `(int, int) -> tuple[qt.Qobj, qt.Qobj]` | Full-space raising/lowering operators for a selected transmon ladder transition |
+| `mode_operators(mode="storage")` | `(str) -> tuple[qt.Qobj, qt.Qobj]` | Retrieve `(creation, annihilation)` operators for the named bosonic mode |
+| `sideband_drive_operators(mode="storage", lower_level=0, upper_level=1, sideband="red")` | `(str, int, int, str) -> tuple[qt.Qobj, qt.Qobj]` | Effective multilevel sideband coupling operators |
 | `static_hamiltonian(frame)` | `(frame: FrameSpec \| None = None) -> qt.Qobj` | Full static Hamiltonian including all coupling terms. Cached by frame parameters. |
 | `basis_state(q_level, cavity_level)` | `(int, int) -> qt.Qobj` | Returns \|q⟩⊗\|n⟩ ket |
 | `basis_energy(q_level, cavity_level, frame)` | `(int, int, FrameSpec \| None) -> float` | Eigenvalue of \|q,n⟩ under static Hamiltonian |
 | `coherent_qubit_superposition(n_cav)` | `(int) -> qt.Qobj` | (&#124;g,n⟩ + &#124;e,n⟩) / √2 |
 | `manifold_transition_frequency(n, frame)` | `(int, FrameSpec \| None) -> float` | &#124;g,n⟩ ↔ &#124;e,n⟩ transition in given frame |
+| `transmon_transition_frequency(cavity_level=0, lower_level=0, upper_level=1, frame=None)` | `(int, int, int, FrameSpec \| None) -> float` | General transmon transition frequency at fixed cavity Fock number |
+| `sideband_transition_frequency(cavity_level=0, lower_level=0, upper_level=1, sideband="red", frame=None)` | `(int, int, int, str, FrameSpec \| None) -> float` | Rotating-frame frequency addressed by the effective sideband transition |
 
 ---
 
@@ -212,12 +218,18 @@ $$H_0/\hbar = \delta_s\, n_s + \delta_r\, n_r + \delta_q\, n_q + \frac{\alpha}{2
 |---|---|---|
 | `operators()` | `-> dict[str, qt.Qobj]` | `b`, `bdag`, `a_s`, `adag_s`, `a_r`, `adag_r`, `n_q`, `n_s`, `n_r` |
 | `drive_coupling_operators()` | `-> dict[str, tuple[qt.Qobj, qt.Qobj]]` | Keys: `"storage"`, `"cavity"`, `"qubit"`, `"transmon"`, `"readout"` |
+| `transmon_level_projector(level)` | `(int) -> qt.Qobj` | Projector onto a transmon level in the full tensor-product space |
+| `transmon_transition_operators(lower_level, upper_level)` | `(int, int) -> tuple[qt.Qobj, qt.Qobj]` | Full-space raising/lowering operators for a selected ancilla transition |
+| `mode_operators(mode="storage")` | `(str) -> tuple[qt.Qobj, qt.Qobj]` | Retrieve `(creation, annihilation)` operators for `"storage"` or `"readout"` |
+| `sideband_drive_operators(mode="storage", lower_level=0, upper_level=1, sideband="red")` | `(str, int, int, str) -> tuple[qt.Qobj, qt.Qobj]` | Effective multilevel sideband coupling operators on the selected bosonic mode |
 | `static_hamiltonian(frame)` | `(FrameSpec \| None) -> qt.Qobj` | Full three-mode static Hamiltonian |
 | `basis_state(q, ns, nr)` | `(int, int, int) -> qt.Qobj` | \|q⟩⊗\|n_s⟩⊗\|n_r⟩ |
 | `basis_energy(q, ns, nr, frame)` | `(int, int, int, FrameSpec \| None) -> float` | Eigenvalue for given basis state |
 | `qubit_transition_frequency(ns, nr, q, frame)` | `(...) -> float` | Qubit transition at given storage/readout occupation |
 | `storage_transition_frequency(q, ns, nr, frame)` | `(...) -> float` | Storage transition frequency |
 | `readout_transition_frequency(q, ns, nr, frame)` | `(...) -> float` | Readout transition frequency |
+| `transmon_transition_frequency(storage_level=0, readout_level=0, lower_level=0, upper_level=1, frame=None)` | `(...) -> float` | General transmon transition frequency in the three-mode model |
+| `sideband_transition_frequency(mode="storage", storage_level=0, readout_level=0, lower_level=0, upper_level=1, sideband="red", frame=None)` | `(...) -> float` | Rotating-frame frequency addressed by the effective sideband transition |
 
 ---
 
@@ -275,6 +287,24 @@ class ExchangeSpec:
 | `additional_coupling_terms(operators, *, cross_kerr_terms, self_kerr_terms, exchange_terms)` | `-> list[qt.Qobj]` | Convert specs to Hamiltonian operator terms |
 | `assemble_static_hamiltonian(base, operators, *, ...)` | `-> qt.Qobj` | Add coupling terms to a base Hamiltonian |
 
+Structured drive targets live in `cqed_sim.core.drive_targets`:
+
+```python
+@dataclass(frozen=True)
+class TransmonTransitionDriveSpec:
+    lower_level: int
+    upper_level: int
+
+@dataclass(frozen=True)
+class SidebandDriveSpec:
+    mode: str = "storage"
+    lower_level: int = 0
+    upper_level: int = 1
+    sideband: str = "red"   # "red" or "blue"
+```
+
+These specs let `simulate_sequence(...)` and the pulse builders target an explicit multilevel ancilla transition or an effective sideband manifold without introducing ad hoc notebook-only operator wiring.
+
 ---
 
 ### 3.5 Basis Conventions
@@ -306,6 +336,9 @@ class ExchangeSpec:
 | Function | Signature | Description |
 |---|---|---|
 | `manifold_transition_frequency(model, n, frame)` | `(DispersiveTransmonCavityModel, int, FrameSpec \| None) -> float` | |g,n⟩↔|e,n⟩ transition frequency including all chi_higher terms |
+| `transmon_transition_frequency(model, ..., frame)` | `(model, ..., FrameSpec \| None) -> float` | General multilevel transmon transition frequency helper for two- and three-mode models |
+| `sideband_transition_frequency(model, ..., frame)` | `(model, ..., FrameSpec \| None) -> float` | Transition frequency for the effective sideband manifold |
+| `effective_sideband_rabi_frequency(coupling, detuning)` | `(float, float) -> float` | `sqrt((2g)^2 + delta^2)` for the effective detuned sideband model |
 | `falling_factorial_scalar(n, order)` | `(int, int) -> float` | n(n−1)(n−2)···(n−order+1) |
 | `carrier_for_transition_frequency(transition_frequency)` | `(float) -> float` | Convert a rotating-frame transition frequency into the resonant `Pulse.carrier` value |
 | `transition_frequency_from_carrier(carrier)` | `(float) -> float` | Convert a `Pulse.carrier` back into the rotating-frame transition frequency it addresses |
@@ -409,8 +442,7 @@ $$w(t) = \text{env}(t_\text{rel}) \cdot \sum_n a_n \, e^{i(\phi_n + \omega_n \cd
 
 **Module path:** `cqed_sim.pulses.builders`
 
-All builders return `tuple[list[Pulse], dict[str, str], dict[str, Any]]`:
-(pulse list, drive-operator mapping, metadata).
+All builders return `(pulse list, drive-operator mapping, metadata)`. The drive mapping is `dict[str, str]` for the original displacement/rotation/SQR builders and `dict[str, SidebandDriveSpec]` for `build_sideband_pulse(...)`.
 
 #### `build_displacement_pulse`
 
@@ -441,6 +473,24 @@ def build_rotation_pulse(
 Creates a normalized-Gaussian pulse on channel `"q"`. Drive mapping: `{"q": "qubit"}`.
 
 Amplitude: Ω = θ / (2T) under the RWA.
+
+#### `build_sideband_pulse`
+
+```python
+def build_sideband_pulse(
+    target: SidebandDriveSpec,
+    *,
+    duration_s: float,
+    amplitude_rad_s: float,
+    channel: str = "sideband",
+    carrier: float = 0.0,
+    phase: float = 0.0,
+    sigma_fraction: float | None = None,
+    label: str | None = None,
+) -> tuple[list[Pulse], dict[str, SidebandDriveSpec], dict[str, Any]]
+```
+
+Builds an effective multilevel sideband pulse with either a square envelope or a normalized Gaussian envelope (`sigma_fraction`). The target specifies the ancilla transition (`lower_level`, `upper_level`), the bosonic mode, and whether the coupling is the red or blue sideband. The implementation is an effective rotating-wave Hamiltonian, not a microscopic flux-drive derivation.
 
 #### `build_sqr_multitone_pulse`
 
@@ -601,7 +651,7 @@ def simulate_sequence(
     model,
     compiled: CompiledSequence,
     initial_state: qt.Qobj,
-    drive_ops: dict[str, str],
+    drive_ops: dict[str, str | TransmonTransitionDriveSpec | SidebandDriveSpec],
     config: SimulationConfig | None = None,
     c_ops: Sequence[qt.Qobj] | None = None,
     noise: NoiseSpec | None = None,
@@ -616,7 +666,7 @@ def simulate_sequence(
 | `model` | any model | Must have `operators()`, `subsystem_dims`, `static_hamiltonian()`, `drive_coupling_operators()` |
 | `compiled` | `CompiledSequence` | Timeline from `SequenceCompiler.compile()` |
 | `initial_state` | `qt.Qobj` | Initial ket or density matrix |
-| `drive_ops` | `dict[str, str]` | Maps pulse channel names to coupling target names (e.g., `{"q": "qubit", "storage": "cavity"}`) |
+| `drive_ops` | `dict[str, str \| TransmonTransitionDriveSpec \| SidebandDriveSpec]` | Maps pulse channel names to string targets or structured multilevel targets |
 | `config` | `SimulationConfig \| None` | Solver configuration |
 | `c_ops` | `Sequence[qt.Qobj] \| None` | Additional collapse operators |
 | `noise` | `NoiseSpec \| None` | Lindblad noise specification |
@@ -717,6 +767,7 @@ def simulate_batch(
 @dataclass(frozen=True)
 class NoiseSpec:
     t1: float | None = None              # T₁ relaxation (s)
+    transmon_t1: tuple[float | None, ...] | None = None  # Explicit ladder T1 values: (T1_ge, T1_fe, ...)
     tphi: float | None = None            # T_φ dephasing (s)
     kappa: float | None = None           # Cavity decay rate (1/s)
     nth: float = 0.0                     # Cavity thermal occupation
@@ -736,7 +787,8 @@ def collapse_operators(model, noise: NoiseSpec | None) -> list[qt.Qobj]
 ```
 
 Returns Lindblad jump operators:
-- √γ₁ · b (qubit relaxation)
+- √γ₁ · b (legacy aggregate transmon relaxation when `transmon_t1` is not supplied)
+- `sqrt(1/T1_j) * |j-1><j|` for each explicit transmon ladder transition listed in `transmon_t1`
 - √γ_φ · σ_z (dephasing for 2-level) or √γ_φ · n_q (multi-level)
 - √(κ(n_th+1)) · a and √(κ·n_th) · a† per bosonic mode
 
@@ -776,10 +828,18 @@ Returns Lindblad jump operators:
 
 | Function | Signature | Returns |
 |---|---|---|
-| `bloch_xyz_from_joint(state)` | `(Qobj) -> (x, y, z)` | Bloch vector from joint state |
+| `bloch_xyz_from_joint(state)` | `(Qobj) -> (x, y, z)` | Bloch vector from joint state; requires a 2-level reduced transmon state |
 | `conditioned_bloch_xyz(state, n, fallback="nan")` | `(Qobj, int, str) -> (x, y, z, p_n, valid)` | Bloch vector conditioned on cavity Fock level n |
 | `conditioned_qubit_state(state, n, fallback="nan")` | `(Qobj, int, str) -> (rho_q, p_n, valid)` | Normalized qubit state conditioned on Fock n |
 | `conditioned_population(state, n)` | `(Qobj, int) -> float` | Probability of cavity being in Fock state n |
+
+#### Multilevel Population Helpers
+
+| Function | Signature | Returns |
+|---|---|---|
+| `subsystem_level_population(state, subsystem, level)` | `(Qobj, str\|int, int) -> float` | Population in a chosen level of a reduced subsystem |
+| `transmon_level_populations(state)` | `(Qobj) -> dict[int, float]` | All transmon level populations in the reduced ancilla state |
+| `compute_shelving_leakage(initial_state, final_state, shelved_level=1, subsystem="transmon")` | `(Qobj, Qobj, int, str\|int) -> float` | Absolute population change of a shelved ancilla level |
 
 #### Mode Moments and Photon Numbers
 
@@ -1136,6 +1196,7 @@ constructs a `DispersiveTransmonCavityModel`.
 | `times_us_to_seconds(times_us)` | `-> ndarray` | Convert µs to seconds |
 | `available_kerr_parameter_sets()` | `-> tuple[str, ...]` | Available preset names |
 | `plot_kerr_wigner_snapshots(result, ...)` | `-> fig` | Grid of Wigner function snapshots |
+| `verify_kerr_sign(...)` | `-> KerrSignVerificationResult` | Compare the documented Kerr sign against a flipped-sign control run for notebook-scale diagnostics |
 
 #### Result Dataclasses
 
@@ -1160,6 +1221,16 @@ class KerrFreeEvolutionResult:
     snapshots: list[KerrEvolutionSnapshot]
     metadata: dict[str, Any]
     # Properties: times_s, times_us → ndarray
+
+@dataclass(frozen=True)
+class KerrSignVerificationResult:
+    documented_kerr_hz: float
+    flipped_kerr_hz: float
+    cavity_mean_documented: complex
+    cavity_mean_flipped: complex
+    documented_phase_rad: float
+    flipped_phase_rad: float
+    matches_documented_sign: bool
 ```
 
 ---

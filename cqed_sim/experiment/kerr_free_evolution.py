@@ -8,7 +8,14 @@ import qutip as qt
 
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.model import DispersiveTransmonCavityModel
-from cqed_sim.experiment.state_prep import StatePreparationSpec, SubsystemStateSpec, prepare_state, qubit_state, vacuum_state
+from cqed_sim.experiment.state_prep import (
+    StatePreparationSpec,
+    SubsystemStateSpec,
+    coherent_state,
+    prepare_state,
+    qubit_state,
+    vacuum_state,
+)
 from cqed_sim.sim.extractors import cavity_wigner, reduced_cavity_state
 from physics_and_conventions.conventions import to_internal_units
 
@@ -106,6 +113,19 @@ class KerrFreeEvolutionResult:
     @property
     def times_us(self) -> np.ndarray:
         return np.asarray([snapshot.time_us for snapshot in self.snapshots], dtype=float)
+
+
+@dataclass(frozen=True)
+class KerrSignVerificationResult:
+    comparison_time_s: float
+    comparison_time_us: float
+    documented_kerr_hz: float
+    flipped_kerr_hz: float
+    cavity_mean_documented: complex
+    cavity_mean_flipped: complex
+    documented_phase_rad: float
+    flipped_phase_rad: float
+    matches_documented_sign: bool
 
 
 def available_kerr_parameter_sets() -> tuple[str, ...]:
@@ -271,6 +291,62 @@ def run_kerr_free_evolution(
     )
 
 
+def verify_kerr_sign(
+    *,
+    parameter_set: str | KerrParameterSet = "phase_evolution",
+    comparison_time_s: float | None = None,
+    alpha: complex = 2.0,
+    n_cav: int = 30,
+    n_tr: int = 3,
+    use_rotating_frame: bool = True,
+) -> KerrSignVerificationResult:
+    preset = resolve_kerr_parameter_set(parameter_set)
+    time_s = _us_to_s(1.0) if comparison_time_s is None else float(comparison_time_s)
+    documented = run_kerr_free_evolution(
+        [0.0, time_s],
+        parameter_set=preset,
+        cavity_state=coherent_state(alpha),
+        n_cav=n_cav,
+        n_tr=n_tr,
+        use_rotating_frame=use_rotating_frame,
+        wigner_times_s=[],
+    )
+    flipped_preset = KerrParameterSet(
+        name=f"{preset.name}_self_kerr_flipped",
+        omega_q_hz=float(preset.omega_q_hz),
+        omega_c_hz=float(preset.omega_c_hz),
+        omega_ro_hz=float(preset.omega_ro_hz),
+        alpha_q_hz=float(preset.alpha_q_hz),
+        kerr_hz=-float(preset.kerr_hz),
+        kerr2_hz=float(preset.kerr2_hz),
+        chi_hz=float(preset.chi_hz),
+        chi2_hz=float(preset.chi2_hz),
+        chi3_hz=float(preset.chi3_hz),
+    )
+    flipped = run_kerr_free_evolution(
+        [0.0, time_s],
+        parameter_set=flipped_preset,
+        cavity_state=coherent_state(alpha),
+        n_cav=n_cav,
+        n_tr=n_tr,
+        use_rotating_frame=use_rotating_frame,
+        wigner_times_s=[],
+    )
+    documented_mean = documented.snapshots[-1].cavity_mean
+    flipped_mean = flipped.snapshots[-1].cavity_mean
+    return KerrSignVerificationResult(
+        comparison_time_s=float(time_s),
+        comparison_time_us=float(time_s) * 1.0e6,
+        documented_kerr_hz=float(preset.kerr_hz),
+        flipped_kerr_hz=float(flipped_preset.kerr_hz),
+        cavity_mean_documented=complex(documented_mean),
+        cavity_mean_flipped=complex(flipped_mean),
+        documented_phase_rad=float(np.angle(documented_mean)),
+        flipped_phase_rad=float(np.angle(flipped_mean)),
+        matches_documented_sign=bool(np.imag(documented_mean) * np.imag(flipped_mean) < 0.0),
+    )
+
+
 def plot_kerr_wigner_snapshots(
     result: KerrFreeEvolutionResult,
     *,
@@ -332,11 +408,13 @@ __all__ = [
     "KerrParameterSet",
     "KerrEvolutionSnapshot",
     "KerrFreeEvolutionResult",
+    "KerrSignVerificationResult",
     "available_kerr_parameter_sets",
     "resolve_kerr_parameter_set",
     "build_kerr_free_evolution_model",
     "build_kerr_free_evolution_frame",
     "times_us_to_seconds",
     "run_kerr_free_evolution",
+    "verify_kerr_sign",
     "plot_kerr_wigner_snapshots",
 ]

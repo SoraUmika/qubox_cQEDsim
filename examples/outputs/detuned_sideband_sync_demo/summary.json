@@ -1,0 +1,13 @@
+{
+  "model": "effective gf sideband with photon-number-dependent detuning",
+  "assumptions": [
+    "single effective sideband tone",
+    "branch mismatch caused by dispersive offset chi",
+    "improvement measured against a simple target superposition"
+  ],
+  "naive_duration": 4.487989505128276,
+  "naive_fidelity": 0.7284211453044209,
+  "optimized_detuning": 0.16,
+  "optimized_duration": 5.11,
+  "optimized_fidelity": 0.9201540942461961
+}

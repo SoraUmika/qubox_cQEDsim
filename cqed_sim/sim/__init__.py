@@ -2,6 +2,7 @@ from .extractors import (
     bloch_xyz_from_joint,
     cavity_moments,
     cavity_wigner,
+    compute_shelving_leakage,
     conditioned_bloch_xyz,
     conditioned_population,
     conditioned_qubit_state,
@@ -20,6 +21,8 @@ from .extractors import (
     reduced_transmon_state,
     storage_moments,
     storage_photon_number,
+    subsystem_level_population,
+    transmon_level_populations,
 )
 from .couplings import TunableCoupler, cross_kerr, exchange, self_kerr
 from .noise import NoiseSpec, collapse_operators
@@ -50,6 +53,9 @@ __all__ = [
     "reduced_storage_state",
     "reduced_readout_state",
     "bloch_xyz_from_joint",
+    "subsystem_level_population",
+    "transmon_level_populations",
+    "compute_shelving_leakage",
     "conditioned_population",
     "conditioned_qubit_state",
     "conditioned_bloch_xyz",

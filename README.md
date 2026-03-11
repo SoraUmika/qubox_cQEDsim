@@ -150,9 +150,10 @@ Common builders:
 
 - `build_rotation_pulse(...)`
 - `build_displacement_pulse(...)`
+- `build_sideband_pulse(...)`
 - `build_sqr_multitone_pulse(...)`
 
-If you need a custom drive family, construct `Pulse(...)` directly and map its channel to a target such as `"qubit"`, `"storage"`, `"cavity"`, `"readout"`, or `"sideband"`.
+If you need a custom drive family, construct `Pulse(...)` directly and map its channel to a target such as `"qubit"`, `"storage"`, `"cavity"`, `"readout"`, or `"sideband"`. For multilevel ancilla control, `drive_ops` can also use structured targets such as `TransmonTransitionDriveSpec(lower_level=0, upper_level=2)` and `SidebandDriveSpec(mode="storage", lower_level=0, upper_level=2)`.
 
 ### Compile and run low-level simulations
 
@@ -180,6 +181,11 @@ Useful runtime entry points:
 - `hamiltonian_time_slices(...)`
 - `SimulationConfig(...)`
 - `NoiseSpec(...)`
+- `transmon_transition_frequency(...)`
+- `sideband_transition_frequency(...)`
+- `effective_sideband_rabi_frequency(...)`
+
+For multilevel ancilla decay, `NoiseSpec(transmon_t1=(T1_ge, T1_fe, ...))` builds explicit ladder collapse operators `|j-1><j|` instead of a single aggregate lowering operator. The extractor path also now includes `subsystem_level_population(...)`, `transmon_level_populations(...)`, and `compute_shelving_leakage(...)` for shelving-style sideband benchmarks.
 
 ### State preparation and measurement
 
@@ -505,6 +511,12 @@ Use `examples/` for those:
 - `examples/audits/experiment_convention_audit.py`
 - `examples/studies/*`
 - `examples/paper_reproductions/*`
+- `examples/sideband_swap_demo.py`
+- `examples/shelving_isolation_demo.py`
+- `examples/detuned_sideband_sync_demo.py`
+- `examples/open_system_sideband_degradation.py`
+- `examples/kerr_sign_verification.py`
+- `examples/multimode_crosskerr_demo.py`
 
 These are example or study APIs, not part of the canonical `cqed_sim` library surface.
 

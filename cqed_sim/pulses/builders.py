@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Mapping
 import numpy as np
 
 from cqed_sim.core.frame import FrameSpec
+from cqed_sim.core.drive_targets import SidebandDriveSpec
 from cqed_sim.io.gates import DisplacementGate, RotationGate, SQRGate
 from cqed_sim.pulses.calibration import (
     build_sqr_tone_specs,
@@ -67,6 +68,54 @@ def build_rotation_pulse(
         "drive_amp": pulse.amp,
         "drive_phase": pulse.phase,
         "sigma_fraction": sigma_fraction,
+    }
+
+
+def build_sideband_pulse(
+    target: SidebandDriveSpec,
+    *,
+    duration_s: float,
+    amplitude_rad_s: float,
+    channel: str = "sideband",
+    carrier: float = 0.0,
+    phase: float = 0.0,
+    sigma_fraction: float | None = None,
+    label: str | None = None,
+) -> tuple[list[Pulse], dict[str, SidebandDriveSpec], dict[str, Any]]:
+    if sigma_fraction is None:
+        envelope = square_envelope
+        envelope_name = "square"
+    else:
+        sigma = float(sigma_fraction)
+
+        def envelope(t_rel: np.ndarray) -> np.ndarray:
+            return normalized_gaussian(t_rel, sigma_fraction=sigma)
+
+        envelope_name = "normalized_gaussian"
+
+    pulse = Pulse(
+        str(channel),
+        0.0,
+        float(duration_s),
+        envelope,
+        carrier=float(carrier),
+        phase=float(phase),
+        amp=float(amplitude_rad_s),
+        label=label,
+    )
+    return [pulse], {str(channel): target}, {
+        "mapping": "Effective multilevel sideband drive using the structured SidebandDriveSpec target.",
+        "duration_s": float(duration_s),
+        "amplitude_rad_s": float(amplitude_rad_s),
+        "carrier": float(carrier),
+        "phase": float(phase),
+        "envelope": envelope_name,
+        "sideband_target": {
+            "mode": str(target.mode),
+            "lower_level": int(target.lower_level),
+            "upper_level": int(target.upper_level),
+            "sideband": str(target.sideband),
+        },
     }
 
 
@@ -142,5 +191,6 @@ def build_sqr_multitone_pulse(
 __all__ = [
     "build_displacement_pulse",
     "build_rotation_pulse",
+    "build_sideband_pulse",
     "build_sqr_multitone_pulse",
 ]

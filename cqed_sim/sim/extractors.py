@@ -72,6 +72,8 @@ def reduced_readout_state(state: qt.Qobj) -> qt.Qobj:
 
 
 def bloch_xyz_from_qubit_state(rho_q: qt.Qobj) -> tuple[float, float, float]:
+    if int(rho_q.dims[0][0]) != 2:
+        raise ValueError("bloch_xyz_from_qubit_state requires a two-level reduced state.")
     return (
         float(np.real((rho_q * qt.sigmax()).tr())),
         float(np.real((rho_q * qt.sigmay()).tr())),
@@ -85,6 +87,41 @@ def qubit_density_from_bloch_xyz(x: float, y: float, z: float) -> qt.Qobj:
 
 def bloch_xyz_from_joint(state: qt.Qobj) -> tuple[float, float, float]:
     return bloch_xyz_from_qubit_state(reduced_qubit_state(state))
+
+
+def subsystem_level_population(state: qt.Qobj, subsystem: int | str, level: int) -> float:
+    rho = _as_dm(state)
+    dims = _subsystem_dims(rho)
+    subsystem_index = _resolve_subsystem_index(rho, subsystem)
+    level = int(level)
+    if level < 0 or level >= dims[subsystem_index]:
+        raise IndexError("level out of range for the selected subsystem.")
+    factors = []
+    for idx, dim in enumerate(dims):
+        if idx == subsystem_index:
+            factors.append(qt.basis(dim, level) * qt.basis(dim, level).dag())
+        else:
+            factors.append(qt.qeye(dim))
+    projector = qt.tensor(*factors)
+    return float(np.real((projector * rho).tr()))
+
+
+def transmon_level_populations(state: qt.Qobj) -> dict[int, float]:
+    rho = _as_dm(state)
+    dims = _subsystem_dims(rho)
+    return {level: subsystem_level_population(rho, "transmon", level) for level in range(int(dims[0]))}
+
+
+def compute_shelving_leakage(
+    initial_state: qt.Qobj,
+    final_state: qt.Qobj,
+    *,
+    shelved_level: int = 1,
+    subsystem: int | str = "transmon",
+) -> float:
+    p_initial = subsystem_level_population(initial_state, subsystem, shelved_level)
+    p_final = subsystem_level_population(final_state, subsystem, shelved_level)
+    return float(abs(p_final - p_initial))
 
 
 def conditioned_population(state: qt.Qobj, n: int) -> float:

@@ -1,0 +1,14 @@
+{
+  "model": "effective gf red sideband on a 3-level transmon + storage mode",
+  "assumptions": [
+    "effective rotating-wave sideband Hamiltonian",
+    "no dissipation",
+    "internal frequencies in rad/s and time in seconds"
+  ],
+  "g_sb_mhz": 8.0,
+  "chi_mhz": -0.8,
+  "swap_time_ns": 31.25,
+  "inverse_abs_chi_ns": 198.94367886486918,
+  "final_p_g1": 0.9999982315598264,
+  "final_p_f0": 1.7684401737214654e-06
+}

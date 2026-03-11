@@ -407,8 +407,9 @@ Direct tests: \texttt{tests/test\_05\_detuning\_and\_frames.py}, \texttt{tests/t
   \]
   \item \texttt{cqed\_sim/sim/runner.py} inserts \(\epsilon(t)\) and \(\epsilon^*(t)\) as raising and lowering couplings obtained from the model, rather than from a hard-coded target list.
   \item Because the runtime drive term is \(\epsilon(t)\,b^\dagger + \epsilon^*(t)\,b\), a rotating-frame transition at frequency \(\omega_{\mathrm{transition}}\) is resonantly addressed by \(\texttt{carrier}=-\omega_{\mathrm{transition}}\). The public helpers \texttt{carrier\_for\_transition\_frequency(...)} and \texttt{transition\_frequency\_from\_carrier(...)} make that mapping explicit.
-  \item The two-mode path supports \texttt{"cavity"} or \texttt{"storage"}, \texttt{"qubit"}, and \texttt{"sideband"} targets.
-  \item The three-mode path supports \texttt{"storage"}, \texttt{"readout"}, \texttt{"qubit"}, and \texttt{"transmon"} targets. The readout and storage drives use the same complex-envelope sign convention as the existing qubit and storage drives.
+  \item User-facing spectroscopy examples and the updated \texttt{usage\_examples.ipynb} therefore plot physical transition detuning on the x-axis and convert that value to the internal raw carrier with \texttt{carrier\_for\_transition\_frequency(...)} before simulation.
+  \item The two-mode path supports \texttt{"cavity"} or \texttt{"storage"}, \texttt{"qubit"}, and the legacy \texttt{"sideband"} target, plus the structured targets \texttt{TransmonTransitionDriveSpec(lower\_level, upper\_level)} and \texttt{SidebandDriveSpec(mode, lower\_level, upper\_level, sideband)}.
+  \item The three-mode path supports \texttt{"storage"}, \texttt{"readout"}, \texttt{"qubit"}, and \texttt{"transmon"} targets, plus the same structured transition and sideband targets. The readout and storage drives use the same complex-envelope sign convention as the existing qubit and storage drives.
   \item The effective three-mode drive Hamiltonian is
   \[
   H_d / \hbar
@@ -420,18 +421,55 @@ Direct tests: \texttt{tests/test\_05\_detuning\_and\_frames.py}, \texttt{tests/t
   \epsilon_r(t) a_r^\dagger + \epsilon_r^*(t) a_r .
   \]
 \end{itemize}
-Direct tests: \texttt{tests/test\_20\_gaussian\_iq\_convention.py}, \texttt{tests/test\_23\_sqr\_additive\_amplitude\_correction.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}.
+Direct tests: \texttt{tests/test\_20\_gaussian\_iq\_convention.py}, \texttt{tests/test\_23\_sqr\_additive\_amplitude\_correction.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}, \texttt{tests/test\_31\_multilevel\_sideband\_extension.py}.
+
+\subsection*{Effective multilevel sideband model}
+The reusable sideband path added in \texttt{cqed\_sim/core/drive\_targets.py} and
+\texttt{cqed\_sim/pulses/builders.py} is an effective rotating-wave Hamiltonian, not a
+microscopic flux-drive derivation. For a red sideband on a bosonic mode \(a_m\) and a
+selected transmon transition \(|\ell\rangle \leftrightarrow |u\rangle\), the implemented
+operator pair is
+\[
+H_{\mathrm{sb}}/\hbar
+=
+\epsilon(t)\, |u\rangle\langle \ell|\, a_m
++
+\epsilon^*(t)\, a_m^\dagger |\ell\rangle\langle u|,
+\]
+with an analogous blue-sideband variant that swaps \(a_m\) and \(a_m^\dagger\). The public
+\texttt{SidebandDriveSpec} selects the bosonic mode, the ancilla ladder transition, and the
+red/blue branch. The helper \texttt{effective\_sideband\_rabi\_frequency(g, \(\delta\))}
+uses the standard effective-model rule
+\[
+\Omega_{\mathrm{eff}} = \sqrt{(2g)^2 + \delta^2}.
+\]
+This path is intended for fast-control and synchronization studies where the effective
+manifold dynamics are the quantity of interest.
+
+\subsection*{Kerr-sign notebook diagnosis}
+The paper-comparison notebook \texttt{test\_against\_papers/bosonic\_controls.ipynb} was
+audited against the runtime implementation. The core simulator and the documented physics
+convention both use
+\[
+H_K/\hbar = +\frac{K}{2} a^{\dagger 2} a^2.
+\]
+For the measured parameter set used in the notebook, the runtime evolution matches the
+documented negative-\(K\) behavior. The apparent sign flip comes from interpreting the
+rotating-frame coherent-state phase trajectory, not from a flipped self-Kerr term in the
+Hamiltonian builder. This is now guarded by \texttt{tests/test\_32\_kerr\_sign\_notebook\_regression.py}
+and exposed through \texttt{cqed\_sim.experiment.verify\_kerr\_sign(...)}.
 
 \section{Dissipation and Lindblad Terms}
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{NoiseSpec} in \texttt{cqed\_sim/sim/noise.py} now supports \texttt{t1}, \texttt{tphi}, \texttt{kappa}, \texttt{nth}, \texttt{kappa\_storage}, \texttt{kappa\_readout}, \texttt{nth\_storage}, and \texttt{nth\_readout}.
+  \item \texttt{NoiseSpec} in \texttt{cqed\_sim/sim/noise.py} now supports \texttt{t1}, \texttt{transmon\_t1}, \texttt{tphi}, \texttt{kappa}, \texttt{nth}, \texttt{kappa\_storage}, \texttt{kappa\_readout}, \texttt{nth\_storage}, and \texttt{nth\_readout}.
   \item The implemented convention is \(\gamma_1 = 1/T_1\) and \(\gamma_\phi = 1/(2 T_\phi)\).
+  \item If \texttt{transmon\_t1=(T_{1,ge}, T_{1,fe}, \ldots)} is supplied, the collapse-operator builder emits explicit ladder decays \(\sqrt{1/T_{1,j}}\,|j-1\rangle\langle j|\). If it is not supplied, the older aggregate \(\sqrt{\gamma_1}\,b\) path remains available through \texttt{t1}.
   \item Two-level dephasing uses \(\sqrt{\gamma_\phi}\,\sigma_z\) with \(\sigma_z = I - 2 n_q\). Multi-level transmon dephasing uses \(\sqrt{\gamma_\phi}\,n_q\).
   \item In the two-mode path, \texttt{kappa} and \texttt{nth} still drive storage loss and thermal excitation.
   \item In the three-mode path, storage and readout can decay independently via \texttt{kappa\_storage} and \texttt{kappa\_readout}, with separate thermal occupations.
   \item \texttt{simulate\_sequence(...)} uses \texttt{mesolve} when collapse operators are present or when the initial state is already a density matrix; otherwise it uses \texttt{sesolve}.
 \end{itemize}
-Direct tests: \texttt{tests/test\_14\_dissipation.py}, \texttt{tests/test\_18\_noise\_and\_sideband.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}.
+Direct tests: \texttt{tests/test\_14\_dissipation.py}, \texttt{tests/test\_18\_noise\_and\_sideband.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}, \texttt{tests/test\_31\_multilevel\_sideband\_extension.py}.
 
 \section{State Representation}
 \begin{itemize}[leftmargin=1.5em]
@@ -449,6 +487,7 @@ Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \t
 \begin{itemize}[leftmargin=1.5em]
   \item The two-mode model uses \texttt{n\_cav} for storage truncation and \texttt{n\_tr} for transmon truncation.
   \item The three-mode model uses \texttt{n\_storage}, \texttt{n\_readout}, and \texttt{n\_tr}.
+  \item The multilevel sideband and structured-transition helpers assume the selected ancilla levels lie within the chosen transmon truncation and will raise if the requested transition falls outside \([0, \texttt{n\_tr}-1]\).
   \item State preparation helpers pad or truncate explicit amplitude vectors to the requested subsystem dimension.
   \item SQR angle arrays are still padded to the storage dimension in \texttt{cqed\_sim/pulses/calibration.py}.
   \item The synthesis layer still distinguishes the full Hilbert dimension from restricted subspace dimension in \texttt{cqed\_sim/unitary\_synthesis/subspace.py}.
@@ -494,6 +533,9 @@ File & Targets, type, and main assertion & Status \\
 \texttt{tests/test\_26\_experimental\_protocols.py} & new protocol-layer tests for state preparation ordering, mixed initial states, sampled qubit measurement, and \texttt{SimulationExperiment}. & Passed \\
 \texttt{tests/test\_27\_three\_mode\_model.py} & explicit basis-index, operator-embedding, partial-trace, analytic diagonal-energy, two-mode reduction, and dispersive shift checks for the three-mode model. & Passed \\
 \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py} & drive isolation, storage/readout ringdown, transmon \(T_1\), transmon dephasing, positivity, and readout-response checks for the three-mode path. & Passed \\
+\texttt{tests/test\_31\_multilevel\_sideband\_extension.py} & effective multilevel sideband Hermiticity, \(g\leftrightarrow f\) swap, detuned synchronization, shelving isolation, and multilevel-noise regression checks. & Passed \\
+\texttt{tests/test\_32\_kerr\_sign\_notebook\_regression.py} & regression that the notebook-scale Kerr evolution matches the documented self-Kerr sign rather than a flipped-sign surrogate. & Passed \\
+\texttt{tests/test\_33\_usage\_examples\_spectroscopy\_sign.py} & fixed-Fock negative-\(\chi\) spectroscopy regression plus a guard that \texttt{usage\_examples.ipynb} plots physical transition detuning instead of raw carrier. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_subspace.py} & restricted-basis ordering and round-trip embedding. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_metrics.py} & fidelity gauges and leakage metrics. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_primitives\_and\_backends.py} & synthesis primitives and ideal/pulse backends. & Passed \\
@@ -535,10 +577,10 @@ E:\Programs\python.exe -m pytest examples/audits/tests examples/workflows/tests 
 \end{verbatim}
 Observed results:
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{tests/}: 172 collected, 171 passed, 1 skipped, 0 failed.
+  \item \texttt{tests/}: 218 collected, 217 passed, 1 skipped, 0 failed.
   \item \texttt{examples/*/tests}: 49 collected, 49 passed, 0 failed.
   \item The single skip is the optional external MPS-reference check in \texttt{tests/unitary\_synthesis/test\_synthesis\_and\_targets.py}.
-  \item Warning-only notes: two \texttt{numpy.trapz} deprecation warnings in \texttt{tests/test\_12\_pulse\_semantics.py} and \texttt{tests/test\_20\_gaussian\_iq\_convention.py}.
+  \item Warning-only notes: two \texttt{numpy.trapz} deprecation warnings in \texttt{tests/test\_12\_pulse\_semantics.py} and \texttt{tests/test\_20\_gaussian\_iq\_convention.py}, plus one QuTiP \texttt{sqrtm} singular-matrix warning in the open-system sideband fidelity regression.
 \end{itemize}
 Interpreter note: \verb|E:\Program Files\Python311\python.exe| from \texttt{AGENTS.md} is not present in this workspace, so the suite was run with \verb|E:\Programs\python.exe| (Python 3.11.8).
 

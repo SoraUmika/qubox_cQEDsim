@@ -1,0 +1,10 @@
+{
+  "closed_fidelity": 0.9999967744154948,
+  "open_system_fidelity": 0.9317385175865981,
+  "noise_model": {
+    "transmon_t1_ge_s": 120.0,
+    "transmon_t1_fe_s": 35.0,
+    "tphi_s": 90.0,
+    "kappa_s_inv": 0.02
+  }
+}

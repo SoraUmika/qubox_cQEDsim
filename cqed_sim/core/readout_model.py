@@ -73,6 +73,47 @@ class DispersiveReadoutTransmonStorageModel:
             "readout": (ops["adag_r"], ops["a_r"]),
         }
 
+    def transmon_level_projector(self, level: int) -> qt.Qobj:
+        level = int(level)
+        projector = qt.basis(self.n_tr, level) * qt.basis(self.n_tr, level).dag()
+        return qt.tensor(projector, qt.qeye(self.n_storage), qt.qeye(self.n_readout))
+
+    def transmon_transition_operators(self, lower_level: int, upper_level: int) -> tuple[qt.Qobj, qt.Qobj]:
+        lower_level = int(lower_level)
+        upper_level = int(upper_level)
+        transition_up = qt.basis(self.n_tr, upper_level) * qt.basis(self.n_tr, lower_level).dag()
+        transition_down = transition_up.dag()
+        return (
+            qt.tensor(transition_up, qt.qeye(self.n_storage), qt.qeye(self.n_readout)),
+            qt.tensor(transition_down, qt.qeye(self.n_storage), qt.qeye(self.n_readout)),
+        )
+
+    def mode_operators(self, mode: str = "storage") -> tuple[qt.Qobj, qt.Qobj]:
+        ops = self.operators()
+        mode_key = str(mode).strip().lower()
+        if mode_key in {"storage", "cavity"}:
+            return ops["a_s"], ops["adag_s"]
+        if mode_key == "readout":
+            return ops["a_r"], ops["adag_r"]
+        raise ValueError(f"Unsupported bosonic mode '{mode}'.")
+
+    def sideband_drive_operators(
+        self,
+        *,
+        mode: str = "storage",
+        lower_level: int = 0,
+        upper_level: int = 1,
+        sideband: str = "red",
+    ) -> tuple[qt.Qobj, qt.Qobj]:
+        mode_lowering, mode_raising = self.mode_operators(mode)
+        transmon_up, transmon_down = self.transmon_transition_operators(lower_level, upper_level)
+        sideband_key = str(sideband).strip().lower()
+        if sideband_key == "red":
+            return 1j * transmon_up * mode_lowering, -1j * transmon_down * mode_raising
+        if sideband_key == "blue":
+            return 1j * transmon_up * mode_raising, -1j * transmon_down * mode_lowering
+        raise ValueError(f"Unsupported sideband '{sideband}'.")
+
     def static_hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
         frame = frame or FrameSpec()
         key = (
@@ -178,6 +219,63 @@ class DispersiveReadoutTransmonStorageModel:
             + float(self.chi_s) * int(storage_level)
             + float(self.chi_r) * int(readout_level)
         )
+
+    def transmon_transition_frequency(
+        self,
+        *,
+        storage_level: int = 0,
+        readout_level: int = 0,
+        lower_level: int = 0,
+        upper_level: int = 1,
+        frame: FrameSpec | None = None,
+    ) -> float:
+        return float(
+            self.basis_energy(int(upper_level), int(storage_level), int(readout_level), frame=frame)
+            - self.basis_energy(int(lower_level), int(storage_level), int(readout_level), frame=frame)
+        )
+
+    def sideband_transition_frequency(
+        self,
+        *,
+        mode: str = "storage",
+        storage_level: int = 0,
+        readout_level: int = 0,
+        lower_level: int = 0,
+        upper_level: int = 1,
+        sideband: str = "red",
+        frame: FrameSpec | None = None,
+    ) -> float:
+        storage_level = int(storage_level)
+        readout_level = int(readout_level)
+        mode_key = str(mode).strip().lower()
+        sideband_key = str(sideband).strip().lower()
+        if mode_key in {"storage", "cavity"}:
+            if storage_level + 1 >= self.n_storage:
+                raise IndexError("selected storage sideband requires storage_level + 1 within the storage dimension.")
+            if sideband_key == "red":
+                return float(
+                    self.basis_energy(int(upper_level), storage_level, readout_level, frame=frame)
+                    - self.basis_energy(int(lower_level), storage_level + 1, readout_level, frame=frame)
+                )
+            if sideband_key == "blue":
+                return float(
+                    self.basis_energy(int(upper_level), storage_level + 1, readout_level, frame=frame)
+                    - self.basis_energy(int(lower_level), storage_level, readout_level, frame=frame)
+                )
+        if mode_key == "readout":
+            if readout_level + 1 >= self.n_readout:
+                raise IndexError("selected readout sideband requires readout_level + 1 within the readout dimension.")
+            if sideband_key == "red":
+                return float(
+                    self.basis_energy(int(upper_level), storage_level, readout_level, frame=frame)
+                    - self.basis_energy(int(lower_level), storage_level, readout_level + 1, frame=frame)
+                )
+            if sideband_key == "blue":
+                return float(
+                    self.basis_energy(int(upper_level), storage_level, readout_level + 1, frame=frame)
+                    - self.basis_energy(int(lower_level), storage_level, readout_level, frame=frame)
+                )
+        raise ValueError(f"Unsupported sideband '{sideband}' for mode '{mode}'.")
 
     def storage_transition_frequency(
         self,

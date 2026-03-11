@@ -9,6 +9,7 @@ import numpy as np
 import qutip as qt
 
 from cqed_sim.backends.base_backend import BaseBackend
+from cqed_sim.core.drive_targets import SidebandDriveSpec, TransmonTransitionDriveSpec
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.sequence.scheduler import CompiledSequence
 from cqed_sim.sim.noise import NoiseSpec, collapse_operators
@@ -39,6 +40,12 @@ def _projector_onto_first_excited_state(subsystem_dims: tuple[int, ...]) -> qt.Q
     return qt.tensor(*factors)
 
 
+def _projector_onto_transmon_level(subsystem_dims: tuple[int, ...], level: int) -> qt.Qobj:
+    factors = [qt.basis(subsystem_dims[0], int(level)) * qt.basis(subsystem_dims[0], int(level)).dag()]
+    factors.extend(qt.qeye(dim) for dim in subsystem_dims[1:])
+    return qt.tensor(*factors)
+
+
 def _mode_quadratures(lowering: qt.Qobj, raising: qt.Qobj) -> tuple[qt.Qobj, qt.Qobj]:
     return lowering + raising, -1j * (lowering - raising)
 
@@ -51,6 +58,15 @@ def default_observables(model: Any) -> dict[str, qt.Qobj]:
     ops = model.operators()
     dims = tuple(int(dim) for dim in getattr(model, "subsystem_dims"))
     observables: dict[str, qt.Qobj] = {"P_e": _projector_onto_first_excited_state(dims)}
+    for level in range(dims[0]):
+        projector = _projector_onto_transmon_level(dims, level)
+        observables[f"P_q{level}"] = projector
+        if level == 0:
+            observables["P_g"] = projector
+        elif level == 1:
+            observables["P_e"] = projector
+        elif level == 2:
+            observables["P_f"] = projector
 
     if "a" in ops:
         x_c, p_c = _mode_quadratures(ops["a"], ops["adag"])
@@ -79,10 +95,35 @@ def _legacy_drive_couplings(model: Any) -> dict[str, tuple[qt.Qobj, qt.Qobj]]:
     return couplings
 
 
+def _resolve_drive_target(
+    model: Any,
+    target: str | TransmonTransitionDriveSpec | SidebandDriveSpec,
+    couplings: dict[str, tuple[qt.Qobj, qt.Qobj]],
+) -> tuple[qt.Qobj, qt.Qobj]:
+    if isinstance(target, str):
+        if target not in couplings:
+            raise ValueError(f"Unsupported target '{target}'.")
+        return couplings[target]
+    if isinstance(target, TransmonTransitionDriveSpec):
+        if not hasattr(model, "transmon_transition_operators"):
+            raise ValueError("Model does not support structured transmon transition targets.")
+        return model.transmon_transition_operators(target.lower_level, target.upper_level)
+    if isinstance(target, SidebandDriveSpec):
+        if not hasattr(model, "sideband_drive_operators"):
+            raise ValueError("Model does not support structured sideband targets.")
+        return model.sideband_drive_operators(
+            mode=target.mode,
+            lower_level=target.lower_level,
+            upper_level=target.upper_level,
+            sideband=target.sideband,
+        )
+    raise TypeError(f"Unsupported drive target type '{type(target).__name__}'.")
+
+
 def hamiltonian_time_slices(
     model: Any,
     compiled: CompiledSequence,
-    drive_ops: dict[str, str],
+    drive_ops: dict[str, str | TransmonTransitionDriveSpec | SidebandDriveSpec],
     frame: FrameSpec | None = None,
 ) -> list:
     frame = frame or FrameSpec()
@@ -91,9 +132,7 @@ def hamiltonian_time_slices(
     h = [model.static_hamiltonian(frame)]
     for channel, target in drive_ops.items():
         coeff = compiled.channels[channel].distorted
-        if target not in couplings:
-            raise ValueError(f"Unsupported target '{target}' for channel '{channel}'.")
-        raising, lowering = couplings[target]
+        raising, lowering = _resolve_drive_target(model, target, couplings)
         h.append([raising, coeff])
         h.append([lowering, np.conj(coeff)])
     return h
@@ -122,7 +161,7 @@ def _final_state_from_result(result: qt.solver.Result) -> qt.Qobj:
 class SimulationSession:
     model: Any
     compiled: CompiledSequence
-    drive_ops: dict[str, str]
+    drive_ops: dict[str, str | TransmonTransitionDriveSpec | SidebandDriveSpec]
     config: SimulationConfig = field(default_factory=SimulationConfig)
     c_ops: Sequence[qt.Qobj] | None = None
     noise: NoiseSpec | None = None
@@ -205,7 +244,7 @@ class SimulationSession:
 def prepare_simulation(
     model: Any,
     compiled: CompiledSequence,
-    drive_ops: dict[str, str],
+    drive_ops: dict[str, str | TransmonTransitionDriveSpec | SidebandDriveSpec],
     *,
     config: SimulationConfig | None = None,
     c_ops: Sequence[qt.Qobj] | None = None,
@@ -251,7 +290,7 @@ def simulate_sequence(
     model: Any,
     compiled: CompiledSequence,
     initial_state: qt.Qobj,
-    drive_ops: dict[str, str],
+    drive_ops: dict[str, str | TransmonTransitionDriveSpec | SidebandDriveSpec],
     config: SimulationConfig | None = None,
     c_ops: Sequence[qt.Qobj] | None = None,
     noise: NoiseSpec | None = None,

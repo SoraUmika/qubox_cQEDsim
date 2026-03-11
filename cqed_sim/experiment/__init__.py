@@ -4,6 +4,7 @@ from .kerr_free_evolution import (
     KerrEvolutionSnapshot,
     KerrFreeEvolutionResult,
     KerrParameterSet,
+    KerrSignVerificationResult,
     available_kerr_parameter_sets,
     build_kerr_free_evolution_frame,
     build_kerr_free_evolution_model,
@@ -11,6 +12,7 @@ from .kerr_free_evolution import (
     resolve_kerr_parameter_set,
     run_kerr_free_evolution,
     times_us_to_seconds,
+    verify_kerr_sign,
 )
 from .protocol import ExperimentMetadata, ExperimentResult, SimulationExperiment
 from .readout_chain import AmplifierChain, PurcellFilter, ReadoutChain, ReadoutResonator, ReadoutTrace
@@ -47,12 +49,14 @@ __all__ = [
     "KerrParameterSet",
     "KerrEvolutionSnapshot",
     "KerrFreeEvolutionResult",
+    "KerrSignVerificationResult",
     "available_kerr_parameter_sets",
     "resolve_kerr_parameter_set",
     "build_kerr_free_evolution_model",
     "build_kerr_free_evolution_frame",
     "times_us_to_seconds",
     "run_kerr_free_evolution",
+    "verify_kerr_sign",
     "plot_kerr_wigner_snapshots",
     "ReadoutResonator",
     "PurcellFilter",

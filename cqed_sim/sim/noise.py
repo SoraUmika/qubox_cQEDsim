@@ -16,6 +16,7 @@ class NoiseSpec:
     """
 
     t1: float | None = None
+    transmon_t1: tuple[float | None, ...] | None = None
     tphi: float | None = None
     kappa: float | None = None
     nth: float = 0.0
@@ -52,6 +53,14 @@ def _append_bosonic_loss(
         c_ops.append(np.sqrt(float(kappa) * nth) * raising)
 
 
+def _embed_transmon_relaxation(subsystem_dims: tuple[int, ...], upper_level: int) -> qt.Qobj:
+    upper_level = int(upper_level)
+    lowering = qt.basis(subsystem_dims[0], upper_level - 1) * qt.basis(subsystem_dims[0], upper_level).dag()
+    factors = [lowering]
+    factors.extend(qt.qeye(dim) for dim in subsystem_dims[1:])
+    return qt.tensor(*factors)
+
+
 def collapse_operators(model: Any, noise: NoiseSpec | None) -> list[qt.Qobj]:
     if noise is None:
         return []
@@ -59,7 +68,14 @@ def collapse_operators(model: Any, noise: NoiseSpec | None) -> list[qt.Qobj]:
     dims = tuple(int(dim) for dim in getattr(model, "subsystem_dims"))
     c_ops: list[qt.Qobj] = []
 
-    if noise.gamma1 > 0.0:
+    if noise.transmon_t1 is not None:
+        for upper_level, lifetime in enumerate(noise.transmon_t1, start=1):
+            if upper_level >= dims[0]:
+                break
+            if lifetime is None or lifetime <= 0.0:
+                continue
+            c_ops.append(np.sqrt(1.0 / float(lifetime)) * _embed_transmon_relaxation(dims, upper_level))
+    elif noise.gamma1 > 0.0:
         c_ops.append(np.sqrt(noise.gamma1) * ops["b"])
 
     if noise.gamma_phi > 0.0:

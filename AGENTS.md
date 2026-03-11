@@ -51,6 +51,12 @@
 - Any user-facing example scripts, demonstration workflows, or reference usage patterns showing how `cqed_sim` is intended to be used in practice should be placed under the `examples` folder.
 - Do not place new validation tests inside ad hoc scripts or notebooks when they belong in the formal `tests` suite, and do not place typical usage demos outside `examples` unless there is a strong project-specific reason.
 
+- If a task or prompt asks for verification against a paper, textbook, or other literature source—especially meaning reproduction of published or reference results—that work should be treated under `test_against_papers`.
+- Requests to reproduce figures, equations, numerical benchmarks, analytical limits, spectra, dynamics, or other results from papers or textbooks should not be placed as ad hoc scripts or informal notes when they are intended as validation.
+- Use `test_against_papers` for literature-based validation tasks whose purpose is to confirm that the implementation matches external reference results, standard derivations, or published cQED behavior.
+- Such tests should make clear what source is being checked, what result is being reproduced, what assumptions or approximations are being used, and what level of agreement is expected.
+- If reproducing a paper or textbook result also requires new reusable regression coverage, add the formal automated portion under `tests` as appropriate, while keeping the literature-reproduction workflow organized under `test_against_papers`.
+
 ## Refactor and Inconsistency Reporting Policy
 
 - Anytime you are asked to refactor, all project guidelines above must still be followed strictly.
@@ -66,6 +72,18 @@
 - Reports should clearly separate confirmed issues from suspected issues or unresolved questions.
 - Important inconsistencies must not be silently corrected without documentation.
 - When multiple inconsistencies are discovered in the same task, either create one consolidated timestamped report for that refactor session or multiple clearly named timestamped reports if that is more readable.
+
+- Before starting a refactor, bug fix, convention update, API cleanup, or related maintenance task, inspect the existing files in the `inconsistency` folder for previously reported issues relevant to the affected code paths.
+- Do not treat prior inconsistency reports as archival only; use them as active task context when evaluating what should be fixed, preserved, or re-verified.
+- If a reported inconsistency is addressed by the current task, update the corresponding inconsistency report to mark it as fixed rather than leaving the report in an unresolved state.
+- A fix update should clearly indicate:
+  - what issue was fixed,
+  - when it was fixed,
+  - what commit, file, module, or change addressed it,
+  - and whether any related concerns remain open.
+- If a task partially fixes a reported inconsistency, mark the resolved portion clearly and leave the remaining unresolved portion explicitly identified.
+- Do not silently resolve previously reported inconsistencies without updating their status in the `inconsistency` folder.
+- If a prior inconsistency report is determined to be outdated, invalid, or no longer applicable, annotate it accordingly rather than deleting its history without explanation.
 
 ## Refactor Documentation Synchronization
 

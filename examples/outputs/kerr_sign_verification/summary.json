@@ -1,0 +1,16 @@
+{
+  "documented_kerr_hz": -107900.0,
+  "flipped_kerr_hz": 107900.0,
+  "cavity_mean_documented": {
+    "real": -0.7588402634667933,
+    "imag": 0.6208769296560261
+  },
+  "cavity_mean_flipped": {
+    "real": -0.5769434402093462,
+    "imag": -0.4028410669141913
+  },
+  "documented_phase_rad": 2.455857125159202,
+  "flipped_phase_rad": -2.532053442670974,
+  "matches_documented_sign": true,
+  "diagnosis": "The notebook-scale Kerr evolution matches the documented runtime sign. Any apparent sign flip comes from frame/phase interpretation rather than the core Hamiltonian."
+}

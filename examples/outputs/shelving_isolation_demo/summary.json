@@ -1,0 +1,8 @@
+{
+  "model": "effective gf sideband with population shelved in |e>",
+  "shelved_level": "e",
+  "initial_p_e": 0.4,
+  "final_p_e": 0.3999999749409968,
+  "shelving_leakage": 2.5059003205818442e-08,
+  "final_p_g1": 0.6000000239978829
+}

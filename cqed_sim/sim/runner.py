@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Sequence
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import dataclass, field
+import multiprocessing as mp
+from typing import Any, Iterable, Sequence
 
 import numpy as np
 import qutip as qt
@@ -39,6 +41,10 @@ def _mode_quadratures(lowering: qt.Qobj, raising: qt.Qobj) -> tuple[qt.Qobj, qt.
 
 
 def default_observables(model: Any) -> dict[str, qt.Qobj]:
+    cached = getattr(model, "_default_observables_cache", None)
+    if cached is not None:
+        return cached
+
     ops = model.operators()
     dims = tuple(int(dim) for dim in getattr(model, "subsystem_dims"))
     observables: dict[str, qt.Qobj] = {"P_e": _projector_onto_first_excited_state(dims)}
@@ -52,6 +58,8 @@ def default_observables(model: Any) -> dict[str, qt.Qobj]:
     if "a_r" in ops:
         x_r, p_r = _mode_quadratures(ops["a_r"], ops["adag_r"])
         observables.update({"n_r": ops["n_r"], "x_r": x_r, "p_r": p_r})
+
+    setattr(model, "_default_observables_cache", observables)
     return observables
 
 
@@ -88,6 +96,144 @@ def hamiltonian_time_slices(
     return h
 
 
+def _solver_options(cfg: SimulationConfig) -> dict[str, Any]:
+    options: dict[str, Any] = {
+        "atol": cfg.atol,
+        "rtol": cfg.rtol,
+        "store_states": bool(cfg.store_states),
+        "store_final_state": True,
+    }
+    if cfg.max_step is not None:
+        options["max_step"] = cfg.max_step
+    return options
+
+
+def _final_state_from_result(result: qt.solver.Result) -> qt.Qobj:
+    final_state = getattr(result, "final_state", None)
+    if final_state is not None:
+        return final_state
+    return result.states[-1]
+
+
+@dataclass
+class SimulationSession:
+    model: Any
+    compiled: CompiledSequence
+    drive_ops: dict[str, str]
+    config: SimulationConfig = field(default_factory=SimulationConfig)
+    c_ops: Sequence[qt.Qobj] | None = None
+    noise: NoiseSpec | None = None
+    e_ops: dict[str, qt.Qobj] | None = None
+
+    hamiltonian: list = field(init=False, repr=False)
+    effective_c_ops: tuple[qt.Qobj, ...] = field(init=False, repr=False)
+    observables: dict[str, qt.Qobj] = field(init=False)
+    observable_names: tuple[str, ...] = field(init=False, repr=False)
+    observable_ops: tuple[qt.Qobj, ...] = field(init=False, repr=False)
+    solver_options: dict[str, Any] = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self.observables = default_observables(self.model) if self.e_ops is None else dict(self.e_ops)
+        self.observable_names = tuple(self.observables.keys())
+        self.observable_ops = tuple(self.observables.values())
+        self.hamiltonian = hamiltonian_time_slices(self.model, self.compiled, self.drive_ops, frame=self.config.frame)
+        eff_c_ops = list(self.c_ops) if self.c_ops else []
+        eff_c_ops.extend(collapse_operators(self.model, self.noise))
+        self.effective_c_ops = tuple(eff_c_ops)
+        self.solver_options = _solver_options(self.config)
+
+    def run(self, initial_state: qt.Qobj) -> SimulationResult:
+        if self.effective_c_ops or initial_state.isoper:
+            result = qt.mesolve(
+                self.hamiltonian,
+                initial_state,
+                self.compiled.tlist,
+                c_ops=list(self.effective_c_ops),
+                e_ops=list(self.observable_ops),
+                options=self.solver_options,
+            )
+        else:
+            result = qt.sesolve(
+                self.hamiltonian,
+                initial_state,
+                self.compiled.tlist,
+                e_ops=list(self.observable_ops),
+                options=self.solver_options,
+            )
+        expectations = {name: np.asarray(result.expect[idx]) for idx, name in enumerate(self.observable_names)}
+        return SimulationResult(
+            final_state=_final_state_from_result(result),
+            states=result.states if self.config.store_states else None,
+            expectations=expectations,
+            solver_result=result,
+        )
+
+    def run_many(
+        self,
+        initial_states: Iterable[qt.Qobj],
+        *,
+        max_workers: int = 1,
+        mp_context: str = "spawn",
+    ) -> list[SimulationResult]:
+        states = list(initial_states)
+        if max_workers <= 1 or len(states) <= 1:
+            return [self.run(state) for state in states]
+
+        ctx = mp.get_context(mp_context)
+        with ProcessPoolExecutor(
+            max_workers=int(max_workers),
+            mp_context=ctx,
+            initializer=_init_parallel_session,
+            initargs=(self,),
+        ) as executor:
+            return list(executor.map(_run_parallel_state, states))
+
+
+def prepare_simulation(
+    model: Any,
+    compiled: CompiledSequence,
+    drive_ops: dict[str, str],
+    *,
+    config: SimulationConfig | None = None,
+    c_ops: Sequence[qt.Qobj] | None = None,
+    noise: NoiseSpec | None = None,
+    e_ops: dict[str, qt.Qobj] | None = None,
+) -> SimulationSession:
+    return SimulationSession(
+        model=model,
+        compiled=compiled,
+        drive_ops=drive_ops,
+        config=config or SimulationConfig(),
+        c_ops=c_ops,
+        noise=noise,
+        e_ops=e_ops,
+    )
+
+
+def simulate_batch(
+    session: SimulationSession,
+    initial_states: Iterable[qt.Qobj],
+    *,
+    max_workers: int = 1,
+    mp_context: str = "spawn",
+) -> list[SimulationResult]:
+    return session.run_many(initial_states, max_workers=max_workers, mp_context=mp_context)
+
+
+_PARALLEL_SESSION: SimulationSession | None = None
+
+
+def _init_parallel_session(session: SimulationSession) -> None:
+    global _PARALLEL_SESSION
+    _PARALLEL_SESSION = session
+
+
+def _run_parallel_state(initial_state: qt.Qobj) -> SimulationResult:
+    if _PARALLEL_SESSION is None:
+        raise RuntimeError("Parallel simulation session was not initialized.")
+    return _PARALLEL_SESSION.run(initial_state)
+
+
 def simulate_sequence(
     model: Any,
     compiled: CompiledSequence,
@@ -98,36 +244,13 @@ def simulate_sequence(
     noise: NoiseSpec | None = None,
     e_ops: dict[str, qt.Qobj] | None = None,
 ) -> SimulationResult:
-    cfg = config or SimulationConfig()
-    e_ops = e_ops or default_observables(model)
-    h = hamiltonian_time_slices(model, compiled, drive_ops, frame=cfg.frame)
-    options = {"atol": cfg.atol, "rtol": cfg.rtol, "store_states": True}
-    if cfg.max_step is not None:
-        options["max_step"] = cfg.max_step
-    eff_c_ops = list(c_ops) if c_ops else []
-    eff_c_ops.extend(collapse_operators(model, noise))
-    if eff_c_ops or initial_state.isoper:
-        result = qt.mesolve(
-            h,
-            initial_state,
-            compiled.tlist,
-            c_ops=eff_c_ops,
-            e_ops=list(e_ops.values()),
-            options=options,
-        )
-    else:
-        result = qt.sesolve(
-            h,
-            initial_state,
-            compiled.tlist,
-            e_ops=list(e_ops.values()),
-            options=options,
-        )
-    expectations = {name: np.asarray(result.expect[idx]) for idx, name in enumerate(e_ops.keys())}
-    final_state = result.states[-1]
-    return SimulationResult(
-        final_state=final_state,
-        states=result.states if cfg.store_states else None,
-        expectations=expectations,
-        solver_result=result,
+    session = prepare_simulation(
+        model,
+        compiled,
+        drive_ops,
+        config=config,
+        c_ops=c_ops,
+        noise=noise,
+        e_ops=e_ops,
     )
+    return session.run(initial_state)

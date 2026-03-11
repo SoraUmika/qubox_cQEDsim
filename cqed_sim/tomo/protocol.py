@@ -111,7 +111,9 @@ def run_all_xy(
     noise: NoiseSpec | None = None,
 ) -> dict[str, np.ndarray]:
     frame = frame or FrameSpec(omega_q_frame=model.omega_q)
-    init = model.basis_state( 0,0)
+    compiler = SequenceCompiler(dt=dt_ns)
+    config = SimulationConfig(frame=frame)
+    init = model.basis_state(0, 0)
     measured = []
     expected = []
     for a, b in ALL_XY_21:
@@ -120,8 +122,8 @@ def run_all_xy(
         for lbl in (a, b):
             pulses.append(_pulse_for_label(lbl, t, cal))
             t += cal.duration_ns
-        compiled = SequenceCompiler(dt=dt_ns).compile(pulses, t_end=t + dt_ns)
-        res = simulate_sequence(model, compiled, init, {"q": "qubit"}, SimulationConfig(frame=frame), noise=noise)
+        compiled = compiler.compile(pulses, t_end=t + dt_ns)
+        res = simulate_sequence(model, compiled, init, {"q": "qubit"}, config, noise=noise, e_ops={})
         rho_q = reduced_qubit_state(res.final_state)
         measured.append(float(np.real((rho_q * qt.sigmaz()).tr())))
 
@@ -222,6 +224,8 @@ def run_fock_resolved_tomo(
     v_hat = {a: np.zeros(n_max + 1, dtype=float) for a in axes}
     p_n = np.zeros(n_max + 1, dtype=float)
     frame = FrameSpec(omega_q_frame=model.omega_q)
+    compiler = SequenceCompiler(dt=dt_ns)
+    config = SimulationConfig(frame=frame)
     for n in range(n_max + 1):
         rho0 = state_prep()
         for a in axes:
@@ -237,8 +241,8 @@ def run_fock_resolved_tomo(
                 else:
                     raise ValueError(a)
                 # matched idle
-                comp_off = SequenceCompiler(dt=dt_ns).compile([], t_end=tag_duration_ns + dt_ns)
-                off = simulate_sequence(model, comp_off, off_state, {}, SimulationConfig(frame=frame), noise=noise)
+                comp_off = compiler.compile([], t_end=tag_duration_ns + dt_ns)
+                off = simulate_sequence(model, comp_off, off_state, {}, config, noise=noise, e_ops={})
                 s_off = float(np.real((reduced_qubit_state(off.final_state) * qt.sigmaz()).tr()))
                 t_pre = 0.0
                 pre = []
@@ -246,8 +250,8 @@ def run_fock_resolved_tomo(
                 pre = _pre_rotation_pulses(a, 0.0, cal)
                 t_pre = sum(p.duration for p in pre)
                 # OFF branch: matched idle equal to tag duration.
-                comp_off = SequenceCompiler(dt=dt_ns).compile(pre, t_end=t_pre + tag_duration_ns + dt_ns)
-                off = simulate_sequence(model, comp_off, rho0, {"q": "qubit"} if pre else {}, SimulationConfig(frame=frame), noise=noise)
+                comp_off = compiler.compile(pre, t_end=t_pre + tag_duration_ns + dt_ns)
+                off = simulate_sequence(model, comp_off, rho0, {"q": "qubit"} if pre else {}, config, noise=noise, e_ops={})
                 s_off = float(np.real((reduced_qubit_state(off.final_state) * qt.sigmaz()).tr()))
 
             if ideal_tag:
@@ -260,8 +264,8 @@ def run_fock_resolved_tomo(
                 s_on = float(np.real((rho_q_on * qt.sigmaz()).tr()))
             else:
                 tag = selective_pi_pulse(n=n, t0_ns=t_pre, duration_ns=tag_duration_ns, amp=tag_amp, model=model, drag=cal.drag)
-                comp_on = SequenceCompiler(dt=dt_ns).compile(pre + [tag], t_end=t_pre + tag_duration_ns + dt_ns)
-                on = simulate_sequence(model, comp_on, rho0, {"q": "qubit"}, SimulationConfig(frame=frame), noise=noise)
+                comp_on = compiler.compile(pre + [tag], t_end=t_pre + tag_duration_ns + dt_ns)
+                on = simulate_sequence(model, comp_on, rho0, {"q": "qubit"}, config, noise=noise, e_ops={})
                 s_on = float(np.real((reduced_qubit_state(on.final_state) * qt.sigmaz()).tr()))
 
             v_hat[a][n] = 0.5 * (s_off - s_on)

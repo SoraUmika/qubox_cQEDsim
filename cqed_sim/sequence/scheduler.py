@@ -67,6 +67,14 @@ class SequenceCompiler:
         n_pts = int(np.floor(max_t / self.dt + 1e-12)) + 1
         return np.arange(n_pts, dtype=float) * self.dt
 
+    @staticmethod
+    def _support_slice(pulse: Pulse, tlist: np.ndarray) -> tuple[int, int]:
+        start_idx = int(np.searchsorted(tlist, pulse.t0, side="left"))
+        end_idx = int(np.searchsorted(tlist, pulse.t1, side="left"))
+        start_idx = max(0, min(start_idx, tlist.size))
+        end_idx = max(start_idx, min(end_idx, tlist.size))
+        return start_idx, end_idx
+
     def compile(self, pulses: list[Pulse], t_end: float | None = None) -> CompiledSequence:
         if self.enable_cache:
             cache_key = (float(self.dt), t_end, tuple(self._pulse_key(p) for p in pulses), tuple(sorted(self.hardware.items(), key=lambda x: x[0])))
@@ -91,7 +99,9 @@ class SequenceCompiler:
                 label=pulse.label,
             )
             by_channel.setdefault(pulse.channel, np.zeros_like(tlist, dtype=np.complex128))
-            by_channel[pulse.channel] += shifted.sample(tlist)
+            start_idx, end_idx = self._support_slice(shifted, tlist)
+            if end_idx > start_idx:
+                by_channel[pulse.channel][start_idx:end_idx] += shifted.sample(tlist[start_idx:end_idx])
 
         if self.crosstalk_matrix:
             mixed = {ch: sig.copy() for ch, sig in by_channel.items()}

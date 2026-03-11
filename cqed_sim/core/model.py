@@ -33,19 +33,23 @@ class DispersiveTransmonCavityModel:
     n_tr: int = 3
 
     subsystem_labels: tuple[str, ...] = ("qubit", "storage")
+    _operators_cache: dict[str, qt.Qobj] | None = field(default=None, init=False, repr=False, compare=False)
+    _static_h_cache: dict[tuple[float, ...], qt.Qobj] = field(default_factory=dict, init=False, repr=False, compare=False)
 
     @property
     def subsystem_dims(self) -> tuple[int, ...]:
         return (int(self.n_tr), int(self.n_cav))
 
     def operators(self) -> dict[str, qt.Qobj]:
-        a = qt.tensor(qt.qeye(self.n_tr), qt.destroy(self.n_cav))
-        b = qt.tensor(qt.destroy(self.n_tr), qt.qeye(self.n_cav))
-        adag = a.dag()
-        bdag = b.dag()
-        n_c = adag * a
-        n_q = bdag * b
-        return {"a": a, "adag": adag, "b": b, "bdag": bdag, "n_c": n_c, "n_q": n_q}
+        if self._operators_cache is None:
+            a = qt.tensor(qt.qeye(self.n_tr), qt.destroy(self.n_cav))
+            b = qt.tensor(qt.destroy(self.n_tr), qt.qeye(self.n_cav))
+            adag = a.dag()
+            bdag = b.dag()
+            n_c = adag * a
+            n_q = bdag * b
+            self._operators_cache = {"a": a, "adag": adag, "b": b, "bdag": bdag, "n_c": n_c, "n_q": n_q}
+        return self._operators_cache
 
     def drive_coupling_operators(self) -> dict[str, tuple[qt.Qobj, qt.Qobj]]:
         ops = self.operators()
@@ -58,6 +62,20 @@ class DispersiveTransmonCavityModel:
 
     def static_hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
         frame = frame or FrameSpec()
+        key = (
+            float(self.omega_c),
+            float(self.omega_q),
+            float(self.alpha),
+            float(self.chi),
+            tuple(float(value) for value in self.chi_higher),
+            float(self.kerr),
+            tuple(float(value) for value in self.kerr_higher),
+            float(frame.omega_c_frame),
+            float(frame.omega_q_frame),
+        )
+        cached = self._static_h_cache.get(key)
+        if cached is not None:
+            return cached
         ops = self.operators()
         n_c, n_q = ops["n_c"], ops["n_q"]
         b, bdag = ops["b"], ops["bdag"]
@@ -78,6 +96,7 @@ class DispersiveTransmonCavityModel:
             h += -self.chi * n_c * n_q
         for i, coeff in enumerate(self.chi_higher, start=2):
             h += -coeff * _falling_factorial_number_op(n_c, i) * n_q
+        self._static_h_cache[key] = h
         return h
 
     def basis_energy(self, q_level: int, cavity_level: int, frame: FrameSpec | None = None) -> float:

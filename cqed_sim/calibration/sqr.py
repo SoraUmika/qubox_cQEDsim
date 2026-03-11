@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
+from functools import lru_cache
 import hashlib
 import json
 import math
@@ -26,6 +27,10 @@ from cqed_sim.sequence.scheduler import SequenceCompiler
 from cqed_sim.sim.noise import NoiseSpec, collapse_operators
 from cqed_sim.sim.runner import hamiltonian_time_slices
 from cqed_sim.unitary_synthesis.progress import NullReporter, ProgressEvent, ProgressReporter
+
+_SIGMA_X = qt.sigmax()
+_SIGMA_Y = qt.sigmay()
+_SIGMA_Z = qt.sigmaz()
 
 
 def default_calibration_config_keys() -> tuple[str, ...]:
@@ -253,9 +258,16 @@ def calibration_cache_path(gate: SQRGate, config: Mapping[str, Any], cache_dir: 
     return base / f"sqr_{_safe_name(gate.name)}.json"
 
 
-def _build_time_grid(duration_s: float, dt_s: float) -> np.ndarray:
+@lru_cache(maxsize=128)
+def _cached_time_grid(duration_s: float, dt_s: float) -> np.ndarray:
     n_steps = max(2, int(math.ceil(duration_s / dt_s)) + 1)
-    return np.linspace(0.0, duration_s, n_steps, dtype=float)
+    grid = np.linspace(0.0, duration_s, n_steps, dtype=float)
+    grid.setflags(write=False)
+    return grid
+
+
+def _build_time_grid(duration_s: float, dt_s: float) -> np.ndarray:
+    return _cached_time_grid(float(duration_s), float(dt_s))
 
 
 def _gaussian_area(duration_s: float, sigma_fraction: float, tlist: np.ndarray | None = None) -> float:
@@ -634,14 +646,11 @@ def extract_effective_qubit_unitary(
         d_lambda=d_lambda,
         d_alpha=d_alpha,
     )
-    sx = qt.sigmax()
-    sy = qt.sigmay()
-    sz = qt.sigmaz()
     detuning = _conditional_detuning_rad_s(n, config) + float(d_omega_rad_s)
     h = [
-        0.5 * detuning * sz,
-        [0.5 * sx, omega_x],
-        [0.5 * sy, omega_y],
+        0.5 * detuning * _SIGMA_Z,
+        [0.5 * _SIGMA_X, omega_x],
+        [0.5 * _SIGMA_Y, omega_y],
     ]
     matrix = _final_unitary_from_hamiltonian(h, tlist, config)
     return matrix, {

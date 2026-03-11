@@ -62,7 +62,15 @@ from .sim.extractors import (
     storage_photon_number,
 )
 from .sim.noise import NoiseSpec
-from .sim.runner import SimulationConfig, default_observables, hamiltonian_time_slices, simulate_sequence
+from .sim.runner import (
+    SimulationConfig,
+    SimulationSession,
+    default_observables,
+    hamiltonian_time_slices,
+    prepare_simulation,
+    simulate_batch,
+    simulate_sequence,
+)
 from .tomo.device import DeviceParameters
 from .tomo.protocol import (
     QubitPulseCal,
@@ -82,9 +90,12 @@ __all__ = [
     "HardwareConfig",
     "SequenceCompiler",
     "SimulationConfig",
+    "SimulationSession",
     "NoiseSpec",
     "default_observables",
     "hamiltonian_time_slices",
+    "prepare_simulation",
+    "simulate_batch",
     "simulate_sequence",
     "reduced_subsystem_state",
     "reduced_qubit_state",

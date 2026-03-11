@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import qutip as qt
 
@@ -23,37 +23,41 @@ class DispersiveReadoutTransmonStorageModel:
     n_tr: int = 3
 
     subsystem_labels: tuple[str, ...] = ("qubit", "storage", "readout")
+    _operators_cache: dict[str, qt.Qobj] | None = field(default=None, init=False, repr=False, compare=False)
+    _static_h_cache: dict[tuple[float, ...], qt.Qobj] = field(default_factory=dict, init=False, repr=False, compare=False)
 
     @property
     def subsystem_dims(self) -> tuple[int, ...]:
         return (int(self.n_tr), int(self.n_storage), int(self.n_readout))
 
     def operators(self) -> dict[str, qt.Qobj]:
-        i_q = qt.qeye(self.n_tr)
-        i_s = qt.qeye(self.n_storage)
-        i_r = qt.qeye(self.n_readout)
+        if self._operators_cache is None:
+            i_q = qt.qeye(self.n_tr)
+            i_s = qt.qeye(self.n_storage)
+            i_r = qt.qeye(self.n_readout)
 
-        b = qt.tensor(qt.destroy(self.n_tr), i_s, i_r)
-        a_s = qt.tensor(i_q, qt.destroy(self.n_storage), i_r)
-        a_r = qt.tensor(i_q, i_s, qt.destroy(self.n_readout))
+            b = qt.tensor(qt.destroy(self.n_tr), i_s, i_r)
+            a_s = qt.tensor(i_q, qt.destroy(self.n_storage), i_r)
+            a_r = qt.tensor(i_q, i_s, qt.destroy(self.n_readout))
 
-        bdag = b.dag()
-        adag_s = a_s.dag()
-        adag_r = a_r.dag()
-        n_q = bdag * b
-        n_s = adag_s * a_s
-        n_r = adag_r * a_r
-        return {
-            "b": b,
-            "bdag": bdag,
-            "a_s": a_s,
-            "adag_s": adag_s,
-            "a_r": a_r,
-            "adag_r": adag_r,
-            "n_q": n_q,
-            "n_s": n_s,
-            "n_r": n_r,
-        }
+            bdag = b.dag()
+            adag_s = a_s.dag()
+            adag_r = a_r.dag()
+            n_q = bdag * b
+            n_s = adag_s * a_s
+            n_r = adag_r * a_r
+            self._operators_cache = {
+                "b": b,
+                "bdag": bdag,
+                "a_s": a_s,
+                "adag_s": adag_s,
+                "a_r": a_r,
+                "adag_r": adag_r,
+                "n_q": n_q,
+                "n_s": n_s,
+                "n_r": n_r,
+            }
+        return self._operators_cache
 
     def drive_coupling_operators(self) -> dict[str, tuple[qt.Qobj, qt.Qobj]]:
         ops = self.operators()
@@ -67,6 +71,23 @@ class DispersiveReadoutTransmonStorageModel:
 
     def static_hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
         frame = frame or FrameSpec()
+        key = (
+            float(self.omega_s),
+            float(self.omega_r),
+            float(self.omega_q),
+            float(self.alpha),
+            float(self.chi_s),
+            float(self.chi_r),
+            float(self.chi_sr),
+            float(self.kerr_s),
+            float(self.kerr_r),
+            float(frame.omega_c_frame),
+            float(frame.omega_q_frame),
+            float(frame.omega_r_frame),
+        )
+        cached = self._static_h_cache.get(key)
+        if cached is not None:
+            return cached
         ops = self.operators()
         n_q = ops["n_q"]
         n_s = ops["n_s"]
@@ -90,6 +111,7 @@ class DispersiveReadoutTransmonStorageModel:
             h += 0.5 * self.kerr_s * n_s * (n_s - qt.qeye(n_s.dims[0]))
         if self.kerr_r != 0.0:
             h += 0.5 * self.kerr_r * n_r * (n_r - qt.qeye(n_r.dims[0]))
+        self._static_h_cache[key] = h
         return h
 
     def basis_energy(

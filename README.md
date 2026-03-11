@@ -277,6 +277,52 @@ experiment_result = experiment.run()
 
 `SimulationExperiment` is a reusable wrapper, not a separate solver. It still compiles with `SequenceCompiler` and simulates through `simulate_sequence(...)`.
 
+## Performance-oriented usage
+
+For high-throughput workloads, the recommended fast path is:
+
+1. Compile once with `SequenceCompiler`.
+2. Prepare the runtime once with `prepare_simulation(...)`.
+3. Reuse the returned `SimulationSession` across many initial states or parameter loops.
+4. Pass `e_ops={}` when you only need the final state and want to avoid expectation-value bookkeeping.
+
+Example:
+
+```python
+from cqed_sim.sequence import SequenceCompiler
+from cqed_sim.sim import SimulationConfig, prepare_simulation, simulate_batch
+
+compiled = SequenceCompiler(dt=0.01).compile(pulses, t_end=1.1)
+session = prepare_simulation(
+    model,
+    compiled,
+    drive_ops,
+    config=SimulationConfig(frame=frame),
+    e_ops={},  # Fast path when only final states matter.
+)
+
+single = session.run(initial_state)
+many = simulate_batch(session, [initial_state_a, initial_state_b], max_workers=1)
+```
+
+Practical guidance:
+
+- Use `simulate_sequence(...)` for one-off runs.
+- Use `prepare_simulation(...)` for repeated runs with the same model, compiled schedule, and drive mapping.
+- Use `simulate_batch(...)` or `SimulationSession.run_many(...)` for sweep-style execution over many initial states.
+- Keep `store_states=False` unless you actually need the full trajectory.
+- Prefer serial prepared sessions for inner loops; on this Windows environment, multiprocessing with `spawn` only pays off for much coarser jobs than the small and medium benchmarks in `benchmarks/performance_audit.md`.
+
+Performance artifacts:
+
+- `benchmarks/run_performance_benchmarks.py`
+- `benchmarks/performance_audit.md`
+
+GPU note:
+
+- No GPU backend is currently provided for the QuTiP solver path.
+- The current architecture benefits more from cache/session reuse and coarse CPU parallelism than from GPU-oriented array acceleration.
+
 ## Extract common observables
 
 Two-mode extractors:

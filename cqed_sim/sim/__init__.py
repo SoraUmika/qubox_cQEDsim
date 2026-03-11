@@ -25,16 +25,22 @@ from .noise import NoiseSpec, collapse_operators
 from .runner import (
     SimulationConfig,
     SimulationResult,
+    SimulationSession,
     default_observables,
     hamiltonian_time_slices,
+    prepare_simulation,
+    simulate_batch,
     simulate_sequence,
 )
 
 __all__ = [
     "SimulationConfig",
     "SimulationResult",
+    "SimulationSession",
     "default_observables",
     "hamiltonian_time_slices",
+    "prepare_simulation",
+    "simulate_batch",
     "simulate_sequence",
     "reduced_subsystem_state",
     "reduced_qubit_state",

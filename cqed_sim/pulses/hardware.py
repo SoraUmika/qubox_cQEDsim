@@ -4,6 +4,11 @@ from dataclasses import dataclass
 
 import numpy as np
 
+try:
+    from scipy.signal import lfilter as _scipy_lfilter
+except Exception:  # pragma: no cover - SciPy is expected, but keep a CPU-only fallback.
+    _scipy_lfilter = None
+
 
 @dataclass(frozen=True)
 class HardwareConfig:
@@ -33,10 +38,9 @@ def apply_timing_quantization(t0: float, quantum: float | None) -> float:
 def apply_zoh(x: np.ndarray, zoh_samples: int) -> np.ndarray:
     if zoh_samples <= 1:
         return x.copy()
-    y = x.copy()
-    for i in range(0, len(x), zoh_samples):
-        y[i : i + zoh_samples] = x[i]
-    return y
+    anchors = np.asarray(x[::zoh_samples])
+    indices = np.minimum(np.arange(x.size) // int(zoh_samples), anchors.size - 1)
+    return np.asarray(anchors[indices], dtype=x.dtype)
 
 
 def apply_first_order_lowpass(x: np.ndarray, dt: float, bw: float | None) -> np.ndarray:
@@ -44,6 +48,16 @@ def apply_first_order_lowpass(x: np.ndarray, dt: float, bw: float | None) -> np.
         return x.copy()
     tau = 1.0 / (2.0 * np.pi * bw)
     alpha = dt / (tau + dt)
+    if _scipy_lfilter is not None:
+        coeff = 1.0 - alpha
+        zi = np.asarray([coeff * x[0]], dtype=np.complex128)
+        y, _ = _scipy_lfilter(
+            np.asarray([alpha], dtype=float),
+            np.asarray([1.0, -coeff], dtype=float),
+            np.asarray(x, dtype=np.complex128),
+            zi=zi,
+        )
+        return np.asarray(y, dtype=np.complex128)
     y = np.empty_like(x)
     y[0] = x[0]
     for i in range(1, len(x)):

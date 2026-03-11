@@ -94,14 +94,15 @@ class DriftPhaseModel:
     """Diagonal drift model for qubit+cavity in the rotating frame.
 
     Convention:
-    - Joint basis ordering is |q>_qubit tensor |n>_cavity with q in {g,e}
-      and sigma_z|e>=+|e|, sigma_z|g>=-|g>.
+    - Joint basis ordering is |q>_qubit tensor |n>_cavity with q in {g,e}.
     - Default frame is rotating at (omega_c, omega_q), so bare terms are
       removed and only residual offsets (delta_c, delta_q) are retained.
+    - Dispersive terms use the excitation-projector convention
+      ``+chi * n * |e><e|`` and ``+chi2 * n(n-1) * |e><e|``.
 
     Energies used for phase accumulation:
-            E_g,n = delta_c*n - 0.5*delta_q - (chi*n + chi2*n(n-1)) + Kerr(n)
-            E_e,n = delta_c*n + 0.5*delta_q + (chi*n + chi2*n(n-1)) + Kerr(n)
+            E_g,n = delta_c*n + Kerr(n)
+            E_e,n = delta_c*n + delta_q + (chi*n + chi2*n(n-1)) + Kerr(n)
 
       Kerr(n) = 0.5*K*n(n-1) + (K2/6)*n(n-1)(n-2)
 
@@ -150,9 +151,9 @@ def drift_phase_table(n_cav: int, duration: float, model: DriftPhaseModel) -> Dr
     disp = model.chi * n + model.chi2 * _falling_factorial_array(n, 2)
     kerr = 0.5 * model.kerr * n * (n - 1.0) + (model.kerr2 / 6.0) * n * (n - 1.0) * (n - 2.0)
     frame_offset_n = model.delta_c * n
-    frame_offset_q_g = np.full(n.shape, -0.5 * model.delta_q, dtype=float)
-    frame_offset_q_e = np.full(n.shape, 0.5 * model.delta_q, dtype=float)
-    e_g = frame_offset_n + frame_offset_q_g - disp + kerr
+    frame_offset_q_g = np.zeros(n.shape, dtype=float)
+    frame_offset_q_e = np.full(n.shape, model.delta_q, dtype=float)
+    e_g = frame_offset_n + frame_offset_q_g + kerr
     e_e = frame_offset_n + frame_offset_q_e + disp + kerr
 
     t = float(duration)
@@ -170,7 +171,7 @@ def drift_phase_table(n_cav: int, duration: float, model: DriftPhaseModel) -> Dr
         phase_g=phase_g,
         phase_e=phase_e,
         phase_delta=phase_e - phase_g,
-        disp_phase_g=(-disp) * t,
+        disp_phase_g=np.zeros(n.shape, dtype=float),
         disp_phase_e=(disp) * t,
         kerr_phase=kerr * t,
         frame_offset_phase_n=frame_offset_n * t,

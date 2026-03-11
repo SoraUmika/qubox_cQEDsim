@@ -49,8 +49,10 @@ Example-side code:
 - Computational basis is `|g> = |0>`, `|e> = |1>`.
 - Internal Hamiltonian and frame frequencies are in `rad/s`; times are in `s`.
 - Complex drive envelopes use `exp(+i * (omega * t + phase))`.
+- Because of that waveform sign, `Pulse.carrier` is the negative of the rotating-frame transition frequency it addresses.
 - Runtime dispersive terms use the excitation projector `n_q = b^\dagger b`; for a two-level qubit, `n_q = |e><e| = (I - sigma_z) / 2`.
-- Runtime `chi` means the per-photon downward pull of the `|g,n> <-> |e,n>` transition frequency.
+- Runtime `chi` means the per-photon shift of the `|g,n> <-> |e,n>` transition frequency.
+- Negative `chi` lowers the qubit transition frequency with photon number; positive `chi` raises it.
 - Measurement helpers return exact probabilities by default and sampled outcomes only when `shots` is requested.
 
 The canonical source of truth for physics conventions, caveats, and verified test coverage is:
@@ -87,6 +89,7 @@ Useful entry points:
 - `DispersiveTransmonCavityModel.static_hamiltonian(frame=...)`
 - `DispersiveTransmonCavityModel.basis_state(q_level, cavity_level)`
 - `manifold_transition_frequency(model, n, frame=...)`
+- `carrier_for_transition_frequency(...)`, `transition_frequency_from_carrier(...)`
 
 ### Build a three-mode storage-transmon-readout model
 
@@ -100,8 +103,8 @@ model = DispersiveReadoutTransmonStorageModel(
     omega_r=2.0 * np.pi * 7.5e9,
     omega_q=2.0 * np.pi * 6.0e9,
     alpha=2.0 * np.pi * (-220.0e6),
-    chi_s=2.0 * np.pi * 2.8e6,
-    chi_r=2.0 * np.pi * 1.2e6,
+    chi_s=2.0 * np.pi * (-2.8e6),
+    chi_r=2.0 * np.pi * (-1.2e6),
     chi_sr=2.0 * np.pi * 15.0e3,
     kerr_s=2.0 * np.pi * (-2.0e3),
     kerr_r=2.0 * np.pi * (-30.0e3),
@@ -388,7 +391,7 @@ Parameter translators:
 - `from_measured(...)`
 - `HamiltonianParams`
 
-These helpers live in `cqed_sim.analysis.parameter_translation` and translate between bare transmon inputs, measured dispersive parameters, and the runtime/synthesis `chi` conventions used inside the library.
+These helpers live in `cqed_sim.analysis.parameter_translation` and translate between bare transmon inputs, measured dispersive parameters, and the shared runtime/synthesis dispersive convention used inside the library.
 
 Calibration-target helpers:
 
@@ -483,7 +486,7 @@ Unitary-synthesis entry points:
 - `make_target(...)`
 - `UnitarySynthesizer(...).fit(...)`
 
-Important caveat: `cqed_sim/unitary_synthesis` still uses a different drift-phase abstraction from the runtime Hamiltonian. In particular, its `sigma_z` sign and `chi` normalization are not identical to the runtime path. Use the conventions report before translating parameters between the runtime and synthesis layers.
+`cqed_sim/unitary_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. The remaining sign distinction users need to track is the pulse waveform convention: `Pulse.carrier = -omega_transition(frame)`.
 
 ## What stays in `examples/`
 

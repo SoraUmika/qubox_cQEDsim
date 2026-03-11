@@ -74,7 +74,7 @@ def test_kerr_only_phase_matches_analytic():
     psi0 = model.basis_state( 0,n)
     compiled = SequenceCompiler(dt=0.1).compile([], t_end=t_end)
     res = simulate_sequence(model, compiled, psi0, {}, config=SimulationConfig(frame=FrameSpec()))
-    energy = -0.5 * k * n * (n - 1)
+    energy = 0.5 * k * n * (n - 1)
     expected = np.exp(-1j * energy * t_end)
     overlap = psi0.overlap(res.final_state)
     assert np.allclose(overlap / np.abs(overlap), expected, atol=2e-3)

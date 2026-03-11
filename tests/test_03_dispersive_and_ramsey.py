@@ -68,8 +68,7 @@ def test_ramsey_pull_with_cavity_photons():
         ph1.append(np.angle(qt.ptrace(res1.final_state, 0)[0, 1]))
     slope0 = np.polyfit(waits, np.unwrap(ph0), 1)[0]
     slope1 = np.polyfit(waits, np.unwrap(ph1), 1)[0]
-    # Under project convention omega_ge(n)=omega_ge(0)-n*chi, rho_ge phase slope decreases with n.
-    omega_shift = slope0 - slope1
+    omega_shift = slope1 - slope0
     assert omega_shift > 0.0
     assert np.isclose(omega_shift, chi, rtol=0.2, atol=0.03)
     assert (time.perf_counter() - start) < 5.0

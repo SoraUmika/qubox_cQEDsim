@@ -7,6 +7,7 @@ import pytest
 import qutip as qt
 
 from cqed_sim.core.frame import FrameSpec
+from cqed_sim.core.frequencies import carrier_for_transition_frequency, transition_frequency_from_carrier
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.pulse import Pulse
 from cqed_sim.sequence.scheduler import SequenceCompiler
@@ -17,7 +18,7 @@ def _square(x):
     return np.ones_like(x, dtype=np.complex128)
 
 
-def _spectroscopy_peak(model: DispersiveTransmonCavityModel, n: int, w_scan: np.ndarray) -> float:
+def _spectroscopy_peak_carrier(model: DispersiveTransmonCavityModel, n: int, w_scan: np.ndarray) -> float:
     pe = []
     for wd in w_scan:
         pulse = Pulse("q", 0.0, 14.0, _square, amp=0.06, carrier=wd)
@@ -33,6 +34,12 @@ def _spectroscopy_peak(model: DispersiveTransmonCavityModel, n: int, w_scan: np.
     return float(w_scan[int(np.argmax(pe))])
 
 
+def _spectroscopy_peak_transition_frequency(model: DispersiveTransmonCavityModel, n: int, w_scan: np.ndarray) -> float:
+    carrier_scan = np.asarray([carrier_for_transition_frequency(w) for w in w_scan], dtype=float)
+    peak_carrier = _spectroscopy_peak_carrier(model, n, carrier_scan)
+    return transition_frequency_from_carrier(peak_carrier)
+
+
 @pytest.mark.slow
 def test_chi_is_qubit_fock_peak_spacing_definition():
     start = time.perf_counter()
@@ -41,13 +48,41 @@ def test_chi_is_qubit_fock_peak_spacing_definition():
         omega_c=0.0, omega_q=2 * np.pi * 1.0, alpha=0.0, chi=chi, chi_higher=(), kerr=0.0, n_cav=8, n_tr=2
     )
     w_scan = np.linspace(-0.8 * chi, 2.8 * chi, 33)
-    # Drive carrier sign convention in this simulator is opposite to extracted omega_ge.
-    w0 = -_spectroscopy_peak(model, 0, w_scan)
-    w1 = -_spectroscopy_peak(model, 1, w_scan)
-    w2 = -_spectroscopy_peak(model, 2, w_scan)
-    assert np.isclose(w0 - w1, chi, rtol=0.15, atol=0.02)
-    assert np.isclose(w1 - w2, chi, rtol=0.15, atol=0.02)
+    w0 = _spectroscopy_peak_transition_frequency(model, 0, w_scan)
+    w1 = _spectroscopy_peak_transition_frequency(model, 1, w_scan)
+    w2 = _spectroscopy_peak_transition_frequency(model, 2, w_scan)
+    assert np.isclose(w1 - w0, chi, rtol=0.15, atol=0.02)
+    assert np.isclose(w2 - w1, chi, rtol=0.15, atol=0.02)
     assert (time.perf_counter() - start) < 8.0
+
+
+@pytest.mark.slow
+def test_negative_chi_fixed_fock_spectroscopy_peaks_follow_transition_frequency():
+    chi = -2 * np.pi * 0.03
+    model = DispersiveTransmonCavityModel(
+        omega_c=0.0, omega_q=0.0, alpha=0.0, chi=chi, chi_higher=(), kerr=0.0, n_cav=8, n_tr=2
+    )
+    abs_chi = abs(chi)
+    w_scan = np.linspace(-2.8 * abs_chi, 0.8 * abs_chi, 33)
+    w0 = _spectroscopy_peak_transition_frequency(model, 0, w_scan)
+    w1 = _spectroscopy_peak_transition_frequency(model, 1, w_scan)
+    w2 = _spectroscopy_peak_transition_frequency(model, 2, w_scan)
+    assert np.isclose(w0, 0.0, atol=0.02)
+    assert np.isclose(w1, -abs_chi, rtol=0.15, atol=0.02)
+    assert np.isclose(w2, -2.0 * abs_chi, rtol=0.15, atol=0.03)
+
+
+def test_peak_carrier_is_negative_of_transition_frequency():
+    chi = -2 * np.pi * 0.03
+    model = DispersiveTransmonCavityModel(
+        omega_c=0.0, omega_q=0.0, alpha=0.0, chi=chi, chi_higher=(), kerr=0.0, n_cav=6, n_tr=2
+    )
+    abs_chi = abs(chi)
+    carrier_scan = np.linspace(-2.8 * abs_chi, 0.8 * abs_chi, 33)
+    peak_carrier = _spectroscopy_peak_carrier(model, 1, carrier_scan)
+    expected_transition = model.manifold_transition_frequency(1, frame=FrameSpec(omega_q_frame=model.omega_q))
+    assert np.isclose(peak_carrier, -expected_transition, rtol=0.15, atol=0.02)
+    assert np.isclose(transition_frequency_from_carrier(peak_carrier), expected_transition, rtol=0.15, atol=0.02)
 
 
 def test_chi_ramsey_phase_slope_equals_n_times_chi():
@@ -65,8 +100,7 @@ def test_chi_ramsey_phase_slope_equals_n_times_chi():
             psi = (model.basis_state( 0,n) + model.basis_state( 1,n)).unit()
             res = simulate_sequence(model, compiled, psi, {}, SimulationConfig(frame=FrameSpec()))
             rho_q = qt.ptrace(res.final_state, 0)
-            # For rho_ge = <g|rho|e>, dispersive pull appears with opposite sign; negate to recover +n*chi slope.
-            phases.append(-np.angle(rho_q[0, 1]))
+            phases.append(np.angle(rho_q[0, 1]))
         slopes.append(float(np.polyfit(times, np.unwrap(phases), 1)[0]))
     assert np.isclose(slopes[1], chi, rtol=0.12, atol=0.02)
     assert np.isclose(slopes[2], 2 * chi, rtol=0.12, atol=0.03)
@@ -87,9 +121,9 @@ def test_chi_projector_vs_pauli_equivalence_with_offset():
     i_tot = qt.tensor( qt.qeye(2),qt.qeye(n_cav))
     sigma_z_eg = 2 * n_q - i_tot
 
-    h_proj = -chi * n_c * n_q
-    h_pauli = -(chi / 2.0) * n_c * sigma_z_eg
-    h_pauli_adj = h_pauli - (chi / 2.0) * n_c
+    h_proj = chi * n_c * n_q
+    h_pauli = (chi / 2.0) * n_c * sigma_z_eg
+    h_pauli_adj = h_pauli + (chi / 2.0) * n_c
 
     compiled = SequenceCompiler(dt=0.1).compile([], t_end=6.0)
     psi0 = (model.basis_state( 0,1) + model.basis_state( 1,1)).unit()
@@ -120,8 +154,8 @@ def test_chi_sign_matches_pull_direction():
         p1 = (model.basis_state( 0,1) + model.basis_state( 1,1)).unit()
         r0 = simulate_sequence(model, compiled, p0, {}, SimulationConfig(frame=FrameSpec()))
         r1 = simulate_sequence(model, compiled, p1, {}, SimulationConfig(frame=FrameSpec()))
-        phases0.append(-np.angle(qt.ptrace(r0.final_state, 0)[0, 1]))
-        phases1.append(-np.angle(qt.ptrace(r1.final_state, 0)[0, 1]))
+        phases0.append(np.angle(qt.ptrace(r0.final_state, 0)[0, 1]))
+        phases1.append(np.angle(qt.ptrace(r1.final_state, 0)[0, 1]))
     s0 = float(np.polyfit(times, np.unwrap(phases0), 1)[0])
     s1 = float(np.polyfit(times, np.unwrap(phases1), 1)[0])
     assert s1 - s0 > 0.0
@@ -146,5 +180,5 @@ def test_higher_order_chi_matches_fock_falling_factorial_transition_shift():
     h0 = model.static_hamiltonian(FrameSpec())
     for n in range(4):
         eg = float(qt.expect(h0, model.basis_state( 1,n)) - qt.expect(h0, model.basis_state( 0,n)))
-        expected = model.omega_q - chi * n - chi2 * (n * (n - 1)) - chi3 * (n * (n - 1) * (n - 2))
+        expected = model.omega_q + chi * n + chi2 * (n * (n - 1)) + chi3 * (n * (n - 1) * (n - 2))
         assert np.isclose(eg, expected, atol=1e-9)

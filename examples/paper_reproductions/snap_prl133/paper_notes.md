@@ -9,7 +9,7 @@ Primary references:
 
 This implementation follows the project dispersive sign convention:
 
-- `omega_ge(n) = omega_ge(0) - n * chi` when higher-order terms are off.
+- `omega_ge(n) = omega_ge(0) + n * chi` when higher-order terms are off.
 
 Paper-to-code variable mapping:
 

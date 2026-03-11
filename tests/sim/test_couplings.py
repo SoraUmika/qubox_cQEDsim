@@ -30,7 +30,7 @@ def test_cross_kerr_shifts_resonator_frequency_by_qubit_excitation_number():
 
 def test_self_kerr_breaks_harmonic_level_spacing():
     a = qt.destroy(5)
-    hamiltonian = 2.0 * (a.dag() * a) + self_kerr(a, -0.4)
+    hamiltonian = 2.0 * (a.dag() * a) + self_kerr(a, 0.4)
     energies = np.real(np.diag(hamiltonian.full()))
     spacing_01 = energies[1] - energies[0]
     spacing_12 = energies[2] - energies[1]

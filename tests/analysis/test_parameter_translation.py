@@ -26,8 +26,8 @@ def _exact_dressed_shifts(omega_q: float, alpha: float, g: float, omega_r: float
     omega0 = matched_energy(1, 0) - matched_energy(0, 0)
     omega1 = matched_energy(1, 1) - matched_energy(0, 1)
     omega2 = matched_energy(1, 2) - matched_energy(0, 2)
-    chi = float(omega0 - omega1)
-    chi_2 = float(0.5 * (omega0 - omega2) - chi)
+    chi = float(omega1 - omega0)
+    chi_2 = float(0.5 * (omega2 - omega0) - chi)
     return chi, chi_2
 
 

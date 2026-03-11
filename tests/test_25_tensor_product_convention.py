@@ -62,9 +62,9 @@ def test_static_hamiltonian_diagonal_uses_qubit_cavity_order():
 
     assert np.isclose(diag[0], 0.0, atol=1e-12)  # |g,0>
     assert np.isclose(diag[1], omega_c, atol=1e-12)  # |g,1>
-    assert np.isclose(diag[2], 2.0 * omega_c - kerr, atol=1e-12)  # |g,2>
+    assert np.isclose(diag[2], 2.0 * omega_c + kerr, atol=1e-12)  # |g,2>
     assert np.isclose(diag[n_cav], omega_q, atol=1e-12)  # |e,0>
-    assert np.isclose(diag[n_cav + 1], omega_q + omega_c - chi, atol=1e-12)  # |e,1>
+    assert np.isclose(diag[n_cav + 1], omega_q + omega_c + chi, atol=1e-12)  # |e,1>
 
 
 def test_conditioned_bloch_uses_fock_projector_on_second_subsystem():

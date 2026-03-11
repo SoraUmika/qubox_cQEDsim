@@ -95,7 +95,7 @@ def test_relative_phase_audit_shows_nontrivial_fock_sector_phases() -> None:
     assert len(block_rows) >= 3
     phase_step_1 = block_rows[1]["block_det_phase_rad"] - block_rows[0]["block_det_phase_rad"]
     phase_step_2 = block_rows[2]["block_det_phase_rad"] - block_rows[1]["block_det_phase_rad"]
-    assert phase_step_1 < -0.3
-    assert phase_step_2 < -0.3
+    assert phase_step_1 > 0.3
+    assert phase_step_2 > 0.3
     assert np.isclose(phase_step_1, phase_step_2, atol=2.0e-2)
     assert any(len(row["support_indices"]) >= 4 for row in state_rows)

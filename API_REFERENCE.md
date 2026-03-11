@@ -140,13 +140,13 @@ class DispersiveTransmonCavityModel:
 ```
 
 **Physics convention:** Positive `chi` means the qubit |g⟩→|e⟩ transition frequency
-**decreases** with increasing cavity photon number:
+**increases** with increasing cavity photon number:
 
-$$\omega_{ge}(n) = \omega_{ge}(0) - \chi \cdot n - \chi_2 \cdot n(n-1) - \cdots$$
+$$\omega_{ge}(n) = \omega_{ge}(0) + \chi \cdot n + \chi_2 \cdot n(n-1) + \cdots$$
 
 The static Hamiltonian in the rotating frame is:
 
-$$H_0/\hbar = \delta_c\, n_c + \delta_q\, n_q + \frac{\alpha}{2}\, b^{\dagger 2} b^2 - \frac{K}{2}\, n_c(n_c - 1) - \chi\, n_c\, n_q - \chi_2\, n_c(n_c-1)\, n_q \;-\;\cdots$$
+$$H_0/\hbar = \delta_c\, n_c + \delta_q\, n_q + \frac{\alpha}{2}\, b^{\dagger 2} b^2 + \frac{K}{2}\, n_c(n_c - 1) + \chi\, n_c\, n_q + \chi_2\, n_c(n_c-1)\, n_q \;+\;\cdots$$
 
 where δ_c = ω_c − ω_c^frame, δ_q = ω_q − ω_q^frame.
 
@@ -202,10 +202,9 @@ class DispersiveReadoutTransmonStorageModel:
 
 **Static Hamiltonian:**
 
-$$H_0/\hbar = \delta_s\, n_s + \delta_r\, n_r + \delta_q\, n_q + \frac{\alpha}{2}\, b^{\dagger 2}b^2 - \chi_s\, n_s\, n_q - \chi_r\, n_r\, n_q + \chi_{sr}\, n_s\, n_r - \frac{K_s}{2}\, n_s(n_s-1) - \frac{K_r}{2}\, n_r(n_r-1)$$
+$$H_0/\hbar = \delta_s\, n_s + \delta_r\, n_r + \delta_q\, n_q + \frac{\alpha}{2}\, b^{\dagger 2}b^2 + \chi_s\, n_s\, n_q + \chi_r\, n_r\, n_q + \chi_{sr}\, n_s\, n_r + \frac{K_s}{2}\, n_s(n_s-1) + \frac{K_r}{2}\, n_r(n_r-1)$$
 
-**Note:** `chi_sr` has the **opposite sign convention** from `chi_s` and `chi_r`:
-positive `chi_sr` **raises** both bosonic mode frequencies with occupancy of the other mode.
+**Note:** positive `chi_sr` raises both bosonic mode frequencies with occupancy of the other mode, while positive `chi_s` and `chi_r` raise the qubit transition frequency with storage/readout occupancy.
 
 #### Methods
 
@@ -308,6 +307,8 @@ class ExchangeSpec:
 |---|---|---|
 | `manifold_transition_frequency(model, n, frame)` | `(DispersiveTransmonCavityModel, int, FrameSpec \| None) -> float` | |g,n⟩↔|e,n⟩ transition frequency including all chi_higher terms |
 | `falling_factorial_scalar(n, order)` | `(int, int) -> float` | n(n−1)(n−2)···(n−order+1) |
+| `carrier_for_transition_frequency(transition_frequency)` | `(float) -> float` | Convert a rotating-frame transition frequency into the resonant `Pulse.carrier` value |
+| `transition_frequency_from_carrier(carrier)` | `(float) -> float` | Convert a `Pulse.carrier` back into the rotating-frame transition frequency it addresses |
 
 ---
 
@@ -364,6 +365,10 @@ $$\epsilon(t) = \text{amp} \cdot \text{envelope}(t_\text{rel}) \cdot e^{i(\text{
 
 where t_rel = (t − t0) / duration. The **exp(+i·ω·t)** sign convention is used
 throughout the repository.
+Because the drive Hamiltonian is assembled as `epsilon(t) * raising + epsilon*(t) * lowering`,
+the resonant rotating-frame transition frequency is `-carrier`. Use
+`carrier_for_transition_frequency(...)` when you want the user-facing detuning axis to match
+the physical transition frequency in the chosen frame.
 
 If `drag ≠ 0`, a quadrature correction is added: the envelope derivative scaled by
 `drag` is added in the imaginary channel.
@@ -481,7 +486,7 @@ per-manifold corrections (d_lambda, d_alpha, d_omega) are applied.
 
 **SQR frequency convention:** tone frequencies are the **negative** of the manifold
 transition frequency in the rotating frame, aligning with the exp(+iωt) waveform
-convention.
+convention. The implementation uses `carrier_for_transition_frequency(...)` for this mapping.
 
 ---
 
@@ -744,7 +749,7 @@ Returns Lindblad jump operators:
 | Function / Class | Signature | Description |
 |---|---|---|
 | `cross_kerr(a, b, chi)` | `(Qobj, Qobj, float) -> Qobj` | χ · a†a · b†b |
-| `self_kerr(a, kerr)` | `(Qobj, float) -> Qobj` | −(K/2) · a†²a² |
+| `self_kerr(a, kerr)` | `(Qobj, float) -> Qobj` | +(K/2) · a†²a² |
 | `exchange(a, b, coupling)` | `(Qobj, Qobj, float\|complex) -> Qobj` | J · (a†b + ab†) |
 | `TunableCoupler` | frozen dataclass | Flux-tunable coupler: `j_max`, `flux_period`, `phase_offset`, `dc_offset` |
 | `TunableCoupler.exchange_rate(flux)` | `(float) -> float` | dc_offset + j_max·cos(2π·flux/flux_period + phase_offset) |
@@ -1019,7 +1024,7 @@ class ReadoutResonator:
 
 | Method | Returns | Description |
 |---|---|---|
-| `dispersive_shift(qubit_state, chi)` | `float` | 0 for "g", −χ for "e" |
+| `dispersive_shift(qubit_state, chi)` | `float` | 0 for "g", +χ for "e" |
 | `resonant_frequency(qubit_state, chi)` | `float` | ω_r + dispersive_shift |
 | `steady_state_amplitude(qubit_state, ...)` | `complex` | α_ss = −iε / (κ_eff/2 + i(ω_r,q − ω_d)) |
 | `gamma_meas(...)` | `float` | Measurement-induced dephasing rate |
@@ -1223,8 +1228,8 @@ class HamiltonianParams:
     delta: float            # Detuning ω_q − ω_r (rad/s)
     ec: float               # Charging energy (rad/s)
     ej: float               # Josephson energy (rad/s)
-    synthesis_chi: float    # −0.5 × chi (for synthesis layer)
-    synthesis_chi_2: float  # −0.5 × chi_2 (for synthesis layer)
+    synthesis_chi: float    # Same canonical chi exposed for synthesis callers
+    synthesis_chi_2: float  # Same canonical chi_2 exposed for synthesis callers
     regime: str = "dispersive"
     metadata: dict = field(default_factory=dict)
 ```
@@ -1767,9 +1772,9 @@ diagnostic visualization.
 Gradient-free optimization of pulse/gate sequences to implement target unitaries
 within a qubit–cavity subspace.
 
-> **Convention warning:** The synthesis drift-phase layer uses a different σ_z sign
-> and χ scaling from the runtime Hamiltonian. See [Section 21](#21-ambiguities--gaps--known-mismatches)
-> and the physics conventions report.
+> **Convention note:** The synthesis drift-phase layer now matches the runtime
+> dispersive/Kerr convention. The remaining sign distinction is the waveform
+> convention `Pulse.carrier = -omega_transition(frame)`.
 
 ### Subspace
 
@@ -1848,13 +1853,10 @@ class DriftPhaseModel:
     frame: str = "rotating_omega_c_omega_q"
 ```
 
-**Drift energies (synthesis convention):**
+**Drift energies (shared runtime/synthesis convention):**
 
-$$E_{g,n} = \Delta_c n - \tfrac{1}{2}\Delta_q - (\chi n + \chi_2 n(n-1)) + K(n)$$
-$$E_{e,n} = \Delta_c n + \tfrac{1}{2}\Delta_q + (\chi n + \chi_2 n(n-1)) + K(n)$$
-
-**CRITICAL:** These use the synthesis σ_z convention where σ_z|e⟩ = +|e⟩, which is
-opposite to the runtime. See [Section 21](#21-ambiguities--gaps--known-mismatches).
+$$E_{g,n} = \Delta_c n + K(n)$$
+$$E_{e,n} = \Delta_c n + \Delta_q + (\chi n + \chi_2 n(n-1)) + K(n)$$
 
 | Function | Description |
 |---|---|
@@ -2088,13 +2090,15 @@ APIs. The canonical reference is `physics_and_conventions/physics_conventions_re
 
 ### Dispersive Shift (χ)
 
-- **Runtime convention:** positive χ means downward pull of qubit transition with photon number
-- ω_ge(n) = ω_ge(0) − χ·n
-- In Hamiltonian: −χ·n_c·n_q
+- **Runtime convention:** positive χ means the qubit transition moves upward with photon number
+- ω_ge(n) = ω_ge(0) + χ·n
+- In Hamiltonian: +χ·n_c·n_q
+- Negative χ lowers the qubit transition frequency with photon number
 
 ### Complex Envelope Sign
 
 - **Convention:** exp(+i(ω·t + φ)) throughout (positive exponent)
+- A transition at rotating-frame frequency `ω_transition` is resonantly addressed by `Pulse.carrier = -ω_transition`
 
 ### Confusion Matrix
 
@@ -2129,24 +2133,20 @@ intended as primary user entry points but are accessible.
 
 ## 21. Ambiguities / Gaps / Known Mismatches
 
-### CRITICAL: Runtime vs. Synthesis σ_z and χ Conventions
+### Runtime/Synthesis Convention Alignment
 
-The runtime Hamiltonian layer and the unitary-synthesis drift-phase model use
-**different** σ_z sign conventions and χ scaling:
+The runtime Hamiltonian layer and the unitary-synthesis drift-phase model now use
+the same projector-based dispersive convention:
 
 | Convention | Runtime path | Synthesis path |
 |---|---|---|
-| σ_z eigenvalues | σ_z\|g⟩ = +\|g⟩, σ_z\|e⟩ = −\|e⟩ | σ_z\|e⟩ = +\|e⟩, σ_z\|g⟩ = −\|g⟩ |
-| χ meaning | −χ n_c n_q in Hamiltonian | +(χ_synth) n_c in σ_z coefficient |
-| Mapping | χ_runtime | χ_synth = −χ_runtime / 2 |
-| Kerr mapping | kerr_runtime | kerr_synth = −kerr_runtime |
+| Qubit basis | \|g⟩ = \|0⟩, \|e⟩ = \|1⟩ | \|g⟩ = \|0⟩, \|e⟩ = \|1⟩ |
+| χ meaning | +χ n_c n_q in Hamiltonian | +χ n \|e⟩⟨e\| in drift model |
+| χ mapping | χ_runtime | χ_synth = χ_runtime |
+| Kerr mapping | kerr_runtime | kerr_synth = kerr_runtime |
 
-This mapping is **documented in the physics conventions report and verified by tests**,
-but it is **not automatically enforced by a single translation helper** within the
-library. Users constructing `DriftPhaseModel` parameters from runtime model parameters
-must apply this mapping manually.
-
-**Reference test:** `tests/test_21_qubox_convention_reconciliation.py`
+The remaining sign convention users must track is the pulse waveform convention:
+`Pulse.carrier = -omega_transition(frame)`.
 
 ### MODERATE: FrameSpec Legacy Field Names
 

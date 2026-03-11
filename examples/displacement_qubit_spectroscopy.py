@@ -8,6 +8,7 @@ import numpy as np
 import qutip as qt
 
 from cqed_sim.core.frame import FrameSpec
+from cqed_sim.core.frequencies import carrier_for_transition_frequency
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.envelopes import gaussian_envelope, square_envelope
 from cqed_sim.pulses.pulse import Pulse
@@ -17,6 +18,10 @@ from cqed_sim.sim.runner import SimulationConfig, simulate_sequence
 
 def mhz_to_rad_per_ns(mhz: float) -> float:
     return float(2.0 * np.pi * mhz * 1e-3)
+
+
+def rad_per_ns_to_mhz(omega: float) -> float:
+    return float(omega / (2.0 * np.pi) * 1.0e3)
 
 
 def gauss_sigma_018(t_rel: np.ndarray) -> np.ndarray:
@@ -64,6 +69,7 @@ def simulate_post_displacement_state(
 def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
     chi_mhz = -2.84
     model = build_model(chi_mhz=chi_mhz, n_cav=24)
+    q_frame = FrameSpec(omega_q_frame=model.omega_q)
 
     dt_ns = 0.5
     disp_duration_ns = 80.0
@@ -71,7 +77,7 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
     gap_ns = 20.0
     disp_amp = 0.035
     spec_amp = 0.004
-    detunings_mhz = np.linspace(-12.0, 12.0, 121)
+    transition_detunings_mhz = np.linspace(-12.0, 2.0, 71)
 
     rho_after_disp = simulate_post_displacement_state(
         model=model,
@@ -87,14 +93,14 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
     p_n = np.clip(np.real(np.diag(rho_cav.full())), 0.0, 1.0)
     p_n = p_n / max(np.sum(p_n), 1e-12)
 
-    pe = np.zeros_like(detunings_mhz)
-    for i, det_mhz in enumerate(detunings_mhz):
+    pe = np.zeros_like(transition_detunings_mhz)
+    for i, det_mhz in enumerate(transition_detunings_mhz):
         spec = Pulse(
             channel="q",
             t0=disp_duration_ns + gap_ns,
             duration=spec_duration_ns,
             envelope=square_envelope,
-            carrier=mhz_to_rad_per_ns(float(det_mhz)),
+            carrier=carrier_for_transition_frequency(mhz_to_rad_per_ns(float(det_mhz))),
             phase=0.0,
             amp=spec_amp,
         )
@@ -114,20 +120,25 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
             ],
             t_end=t_end,
         )
+        # Re-run the full displacement + probe schedule so the idle gap and carrier
+        # phase reference match the experiment at each spectroscopy point.
         result = simulate_sequence(
             model,
             compiled,
             model.basis_state( 0,0),
             drive_ops={"c": "cavity", "q": "qubit"},
-            config=SimulationConfig(frame=FrameSpec(omega_q_frame=model.omega_q)),
+            config=SimulationConfig(frame=q_frame),
         )
         pe[i] = float(np.real(result.expectations["P_e"][-1]))
 
     peak_idx = int(np.argmax(pe))
-    peak_detuning_mhz = float(detunings_mhz[peak_idx])
+    peak_detuning_mhz = float(transition_detunings_mhz[peak_idx])
 
     top_n = int(min(8, model.n_cav))
-    predicted_lines_mhz = [float(n * chi_mhz) for n in range(top_n)]
+    predicted_lines_mhz = [
+        rad_per_ns_to_mhz(model.manifold_transition_frequency(n, frame=q_frame))
+        for n in range(top_n)
+    ]
     predicted_weights = [float(p_n[n]) for n in range(top_n)]
 
     output = {
@@ -142,16 +153,16 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
             "amp": float(spec_amp),
             "duration_ns": float(spec_duration_ns),
             "gap_ns": float(gap_ns),
-            "detunings_mhz": [float(x) for x in detunings_mhz],
+            "transition_detunings_mhz": [float(x) for x in transition_detunings_mhz],
             "pe_final": [float(x) for x in pe],
             "peak_detuning_mhz": peak_detuning_mhz,
         },
         "predicted_transition_lines_mhz": predicted_lines_mhz,
         "predicted_line_weights": predicted_weights,
         "units": {
-            "detuning": "MHz relative to bare qubit frame",
+            "transition_detuning": "MHz relative to the qubit rotating frame",
             "chi": "MHz",
-            "carrier": "rad/ns",
+            "carrier": "internal waveform carrier in rad/ns; carrier = -transition_detuning",
         },
     }
     return output
@@ -164,7 +175,7 @@ def save_artifacts(result: dict[str, object]) -> tuple[Path, Path]:
     json_path = out_dir / "displacement_qubit_spectroscopy_chi_minus_2p84MHz.json"
     fig_path = out_dir / "displacement_qubit_spectroscopy_chi_minus_2p84MHz.png"
 
-    det = np.asarray(result["spectroscopy"]["detunings_mhz"], dtype=float)
+    det = np.asarray(result["spectroscopy"]["transition_detunings_mhz"], dtype=float)
     pe = np.asarray(result["spectroscopy"]["pe_final"], dtype=float)
 
     fig, ax = plt.subplots(figsize=(8.0, 4.8))
@@ -177,7 +188,7 @@ def save_artifacts(result: dict[str, object]) -> tuple[Path, Path]:
             continue
         ax.axvline(ln, color="tab:red", alpha=min(0.9, 0.2 + 1.5 * wt), lw=1.0)
 
-    ax.set_xlabel("Qubit spectroscopy detuning (MHz)")
+    ax.set_xlabel("Qubit transition detuning relative to frame (MHz)")
     ax.set_ylabel("Final excited-state probability $P_e$")
     ax.set_title(r"Displacement $\rightarrow$ qubit spectroscopy ($\chi=-2.84$ MHz)")
     ax.grid(alpha=0.25)

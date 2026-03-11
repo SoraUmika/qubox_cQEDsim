@@ -1133,6 +1133,30 @@ def _benchmark_bounds(config: Mapping[str, Any], n_active: int) -> Bounds:
     return Bounds(lower, upper)
 
 
+def _benchmark_warm_start_vector(
+    target: RandomSQRTarget,
+    config: Mapping[str, Any],
+    active_levels: Sequence[int],
+) -> np.ndarray:
+    gate = SQRGate(
+        index=0,
+        name=f"{target.target_id}_warm_start",
+        theta=tuple(float(value) for value in target.theta),
+        phi=tuple(float(value) for value in target.phi),
+    )
+    seeded = calibrate_sqr_gate(gate, config)
+    vector: list[float] = []
+    for level in active_levels:
+        vector.extend(
+            (
+                float(seeded.d_lambda[int(level)]),
+                float(seeded.d_alpha[int(level)]),
+                float(seeded.d_omega_rad_s[int(level)]),
+            )
+        )
+    return np.asarray(vector, dtype=float)
+
+
 def _benchmark_regularization(config: Mapping[str, Any], x: np.ndarray) -> float:
     eta_lambda = float(config.get("regularization_lambda", 0.0))
     eta_alpha = float(config.get("regularization_alpha", 0.0))
@@ -1446,11 +1470,13 @@ def calibrate_guarded_sqr_target(
     bounds = _benchmark_bounds(config, len(active_levels))
     method_stage1 = str(config.get("optimizer_method_stage1", "Powell"))
     method_stage2 = str(config.get("optimizer_method_stage2", "L-BFGS-B"))
-    x0 = (
-        np.zeros(3 * len(active_levels), dtype=float)
-        if initial_vector is None
-        else np.asarray(initial_vector, dtype=float).reshape((3 * len(active_levels),))
-    )
+    if initial_vector is None:
+        if float(lambda_guard) > 0.0:
+            x0 = _benchmark_warm_start_vector(target, config, active_levels)
+        else:
+            x0 = np.zeros(3 * len(active_levels), dtype=float)
+    else:
+        x0 = np.asarray(initial_vector, dtype=float).reshape((3 * len(active_levels),))
     trace: list[dict[str, float]] = []
     best_metrics: dict[str, Any] | None = None
     best_loss = float("inf")

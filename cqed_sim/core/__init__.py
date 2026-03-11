@@ -7,7 +7,12 @@ from .conventions import (
     qubit_storage_readout_index,
 )
 from .frame import FrameSpec
-from .frequencies import falling_factorial_scalar, manifold_transition_frequency
+from .frequencies import (
+    carrier_for_transition_frequency,
+    falling_factorial_scalar,
+    manifold_transition_frequency,
+    transition_frequency_from_carrier,
+)
 from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec
 from .ideal_gates import (
     beamsplitter_unitary,
@@ -37,6 +42,8 @@ __all__ = [
     "qubit_storage_readout_block_indices",
     "falling_factorial_scalar",
     "manifold_transition_frequency",
+    "carrier_for_transition_frequency",
+    "transition_frequency_from_carrier",
     "qubit_rotation_xy",
     "qubit_rotation_axis",
     "displacement_op",

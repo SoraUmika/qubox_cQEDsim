@@ -82,7 +82,7 @@ def test_fec3_relative_phase_scaling() -> None:
 
     dt = t2 - t1
     for n in [1, 2, 3]:
-        expected = 2.0 * (model.chi * n + model.chi2 * (n * (n - 1))) * dt
+        expected = (model.chi * n + model.chi2 * (n * (n - 1))) * dt
 
         ideal_diff = table2.phase_delta[n] - table1.phase_delta[n]
         assert np.isclose(ideal_diff, expected, atol=1e-12)

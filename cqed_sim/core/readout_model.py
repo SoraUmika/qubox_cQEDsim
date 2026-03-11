@@ -107,15 +107,15 @@ class DispersiveReadoutTransmonStorageModel:
         h = delta_s * n_s + delta_r * n_r + delta_q * n_q
         h += 0.5 * self.alpha * (bdag * bdag * b * b)
         if self.chi_s != 0.0:
-            h += -self.chi_s * n_s * n_q
+            h += self.chi_s * n_s * n_q
         if self.chi_r != 0.0:
-            h += -self.chi_r * n_r * n_q
+            h += self.chi_r * n_r * n_q
         if self.chi_sr != 0.0:
             h += self.chi_sr * n_s * n_r
         if self.kerr_s != 0.0:
-            h -= 0.5 * self.kerr_s * n_s * (n_s - qt.qeye(n_s.dims[0]))
+            h += 0.5 * self.kerr_s * n_s * (n_s - qt.qeye(n_s.dims[0]))
         if self.kerr_r != 0.0:
-            h -= 0.5 * self.kerr_r * n_r * (n_r - qt.qeye(n_r.dims[0]))
+            h += 0.5 * self.kerr_r * n_r * (n_r - qt.qeye(n_r.dims[0]))
         h = assemble_static_hamiltonian(
             h,
             ops,
@@ -143,11 +143,11 @@ class DispersiveReadoutTransmonStorageModel:
         delta_q = float(self.omega_q - frame.omega_q_frame)
         energy = delta_s * storage_level + delta_r * readout_level + delta_q * q_level
         energy += 0.5 * float(self.alpha) * q_level * (q_level - 1)
-        energy += -float(self.chi_s) * storage_level * q_level
-        energy += -float(self.chi_r) * readout_level * q_level
+        energy += float(self.chi_s) * storage_level * q_level
+        energy += float(self.chi_r) * readout_level * q_level
         energy += float(self.chi_sr) * storage_level * readout_level
-        energy -= 0.5 * float(self.kerr_s) * storage_level * (storage_level - 1)
-        energy -= 0.5 * float(self.kerr_r) * readout_level * (readout_level - 1)
+        energy += 0.5 * float(self.kerr_s) * storage_level * (storage_level - 1)
+        energy += 0.5 * float(self.kerr_r) * readout_level * (readout_level - 1)
         return float(energy)
 
     def basis_state(self, q_level: int, storage_level: int, readout_level: int) -> qt.Qobj:
@@ -175,8 +175,8 @@ class DispersiveReadoutTransmonStorageModel:
         return float(
             delta_q
             + float(self.alpha) * int(qubit_level)
-            - float(self.chi_s) * int(storage_level)
-            - float(self.chi_r) * int(readout_level)
+            + float(self.chi_s) * int(storage_level)
+            + float(self.chi_r) * int(readout_level)
         )
 
     def storage_transition_frequency(
@@ -190,9 +190,9 @@ class DispersiveReadoutTransmonStorageModel:
         delta_s = float(self.omega_s - frame.omega_s_frame)
         return float(
             delta_s
-            - float(self.chi_s) * int(qubit_level)
+            + float(self.chi_s) * int(qubit_level)
             + float(self.chi_sr) * int(readout_level)
-            - float(self.kerr_s) * int(storage_level)
+            + float(self.kerr_s) * int(storage_level)
         )
 
     def readout_transition_frequency(
@@ -206,7 +206,7 @@ class DispersiveReadoutTransmonStorageModel:
         delta_r = float(self.omega_r - frame.omega_r_frame)
         return float(
             delta_r
-            - float(self.chi_r) * int(qubit_level)
+            + float(self.chi_r) * int(qubit_level)
             + float(self.chi_sr) * int(storage_level)
-            - float(self.kerr_r) * int(readout_level)
+            + float(self.kerr_r) * int(readout_level)
         )

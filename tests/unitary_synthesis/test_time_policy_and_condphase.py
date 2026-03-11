@@ -123,7 +123,7 @@ def test_t3_conditional_relative_phase_matches_expected() -> None:
     pulse_u = simulate_sequence(seq, sub, backend="pulse").full_operator
 
     for n in [0, 1, 2]:
-        expected = np.exp(-1j * 2.0 * (drift.chi * n + drift.chi2 * (n * (n - 1))) * duration)
+        expected = np.exp(-1j * (drift.chi * n + drift.chi2 * (n * (n - 1))) * duration)
 
         ratio_direct = direct_u[n_cav + n, n_cav + n] / direct_u[n, n]
         ratio_pulse = pulse_u[n_cav + n, n_cav + n] / pulse_u[n, n]
@@ -132,7 +132,7 @@ def test_t3_conditional_relative_phase_matches_expected() -> None:
         assert np.isclose(ratio_pulse, expected, atol=1e-12)
 
     table = drift_phase_table(n_cav=n_cav, duration=duration, model=drift)
-    expected_delta = np.asarray([2.0 * (drift.chi * n + drift.chi2 * (n * (n - 1))) * duration for n in range(n_cav)], dtype=float)
+    expected_delta = np.asarray([(drift.chi * n + drift.chi2 * (n * (n - 1))) * duration for n in range(n_cav)], dtype=float)
     assert np.allclose(table.phase_delta, expected_delta, atol=1e-12)
 
 

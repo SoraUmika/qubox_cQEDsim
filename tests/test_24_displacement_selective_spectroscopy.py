@@ -5,6 +5,7 @@ import pytest
 import qutip as qt
 
 from cqed_sim.core.frame import FrameSpec
+from cqed_sim.core.frequencies import carrier_for_transition_frequency
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.envelopes import gaussian_envelope
 from cqed_sim.pulses.pulse import Pulse
@@ -74,7 +75,7 @@ def test_displacement_selective_spectroscopy_peak_spacing_tracks_chi():
             t0=disp_duration_ns + gap_ns,
             duration=spec_duration_ns,
             envelope=spec_env,
-            carrier=_mhz_to_rad_per_ns(float(det_mhz)),
+            carrier=carrier_for_transition_frequency(_mhz_to_rad_per_ns(float(det_mhz))),
             phase=0.0,
             amp=spec_amp,
         )
@@ -103,4 +104,5 @@ def test_displacement_selective_spectroscopy_peak_spacing_tracks_chi():
     spacings = np.diff(peak_detunings)
     target = abs(float(chi_mhz))
     assert np.all(np.abs(spacings - target) < 0.75)
-    assert np.isclose(abs(dominant), target, atol=0.8)
+    assert dominant < 0.0
+    assert np.isclose(dominant, chi_mhz, atol=0.8)

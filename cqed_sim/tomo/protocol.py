@@ -7,6 +7,7 @@ import numpy as np
 import qutip as qt
 
 from cqed_sim.core.frame import FrameSpec
+from cqed_sim.core.frequencies import carrier_for_transition_frequency, manifold_transition_frequency
 from cqed_sim.core.ideal_gates import embed_qubit_op, qubit_rotation_axis
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.pulse import Pulse
@@ -168,8 +169,8 @@ def autocalibrate_all_xy(
 
 
 def selective_qubit_freq(model: DispersiveTransmonCavityModel, n: int) -> float:
-    # Frame where omega_q removed: omega_ge(n)= -n*chi (project convention).
-    return -n * model.chi
+    frame = FrameSpec(omega_q_frame=model.omega_q)
+    return carrier_for_transition_frequency(manifold_transition_frequency(model, n=n, frame=frame))
 
 
 def selective_pi_pulse(n: int, t0_ns: float, duration_ns: float, amp: float, model: DispersiveTransmonCavityModel, drag: float = 0.0) -> Pulse:

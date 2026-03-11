@@ -12,6 +12,7 @@ from .core import (
     FrameSpec,
     SelfKerrSpec,
     beamsplitter_unitary,
+    carrier_for_transition_frequency,
     displacement_op,
     embed_cavity_op,
     embed_qubit_op,
@@ -20,6 +21,7 @@ from .core import (
     qubit_rotation_xy,
     snap_op,
     sqr_op,
+    transition_frequency_from_carrier,
 )
 from .experiment import (
     AmplifierChain,
@@ -115,6 +117,8 @@ __all__ = [
     "NumPyBackend",
     "JaxBackend",
     "manifold_transition_frequency",
+    "carrier_for_transition_frequency",
+    "transition_frequency_from_carrier",
     "HamiltonianParams",
     "from_transmon_params",
     "from_measured",

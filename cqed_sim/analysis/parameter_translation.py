@@ -20,10 +20,10 @@ class HamiltonianParams:
     coefficients are then extracted from a small exact diagonalization of the
     coupled Duffing model and matched to
 
-    ``omega_ge(n) ~= omega_q - chi * n - chi_2 * n * (n - 1)``.
+    ``omega_ge(n) ~= omega_q + chi * n + chi_2 * n * (n - 1)``.
 
-    This keeps the translator numerically stable while preserving the runtime
-    sign convention used by ``cqed_sim``.
+    This keeps the translator numerically stable while preserving the canonical
+    runtime sign convention used by ``cqed_sim``.
     """
 
     omega_q: float
@@ -104,8 +104,8 @@ def _extract_dressed_coefficients(
         resonator_dim=resonator_dim,
         transmon_dim=transmon_dim,
     )
-    chi = float(omega0 - omega1)
-    chi_2 = float(0.5 * (omega0 - omega2) - chi)
+    chi = float(omega1 - omega0)
+    chi_2 = float(0.5 * (omega2 - omega0) - chi)
     return chi, chi_2
 
 
@@ -129,7 +129,7 @@ def from_transmon_params(
     omega_q = _bare_transmon_frequency(float(ej), float(ec))
     alpha = -float(ec)
     delta = float(omega_q - float(omega_r))
-    chi_perturbative = float(-2.0 * (float(g) ** 2) * alpha / (delta * (delta + alpha)))
+    chi_perturbative = float(2.0 * (float(g) ** 2) * alpha / (delta * (delta + alpha)))
     chi, chi_2 = _extract_dressed_coefficients(
         omega_q,
         alpha,
@@ -148,8 +148,8 @@ def from_transmon_params(
         delta=float(delta),
         ec=float(ec),
         ej=float(ej),
-        synthesis_chi=float(-0.5 * chi),
-        synthesis_chi_2=float(-0.5 * chi_2),
+        synthesis_chi=float(chi),
+        synthesis_chi_2=float(chi_2),
         metadata={
             "chi_perturbative": float(chi_perturbative),
             "ej_over_ec": float(ej / ec),
@@ -172,7 +172,7 @@ def _solve_detuning_from_measured(
             raise ValueError("omega_r is required when chi is zero because the detuning cannot be inferred.")
         return float(omega_01 - omega_r)
 
-    coeffs = np.array([float(chi), float(chi * alpha), float(2.0 * g * g * alpha)], dtype=float)
+    coeffs = np.array([float(chi), float(chi * alpha), float(-2.0 * g * g * alpha)], dtype=float)
     roots = np.roots(coeffs)
     real_roots = [float(np.real(root)) for root in roots if abs(np.imag(root)) < 1.0e-10]
     if not real_roots:
@@ -215,7 +215,7 @@ def from_measured(
     ``EJ ~= (omega_01 - alpha)^2 / (8 EC)``, then solves the runtime-convention
     dispersive equation
 
-    ``chi ~= -2 g^2 alpha / (Delta (Delta + alpha))``
+    ``chi ~= 2 g^2 alpha / (Delta (Delta + alpha))``
 
     for ``Delta = omega_q - omega_r``.
     """
@@ -251,8 +251,8 @@ def from_measured(
         delta=float(delta),
         ec=float(ec),
         ej=float(ej),
-        synthesis_chi=float(-0.5 * translated.chi),
-        synthesis_chi_2=float(-0.5 * translated.chi_2),
+        synthesis_chi=float(translated.chi),
+        synthesis_chi_2=float(translated.chi_2),
         metadata={
             **translated.metadata,
             "detuning_branch": str(detuning_branch),

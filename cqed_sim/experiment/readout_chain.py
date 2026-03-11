@@ -41,7 +41,7 @@ class ReadoutResonator:
 
     def dispersive_shift(self, qubit_state: str | int, chi: float | None = None) -> float:
         resolved_chi = float(self.chi if chi is None else chi)
-        return 0.0 if _qubit_label(qubit_state) == "g" else -resolved_chi
+        return 0.0 if _qubit_label(qubit_state) == "g" else resolved_chi
 
     def resonant_frequency(self, qubit_state: str | int, chi: float | None = None) -> float:
         return float(self.omega_r + self.dispersive_shift(qubit_state, chi=chi))

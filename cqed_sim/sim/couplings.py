@@ -8,17 +8,17 @@ import qutip as qt
 
 
 def cross_kerr(a: qt.Qobj, b: qt.Qobj, chi: float) -> qt.Qobj:
-    """Return a cross-Kerr interaction ``chi * a^† a * b^† b``."""
+    """Return a cross-Kerr interaction ``chi * a^dagger a * b^dagger b``."""
     return float(chi) * (a.dag() * a) * (b.dag() * b)
 
 
 def self_kerr(a: qt.Qobj, kerr: float) -> qt.Qobj:
-    """Return a self-Kerr interaction ``-(K / 2) * a^† a^† a a``."""
-    return -0.5 * float(kerr) * (a.dag() * a.dag() * a * a)
+    """Return a self-Kerr interaction ``+(K / 2) * a^dagger a^dagger a a``."""
+    return 0.5 * float(kerr) * (a.dag() * a.dag() * a * a)
 
 
 def exchange(a: qt.Qobj, b: qt.Qobj, coupling: float | complex) -> qt.Qobj:
-    """Return an exchange interaction ``J * (a^† b + a b^†)``."""
+    """Return an exchange interaction ``J * (a^dagger b + a b^dagger)``."""
     coupling = complex(coupling)
     return coupling * (a.dag() * b + a * b.dag())
 

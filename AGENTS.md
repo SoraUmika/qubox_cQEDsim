@@ -20,6 +20,18 @@
 - Do not introduce parallel implementations, duplicate abstractions, or ad hoc workarounds when an existing project path already supports the task.
 - Keep new code, documentation, and refactors aligned with the repository’s current architecture unless the task explicitly requires an architectural change.
 
+## QuTiP Native-First Policy
+
+- When adding new functionality, first check whether QuTiP already supports the required operation, solver, object, transformation, visualization, or analysis natively.
+- If QuTiP provides the needed functionality in a form that is compatible with the project, prefer using that native QuTiP capability rather than re-implementing the same behavior from scratch.
+- In such cases, expose the functionality through a project-level wrapper function or wrapper abstraction so that repository conventions, validation, typing, defaults, units, documentation, and future extensibility remain under project control.
+- Do not call QuTiP primitives in an ad hoc or scattered way across the codebase when a stable wrapped interface is more appropriate.
+- New wrappers around QuTiP functionality should follow the repository’s existing API style and should make any project-specific conventions explicit, including truncation, basis ordering, rotating-frame assumptions, units, parameter naming, and return types.
+- If QuTiP provides only part of the needed functionality, reuse the native QuTiP portion where appropriate and implement only the missing project-specific layer on top.
+- If QuTiP does not support the needed functionality natively, document that gap clearly in the implementation or task notes before introducing a custom implementation.
+- Any wrapper introduced around QuTiP functionality should also be reflected in `API_REFERENCE.md` if it is part of the intended public or developer-facing API.
+- If the wrapped QuTiP functionality carries physics assumptions or convention-sensitive meaning, ensure those assumptions are also documented in `physics_and_conventions/physics_conventions_report.tex` when relevant.
+
 ## cQED Simulation Usage Policy
 
 - For tasks that require simulation, numerical modeling, or reproducing a particular cQED experiment, prefer using `cqed_sim` whenever it is applicable.

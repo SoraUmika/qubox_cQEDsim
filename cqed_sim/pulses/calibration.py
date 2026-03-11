@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from cqed_sim.core.frame import FrameSpec
-from cqed_sim.core.frequencies import manifold_transition_frequency
+from cqed_sim.core.frequencies import carrier_for_transition_frequency, manifold_transition_frequency
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.envelopes import MultitoneTone
 
@@ -96,10 +96,9 @@ def build_sqr_tone_specs(
             and abs(d_lambda_n) <= tone_cutoff
         ):
             continue
-        # Canonical waveform convention uses exp(+i*omega*t), so SQR tone frequency
-        # parameter is the negative of manifold_transition_frequency(...), which was
-        # previously paired with exp(-i*omega*t).
-        omega_waveform = -_manifold_frequency_in_frame_rad_s(model, n, frame, fock_fqs_hz)
+        omega_waveform = carrier_for_transition_frequency(
+            _manifold_frequency_in_frame_rad_s(model, n, frame, fock_fqs_hz)
+        )
         tone_specs.append(
             MultitoneTone(
                 manifold=int(n),

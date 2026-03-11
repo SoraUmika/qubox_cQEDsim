@@ -24,6 +24,8 @@ Core library:
   - Hamiltonian assembly, solver entry points, noise model, extractors, readout-conditioned response helpers.
 - `cqed_sim/experiment`
   - Reusable state preparation, qubit measurement, and lightweight protocol wrappers built on the core simulator path.
+- `cqed_sim/analysis`, `cqed_sim/calibration_targets`, `cqed_sim/backends`
+  - Parameter translation, calibration-target surrogates, and optional dense NumPy/JAX backend support.
 - `cqed_sim/calibration`, `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`, `cqed_sim/unitary_synthesis`
   - Reusable calibration, diagnostics, tomography, gate I/O, plotting, and synthesis helpers that remain part of the library surface.
 
@@ -215,7 +217,61 @@ Measurement helpers:
 - `measure_qubit(...)`
 - `QubitMeasurementSpec(...)`
 
-`measure_qubit(...)` is intentionally lightweight. It computes exact qubit probabilities from the runtime state, optionally applies a confusion matrix via `p_observed = M @ p_latent` with `(g, e)` ordering, and optionally samples repeated-shot outcomes and synthetic Gaussian I/Q points.
+`measure_qubit(...)` remains lightweight by default. It computes exact qubit probabilities from the runtime state, optionally applies a confusion matrix via `p_observed = M @ p_latent` with `(g, e)` ordering, and optionally samples repeated-shot outcomes.
+
+For experiment-style readout, it can now also use a physical readout chain:
+
+- `ReadoutResonator(...)`
+- `PurcellFilter(...)`
+- `AmplifierChain(...)`
+- `ReadoutChain(...)`
+
+When a `ReadoutChain` is attached to `QubitMeasurementSpec`, `measure_qubit(...)` can:
+
+- generate state-conditioned resonator responses and I/Q clusters,
+- report measurement-induced dephasing rates,
+- estimate Purcell-limited `T1`,
+- optionally apply readout-induced dephasing and Purcell relaxation before sampling.
+
+Example:
+
+```python
+import numpy as np
+
+from cqed_sim.experiment import (
+    AmplifierChain,
+    PurcellFilter,
+    QubitMeasurementSpec,
+    ReadoutChain,
+    ReadoutResonator,
+    measure_qubit,
+)
+
+readout_chain = ReadoutChain(
+    resonator=ReadoutResonator(
+        omega_r=2.0 * np.pi * 7.0e9,
+        kappa=2.0 * np.pi * 8.0e6,
+        g=2.0 * np.pi * 90.0e6,
+        epsilon=2.0 * np.pi * 0.6e6,
+        chi=2.0 * np.pi * 1.5e6,
+    ),
+    purcell_filter=PurcellFilter(bandwidth=2.0 * np.pi * 40.0e6),
+    amplifier=AmplifierChain(noise_temperature=4.0, gain=12.0),
+    integration_time=300.0e-9,
+    dt=5.0e-9,
+)
+
+measurement = measure_qubit(
+    initial,
+    QubitMeasurementSpec(
+        shots=1024,
+        seed=123,
+        readout_chain=readout_chain,
+        readout_duration=300.0e-9,
+        classify_from_iq=True,
+    ),
+)
+```
 
 ## Experimental-style workflows
 
@@ -320,8 +376,44 @@ Performance artifacts:
 
 GPU note:
 
-- No GPU backend is currently provided for the QuTiP solver path.
-- The current architecture benefits more from cache/session reuse and coarse CPU parallelism than from GPU-oriented array acceleration.
+- The default runtime path is still the QuTiP solver stack.
+- `SimulationConfig(backend=NumPyBackend())` and `SimulationConfig(backend=JaxBackend())` now enable an optional dense piecewise-constant solver path for small systems and backend parity checks.
+- The current architecture still benefits more from cache/session reuse and coarse CPU parallelism than from GPU acceleration on large QuTiP-style workloads.
+
+## Parameter Translation and Calibration Targets
+
+Parameter translators:
+
+- `from_transmon_params(...)`
+- `from_measured(...)`
+- `HamiltonianParams`
+
+These helpers live in `cqed_sim.analysis.parameter_translation` and translate between bare transmon inputs, measured dispersive parameters, and the runtime/synthesis `chi` conventions used inside the library.
+
+Calibration-target helpers:
+
+- `run_spectroscopy(...)`
+- `run_rabi(...)`
+- `run_ramsey(...)`
+- `run_t1(...)`
+- `run_t2_echo(...)`
+- `run_drag_tuning(...)`
+
+These live in `cqed_sim.calibration_targets` and return fitted parameters, uncertainties, and raw simulated data for standard calibration sweeps.
+
+## Optional Coupling Terms
+
+The runtime models now accept additional nonlinear or exchange terms through:
+
+- `CrossKerrSpec(...)`
+- `SelfKerrSpec(...)`
+- `ExchangeSpec(...)`
+- `cross_kerr(...)`
+- `self_kerr(...)`
+- `exchange(...)`
+- `TunableCoupler(...)`
+
+This makes it possible to add bosonic self-Kerr, cross-Kerr, or direct exchange couplings without replacing the existing dispersive-model APIs.
 
 ## Extract common observables
 

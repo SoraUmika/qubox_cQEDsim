@@ -27,6 +27,7 @@ from cqed_sim.sequence.scheduler import SequenceCompiler
 from cqed_sim.sim.noise import NoiseSpec, collapse_operators
 from cqed_sim.sim.runner import hamiltonian_time_slices
 from cqed_sim.unitary_synthesis.progress import NullReporter, ProgressEvent, ProgressReporter
+from physics_and_conventions.conventions import to_internal_units
 
 _SIGMA_X = qt.sigmax()
 _SIGMA_Y = qt.sigmay()
@@ -348,7 +349,7 @@ def _benchmark_simulation_config(config: Mapping[str, Any], total_levels: int) -
 
 
 def _hz_to_rad_s(hz: float) -> float:
-    return float(2.0 * np.pi * hz)
+    return to_internal_units(float(hz))
 
 
 def _ns_to_s(ns: float | None) -> float | None:

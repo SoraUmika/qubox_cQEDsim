@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 import qutip as qt
 
+from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec, assemble_static_hamiltonian, coupling_term_key
 from .frame import FrameSpec
 
 
@@ -18,6 +19,9 @@ class DispersiveReadoutTransmonStorageModel:
     chi_sr: float = 0.0
     kerr_s: float = 0.0
     kerr_r: float = 0.0
+    cross_kerr_terms: tuple[CrossKerrSpec, ...] = field(default_factory=tuple)
+    self_kerr_terms: tuple[SelfKerrSpec, ...] = field(default_factory=tuple)
+    exchange_terms: tuple[ExchangeSpec, ...] = field(default_factory=tuple)
     n_storage: int = 12
     n_readout: int = 8
     n_tr: int = 3
@@ -81,6 +85,7 @@ class DispersiveReadoutTransmonStorageModel:
             float(self.chi_sr),
             float(self.kerr_s),
             float(self.kerr_r),
+            coupling_term_key(self.cross_kerr_terms, self.self_kerr_terms, self.exchange_terms),
             float(frame.omega_c_frame),
             float(frame.omega_q_frame),
             float(frame.omega_r_frame),
@@ -111,6 +116,13 @@ class DispersiveReadoutTransmonStorageModel:
             h += 0.5 * self.kerr_s * n_s * (n_s - qt.qeye(n_s.dims[0]))
         if self.kerr_r != 0.0:
             h += 0.5 * self.kerr_r * n_r * (n_r - qt.qeye(n_r.dims[0]))
+        h = assemble_static_hamiltonian(
+            h,
+            ops,
+            cross_kerr_terms=self.cross_kerr_terms,
+            self_kerr_terms=self.self_kerr_terms,
+            exchange_terms=self.exchange_terms,
+        )
         self._static_h_cache[key] = h
         return h
 

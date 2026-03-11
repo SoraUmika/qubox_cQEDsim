@@ -8,6 +8,7 @@ from .conventions import (
 )
 from .frame import FrameSpec
 from .frequencies import falling_factorial_scalar, manifold_transition_frequency
+from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec
 from .ideal_gates import (
     beamsplitter_unitary,
     displacement_op,
@@ -25,6 +26,9 @@ __all__ = [
     "DispersiveTransmonCavityModel",
     "DispersiveReadoutTransmonStorageModel",
     "FrameSpec",
+    "CrossKerrSpec",
+    "SelfKerrSpec",
+    "ExchangeSpec",
     "qubit_cavity_dims",
     "qubit_cavity_index",
     "qubit_cavity_block_indices",

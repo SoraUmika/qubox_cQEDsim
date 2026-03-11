@@ -1,5 +1,6 @@
 from .measurement import QubitMeasurementResult, QubitMeasurementSpec, measure_qubit
 from .protocol import ExperimentMetadata, ExperimentResult, SimulationExperiment
+from .readout_chain import AmplifierChain, PurcellFilter, ReadoutChain, ReadoutResonator, ReadoutTrace
 from .state_prep import (
     StatePreparationSpec,
     SubsystemStateSpec,
@@ -29,6 +30,11 @@ __all__ = [
     "QubitMeasurementSpec",
     "QubitMeasurementResult",
     "measure_qubit",
+    "ReadoutResonator",
+    "PurcellFilter",
+    "AmplifierChain",
+    "ReadoutChain",
+    "ReadoutTrace",
     "ExperimentMetadata",
     "ExperimentResult",
     "SimulationExperiment",

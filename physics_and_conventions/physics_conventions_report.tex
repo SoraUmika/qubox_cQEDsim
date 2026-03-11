@@ -34,6 +34,7 @@ The main experiment-facing additions are implemented in:
 \begin{itemize}[leftmargin=1.5em]
   \item \texttt{cqed\_sim/experiment/state\_prep.py}: \texttt{StatePreparationSpec} and reusable subsystem state specs.
   \item \texttt{cqed\_sim/experiment/measurement.py}: \texttt{QubitMeasurementSpec} and \texttt{measure\_qubit(...)}.
+  \item \texttt{cqed\_sim/experiment/readout\_chain.py}: \texttt{ReadoutResonator}, \texttt{PurcellFilter}, \texttt{AmplifierChain}, and \texttt{ReadoutChain}.
   \item \texttt{cqed\_sim/experiment/protocol.py}: \texttt{SimulationExperiment}, \texttt{ExperimentResult}, and metadata wrappers.
 \end{itemize}
 These objects are not a second solver stack. They are a thin reusable layer above \texttt{SequenceCompiler} plus \texttt{simulate\_sequence(...)}. In particular:
@@ -42,9 +43,37 @@ These objects are not a second solver stack. They are a thin reusable layer abov
   \item State preparation may return either a ket or a density matrix. If any subsystem spec is mixed, the joint initial state is promoted to a density matrix before tensoring.
   \item \texttt{measure\_qubit(...)} returns exact probabilities by default. Sampled outcomes appear only when \texttt{shots} is set.
   \item When a confusion matrix is supplied, the code applies \(\mathbf{p}_{\mathrm{obs}} = M \mathbf{p}_{\mathrm{latent}}\) with columns ordered as latent \((g,e)\) and rows ordered as reported \((g,e)\).
-  \item Synthetic I/Q points, when requested, are generated from a simple Gaussian cluster model and are explicitly synthetic data, not a hardware-calibrated readout chain model.
+  \item If \texttt{QubitMeasurementSpec.readout\_chain} is omitted, synthetic I/Q points are still generated from the previous Gaussian cluster model.
+  \item If a \texttt{ReadoutChain} is provided, the measurement layer instead uses a resonator response, optional Purcell filter, amplifier noise, and mixer-style I/Q integration. The same API can also report \(\gamma_{\mathrm{meas}}\) and a Purcell-limited \(T_1\), and can optionally apply readout-induced dephasing plus Purcell relaxation as a reduced-state backaction model.
 \end{itemize}
 Direct tests: \texttt{tests/test\_26\_experimental\_protocols.py}.
+
+\section{Physical Readout Chain}
+The physical readout-chain path models a driven dispersive resonator with optional Purcell filtering and additive amplifier noise:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{ReadoutResonator} stores \(\omega_r\), \(\kappa\), the qubit-resonator coupling \(g\), the complex drive amplitude \(\epsilon\), and an optional runtime-convention dispersive pull \(\chi\).
+  \item The steady-state pointer amplitudes are
+  \[
+  \alpha_{g/e}^{(\mathrm{ss})}
+  =
+  \frac{-i\epsilon}{\kappa_{\mathrm{eff}}/2 + i(\omega_{r,g/e}-\omega_d)},
+  \]
+  with \(\omega_{r,g}=\omega_r\) and \(\omega_{r,e}=\omega_r-\chi\) in the runtime projector convention.
+  \item The implemented measurement-induced dephasing rate is
+  \[
+  \gamma_{\mathrm{meas}} = \frac{\kappa_{\mathrm{eff}}}{2} |\alpha_e-\alpha_g|^2,
+  \]
+  which reproduces the expected small-\(\chi\) scaling \(\gamma_{\mathrm{meas}} \propto \chi^2 \bar{n} / \kappa\).
+  \item The Purcell filter follows the standard frequency-dependent linewidth picture:
+  \[
+  \kappa_{\mathrm{eff}}(\omega)
+  =
+  \frac{4 J^2 \kappa_f}{\kappa_f^2 + 4(\omega-\omega_f)^2},
+  \]
+  so the Purcell rate is evaluated as \(\Gamma_P = (g/\Delta)^2 \kappa_{\mathrm{eff}}(\omega_q)\).
+  \item \texttt{AmplifierChain} applies linear gain and additive thermal noise before mixer-phase rotation and I/Q integration.
+\end{itemize}
+Direct tests: \texttt{tests/experiment/test\_readout\_chain.py}.
 
 \section{Hilbert Space Structure}
 \subsection*{Two-mode runtime}
@@ -243,6 +272,15 @@ This is intentionally kept in the same runtime convention style as the two-mode 
 \end{itemize}
 The model also exposes analytic helpers for the basis energies and the qubit, storage, and readout transition frequencies.
 
+\subsection*{Optional nonlinear and exchange terms}
+\texttt{cqed\_sim/sim/couplings.py} now provides explicit builder functions for
+\[
+\chi_{ab} a^\dagger a\, b^\dagger b,\qquad
+\frac{K}{2} a^{\dagger 2} a^2,\qquad
+J(a^\dagger b + a b^\dagger),
+\]
+and the model classes accept \texttt{CrossKerrSpec}, \texttt{SelfKerrSpec}, and \texttt{ExchangeSpec} entries that are injected into the static Hamiltonian assembly. This extends the existing dispersive models without replacing their original API or sign conventions.
+
 \subsection*{Canonical parameter-definition table}
 \small
 \begin{longtable}{p{0.12\linewidth} p{0.24\linewidth} p{0.34\linewidth} p{0.22\linewidth}}
@@ -286,9 +324,18 @@ higher Kerr & tuple \texttt{kerr\_higher} & \(K_m n_c^{\underline{m}} / m!\) & f
 \begin{itemize}[leftmargin=1.5em]
   \item Internal Hamiltonian coefficients and rotating-frame frequencies are in rad/s.
   \item Pulse durations, timeline steps, and solver \texttt{max\_step} values are in seconds.
+  \item The repository now centralizes conversion helpers in \texttt{physics\_and\_conventions/conventions.py}, including \texttt{to\_internal\_units(...)} and \texttt{from\_internal\_units(...)}.
   \item Example-side configuration files may still carry \texttt{\_hz}, \texttt{\_ns}, or \texttt{\_1\_per\_s} field names, but those values are converted before constructing library models or noise objects.
 \end{itemize}
 Direct tests: \texttt{tests/test\_05\_detuning\_and\_frames.py}, \texttt{tests/test\_10\_chi\_convention.py}, \texttt{tests/test\_13\_hardware\_extended.py}, \texttt{tests/test\_27\_three\_mode\_model.py}.
+
+\section{Parameter Translation, Calibration Targets, and Backends}
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{cqed\_sim/analysis/parameter\_translation.py} now provides \texttt{from\_transmon\_params(...)} and \texttt{from\_measured(...)}. Bare transmon parameters use the usual large-\(E_J/E_C\) expansion \(\omega_{01}\approx\sqrt{8E_JE_C}-E_C\) and \(\alpha\approx-E_C\), while dressed \(\chi\) and \(\chi_2\) are extracted by matching a low-dimensional Duffing-plus-resonator diagonalization to the runtime form \(\omega_{ge}(n)=\omega_q-\chi n-\chi_2 n(n-1)\).
+  \item \texttt{cqed\_sim/calibration\_targets/} now provides reusable spectroscopy, Rabi, Ramsey, \(T_1\), \(T_{2,\mathrm{echo}}\), and DRAG-tuning surrogate targets that return fitted parameters, uncertainties, and raw simulated data.
+  \item \texttt{cqed\_sim/backends/} now provides \texttt{NumPyBackend} and \texttt{JaxBackend} plus a dense piecewise-constant solver path in \texttt{cqed\_sim/sim/solver.py}. The default runtime still uses QuTiP; the backend path is opt-in through \texttt{SimulationConfig.backend}.
+\end{itemize}
+Direct tests: \texttt{tests/analysis/test\_parameter\_translation.py}, \texttt{tests/calibration\_targets/test\_targets.py}, \texttt{tests/sim/test\_backends.py}.
 
 \section{Rotating Frame Conventions}
 \begin{itemize}[leftmargin=1.5em]
@@ -340,7 +387,8 @@ Direct tests: \texttt{tests/test\_14\_dissipation.py}, \texttt{tests/test\_18\_n
   \item The generic extractor path now supports two-mode and three-mode states through subsystem-aware partial traces.
   \item \texttt{reduced\_cavity\_state(...)} remains specific to the two-mode path. The three-mode path uses \texttt{reduced\_storage\_state(...)} and \texttt{reduced\_readout\_state(...)}.
   \item \texttt{measure\_qubit(...)} acts on the reduced transmon state obtained from the runtime state convention. The exact probabilities are taken from the reduced density matrix before any optional confusion-matrix application or finite-shot sampling.
-  \item Synthetic I/Q points are optional and currently generated by a simple Gaussian two-cluster model centered on readout labels, not by a resonator-plus-amplifier chain model.
+  \item Synthetic I/Q points remain available for lightweight sampling-only usage.
+  \item The new readout-chain path adds optional state-conditioned resonator traces, amplifier-noise I/Q sampling, and a reduced-state backaction model without changing the default no-chain behavior.
 \end{itemize}
 Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \texttt{tests/test\_19\_fock\_tomo.py}, \texttt{tests/test\_26\_experimental\_protocols.py}, \texttt{tests/test\_27\_three\_mode\_model.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}.
 
@@ -456,11 +504,10 @@ Interpreter note: \verb|E:\Program Files\Python311\python.exe| from \texttt{AGEN
 
 \section{Gaps Between Code Conventions and Test Coverage}
 \begin{itemize}[leftmargin=1.5em]
-  \item There is still no dedicated runtime-to-synthesis translation helper or unit test that asserts the full algebraic mapping between runtime \(\chi\) and synthesis-drift \(\chi\).
+  \item The new runtime-to-synthesis translation helper exposes \(\chi_{\mathrm{synth}}=-\chi_{\mathrm{runtime}}/2\), but the library still does not force every synthesis-side caller to use that mapping automatically.
   \item Higher-order \(\chi_2\), \(\chi_3\), and higher-order Kerr coefficients are covered indirectly, but not with isolated sign-and-factor analytic tests of the same style now used for the three-mode diagonal-energy checks.
-  \item The measurement layer is intentionally lightweight. It does not yet test or implement a resonator-derived threshold classifier, a POVM model, or a calibrated amplifier chain.
-  \item The synthetic I/Q mode is tested only as a sampling wrapper around reduced-state probabilities. It should not be interpreted as a validated hardware readout model.
-  \item The three-mode model is effective and dispersive. It does not yet include direct exchange couplings, Purcell channels, or a full resonator-chain measurement model.
+  \item The readout-chain model is physically motivated, but it is still an effective resonator/filter/amplifier abstraction rather than a full microwave network or POVM calibration workflow.
+  \item The backend path is dense and piecewise constant; it is intended for parity and small-system acceleration checks, not as a drop-in replacement for every QuTiP workflow.
 \end{itemize}
 
 \section{Potential Ambiguities}
@@ -472,6 +519,6 @@ Interpreter note: \verb|E:\Program Files\Python311\python.exe| from \texttt{AGEN
 \textbf{Low:} \texttt{FrameSpec} still stores the storage frame in the legacy field \texttt{omega\_c\_frame}; the \texttt{omega\_s\_frame} alias removes ambiguity but does not rename the underlying field.
 
 \section{Summary}
-\texttt{cqed\_sim} is now a coherent reusable library for pulse-level cQED simulation with both a two-mode transmon-storage path and a three-mode storage-transmon-readout extension. The authoritative runtime conventions are: qubit-first tensor ordering; \(|g\rangle=|0\rangle\), \(|e\rangle=|1\rangle\); QuTiP-standard Pauli signs; rad/s internally and seconds for time; complex envelopes with \(e^{+i(\omega t+\phi)}\); dispersive physics written in terms of \(n_q=b^\dagger b\); and Lindblad collapse operators as implemented in \texttt{cqed\_sim/sim/noise.py}. The experiment-facing layer is intentionally lightweight: \texttt{StatePreparationSpec} standardizes initial conditions, \texttt{QubitMeasurementSpec} standardizes exact or sampled qubit readout, and \texttt{SimulationExperiment} provides a clean protocol wrapper without bypassing the core runtime. The main caution that remains is the runtime-to-synthesis translation of \(\chi\), which is now documented explicitly but still not encoded directly in the library.
+\texttt{cqed\_sim} is now a coherent reusable library for pulse-level cQED simulation with both a two-mode transmon-storage path and a three-mode storage-transmon-readout extension. The authoritative runtime conventions are: qubit-first tensor ordering; \(|g\rangle=|0\rangle\), \(|e\rangle=|1\rangle\); QuTiP-standard Pauli signs; rad/s internally and seconds for time; complex envelopes with \(e^{+i(\omega t+\phi)}\); dispersive physics written in terms of \(n_q=b^\dagger b\); and Lindblad collapse operators as implemented in \texttt{cqed\_sim/sim/noise.py}. The experiment-facing layer now has two measurement modes: a default lightweight exact-probability path and an opt-in physical readout-chain path with resonator response, Purcell filtering, amplifier noise, and reduced-state backaction. The library also now exposes optional nonlinear/exchange Hamiltonian terms, runtime-to-synthesis parameter translation helpers, calibration-target utilities, and an opt-in dense NumPy/JAX backend path. The main caution that remains is that the synthesis layer still does not automatically consume the runtime-to-synthesis \(\chi\) mapping everywhere by construction.
 
 \end{document}

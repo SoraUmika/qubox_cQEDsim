@@ -1,10 +1,16 @@
 """Hardware-faithful time-domain cQED pulse simulator."""
 
+from .analysis import HamiltonianParams, from_measured, from_transmon_params
+from .backends import BaseBackend, JaxBackend, NumPyBackend
+from .calibration_targets import CalibrationResult, run_drag_tuning, run_rabi, run_ramsey, run_spectroscopy, run_t1, run_t2_echo
 from .calibration.sqr import calibrate_sqr_gate, extract_sqr_gates, load_or_calibrate_sqr_gate, select_sqr_gate
 from .core import (
+    CrossKerrSpec,
     DispersiveReadoutTransmonStorageModel,
     DispersiveTransmonCavityModel,
+    ExchangeSpec,
     FrameSpec,
+    SelfKerrSpec,
     beamsplitter_unitary,
     displacement_op,
     embed_cavity_op,
@@ -16,10 +22,15 @@ from .core import (
     sqr_op,
 )
 from .experiment import (
+    AmplifierChain,
     ExperimentMetadata,
     ExperimentResult,
+    PurcellFilter,
     QubitMeasurementResult,
     QubitMeasurementSpec,
+    ReadoutChain,
+    ReadoutResonator,
+    ReadoutTrace,
     SimulationExperiment,
     StatePreparationSpec,
     SubsystemStateSpec,
@@ -39,6 +50,7 @@ from .pulses import HardwareConfig
 from .pulses.builders import build_displacement_pulse, build_rotation_pulse, build_sqr_multitone_pulse
 from .pulses.pulse import Pulse
 from .sequence.scheduler import SequenceCompiler
+from .sim.couplings import TunableCoupler, cross_kerr, exchange, self_kerr
 from .sim.extractors import (
     bloch_xyz_from_joint,
     cavity_moments,
@@ -84,8 +96,17 @@ from .tomo.protocol import (
 __all__ = [
     "DispersiveTransmonCavityModel",
     "DispersiveReadoutTransmonStorageModel",
+    "CrossKerrSpec",
+    "SelfKerrSpec",
+    "ExchangeSpec",
     "FrameSpec",
+    "BaseBackend",
+    "NumPyBackend",
+    "JaxBackend",
     "manifold_transition_frequency",
+    "HamiltonianParams",
+    "from_transmon_params",
+    "from_measured",
     "Pulse",
     "HardwareConfig",
     "SequenceCompiler",
@@ -131,6 +152,11 @@ __all__ = [
     "QubitMeasurementSpec",
     "QubitMeasurementResult",
     "measure_qubit",
+    "ReadoutResonator",
+    "PurcellFilter",
+    "AmplifierChain",
+    "ReadoutChain",
+    "ReadoutTrace",
     "ExperimentMetadata",
     "ExperimentResult",
     "SimulationExperiment",
@@ -147,6 +173,17 @@ __all__ = [
     "build_displacement_pulse",
     "build_rotation_pulse",
     "build_sqr_multitone_pulse",
+    "CalibrationResult",
+    "run_spectroscopy",
+    "run_rabi",
+    "run_ramsey",
+    "run_t1",
+    "run_t2_echo",
+    "run_drag_tuning",
+    "cross_kerr",
+    "self_kerr",
+    "exchange",
+    "TunableCoupler",
     "qubit_rotation_xy",
     "qubit_rotation_axis",
     "displacement_op",

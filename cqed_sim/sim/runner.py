@@ -8,9 +8,11 @@ from typing import Any, Iterable, Sequence
 import numpy as np
 import qutip as qt
 
+from cqed_sim.backends.base_backend import BaseBackend
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.sequence.scheduler import CompiledSequence
 from cqed_sim.sim.noise import NoiseSpec, collapse_operators
+from cqed_sim.sim.solver import solve_with_backend
 
 
 @dataclass(frozen=True)
@@ -20,6 +22,7 @@ class SimulationConfig:
     rtol: float = 1e-7
     max_step: float | None = None
     store_states: bool = False
+    backend: BaseBackend | None = None
 
 
 @dataclass
@@ -27,7 +30,7 @@ class SimulationResult:
     final_state: qt.Qobj
     states: list[qt.Qobj] | None
     expectations: dict[str, np.ndarray]
-    solver_result: qt.solver.Result
+    solver_result: Any
 
 
 def _projector_onto_first_excited_state(subsystem_dims: tuple[int, ...]) -> qt.Qobj:
@@ -143,7 +146,17 @@ class SimulationSession:
         self.solver_options = _solver_options(self.config)
 
     def run(self, initial_state: qt.Qobj) -> SimulationResult:
-        if self.effective_c_ops or initial_state.isoper:
+        if self.config.backend is not None:
+            result = solve_with_backend(
+                self.hamiltonian,
+                self.compiled.tlist,
+                initial_state,
+                observables=list(self.observable_ops),
+                collapse_ops=list(self.effective_c_ops),
+                backend=self.config.backend,
+                store_states=self.config.store_states,
+            )
+        elif self.effective_c_ops or initial_state.isoper:
             result = qt.mesolve(
                 self.hamiltonian,
                 initial_state,

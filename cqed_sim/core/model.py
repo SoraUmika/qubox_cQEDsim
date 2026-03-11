@@ -6,6 +6,7 @@ from typing import Sequence
 
 import qutip as qt
 
+from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec, assemble_static_hamiltonian, coupling_term_key
 from .frame import FrameSpec
 from .frequencies import manifold_transition_frequency
 
@@ -29,6 +30,9 @@ class DispersiveTransmonCavityModel:
     chi_higher: Sequence[float] = field(default_factory=tuple)
     kerr: float = 0.0
     kerr_higher: Sequence[float] = field(default_factory=tuple)
+    cross_kerr_terms: Sequence[CrossKerrSpec] = field(default_factory=tuple)
+    self_kerr_terms: Sequence[SelfKerrSpec] = field(default_factory=tuple)
+    exchange_terms: Sequence[ExchangeSpec] = field(default_factory=tuple)
     n_cav: int = 12
     n_tr: int = 3
 
@@ -70,6 +74,7 @@ class DispersiveTransmonCavityModel:
             tuple(float(value) for value in self.chi_higher),
             float(self.kerr),
             tuple(float(value) for value in self.kerr_higher),
+            coupling_term_key(self.cross_kerr_terms, self.self_kerr_terms, self.exchange_terms),
             float(frame.omega_c_frame),
             float(frame.omega_q_frame),
         )
@@ -96,6 +101,13 @@ class DispersiveTransmonCavityModel:
             h += -self.chi * n_c * n_q
         for i, coeff in enumerate(self.chi_higher, start=2):
             h += -coeff * _falling_factorial_number_op(n_c, i) * n_q
+        h = assemble_static_hamiltonian(
+            h,
+            ops,
+            cross_kerr_terms=self.cross_kerr_terms,
+            self_kerr_terms=self.self_kerr_terms,
+            exchange_terms=self.exchange_terms,
+        )
         self._static_h_cache[key] = h
         return h
 

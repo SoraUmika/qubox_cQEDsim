@@ -21,6 +21,7 @@ from .extractors import (
     storage_moments,
     storage_photon_number,
 )
+from .couplings import TunableCoupler, cross_kerr, exchange, self_kerr
 from .noise import NoiseSpec, collapse_operators
 from .runner import (
     SimulationConfig,
@@ -65,4 +66,8 @@ __all__ = [
     "cavity_wigner",
     "NoiseSpec",
     "collapse_operators",
+    "cross_kerr",
+    "self_kerr",
+    "exchange",
+    "TunableCoupler",
 ]

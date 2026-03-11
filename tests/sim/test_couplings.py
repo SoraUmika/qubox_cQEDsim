@@ -34,7 +34,7 @@ def test_self_kerr_breaks_harmonic_level_spacing():
     energies = np.real(np.diag(hamiltonian.full()))
     spacing_01 = energies[1] - energies[0]
     spacing_12 = energies[2] - energies[1]
-    assert np.isclose(spacing_12 - spacing_01, -0.4, atol=1.0e-12)
+    assert np.isclose(spacing_12 - spacing_01, 0.4, atol=1.0e-12)
 
 
 def test_exchange_coupling_generates_vacuum_rabi_swap():

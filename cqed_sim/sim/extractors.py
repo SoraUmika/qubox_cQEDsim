@@ -221,14 +221,27 @@ def readout_response_by_qubit_state(state: qt.Qobj) -> dict[int, dict[str, compl
     }
 
 
+def _resolve_wigner_coordinate_scale(coordinate: str) -> float:
+    coordinate_key = str(coordinate).strip().lower()
+    if coordinate_key in {"quadrature", "x-p", "xp", "phase_space"}:
+        return 1.0
+    if coordinate_key in {"alpha", "coherent", "complex_amplitude"}:
+        return float(np.sqrt(2.0))
+    raise ValueError(
+        "coordinate must be one of 'quadrature' or 'alpha'."
+    )
+
+
 def cavity_wigner(
     rho_c: qt.Qobj,
     xvec: np.ndarray | None = None,
     yvec: np.ndarray | None = None,
     n_points: int = 41,
     extent: float = 4.0,
+    coordinate: str = "quadrature",
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    xvec = np.linspace(-extent, extent, n_points) if xvec is None else np.asarray(xvec, dtype=float)
-    yvec = np.linspace(-extent, extent, n_points) if yvec is None else np.asarray(yvec, dtype=float)
-    w = qt.wigner(rho_c, xvec, yvec)
-    return xvec, yvec, np.asarray(w, dtype=float)
+    scale = _resolve_wigner_coordinate_scale(coordinate)
+    xvec_out = np.linspace(-extent, extent, n_points) if xvec is None else np.asarray(xvec, dtype=float)
+    yvec_out = np.linspace(-extent, extent, n_points) if yvec is None else np.asarray(yvec, dtype=float)
+    w = qt.wigner(rho_c, scale * xvec_out, scale * yvec_out)
+    return xvec_out, yvec_out, np.asarray(w, dtype=float)

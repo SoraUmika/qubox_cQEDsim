@@ -286,6 +286,18 @@ def test_wigner_displaced_vacuum_center_shifts():
     assert np.isclose(y_peak, np.sqrt(2) * np.imag(alpha0), atol=0.35)
 
 
+def test_wigner_alpha_coordinates_center_match_coherent_amplitude():
+    n_cav = 20
+    alpha0 = 0.7 - 0.5j
+    rho = (displacement_op(n_cav, alpha0) * qt.basis(n_cav, 0)).proj()
+    x, y, w = cavity_wigner(rho, n_points=51, extent=3.0, coordinate="alpha")
+    iy, ix = np.unravel_index(np.argmax(w), w.shape)
+    x_peak = x[ix]
+    y_peak = y[iy]
+    assert np.isclose(x_peak, np.real(alpha0), atol=0.25)
+    assert np.isclose(y_peak, np.imag(alpha0), atol=0.25)
+
+
 def test_plot_helpers_return_correct_shapes_and_axes():
     n_cav = 12
     rho = qt.basis(n_cav, 0).proj()

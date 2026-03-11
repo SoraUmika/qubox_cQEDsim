@@ -92,10 +92,10 @@ class DispersiveTransmonCavityModel:
         h += 0.5 * self.alpha * (bdag * bdag * b * b)
 
         if self.kerr != 0.0:
-            h += self.kerr * _falling_factorial_number_op(n_c, 2) / math.factorial(2)
+            h -= self.kerr * _falling_factorial_number_op(n_c, 2) / math.factorial(2)
         for i, coeff in enumerate(self.kerr_higher, start=2):
             order = i + 1
-            h += coeff * _falling_factorial_number_op(n_c, order) / math.factorial(order)
+            h -= coeff * _falling_factorial_number_op(n_c, order) / math.factorial(order)
 
         if self.chi != 0.0:
             h += -self.chi * n_c * n_q
@@ -120,13 +120,13 @@ class DispersiveTransmonCavityModel:
         delta_q = float(self.omega_q - frame.omega_q_frame)
         energy = delta_c * cavity_level + delta_q * q_level
         energy += 0.5 * float(self.alpha) * q_level * (q_level - 1)
-        energy += 0.5 * float(self.kerr) * cavity_level * (cavity_level - 1)
+        energy -= 0.5 * float(self.kerr) * cavity_level * (cavity_level - 1)
         for i, coeff in enumerate(self.kerr_higher, start=2):
             order = i + 1
             factor = 1
             for k in range(order):
                 factor *= cavity_level - k
-            energy += float(coeff) * factor / math.factorial(order)
+            energy -= float(coeff) * factor / math.factorial(order)
         energy += -float(self.chi) * cavity_level * q_level
         for i, coeff in enumerate(self.chi_higher, start=2):
             factor = 1

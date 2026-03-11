@@ -158,11 +158,11 @@ def test_three_mode_transition_frequencies_match_configured_dispersive_shifts():
     )
     assert np.isclose(
         model.storage_transition_frequency(qubit_level=1, readout_level=2, storage_level=1, frame=frame),
-        -model.chi_s + 2.0 * model.chi_sr + model.kerr_s,
+        -model.chi_s + 2.0 * model.chi_sr - model.kerr_s,
         atol=1.0e-12,
     )
     assert np.isclose(
         model.readout_transition_frequency(qubit_level=1, storage_level=2, readout_level=1, frame=frame),
-        -model.chi_r + 2.0 * model.chi_sr + model.kerr_r,
+        -model.chi_r + 2.0 * model.chi_sr - model.kerr_r,
         atol=1.0e-12,
     )

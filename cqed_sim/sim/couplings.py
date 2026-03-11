@@ -13,8 +13,8 @@ def cross_kerr(a: qt.Qobj, b: qt.Qobj, chi: float) -> qt.Qobj:
 
 
 def self_kerr(a: qt.Qobj, kerr: float) -> qt.Qobj:
-    """Return a self-Kerr interaction ``(K / 2) * a^† a^† a a``."""
-    return 0.5 * float(kerr) * (a.dag() * a.dag() * a * a)
+    """Return a self-Kerr interaction ``-(K / 2) * a^† a^† a a``."""
+    return -0.5 * float(kerr) * (a.dag() * a.dag() * a * a)
 
 
 def exchange(a: qt.Qobj, b: qt.Qobj, coupling: float | complex) -> qt.Qobj:

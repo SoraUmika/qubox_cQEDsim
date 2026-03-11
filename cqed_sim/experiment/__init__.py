@@ -1,4 +1,17 @@
 from .measurement import QubitMeasurementResult, QubitMeasurementSpec, measure_qubit
+from .kerr_free_evolution import (
+    KERR_FREE_EVOLUTION_PARAMETER_SETS,
+    KerrEvolutionSnapshot,
+    KerrFreeEvolutionResult,
+    KerrParameterSet,
+    available_kerr_parameter_sets,
+    build_kerr_free_evolution_frame,
+    build_kerr_free_evolution_model,
+    plot_kerr_wigner_snapshots,
+    resolve_kerr_parameter_set,
+    run_kerr_free_evolution,
+    times_us_to_seconds,
+)
 from .protocol import ExperimentMetadata, ExperimentResult, SimulationExperiment
 from .readout_chain import AmplifierChain, PurcellFilter, ReadoutChain, ReadoutResonator, ReadoutTrace
 from .state_prep import (
@@ -30,6 +43,17 @@ __all__ = [
     "QubitMeasurementSpec",
     "QubitMeasurementResult",
     "measure_qubit",
+    "KERR_FREE_EVOLUTION_PARAMETER_SETS",
+    "KerrParameterSet",
+    "KerrEvolutionSnapshot",
+    "KerrFreeEvolutionResult",
+    "available_kerr_parameter_sets",
+    "resolve_kerr_parameter_set",
+    "build_kerr_free_evolution_model",
+    "build_kerr_free_evolution_frame",
+    "times_us_to_seconds",
+    "run_kerr_free_evolution",
+    "plot_kerr_wigner_snapshots",
     "ReadoutResonator",
     "PurcellFilter",
     "AmplifierChain",

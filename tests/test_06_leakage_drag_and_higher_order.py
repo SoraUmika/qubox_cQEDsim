@@ -103,6 +103,6 @@ def test_higher_order_kerr_matches_falling_factorial_energy_shift():
     h0 = model.static_hamiltonian(FrameSpec())
     for n in range(5):
         energy = float(qt.expect(h0, model.basis_state( 0,n)))
-        expected = 0.5 * kerr * n * (n - 1)
-        expected += (kerr2 / 6.0) * n * (n - 1) * (n - 2)
+        expected = -0.5 * kerr * n * (n - 1)
+        expected += -(kerr2 / 6.0) * n * (n - 1) * (n - 2)
         assert np.isclose(energy, expected, atol=1e-9)

@@ -3,14 +3,13 @@
 ## Startup Policy
 
 - Before taking any action, first read `README.md` to gather project context.
-- If the task is notebook- or simulation-specific, also read the most relevant local file before acting, such as `pyproject.toml`, `experiment_mapping.md`, or the active notebook.
 - Do not create, activate, or rely on a virtual environment unless the user explicitly asks for one.
-- For Python execution, use the existing system Python at `E:\Program Files\Python311\python.exe`. Or `E:\Programs\python.exe`
+- For Python execution, use the existing system Python at `E:\Program Files\Python311\python.exe` or `E:\Programs\python.exe`.
 - Do not run dependency installation or environment-management commands unless the user explicitly requests them.
 
 ## Python Environment
 
-- Treat this repository as using the existing machine Python environment rather than a repo-local venv.
+- Treat this repository as using the existing machine Python environment rather than a repo-local virtual environment.
 - Avoid commands such as `python -m venv`, `virtualenv`, `conda create`, `poetry env use`, or other environment bootstrap steps unless the user explicitly asks for them.
 
 ## Working Style
@@ -18,6 +17,15 @@
 - Inspect the current codebase first and prefer minimal changes that match existing conventions.
 - Before changing project setup, execution workflow, or dependency state, confirm that the change is necessary for the task.
 - Prefer using the repository's existing scripts, tests, and notebooks over introducing new setup layers.
+- Do not introduce parallel implementations, duplicate abstractions, or ad hoc workarounds when an existing project path already supports the task.
+- Keep new code, documentation, and refactors aligned with the repository’s current architecture unless the task explicitly requires an architectural change.
+
+## cQED Simulation Usage Policy
+
+- For tasks that require simulation, numerical modeling, or reproducing a particular cQED experiment, prefer using `cqed_sim` whenever it is applicable.
+- When asked to simulate a particular experiment, first check whether the task can and should be implemented through the existing `cqed_sim` framework rather than building a separate ad hoc simulation path.
+- When working with `cqed_sim`, refer to `API_REFERENCE.md` to align usage with the intended public API, existing abstractions, and project conventions.
+- Do not bypass `cqed_sim` with custom standalone simulation code unless there is a clear technical reason, and in such cases explain the limitation or gap in `cqed_sim` that motivates the deviation.
 
 ## Physics and Convention Maintenance
 
@@ -30,3 +38,46 @@
 - Any new tests or test cases added to validate code correctness, physics consistency, numerical behavior, or API behavior must be placed under the `tests` folder.
 - Any user-facing example scripts, demonstration workflows, or reference usage patterns showing how `cqed_sim` is intended to be used in practice should be placed under the `examples` folder.
 - Do not place new validation tests inside ad hoc scripts or notebooks when they belong in the formal `tests` suite, and do not place typical usage demos outside `examples` unless there is a strong project-specific reason.
+
+## Refactor and Inconsistency Reporting Policy
+
+- Anytime you are asked to refactor, all project guidelines above must still be followed strictly.
+- A refactor task must include an inspection step for inconsistencies in code behavior, conventions, APIs, documentation, assumptions, and physics definitions, rather than assuming the existing implementation is internally consistent.
+- If any inconsistency is discovered, write an inconsistency report in the `inconsistency` folder before or alongside the refactor changes.
+- The report filename must include the date and time of creation.
+- Each report must briefly specify:
+  - what the inconsistency is,
+  - where it appears,
+  - what components it affects,
+  - why it is inconsistent with the project’s intended conventions or behavior,
+  - and what consequences it may cause.
+- Reports should clearly separate confirmed issues from suspected issues or unresolved questions.
+- Important inconsistencies must not be silently corrected without documentation.
+- When multiple inconsistencies are discovered in the same task, either create one consolidated timestamped report for that refactor session or multiple clearly named timestamped reports if that is more readable.
+
+## Refactor Documentation Synchronization
+
+- If something is being refactored, update `API_REFERENCE.md` if the refactor changes public APIs, function signatures, class behavior, module organization, expected usage patterns, configuration structure, or any other user-facing developer interface.
+- If something is being refactored and the refactor affects physical meaning, conventions, modeling assumptions, Hamiltonians, rotating frames, sign conventions, units, approximations, observables, tomography definitions, calibration meaning, or experiment-to-simulation interpretation, update `physics_and_conventions/physics_conventions_report.tex` as needed.
+- Do not treat `API_REFERENCE.md` or `physics_and_conventions/physics_conventions_report.tex` as optional follow-up work when a refactor materially changes the documented behavior or meaning of the code.
+- If a refactor does not require changes to these documents, verify that explicitly before leaving them unchanged.
+- Refactors should preserve consistency between implementation, API documentation, and physics/conventions documentation at the end of the task.
+
+## Expected Refactor Workflow
+
+- When performing a refactor, follow this general sequence unless the task explicitly requires a different order:
+  1. Read `README.md` and inspect the relevant code paths.
+  2. Determine whether the task should use existing `cqed_sim` infrastructure.
+  3. Identify any inconsistencies in implementation, API usage, conventions, assumptions, or physics meaning.
+  4. Write an inconsistency report in the `inconsistency` folder if issues are found.
+  5. Apply the refactor with minimal necessary changes that match project conventions.
+  6. Update `API_REFERENCE.md` if the refactor changes public-facing code behavior or usage.
+  7. Update `physics_and_conventions/physics_conventions_report.tex` if the refactor changes physical meaning, conventions, or modeling assumptions.
+  8. Add or update tests under `tests` as needed.
+  9. Add or update examples under `examples` if the intended user workflow or recommended usage has changed.
+
+## General Quality Bar
+
+- Prefer correctness, consistency, and maintainability over introducing unnecessary abstractions.
+- Keep simulation, experiment-facing usage, documentation, and conventions synchronized.
+- Any change that affects behavior should be considered for its impact on implementation, tests, examples, API documentation, and physics/conventions documentation rather than modifying code in isolation.

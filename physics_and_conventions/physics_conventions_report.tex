@@ -136,7 +136,7 @@ H_0
 \delta_q n_q
 +
 \frac{\alpha}{2} b^{\dagger 2} b^2
-+
+-
 K(n_c)
 -
 \Xi(n_c) n_q,
@@ -238,7 +238,71 @@ so componentwise
 \chi_{2,\mathrm{synth}}=-\chi_{2,\mathrm{runtime}}/2,\qquad
 \chi_{3,\mathrm{synth}}=-\chi_{3,\mathrm{runtime}}/2.
 \]
+For the cavity self-Kerr contribution, the runtime diagonal energies use \(-K_{\mathrm{runtime}}(n)\)
+while the synthesis drift model uses \(+K_{\mathrm{synth}}(n)\), so full-energy matching requires
+\[
+K_{\mathrm{synth}}(n) = -K_{\mathrm{runtime}}(n)
+\]
+componentwise, \(\texttt{kerr}_{\mathrm{synth}}=-\texttt{kerr}_{\mathrm{runtime}}\) and
+\(\texttt{kerr2}_{\mathrm{synth}}=-\texttt{kerr2}_{\mathrm{runtime}}\).
 This mapping is derived from code and tests, but is not enforced by a dedicated helper.
+
+\subsection*{Kerr free-evolution workflow presets}
+The reusable workflow in \texttt{cqed\_sim/experiment/kerr\_free\_evolution.py} builds a two-mode
+storage--transmon model from human-readable frequencies in Hz and converts them to the runtime's
+angular-frequency units with \texttt{physics\_and\_conventions.conventions.to\_internal\_units()}.
+Its default frame is
+\[
+\omega_{c,\mathrm{frame}} = \omega_c,
+\qquad
+\omega_{q,\mathrm{frame}} = \omega_q,
+\]
+so the undriven evolution isolates the nonlinear Kerr and dispersive terms after removing the bare
+storage and qubit carrier rotations.
+
+The Hamiltonian used by this workflow is therefore exactly the two-mode runtime Hamiltonian above,
+evaluated in that rotating frame:
+\[
+\frac{H_{\mathrm{free}}}{\hbar}
+=
+\frac{\alpha}{2} b^{\dagger 2} b^2
+-
+\frac{K}{2} n_c(n_c-1)
+-
+\frac{K'}{6} n_c(n_c-1)(n_c-2)
+-
+\left[
+\chi n_c
++
+\chi' n_c(n_c-1)
++
+\chi'' n_c(n_c-1)(n_c-2)
+\right] n_q.
+\]
+When the qubit is initialized in \(|g\rangle\), the reduced cavity state undergoes pure self-Kerr
+evolution; the dispersive coefficients remain part of the joint Hamiltonian and matter whenever a
+different qubit state preparation is used.
+
+The workflow ships with two named parameter sets:
+\begin{itemize}
+  \item \texttt{phase\_evolution}: \(\omega_q/2\pi = 7627.05\,\mathrm{MHz}\),
+  \(\omega_c/2\pi = 8226.787\,\mathrm{MHz}\),
+  \(\omega_{ro}/2\pi = 9376.75\,\mathrm{MHz}\),
+  \(\alpha_q/2\pi = 283.4\,\mathrm{MHz}\),
+  \(K/2\pi = -107.9\,\mathrm{kHz}\),
+  \(K'/2\pi = 3.4\,\mathrm{kHz}\),
+  \(\chi/2\pi = -8281.3\,\mathrm{kHz}\),
+  \(\chi'/2\pi = 48.8\,\mathrm{kHz}\),
+  \(\chi''/2\pi = 0.5\,\mathrm{kHz}\).
+  \item \texttt{value\_2}: same \(\omega_q\), \(\omega_c\), \(\omega_{ro}\), and \(\alpha_q\), with
+  \(K/2\pi = -106.2\,\mathrm{kHz}\),
+  \(K'/2\pi = 3.4\,\mathrm{kHz}\),
+  \(\chi/2\pi = -8273\,\mathrm{kHz}\),
+  \(\chi'/2\pi = 60.9\,\mathrm{kHz}\), and \(\chi''\) taken as zero because no alternate value was supplied.
+\end{itemize}
+
+The readout frequency \(\omega_{ro}\) is stored with the preset metadata for consistency with the
+measured parameter set, but it is not part of the two-mode Kerr free-evolution Hamiltonian.
 
 \subsection*{Three-mode storage-transmon-readout Hamiltonian}
 The new three-mode model in \texttt{cqed\_sim/core/readout\_model.py} implements
@@ -258,9 +322,9 @@ The new three-mode model in \texttt{cqed\_sim/core/readout\_model.py} implements
 \chi_r n_r n_q
 +
 \chi_{sr} n_s n_r
-+
+-
 \frac{K_s}{2} n_s(n_s-1)
-+
+-
 \frac{K_r}{2} n_r(n_r-1).
 \]
 This is intentionally kept in the same runtime convention style as the two-mode path:
@@ -268,7 +332,7 @@ This is intentionally kept in the same runtime convention style as the two-mode 
   \item \(n_q=b^\dagger b\) is the transmon excitation projector/number operator.
   \item Positive \(\chi_s\) or \(\chi_r\) lowers the transmon transition frequency as storage or readout occupancy increases.
   \item Positive \(\chi_{sr}\) raises the storage frequency with readout occupancy and raises the readout frequency with storage occupancy.
-  \item Storage and readout self-Kerr use the same \(K\,n(n-1)/2\) convention as the two-mode storage Kerr term.
+  \item Positive \(K_s\) or \(K_r\) is subtracted from the Hamiltonian as \(-K\,n(n-1)/2\), so the adjacent-mode spacing shifts by \(-K n\).
 \end{itemize}
 The model also exposes analytic helpers for the basis energies and the qubit, storage, and readout transition frequencies.
 
@@ -276,7 +340,7 @@ The model also exposes analytic helpers for the basis energies and the qubit, st
 \texttt{cqed\_sim/sim/couplings.py} now provides explicit builder functions for
 \[
 \chi_{ab} a^\dagger a\, b^\dagger b,\qquad
-\frac{K}{2} a^{\dagger 2} a^2,\qquad
+-\frac{K}{2} a^{\dagger 2} a^2,\qquad
 J(a^\dagger b + a b^\dagger),
 \]
 and the model classes accept \texttt{CrossKerrSpec}, \texttt{SelfKerrSpec}, and \texttt{ExchangeSpec} entries that are injected into the static Hamiltonian assembly. This extends the existing dispersive models without replacing their original API or sign conventions.

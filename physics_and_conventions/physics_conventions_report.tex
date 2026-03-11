@@ -11,61 +11,122 @@
 \usepackage{enumitem}
 
 \title{Canonical Physics and Conventions Reference for \texttt{cqed\_sim}}
-\author{Post-cleanup library reference}
+\author{Post-cleanup and protocol-alignment reference}
 \date{March 10, 2026}
 
 \begin{document}
 \maketitle
 
-\noindent This report is the source of truth for the cleaned \texttt{cqed\_sim} library. It describes the conventions implemented in \texttt{cqed\_sim/}, distinguishes them from example-side code now under \texttt{examples/}, and records which conventions are directly backed by tests.
+\noindent This document is the source of truth for the reusable simulator code under \texttt{cqed\_sim/}. It records the active physics conventions, the protocol-facing abstractions that now sit on top of the simulator, the cleaned package boundary versus \texttt{examples/}, and the tests that directly back the main conventions.
 
 \section{Overview of cqed\_sim}
 \texttt{cqed\_sim/} now contains only reusable simulator code:
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{core}: Hilbert-space conventions, frames, Hamiltonian model, ideal gates, manifold-frequency helpers.
-  \item \texttt{pulses}, \texttt{sequence}, \texttt{sim}: pulse objects, envelopes, builders, compilation, hardware distortion, solver path, extractors, noise.
+  \item \texttt{core}: Hilbert-space conventions, frames, the two-mode dispersive transmon-storage model, the three-mode storage-transmon-readout model, ideal gates, and manifold-frequency helpers.
+  \item \texttt{pulses}, \texttt{sequence}, \texttt{sim}: pulse objects, envelopes, channel compilation, hardware distortion, the solver path, collapse operators, and extractors.
+  \item \texttt{experiment}: reusable state preparation, qubit measurement, and a lightweight protocol wrapper built on the same compile-and-simulate path as the low-level runtime.
   \item \texttt{calibration}, \texttt{observables}, \texttt{operators}, \texttt{tomo}, \texttt{io}, \texttt{plotting}, \texttt{unitary\_synthesis}: reusable helpers that still belong to the library surface.
 \end{itemize}
-Workflow, audit, study, paper-reproduction, and smoke-test code was moved to \texttt{examples/}, notably:
-\texttt{examples/workflows/}, \texttt{examples/audits/}, \texttt{examples/studies/}, \texttt{examples/paper\_reproductions/}, and \texttt{examples/smoke\_tests/}.
+Study, workflow, paper-reproduction, audit, and smoke-test code remains under \texttt{examples/}. The alignment note for the experiment-facing cleanup is kept in \texttt{physics\_and\_conventions/experimental\_protocol\_alignment\_note.md}.
+
+\section{Experimental Protocol Layer}
+The main experiment-facing additions are implemented in:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{cqed\_sim/experiment/state\_prep.py}: \texttt{StatePreparationSpec} and reusable subsystem state specs.
+  \item \texttt{cqed\_sim/experiment/measurement.py}: \texttt{QubitMeasurementSpec} and \texttt{measure\_qubit(...)}.
+  \item \texttt{cqed\_sim/experiment/protocol.py}: \texttt{SimulationExperiment}, \texttt{ExperimentResult}, and metadata wrappers.
+\end{itemize}
+These objects are not a second solver stack. They are a thin reusable layer above \texttt{SequenceCompiler} plus \texttt{simulate\_sequence(...)}. In particular:
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{SimulationExperiment} is executable, not merely declarative. It resolves an initial state, compiles pulses, runs the existing solver path, and optionally performs qubit measurement on the resulting runtime state.
+  \item State preparation may return either a ket or a density matrix. If any subsystem spec is mixed, the joint initial state is promoted to a density matrix before tensoring.
+  \item \texttt{measure\_qubit(...)} returns exact probabilities by default. Sampled outcomes appear only when \texttt{shots} is set.
+  \item When a confusion matrix is supplied, the code applies \(\mathbf{p}_{\mathrm{obs}} = M \mathbf{p}_{\mathrm{latent}}\) with columns ordered as latent \((g,e)\) and rows ordered as reported \((g,e)\).
+  \item Synthetic I/Q points, when requested, are generated from a simple Gaussian cluster model and are explicitly synthetic data, not a hardware-calibrated readout chain model.
+\end{itemize}
+Direct tests: \texttt{tests/test\_26\_experimental\_protocols.py}.
 
 \section{Hilbert Space Structure}
+\subsection*{Two-mode runtime}
 \begin{itemize}[leftmargin=1.5em]
-  \item Runtime ordering is qubit first, cavity second:
+  \item Runtime ordering is qubit first, storage second:
   \[
-  |q,n\rangle = |q\rangle_{\mathrm{qubit}} \otimes |n\rangle_{\mathrm{cavity}}.
+  |q,n\rangle = |q\rangle_{\mathrm{qubit}} \otimes |n\rangle_{\mathrm{storage}}.
   \]
-  Implemented in \texttt{cqed\_sim/core/conventions.py} and \texttt{cqed\_sim/core/model.py}.
-  \item Flattened basis index is \(\texttt{index}(q,n)=q\,n_{\mathrm{cav}}+n\). The pair \(\{|g,n\rangle,|e,n\rangle\}\) occupies \((n, n_{\mathrm{cav}}+n)\).
+  \item The flattened basis index is \(\texttt{index}(q,n)=q\,n_{\mathrm{cav}}+n\), implemented in \texttt{cqed\_sim/core/conventions.py}.
   \item Computational basis is \(|g\rangle=|0\rangle\), \(|e\rangle=|1\rangle\).
-  \item The synthesis layer keeps the same full-space ordering but uses a restricted subspace basis ordered as \(|g,0\rangle,|e,0\rangle,|g,1\rangle,|e,1\rangle,\ldots\) in \texttt{cqed\_sim/unitary\_synthesis/subspace.py}.
 \end{itemize}
-Direct tests: \texttt{tests/test\_25\_tensor\_product\_convention.py}, \texttt{tests/unitary\_synthesis/test\_subspace.py}, \texttt{examples/audits/tests/test\_experiment\_convention\_audit.py}.
+
+\subsection*{Three-mode runtime}
+\begin{itemize}[leftmargin=1.5em]
+  \item The three-mode extension uses
+  \[
+  |q,n_s,n_r\rangle = |q\rangle_{\mathrm{qubit}} \otimes |n_s\rangle_{\mathrm{storage}} \otimes |n_r\rangle_{\mathrm{readout}}.
+  \]
+  \item The flattened basis index is
+  \[
+  \texttt{index}(q,n_s,n_r)=((q\,n_{\mathrm{storage}})+n_s)\,n_{\mathrm{readout}}+n_r.
+  \]
+  \item This ordering is implemented in \texttt{cqed\_sim/core/conventions.py} and \texttt{cqed\_sim/core/readout\_model.py}, and all new extractors assume subsystem \(0\) is the transmon, subsystem \(1\) is storage, subsystem \(2\) is readout.
+\end{itemize}
+
+\subsection*{Synthesis subspace}
+The unitary-synthesis layer retains the same full-space qubit-first ordering, but restricted subspace bases are explicitly reordered in \texttt{cqed\_sim/unitary\_synthesis/subspace.py}; for example, a qubit-cavity block is ordered as \(|g,0\rangle, |e,0\rangle, |g,1\rangle, |e,1\rangle, \ldots\).
+
+Direct tests: \texttt{tests/test\_25\_tensor\_product\_convention.py}, \texttt{tests/test\_27\_three\_mode\_model.py}, \texttt{tests/unitary\_synthesis/test\_subspace.py}.
 
 \section{Operator Conventions}
 \begin{itemize}[leftmargin=1.5em]
   \item The simulator uses QuTiP Pauli matrices without sign changes. Therefore
   \[
-  \sigma_z|g\rangle=+|g\rangle,\qquad \sigma_z|e\rangle=-|e\rangle.
+  \sigma_z |g\rangle = +|g\rangle, \qquad \sigma_z |e\rangle = -|e\rangle.
   \]
-  \item The core Hamiltonian uses the excitation projector \(n_q=b^\dagger b\), not \(\sigma_z/2\). For two levels,
+  \item The core Hamiltonians use the excitation number operator \(n_q=b^\dagger b\), not \(\sigma_z/2\). For two levels,
   \[
-  n_q = |e\rangle\langle e| = \frac{I-\sigma_z}{2}.
+  n_q = |e\rangle \langle e| = \frac{I-\sigma_z}{2}.
   \]
-  \item Embedded drive operators are \(a\) for the cavity and \(b\) for the qubit, with runtime couplings \(a^\dagger \epsilon + a\epsilon^*\) and \(b^\dagger \epsilon + b\epsilon^*\).
-  \item Ideal \(R_{xy}\), SQR, SNAP, and displacement gates are defined in \texttt{cqed\_sim/core/ideal\_gates.py}.
+  \item Two-mode operators in \texttt{cqed\_sim/core/model.py} are embedded as \(a = I_q \otimes a_{\mathrm{storage}}\) and \(b = b_{\mathrm{transmon}} \otimes I_s\).
+  \item Three-mode operators in \texttt{cqed\_sim/core/readout\_model.py} are embedded as
+  \[
+  b = b_{\mathrm{transmon}} \otimes I_s \otimes I_r,\quad
+  a_s = I_q \otimes a_{\mathrm{storage}} \otimes I_r,\quad
+  a_r = I_q \otimes I_s \otimes a_{\mathrm{readout}}.
+  \]
+  \item The generic runtime now resolves drive operators through \texttt{model.drive\_coupling\_operators()}, so the solver no longer hard-codes a qubit-plus-one-mode assumption.
 \end{itemize}
-Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \texttt{tests/test\_20\_gaussian\_iq\_convention.py}, \texttt{tests/test\_25\_tensor\_product\_convention.py}.
+Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \texttt{tests/test\_20\_gaussian\_iq\_convention.py}, \texttt{tests/test\_25\_tensor\_product\_convention.py}, \texttt{tests/test\_27\_three\_mode\_model.py}.
 
 \section{Hamiltonian Definitions}
-The reusable runtime Hamiltonian in \texttt{cqed\_sim/core/model.py} is
+\subsection*{Two-mode runtime Hamiltonian}
+The reusable two-mode Hamiltonian in \texttt{cqed\_sim/core/model.py} is
 \[
-H_0 = \delta_c n_c + \delta_q n_q + \frac{\alpha}{2} b^{\dagger 2}b^2 + K(n_c) - \Xi(n_c)n_q,
+H_0
+=
+\delta_c n_c
++
+\delta_q n_q
++
+\frac{\alpha}{2} b^{\dagger 2} b^2
++
+K(n_c)
+-
+\Xi(n_c) n_q,
 \]
 with
 \[
-K(n_c)= \frac{\texttt{kerr}}{2}n_c(n_c-1)+\cdots,\qquad
-\Xi(n_c)= \texttt{chi}\,n_c + \texttt{chi2}\,n_c(n_c-1)+\texttt{chi3}\,n_c(n_c-1)(n_c-2)+\cdots .
+K(n_c)
+=
+\frac{\texttt{kerr}}{2} n_c(n_c-1)
+ + \cdots,
+\qquad
+\Xi(n_c)
+=
+\texttt{chi}\, n_c
++
+\texttt{chi2}\, n_c(n_c-1)
++
+\texttt{chi3}\, n_c(n_c-1)(n_c-2)
+ + \cdots .
 \]
 \texttt{cqed\_sim/core/frequencies.py} makes the intended transition law explicit:
 \[
@@ -75,18 +136,27 @@ K(n_c)= \frac{\texttt{kerr}}{2}n_c(n_c-1)+\cdots,\qquad
 \subsection*{Textbook-to-code translation}
 With the active runtime sign convention,
 \[
-n_q=\frac{I-\sigma_z}{2}.
+n_q = \frac{I-\sigma_z}{2}.
 \]
 Therefore
 \[
-\delta_q n_q = \frac{\delta_q}{2}I - \frac{\delta_q}{2}\sigma_z,\qquad
--\Xi(n_c)n_q = -\frac{\Xi(n_c)}{2}I + \frac{\Xi(n_c)}{2}\sigma_z.
+\delta_q n_q
+=
+\frac{\delta_q}{2} I
+-
+\frac{\delta_q}{2} \sigma_z,
+\qquad
+-\Xi(n_c)n_q
+=
+-\frac{\Xi(n_c)}{2} I
++
+\frac{\Xi(n_c)}{2} \sigma_z.
 \]
-So, up to identity and cavity-only shifts,
+Up to identity and storage-only shifts,
 \[
 H_{q,\mathrm{runtime}} \doteq -\frac{1}{2}\bigl(\delta_q-\Xi(n_c)\bigr)\sigma_z.
 \]
-If one rewrites the same model with the textbook sign
+If one instead uses the textbook sign
 \[
 \sigma_z^{\mathrm{text}}=|e\rangle\langle e|-|g\rangle\langle g|=-\sigma_z,
 \]
@@ -94,37 +164,88 @@ then
 \[
 H_{q,\mathrm{runtime}} \doteq \frac{1}{2}\bigl(\delta_q-\Xi(n_c)\bigr)\sigma_z^{\mathrm{text}}.
 \]
-Hence runtime \texttt{chi} is the per-photon downward pull of the \(|g,n\rangle \leftrightarrow |e,n\rangle\) transition.
+Hence runtime \texttt{chi} is the per-photon downward pull of the \(|g,n\rangle \leftrightarrow |e,n\rangle\) transition frequency.
 
 \subsection*{Comparison with the synthesis drift convention}
-\texttt{cqed\_sim/unitary\_synthesis/sequence.py} defines
+\texttt{cqed\_sim/unitary\_synthesis/sequence.py} defines drift energies
 \[
-E_{g,n}= \delta_c n-\frac{\delta_q}{2}-\Xi_{\mathrm{synth}}(n)+K(n),\qquad
-E_{e,n}= \delta_c n+\frac{\delta_q}{2}+\Xi_{\mathrm{synth}}(n)+K(n),
+E_{g,n}
+=
+\delta_c n
+-
+\frac{\delta_q}{2}
+-
+\Xi_{\mathrm{synth}}(n)
++
+K(n),
+\qquad
+E_{e,n}
+=
+\delta_c n
++
+\frac{\delta_q}{2}
++
+\Xi_{\mathrm{synth}}(n)
++
+K(n).
 \]
-and its docstring uses the opposite qubit sign convention:
+Its docstring uses the opposite qubit sign convention,
 \[
-\sigma_z^{\mathrm{synth}}|e\rangle=+|e\rangle,\qquad \sigma_z^{\mathrm{synth}}|g\rangle=-|g\rangle.
+\sigma_z^{\mathrm{synth}} |e\rangle = +|e\rangle,
+\qquad
+\sigma_z^{\mathrm{synth}} |g\rangle = -|g\rangle.
 \]
 Its transition shift is therefore
 \[
-E_{e,n}-E_{g,n}=\delta_q+2\Xi_{\mathrm{synth}}(n).
+E_{e,n}-E_{g,n} = \delta_q + 2 \Xi_{\mathrm{synth}}(n).
 \]
-To match the runtime shift \(\delta_q-\Xi_{\mathrm{runtime}}(n)\), the algebraic mapping is
+Matching the runtime shift \(\delta_q-\Xi_{\mathrm{runtime}}(n)\) gives
 \[
-2\Xi_{\mathrm{synth}}(n)=-\Xi_{\mathrm{runtime}}(n),
+2 \Xi_{\mathrm{synth}}(n) = - \Xi_{\mathrm{runtime}}(n),
 \]
-so, componentwise,
+so componentwise
 \[
 \chi_{\mathrm{synth}}=-\chi_{\mathrm{runtime}}/2,\qquad
 \chi_{2,\mathrm{synth}}=-\chi_{2,\mathrm{runtime}}/2,\qquad
 \chi_{3,\mathrm{synth}}=-\chi_{3,\mathrm{runtime}}/2.
 \]
-This mapping is derived from code; there is no dedicated runtime-to-synthesis translation helper yet.
+This mapping is derived from code and tests, but is not enforced by a dedicated helper.
+
+\subsection*{Three-mode storage-transmon-readout Hamiltonian}
+The new three-mode model in \texttt{cqed\_sim/core/readout\_model.py} implements
+\[
+\frac{H}{\hbar}
+=
+\delta_s n_s
++
+\delta_r n_r
++
+\delta_q n_q
++
+\frac{\alpha}{2} b^{\dagger 2} b^2
+-
+\chi_s n_s n_q
+-
+\chi_r n_r n_q
++
+\chi_{sr} n_s n_r
++
+\frac{K_s}{2} n_s(n_s-1)
++
+\frac{K_r}{2} n_r(n_r-1).
+\]
+This is intentionally kept in the same runtime convention style as the two-mode path:
+\begin{itemize}[leftmargin=1.5em]
+  \item \(n_q=b^\dagger b\) is the transmon excitation projector/number operator.
+  \item Positive \(\chi_s\) or \(\chi_r\) lowers the transmon transition frequency as storage or readout occupancy increases.
+  \item Positive \(\chi_{sr}\) raises the storage frequency with readout occupancy and raises the readout frequency with storage occupancy.
+  \item Storage and readout self-Kerr use the same \(K\,n(n-1)/2\) convention as the two-mode storage Kerr term.
+\end{itemize}
+The model also exposes analytic helpers for the basis energies and the qubit, storage, and readout transition frequencies.
 
 \subsection*{Canonical parameter-definition table}
 \small
-\begin{longtable}{p{0.12\linewidth} p{0.24\linewidth} p{0.28\linewidth} p{0.24\linewidth}}
+\begin{longtable}{p{0.12\linewidth} p{0.24\linewidth} p{0.34\linewidth} p{0.22\linewidth}}
 \toprule
 Name & Code-level meaning & Algebra used & Caveat \\
 \midrule
@@ -133,90 +254,109 @@ Name & Code-level meaning & Algebra used & Caveat \\
 Name & Code-level meaning & Algebra used & Caveat \\
 \midrule
 \endhead
-\texttt{chi} & first-order runtime dispersive pull & \(-\texttt{chi}\,n_c n_q\) and \(\omega_{ge}(n)=\omega_{ge}(0)-\chi n\) & projector form, not stored as \(\sigma_z a^\dagger a/2\) \\
-\texttt{chi2} & second-order pull, exposed through \texttt{chi\_higher[0]} & \(-\chi_2 n_c(n_c-1)n_q\) & falling-factorial coefficient \\
-\texttt{chi3} & third-order pull, exposed through \texttt{chi\_higher[1]} & \(-\chi_3 n_c(n_c-1)(n_c-2)n_q\) & falling-factorial coefficient \\
-\texttt{kerr} & first cavity Kerr coefficient & \(\texttt{kerr}\,n_c(n_c-1)/2\) & no implicit sign flip \\
-higher Kerr & tuple \texttt{kerr\_higher} & \(K_m n_c^{\underline{m}}/m!\) & falling-factorial hierarchy \\
-\texttt{alpha} & transmon Duffing anharmonicity & \(\texttt{alpha}\,b^{\dagger 2}b^2/2\) & inactive for \texttt{n\_tr=2} \\
-\(\sigma_z\) & active runtime Pauli-\(Z\) & \(|g\rangle\langle g|-|e\rangle\langle e|=I-2n_q\) & opposite sign from synthesis docstring \\
-\(n_q\) & qubit excitation projector & \(b^\dagger b\), and for two levels \(n_q=|e\rangle\langle e|\) & repo-specific versus \(\sigma_z/2\) form \\
+\texttt{chi} & two-mode first-order dispersive pull & \(-\texttt{chi}\, n_c n_q\), \(\omega_{ge}(n)=\omega_{ge}(0)-\chi n\) & runtime projector form, not stored as \(\sigma_z a^\dagger a/2\) \\
+\texttt{chi2} & second-order pull, exposed by \texttt{chi\_higher[0]} & \(-\chi_2 n_c(n_c-1)n_q\) & falling-factorial coefficient \\
+\texttt{chi3} & third-order pull, exposed by \texttt{chi\_higher[1]} & \(-\chi_3 n_c(n_c-1)(n_c-2)n_q\) & falling-factorial coefficient \\
+\texttt{chi\_s} & storage-transmon dispersive pull in the three-mode model & \(-\chi_s n_s n_q\) & positive values lower \(\omega_{ge}\) with storage photons \\
+\texttt{chi\_r} & readout-transmon dispersive pull in the three-mode model & \(-\chi_r n_r n_q\) & positive values lower \(\omega_{ge}\) with readout photons \\
+\texttt{chi\_sr} & storage-readout cross-Kerr & \(+\chi_{sr} n_s n_r\) & positive values raise both bosonic mode frequencies with occupancy of the other mode \\
+\texttt{kerr} & two-mode storage self-Kerr coefficient & \(\texttt{kerr}\,n_c(n_c-1)/2\) & same sign convention as code, no implicit factor change \\
+higher Kerr & tuple \texttt{kerr\_higher} & \(K_m n_c^{\underline{m}} / m!\) & falling-factorial hierarchy \\
+\texttt{kerr\_s} & three-mode storage self-Kerr & \(\texttt{kerr\_s}\,n_s(n_s-1)/2\) & same convention as \texttt{kerr} \\
+\texttt{kerr\_r} & three-mode readout self-Kerr & \(\texttt{kerr\_r}\,n_r(n_r-1)/2\) & same convention as \texttt{kerr} \\
+\texttt{alpha} & transmon Duffing anharmonicity & \(\texttt{alpha}\,b^{\dagger 2}b^2/2\) & inactive for strict two-level truncation \\
+\(\sigma_z\) & active runtime Pauli-\(Z\) & \(|g\rangle\langle g|-|e\rangle\langle e|=I-2n_q\) & opposite sign from the synthesis docstring \\
+\(n_q\) & transmon excitation operator & \(b^\dagger b\); for two levels \(n_q=|e\rangle\langle e|\) & repo-specific implementation choice versus \(\sigma_z/2\) notation \\
 \(\delta_q\) & qubit residual detuning & \(\omega_q-\omega_q^{\mathrm{frame}}\) & only defined after choosing a frame \\
-\(\delta_c\) & cavity residual detuning & \(\omega_c-\omega_c^{\mathrm{frame}}\) & same frame caveat \\
+\(\delta_c\) & two-mode storage residual detuning & \(\omega_c-\omega_c^{\mathrm{frame}}\) & same frame caveat \\
+\(\delta_s\) & three-mode storage residual detuning & \(\omega_s-\omega_s^{\mathrm{frame}}\) & \(\omega_s^{\mathrm{frame}}\) is stored as \texttt{omega\_c\_frame} with an alias \\
+\(\delta_r\) & three-mode readout residual detuning & \(\omega_r-\omega_r^{\mathrm{frame}}\) & only used in the three-mode path \\
 \bottomrule
 \end{longtable}
 \normalsize
 
-\subsection*{Standard-compatible vs repo-specific}
+\subsection*{Standard-compatible versus repo-specific}
 \begin{itemize}[leftmargin=1.5em]
-  \item Standard-compatible: tensor ordering, QuTiP Pauli matrices, rad/s and seconds internally, Lindblad form, Duffing/Kerr terms, and \texttt{chi} as a transition pull.
-  \item Repo-specific: projector-form \(n_q\) Hamiltonian, falling-factorial storage for higher-order pulls, and the explicit complex-envelope sign \(e^{+i(\omega t+\phi)}\).
-  \item Needs caution: the synthesis drift model does not share the runtime \(\sigma_z\) sign or \(\chi\) normalization.
+  \item Standard-compatible: qubit-first tensor ordering, QuTiP Pauli signs, rad/s and seconds internally, Duffing/Kerr terms, Lindblad dynamics, and positive \(\chi\) or \(\chi_s,\chi_r\) as downward transmon pulls.
+  \item Repo-specific: writing the transmon term in terms of \(n_q\), storing higher-order pulls and Kerr terms in falling-factorial form, and using complex envelopes with \(e^{+i(\omega t+\phi)}\).
+  \item Needs caution: the synthesis drift model still does not share the runtime \(\sigma_z\) sign or \(\chi\) normalization.
 \end{itemize}
 
 \section{Frequency and Time Units}
 \begin{itemize}[leftmargin=1.5em]
-  \item Internal Hamiltonian coefficients and frame frequencies are rad/s.
-  \item Pulse durations, timeline steps, and solver \texttt{max\_step} are seconds.
-  \item Example/workflow config dictionaries often use \texttt{\_hz} and \texttt{\_ns} names, then convert to core units before constructing the core model.
+  \item Internal Hamiltonian coefficients and rotating-frame frequencies are in rad/s.
+  \item Pulse durations, timeline steps, and solver \texttt{max\_step} values are in seconds.
+  \item Example-side configuration files may still carry \texttt{\_hz}, \texttt{\_ns}, or \texttt{\_1\_per\_s} field names, but those values are converted before constructing library models or noise objects.
 \end{itemize}
-Direct tests: \texttt{tests/test\_05\_detuning\_and\_frames.py}, \texttt{tests/test\_10\_chi\_convention.py}, \texttt{tests/test\_13\_hardware\_extended.py}.
+Direct tests: \texttt{tests/test\_05\_detuning\_and\_frames.py}, \texttt{tests/test\_10\_chi\_convention.py}, \texttt{tests/test\_13\_hardware\_extended.py}, \texttt{tests/test\_27\_three\_mode\_model.py}.
 
 \section{Rotating Frame Conventions}
 \begin{itemize}[leftmargin=1.5em]
-  \item Frames are represented by \texttt{FrameSpec(omega\_c\_frame, omega\_q\_frame)} in \texttt{cqed\_sim/core/frame.py}.
-  \item The core Hamiltonian uses \(\delta_c=\omega_c-\omega_c^{\mathrm{frame}}\) and \(\delta_q=\omega_q-\omega_q^{\mathrm{frame}}\).
-  \item \texttt{manifold\_transition\_frequency(...)} returns the qubit transition in the chosen frame.
-  \item \texttt{build\_sqr\_multitone\_pulse(...)} defaults to the rotating frame \((\omega_c,\omega_q)\) when \texttt{use\_rotating\_frame=True}.
+  \item Frames are represented by \texttt{FrameSpec(omega\_c\_frame, omega\_q\_frame, omega\_r\_frame)} in \texttt{cqed\_sim/core/frame.py}.
+  \item The legacy field \texttt{omega\_c\_frame} remains the storage/cavity frame frequency. The readout model adds the alias property \texttt{omega\_s\_frame} for clarity.
+  \item The two-mode path uses \(\delta_c=\omega_c-\omega_c^{\mathrm{frame}}\) and \(\delta_q=\omega_q-\omega_q^{\mathrm{frame}}\).
+  \item The three-mode path uses \(\delta_s=\omega_s-\omega_s^{\mathrm{frame}}\), \(\delta_r=\omega_r-\omega_r^{\mathrm{frame}}\), and \(\delta_q=\omega_q-\omega_q^{\mathrm{frame}}\).
+  \item \texttt{manifold\_transition\_frequency(...)} still refers only to the two-mode path; the three-mode model instead exposes \texttt{qubit\_transition\_frequency(...)}, \texttt{storage\_transition\_frequency(...)}, and \texttt{readout\_transition\_frequency(...)}.
 \end{itemize}
-Direct tests: \texttt{tests/test\_05\_detuning\_and\_frames.py}, \texttt{tests/test\_21\_qubox\_convention\_reconciliation.py}.
+Direct tests: \texttt{tests/test\_05\_detuning\_and\_frames.py}, \texttt{tests/test\_21\_qubox\_convention\_reconciliation.py}, \texttt{tests/test\_27\_three\_mode\_model.py}.
 
 \section{Drive Hamiltonians}
 \begin{itemize}[leftmargin=1.5em]
   \item \texttt{cqed\_sim/pulses/pulse.py} samples analytic or discrete envelopes as
   \[
-  \epsilon(t)=\texttt{amp}\,\texttt{envelope}(t)\,e^{i(\texttt{carrier}t+\texttt{phase})}.
+  \epsilon(t)=\texttt{amp}\,\texttt{envelope}(t)\,e^{i(\texttt{carrier} t+\texttt{phase})}.
   \]
-  \item \texttt{cqed\_sim/sim/runner.py} inserts \(\epsilon(t)\) and \(\epsilon^*(t)\) into creation and annihilation terms.
-  \item Gaussian qubit rotations use \(\theta=2\int \Omega(t)\,dt\).
-  \item Square cavity displacements use the analytic mapping \(\alpha=-i\int \epsilon(t)\,dt\).
-  \item SQR multitone pulses use
+  \item \texttt{cqed\_sim/sim/runner.py} inserts \(\epsilon(t)\) and \(\epsilon^*(t)\) as raising and lowering couplings obtained from the model, rather than from a hard-coded target list.
+  \item The two-mode path supports \texttt{"cavity"} or \texttt{"storage"}, \texttt{"qubit"}, and \texttt{"sideband"} targets.
+  \item The three-mode path supports \texttt{"storage"}, \texttt{"readout"}, \texttt{"qubit"}, and \texttt{"transmon"} targets. The readout and storage drives use the same complex-envelope sign convention as the existing qubit and storage drives.
+  \item The effective three-mode drive Hamiltonian is
   \[
-  \epsilon_{\mathrm{SQR}}(t)=g(t)\sum_n A_n e^{i\phi_n}e^{i\omega_n t},
-  \qquad
-  A_n=\theta_n/(2T)+\lambda_0 d\lambda_n.
+  H_d / \hbar
+  =
+  \epsilon_s(t) a_s^\dagger + \epsilon_s^*(t) a_s
+  +
+  \epsilon_q(t) b^\dagger + \epsilon_q^*(t) b
+  +
+  \epsilon_r(t) a_r^\dagger + \epsilon_r^*(t) a_r .
   \]
 \end{itemize}
-Direct tests: \texttt{tests/test\_20\_gaussian\_iq\_convention.py}, \texttt{tests/test\_23\_sqr\_additive\_amplitude\_correction.py}, \texttt{examples/audits/tests/test\_experiment\_convention\_audit.py}.
+Direct tests: \texttt{tests/test\_20\_gaussian\_iq\_convention.py}, \texttt{tests/test\_23\_sqr\_additive\_amplitude\_correction.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}.
 
 \section{Dissipation and Lindblad Terms}
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{NoiseSpec} in \texttt{cqed\_sim/sim/noise.py} uses \(T_1\), \(T_\phi\), \(\kappa\), and \(n_{\mathrm{th}}\).
-  \item The implemented convention is \(\gamma_1=1/T_1\) and \(\gamma_\phi=1/(2T_\phi)\).
-  \item Two-level dephasing uses \(\sqrt{\gamma_\phi}\,\sigma_z\) with \(\sigma_z=I-2n_q\); multi-level dephasing uses \(\sqrt{\gamma_\phi}\,n_q\).
+  \item \texttt{NoiseSpec} in \texttt{cqed\_sim/sim/noise.py} now supports \texttt{t1}, \texttt{tphi}, \texttt{kappa}, \texttt{nth}, \texttt{kappa\_storage}, \texttt{kappa\_readout}, \texttt{nth\_storage}, and \texttt{nth\_readout}.
+  \item The implemented convention is \(\gamma_1 = 1/T_1\) and \(\gamma_\phi = 1/(2 T_\phi)\).
+  \item Two-level dephasing uses \(\sqrt{\gamma_\phi}\,\sigma_z\) with \(\sigma_z = I - 2 n_q\). Multi-level transmon dephasing uses \(\sqrt{\gamma_\phi}\,n_q\).
+  \item In the two-mode path, \texttt{kappa} and \texttt{nth} still drive storage loss and thermal excitation.
+  \item In the three-mode path, storage and readout can decay independently via \texttt{kappa\_storage} and \texttt{kappa\_readout}, with separate thermal occupations.
   \item \texttt{simulate\_sequence(...)} uses \texttt{mesolve} when collapse operators are present or when the initial state is already a density matrix; otherwise it uses \texttt{sesolve}.
 \end{itemize}
-Direct tests: \texttt{tests/test\_14\_dissipation.py}, \texttt{tests/test\_18\_noise\_and\_sideband.py}.
+Direct tests: \texttt{tests/test\_14\_dissipation.py}, \texttt{tests/test\_18\_noise\_and\_sideband.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}.
 
 \section{State Representation}
 \begin{itemize}[leftmargin=1.5em]
   \item Runtime inputs may be kets or density matrices.
-  \item The result wrapper stores the final state, optional history, expectation traces, and the raw QuTiP solver result.
-  \item Extractors and observables assume subsystem \(0\) is the qubit and subsystem \(1\) is the cavity, matching the tensor convention.
+  \item The result wrapper stores the final state, optional state history, expectation traces, and the raw QuTiP solver result.
+  \item The generic extractor path now supports two-mode and three-mode states through subsystem-aware partial traces.
+  \item \texttt{reduced\_cavity\_state(...)} remains specific to the two-mode path. The three-mode path uses \texttt{reduced\_storage\_state(...)} and \texttt{reduced\_readout\_state(...)}.
+  \item \texttt{measure\_qubit(...)} acts on the reduced transmon state obtained from the runtime state convention. The exact probabilities are taken from the reduced density matrix before any optional confusion-matrix application or finite-shot sampling.
+  \item Synthetic I/Q points are optional and currently generated by a simple Gaussian two-cluster model centered on readout labels, not by a resonator-plus-amplifier chain model.
 \end{itemize}
-Direct tests: \texttt{tests/test\_14\_dissipation.py}, \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \texttt{tests/test\_19\_fock\_tomo.py}, \texttt{examples/smoke\_tests/tests/test\_sanity.py}.
+Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \texttt{tests/test\_19\_fock\_tomo.py}, \texttt{tests/test\_26\_experimental\_protocols.py}, \texttt{tests/test\_27\_three\_mode\_model.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}.
 
 \section{Hilbert Space Truncation}
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{n\_cav} truncates the cavity Fock space and \texttt{n\_tr} truncates the transmon space.
-  \item SQR \(\theta\) and \(\phi\) arrays are padded to the cavity dimension in \texttt{cqed\_sim/pulses/calibration.py}.
-  \item The synthesis layer distinguishes full Hilbert dimension from restricted subspace dimension in \texttt{cqed\_sim/unitary\_synthesis/subspace.py}.
+  \item The two-mode model uses \texttt{n\_cav} for storage truncation and \texttt{n\_tr} for transmon truncation.
+  \item The three-mode model uses \texttt{n\_storage}, \texttt{n\_readout}, and \texttt{n\_tr}.
+  \item State preparation helpers pad or truncate explicit amplitude vectors to the requested subsystem dimension.
+  \item SQR angle arrays are still padded to the storage dimension in \texttt{cqed\_sim/pulses/calibration.py}.
+  \item The synthesis layer still distinguishes the full Hilbert dimension from restricted subspace dimension in \texttt{cqed\_sim/unitary\_synthesis/subspace.py}.
 \end{itemize}
-Direct tests: \texttt{tests/test\_11\_model\_invariants.py}, \texttt{tests/test\_24\_displacement\_selective\_spectroscopy.py}, \texttt{tests/unitary\_synthesis/test\_subspace.py}.
+Direct tests: \texttt{tests/test\_11\_model\_invariants.py}, \texttt{tests/test\_24\_displacement\_selective\_spectroscopy.py}, \texttt{tests/test\_26\_experimental\_protocols.py}, \texttt{tests/test\_27\_three\_mode\_model.py}, \texttt{tests/unitary\_synthesis/test\_subspace.py}.
 
 \section{Test Suite Audit}
 \small
-\begin{longtable}{p{0.31\linewidth} p{0.54\linewidth} p{0.10\linewidth}}
+\begin{longtable}{p{0.30\linewidth} p{0.56\linewidth} p{0.08\linewidth}}
 \toprule
 File & Targets, type, and main assertion & Status \\
 \midrule
@@ -225,58 +365,61 @@ File & Targets, type, and main assertion & Status \\
 File & Targets, type, and main assertion & Status \\
 \midrule
 \endhead
-\texttt{tests/test\_01\_sanity\_and\_free.py} & \texttt{core/model.py}, \texttt{sim/runner.py}; Hermiticity, free evolution, Kerr analytic phase. & Passed \\
-\texttt{tests/test\_02\_cavity\_drive\_and\_kerr.py} & cavity drive and Kerr numerical sanity. & Passed \\
-\texttt{tests/test\_03\_dispersive\_and\_ramsey.py} & dispersive phase scaling and Ramsey pull. & Passed \\
-\texttt{tests/test\_04\_xy\_phase\_and\_overlap.py} & XY phase and overlap cancellation conventions. & Passed \\
-\texttt{tests/test\_05\_detuning\_and\_frames.py} & detuning sign and rotating-frame behavior. & Passed \\
-\texttt{tests/test\_06\_leakage\_drag\_and\_higher\_order.py} & multilevel leakage, DRAG, higher-order-term smoke test. & Passed \\
-\texttt{tests/test\_07\_convergence\_regression.py} & timestep convergence plus golden regression artifact. & Passed \\
-\texttt{tests/test\_08\_timeline\_and\_hardware.py} & overlap handling and hardware distortion basics. & Passed \\
-\texttt{tests/test\_09\_runtime\_policy.py} & runtime-budget fast-path regression. & Passed \\
-\texttt{tests/test\_10\_chi\_convention.py} & direct runtime \(\chi\) sign and meaning. & Passed \\
-\texttt{tests/test\_11\_model\_invariants.py} & model dimensions and invariants. & Passed \\
-\texttt{tests/test\_12\_pulse\_semantics.py} & pulse area/shape semantics. & Passed \\
-\texttt{tests/test\_13\_hardware\_extended.py} & ZOH, low-pass, sidebands, quantization, crosstalk. & Passed \\
-\texttt{tests/test\_14\_dissipation.py} & \(T_1\), \(T_\phi\), cavity damping. & Passed \\
-\texttt{tests/test\_15\_numerics\_performance.py} & max-step, compile cache, scaling smoke. & Passed \\
-\texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py} & ideal displacement/SNAP/SQR plus extractors. & Passed \\
-\texttt{tests/test\_17\_gate\_library\_integration.py} & gate loading and library integration. & Passed \\
-\texttt{tests/test\_18\_noise\_and\_sideband.py} & sideband exchange and noise composition. & Passed \\
-\texttt{tests/test\_19\_fock\_tomo.py} & tomography and leakage-calibration helpers. & Passed \\
-\texttt{tests/test\_20\_gaussian\_iq\_convention.py} & Gaussian I/Q axis, phase, detuning sign. & Passed \\
-\texttt{tests/test\_21\_qubox\_convention\_reconciliation.py} & runtime-vs-documented external convention reconciliation. & Passed \\
-\texttt{tests/test\_22\_support\_aware\_objective.py} & support-aware objective wiring. & Passed \\
-\texttt{tests/test\_23\_sqr\_additive\_amplitude\_correction.py} & additive \(d\lambda\) amplitude convention. & Passed \\
-\texttt{tests/test\_24\_displacement\_selective\_spectroscopy.py} & selective-spectroscopy frequencies. & Passed \\
-\texttt{tests/test\_25\_tensor\_product\_convention.py} & tensor ordering, block indices, \(\sigma_z\) sign. & Passed \\
+\texttt{tests/test\_01\_sanity\_and\_free.py} & unit and numerical sanity checks for Hermiticity, free evolution, and Kerr phase accumulation in the two-mode runtime. & Passed \\
+\texttt{tests/test\_02\_cavity\_drive\_and\_kerr.py} & unit and regression checks for storage drive behavior and Kerr response. & Passed \\
+\texttt{tests/test\_03\_dispersive\_and\_ramsey.py} & dispersive phase scaling and Ramsey pull in the two-mode model. & Passed \\
+\texttt{tests/test\_04\_xy\_phase\_and\_overlap.py} & XY phase convention and overlap cancellation for qubit pulses. & Passed \\
+\texttt{tests/test\_05\_detuning\_and\_frames.py} & rotating-frame detuning signs and frame handling. & Passed \\
+\texttt{tests/test\_06\_leakage\_drag\_and\_higher\_order.py} & multilevel leakage, DRAG behavior, and higher-order term smoke checks. & Passed \\
+\texttt{tests/test\_07\_convergence\_regression.py} & timestep convergence and regression against a stored reference. & Passed \\
+\texttt{tests/test\_08\_timeline\_and\_hardware.py} & compile timeline assembly and basic hardware distortion semantics. & Passed \\
+\texttt{tests/test\_09\_runtime\_policy.py} & runtime-budget and fast-path regression checks. & Passed \\
+\texttt{tests/test\_10\_chi\_convention.py} & direct checks of runtime \(\chi\) sign, transition-pull meaning, and observable defaults. & Passed \\
+\texttt{tests/test\_11\_model\_invariants.py} & model dimensions, invariants, and expectation consistency. & Passed \\
+\texttt{tests/test\_12\_pulse\_semantics.py} & pulse-area and pulse-shape semantics. & Passed \\
+\texttt{tests/test\_13\_hardware\_extended.py} & ZOH, low-pass, sideband, quantization, and crosstalk behavior. & Passed \\
+\texttt{tests/test\_14\_dissipation.py} & explicit \(T_1\), \(T_\phi\), and storage damping checks using collapse operators. & Passed \\
+\texttt{tests/test\_15\_numerics\_performance.py} & max-step, compile-cache, and runtime scaling smoke checks. & Passed \\
+\texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py} & ideal displacement/SNAP/SQR primitives and the two-mode extractor path. & Passed \\
+\texttt{tests/test\_17\_gate\_library\_integration.py} & gate loading and integration of the library-level gate path. & Passed \\
+\texttt{tests/test\_18\_noise\_and\_sideband.py} & sideband exchange and combined noise behavior in the two-mode runtime. & Passed \\
+\texttt{tests/test\_19\_fock\_tomo.py} & reusable tomography and leakage-calibration helpers. & Passed \\
+\texttt{tests/test\_20\_gaussian\_iq\_convention.py} & Gaussian I/Q axis, phase, and detuning sign convention. & Passed \\
+\texttt{tests/test\_21\_qubox\_convention\_reconciliation.py} & reconciliation between runtime conventions and externally documented qubox-style conventions. & Passed \\
+\texttt{tests/test\_22\_support\_aware\_objective.py} & support-aware objective wiring in synthesis-related helpers. & Passed \\
+\texttt{tests/test\_23\_sqr\_additive\_amplitude\_correction.py} & additive \(d\lambda\) amplitude convention for SQR tones. & Passed \\
+\texttt{tests/test\_24\_displacement\_selective\_spectroscopy.py} & selective-spectroscopy frequencies and displacement conventions. & Passed \\
+\texttt{tests/test\_25\_tensor\_product\_convention.py} & direct checks of tensor ordering, block indices, and active \(\sigma_z\) sign. & Passed \\
+\texttt{tests/test\_26\_experimental\_protocols.py} & new protocol-layer tests for state preparation ordering, mixed initial states, sampled qubit measurement, and \texttt{SimulationExperiment}. & Passed \\
+\texttt{tests/test\_27\_three\_mode\_model.py} & explicit basis-index, operator-embedding, partial-trace, analytic diagonal-energy, two-mode reduction, and dispersive shift checks for the three-mode model. & Passed \\
+\texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py} & drive isolation, storage/readout ringdown, transmon \(T_1\), transmon dephasing, positivity, and readout-response checks for the three-mode path. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_subspace.py} & restricted-basis ordering and round-trip embedding. & Passed \\
-\texttt{tests/unitary\_synthesis/test\_metrics.py} & fidelity gauge choices and leakage metrics. & Passed \\
+\texttt{tests/unitary\_synthesis/test\_metrics.py} & fidelity gauges and leakage metrics. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_primitives\_and\_backends.py} & synthesis primitives and ideal/pulse backends. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_optimization.py} & duration mapping and time optimization. & Passed \\
-\texttt{tests/unitary\_synthesis/test\_synthesis\_and\_targets.py} & easy targets, leakage penalty, MPS targets. & Passed \\
+\texttt{tests/unitary\_synthesis/test\_synthesis\_and\_targets.py} & easy targets, leakage penalty, and MPS-target behavior. & Passed with one optional skip \\
 \texttt{tests/unitary\_synthesis/test\_free\_evolve\_condphase.py} & free-evolution conditional phase formulas. & Passed \\
-\texttt{tests/unitary\_synthesis/test\_hardware\_grid\_parallel.py} & time grid, slew, tone spacing, parallel multistart. & Passed \\
+\texttt{tests/unitary\_synthesis/test\_hardware\_grid\_parallel.py} & time-grid, slew, tone-spacing, and parallel-multistart behavior. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_progress\_reporting.py} & history aggregation and serialization. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_reporting\_and\_determinism.py} & report schema and fixed-seed determinism. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_time\_policy\_and\_condphase.py} & time-policy modes and drift-phase decomposition. & Passed \\
-\texttt{examples/audits/tests/test\_experiment\_convention\_audit.py} & moved audit checks for SU(2), tensor order, waveform signs, relative phases. & Passed \\
+\texttt{examples/audits/tests/test\_experiment\_convention\_audit.py} & moved audit checks for SU(2), tensor ordering, waveform signs, and relative phases. & Passed \\
 \texttt{examples/workflows/tests/test\_sqr\_transfer\_artifact.py} & moved workflow artifact serialization and replay. & Passed \\
-\texttt{examples/studies/tests/test\_snap\_opt\_converges.py} & moved study regression for convergence from vanilla initialization. & Passed \\
+\texttt{examples/studies/tests/test\_snap\_opt\_converges.py} & moved convergence regression for the SNAP optimization study. & Passed \\
 \texttt{examples/studies/tests/test\_snap\_opt\_achieves\_zero\_coherent\_error\_above\_limit.py} & moved study regression for threshold behavior above the empirical limit. & Passed \\
 \texttt{examples/studies/tests/test\_snap\_opt\_generalization\_sweeps.py} & moved study regressions for below-limit failure, runtime budget, and parameter sweeps. & Passed \\
-\texttt{examples/studies/tests/test\_snap\_opt\_preserves\_low\_frequency\_content.py} & moved study convention test that no extra tones are introduced. & Passed \\
+\texttt{examples/studies/tests/test\_snap\_opt\_preserves\_low\_frequency\_content.py} & moved convention test that no extra tones are introduced. & Passed \\
 \texttt{examples/paper\_reproductions/tests/test\_convergence\_and\_runtime.py} & moved PRL-133 convergence trend and runtime-budget regression. & Passed \\
 \texttt{examples/paper\_reproductions/tests/test\_no\_extra\_frequencies.py} & moved PRL-133 tone-support convention test. & Passed \\
 \texttt{examples/paper\_reproductions/tests/test\_optimization\_limit.py} & moved PRL-133 optimization-limit regression. & Passed \\
 \texttt{examples/paper\_reproductions/tests/test\_prl133\_components\_consistency.py} & moved PRL-133 component-consistency regression. & Passed \\
-\texttt{examples/paper\_reproductions/tests/test\_prl133\_metric\_bounds.py} & moved PRL-133 metric boundedness and fail-fast validation. & Passed \\
+\texttt{examples/paper\_reproductions/tests/test\_prl133\_metric\_bounds.py} & moved PRL-133 metric-boundedness and fail-fast validation. & Passed \\
 \texttt{examples/paper\_reproductions/tests/test\_prl133\_metric\_relation.py} & moved PRL-133 metric-relation regression. & Passed \\
-\texttt{examples/paper\_reproductions/tests/test\_prl133\_unitarity\_trace.py} & moved PRL-133 closed-system unitarity and trace-preservation check. & Passed \\
+\texttt{examples/paper\_reproductions/tests/test\_prl133\_unitarity\_trace.py} & moved PRL-133 closed-system unitarity and trace-preservation checks. & Passed \\
 \texttt{examples/paper\_reproductions/tests/test\_reproduce\_baseline.py} & moved PRL-133 end-to-end reproduction smoke test. & Passed \\
 \texttt{examples/smoke\_tests/tests/test\_sanity.py} & moved sequential-workflow sanity checks. & Passed \\
 \texttt{examples/smoke\_tests/tests/test\_sqr\_calibration.py} & moved SQR calibration smoke and guarded-benchmark checks. & Passed \\
-\texttt{examples/smoke\_tests/tests/test\_sqr\_speedlimit\_analysis.py} & moved speed-limit serial/parallel equivalence check. & Passed \\
+\texttt{examples/smoke\_tests/tests/test\_sqr\_speedlimit\_analysis.py} & moved speed-limit serial/parallel equivalence checks. & Passed \\
 \bottomrule
 \end{longtable}
 \normalsize
@@ -291,40 +434,44 @@ E:\Programs\python.exe -m pytest examples/audits/tests examples/workflows/tests 
 \end{verbatim}
 Observed results:
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{tests/}: 157 collected, 156 passed, 1 skipped, 0 failed.
+  \item \texttt{tests/}: 172 collected, 171 passed, 1 skipped, 0 failed.
   \item \texttt{examples/*/tests}: 49 collected, 49 passed, 0 failed.
   \item The single skip is the optional external MPS-reference check in \texttt{tests/unitary\_synthesis/test\_synthesis\_and\_targets.py}.
   \item Warning-only notes: two \texttt{numpy.trapz} deprecation warnings in \texttt{tests/test\_12\_pulse\_semantics.py} and \texttt{tests/test\_20\_gaussian\_iq\_convention.py}.
 \end{itemize}
-Interpreter note: \verb|E:\Program Files\Python311\python.exe| from \texttt{AGENTS.md} is not present in this workspace; tests were run with \verb|E:\Programs\python.exe| (Python 3.11.8).
+Interpreter note: \verb|E:\Program Files\Python311\python.exe| from \texttt{AGENTS.md} is not present in this workspace, so the suite was run with \verb|E:\Programs\python.exe| (Python 3.11.8).
 
 \section{Verified Behaviors Backed by Tests}
 \begin{itemize}[leftmargin=1.5em]
-  \item Tensor ordering, basis labels, and synthesis restricted-basis ordering are directly tested.
-  \item The active Pauli/Bloch sign convention is directly tested.
-  \item Runtime \(\chi\) meaning as a downward transition pull is directly tested.
-  \item The complex-envelope sign \(e^{+i(\omega t+\phi)}\) and Gaussian I/Q conventions are directly tested.
-  \item The additive SQR amplitude correction rule is directly tested.
-  \item Rotating-frame detuning behavior is directly tested.
-  \item Solver selection and Lindblad behavior are directly tested.
+  \item Two-mode tensor ordering, basis labels, block indexing, and active Pauli/Bloch sign conventions are directly tested.
+  \item The runtime meaning of \(\chi\) as a downward transition pull is directly tested.
+  \item The textbook-to-runtime projector translation is supported by direct \(\sigma_z\) sign tests and by the runtime \(\chi\) transition tests, even though the exact algebraic translation is not asserted by a single dedicated unit test.
+  \item The new three-mode tensor ordering, operator embeddings, partial traces, diagonal energies, and analytic dispersive shifts are directly tested.
+  \item The three-mode solver path is directly tested for drive isolation, storage/readout-specific damping, transmon relaxation, transmon dephasing, positivity, and qubit-conditioned readout response.
+  \item State preparation helpers are directly tested for ordering and mixed-state behavior.
+  \item The qubit measurement abstraction is directly tested for exact probabilities, confusion-matrix application, finite-shot sampling, and synthetic I/Q output shape.
+  \item \texttt{SimulationExperiment} is directly tested as the recommended light protocol wrapper over the compile-and-run path.
   \item The moved example workflows still execute correctly in their new locations.
 \end{itemize}
 
 \section{Gaps Between Code Conventions and Test Coverage}
 \begin{itemize}[leftmargin=1.5em]
-  \item No dedicated test yet enforces the algebraic mapping between runtime \(\chi\) and synthesis-drift \(\chi\).
-  \item Higher-order \(\chi_2\), \(\chi_3\), and higher-order Kerr coefficients have coverage, but not with isolated analytic sign/factor tests.
-  \item Multi-level pure-dephasing behavior for \(\texttt{n\_tr}>2\) is only indirectly covered.
-  \item The projector-to-\(\sigma_z\) translation written in this report is inferred from code and indirect tests rather than asserted directly by its own unit test.
+  \item There is still no dedicated runtime-to-synthesis translation helper or unit test that asserts the full algebraic mapping between runtime \(\chi\) and synthesis-drift \(\chi\).
+  \item Higher-order \(\chi_2\), \(\chi_3\), and higher-order Kerr coefficients are covered indirectly, but not with isolated sign-and-factor analytic tests of the same style now used for the three-mode diagonal-energy checks.
+  \item The measurement layer is intentionally lightweight. It does not yet test or implement a resonator-derived threshold classifier, a POVM model, or a calibrated amplifier chain.
+  \item The synthetic I/Q mode is tested only as a sampling wrapper around reduced-state probabilities. It should not be interpreted as a validated hardware readout model.
+  \item The three-mode model is effective and dispersive. It does not yet include direct exchange couplings, Purcell channels, or a full resonator-chain measurement model.
 \end{itemize}
 
 \section{Potential Ambiguities}
-\textbf{Critical:} runtime and synthesis drift layers do not use the same \(\sigma_z\) sign or \(\chi\) scaling.\\
-\textbf{Moderate:} higher-order pull/Kerr parameters are falling-factorial coefficients, not ordinary polynomial coefficients.\\
-\textbf{Moderate:} the runtime uses \(n_q\) rather than \(\sigma_z/2\), so ground-state energy offsets look different from some textbook forms.\\
-\textbf{Low:} the complex-envelope sign \(e^{+i(\omega t+\phi)}\) is repo-specific and must be preserved when adding new pulse families.
+\textbf{Critical:} runtime and synthesis drift layers do not use the same \(\sigma_z\) sign or \(\chi\) scaling; the report derives the mapping, but code does not enforce it.\\
+\textbf{Moderate:} higher-order pull and Kerr parameters are falling-factorial coefficients, not ordinary polynomial coefficients.\\
+\textbf{Moderate:} the runtime writes transmon physics in terms of \(n_q\) rather than \(\sigma_z/2\), so ground-state energy offsets differ from some textbook presentations.\\
+\textbf{Moderate:} synthetic I/Q output is a convenience sampling layer, not a calibrated hardware-response model.\\
+\textbf{Low:} the explicit complex-envelope sign \(e^{+i(\omega t+\phi)}\) is repo-specific and must be preserved when adding pulse families.\\
+\textbf{Low:} \texttt{FrameSpec} still stores the storage frame in the legacy field \texttt{omega\_c\_frame}; the \texttt{omega\_s\_frame} alias removes ambiguity but does not rename the underlying field.
 
 \section{Summary}
-\texttt{cqed\_sim} is now a coherent reusable library for the qubit-cavity Hamiltonian, frames, pulses, compilation, simulation, standard gates, observables, calibration, tomography, and unitary synthesis. The authoritative physics conventions are: qubit-first tensor ordering; \(|g\rangle=|0\rangle\), \(|e\rangle=|1\rangle\); QuTiP-standard Pauli signs; rad/s and seconds internally; complex envelopes with \(e^{+i(\omega t+\phi)}\); runtime dispersive physics written with \(n_q=|e\rangle\langle e|\); and Lindblad collapse operators as implemented in \texttt{sim/noise.py}. The main caution that remains is the runtime-to-synthesis translation of \(\chi\), which this report now derives explicitly but the code does not yet enforce directly.
+\texttt{cqed\_sim} is now a coherent reusable library for pulse-level cQED simulation with both a two-mode transmon-storage path and a three-mode storage-transmon-readout extension. The authoritative runtime conventions are: qubit-first tensor ordering; \(|g\rangle=|0\rangle\), \(|e\rangle=|1\rangle\); QuTiP-standard Pauli signs; rad/s internally and seconds for time; complex envelopes with \(e^{+i(\omega t+\phi)}\); dispersive physics written in terms of \(n_q=b^\dagger b\); and Lindblad collapse operators as implemented in \texttt{cqed\_sim/sim/noise.py}. The experiment-facing layer is intentionally lightweight: \texttt{StatePreparationSpec} standardizes initial conditions, \texttt{QubitMeasurementSpec} standardizes exact or sampled qubit readout, and \texttt{SimulationExperiment} provides a clean protocol wrapper without bypassing the core runtime. The main caution that remains is the runtime-to-synthesis translation of \(\chi\), which is now documented explicitly but still not encoded directly in the library.
 
 \end{document}

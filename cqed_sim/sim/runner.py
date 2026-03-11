@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Any, Sequence
 
 import numpy as np
 import qutip as qt
 
 from cqed_sim.core.frame import FrameSpec
-from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.sequence.scheduler import CompiledSequence
 from cqed_sim.sim.noise import NoiseSpec, collapse_operators
 
@@ -29,42 +28,68 @@ class SimulationResult:
     solver_result: qt.solver.Result
 
 
-def default_observables(model: DispersiveTransmonCavityModel) -> dict[str, qt.Qobj]:
+def _projector_onto_first_excited_state(subsystem_dims: tuple[int, ...]) -> qt.Qobj:
+    factors = [qt.basis(subsystem_dims[0], 1) * qt.basis(subsystem_dims[0], 1).dag()]
+    factors.extend(qt.qeye(dim) for dim in subsystem_dims[1:])
+    return qt.tensor(*factors)
+
+
+def _mode_quadratures(lowering: qt.Qobj, raising: qt.Qobj) -> tuple[qt.Qobj, qt.Qobj]:
+    return lowering + raising, -1j * (lowering - raising)
+
+
+def default_observables(model: Any) -> dict[str, qt.Qobj]:
     ops = model.operators()
-    proj_e = qt.tensor(qt.basis(model.n_tr, 1) * qt.basis(model.n_tr, 1).dag(), qt.qeye(model.n_cav))
-    x_c = ops["a"] + ops["adag"]
-    p_c = -1j * (ops["a"] - ops["adag"])
-    return {"P_e": proj_e, "n_c": ops["n_c"], "x_c": x_c, "p_c": p_c}
+    dims = tuple(int(dim) for dim in getattr(model, "subsystem_dims"))
+    observables: dict[str, qt.Qobj] = {"P_e": _projector_onto_first_excited_state(dims)}
+
+    if "a" in ops:
+        x_c, p_c = _mode_quadratures(ops["a"], ops["adag"])
+        observables.update({"n_c": ops["n_c"], "x_c": x_c, "p_c": p_c})
+    if "a_s" in ops:
+        x_s, p_s = _mode_quadratures(ops["a_s"], ops["adag_s"])
+        observables.update({"n_s": ops["n_s"], "x_s": x_s, "p_s": p_s})
+    if "a_r" in ops:
+        x_r, p_r = _mode_quadratures(ops["a_r"], ops["adag_r"])
+        observables.update({"n_r": ops["n_r"], "x_r": x_r, "p_r": p_r})
+    return observables
+
+
+def _legacy_drive_couplings(model: Any) -> dict[str, tuple[qt.Qobj, qt.Qobj]]:
+    ops = model.operators()
+    couplings: dict[str, tuple[qt.Qobj, qt.Qobj]] = {}
+    if "a" in ops:
+        couplings["cavity"] = (ops["adag"], ops["a"])
+        couplings["storage"] = (ops["adag"], ops["a"])
+    if "b" in ops:
+        couplings["qubit"] = (ops["bdag"], ops["b"])
+    if {"a", "adag", "b", "bdag"}.issubset(ops):
+        couplings["sideband"] = (ops["adag"] * ops["b"], ops["a"] * ops["bdag"])
+    return couplings
 
 
 def hamiltonian_time_slices(
-    model: DispersiveTransmonCavityModel,
+    model: Any,
     compiled: CompiledSequence,
     drive_ops: dict[str, str],
     frame: FrameSpec | None = None,
 ) -> list:
     frame = frame or FrameSpec()
-    ops = model.operators()
+    couplings = model.drive_coupling_operators() if hasattr(model, "drive_coupling_operators") else _legacy_drive_couplings(model)
+
     h = [model.static_hamiltonian(frame)]
     for channel, target in drive_ops.items():
         coeff = compiled.channels[channel].distorted
-        if target == "cavity":
-            h.append([ops["adag"], coeff])
-            h.append([ops["a"], np.conj(coeff)])
-        elif target == "qubit":
-            h.append([ops["bdag"], coeff])
-            h.append([ops["b"], np.conj(coeff)])
-        elif target == "sideband":
-            # e,n <-> g,n+1 exchange: a^\dagger b + a b^\dagger
-            h.append([ops["adag"] * ops["b"], coeff])
-            h.append([ops["a"] * ops["bdag"], np.conj(coeff)])
-        else:
+        if target not in couplings:
             raise ValueError(f"Unsupported target '{target}' for channel '{channel}'.")
+        raising, lowering = couplings[target]
+        h.append([raising, coeff])
+        h.append([lowering, np.conj(coeff)])
     return h
 
 
 def simulate_sequence(
-    model: DispersiveTransmonCavityModel,
+    model: Any,
     compiled: CompiledSequence,
     initial_state: qt.Qobj,
     drive_ops: dict[str, str],

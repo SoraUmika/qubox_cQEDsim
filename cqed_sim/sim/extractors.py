@@ -10,24 +10,68 @@ def _as_dm(state: qt.Qobj) -> qt.Qobj:
     return state if state.isoper else state.proj()
 
 
-def _joint_dims(rho: qt.Qobj) -> tuple[int, int]:
-    if len(rho.dims[0]) != 2 or len(rho.dims[1]) != 2:
-        raise ValueError(f"Expected a qubit-cavity bipartite state, got dims={rho.dims}.")
-    n_qubit = int(rho.dims[0][0])
-    n_cav = int(rho.dims[0][1])
-    return n_qubit, n_cav
+def _subsystem_dims(rho: qt.Qobj) -> tuple[int, ...]:
+    left_dims = tuple(int(dim) for dim in rho.dims[0])
+    right_dims = tuple(int(dim) for dim in rho.dims[1])
+    if left_dims != right_dims:
+        raise ValueError(f"Expected a square state operator, got dims={rho.dims}.")
+    if len(left_dims) < 2:
+        raise ValueError(f"Expected a multipartite state, got dims={rho.dims}.")
+    return left_dims
+
+
+def _resolve_subsystem_index(rho: qt.Qobj, subsystem: int | str) -> int:
+    dims = _subsystem_dims(rho)
+    if isinstance(subsystem, int):
+        if subsystem < 0 or subsystem >= len(dims):
+            raise IndexError(f"Subsystem index {subsystem} out of range for dims={dims}.")
+        return int(subsystem)
+
+    aliases = {
+        "qubit": 0,
+        "transmon": 0,
+        "cavity": 1,
+        "storage": 1,
+        "readout": 2,
+    }
+    if subsystem not in aliases:
+        raise ValueError(f"Unsupported subsystem label '{subsystem}'.")
+    idx = aliases[subsystem]
+    if idx >= len(dims):
+        raise ValueError(f"Subsystem label '{subsystem}' is not valid for dims={dims}.")
+    return idx
+
+
+def reduced_subsystem_state(state: qt.Qobj, subsystem: int | str) -> qt.Qobj:
+    rho = _as_dm(state)
+    return qt.ptrace(rho, _resolve_subsystem_index(rho, subsystem))
 
 
 def reduced_qubit_state(state: qt.Qobj) -> qt.Qobj:
-    return qt.ptrace(_as_dm(state), 0)
+    return reduced_subsystem_state(state, 0)
+
+
+def reduced_transmon_state(state: qt.Qobj) -> qt.Qobj:
+    return reduced_subsystem_state(state, 0)
 
 
 def reduced_cavity_state(state: qt.Qobj) -> qt.Qobj:
-    return qt.ptrace(_as_dm(state), 1)
+    rho = _as_dm(state)
+    dims = _subsystem_dims(rho)
+    if len(dims) != 2:
+        raise ValueError("reduced_cavity_state is only defined for the two-mode qubit-storage path.")
+    return qt.ptrace(rho, 1)
+
+
+def reduced_storage_state(state: qt.Qobj) -> qt.Qobj:
+    return reduced_subsystem_state(state, "storage")
+
+
+def reduced_readout_state(state: qt.Qobj) -> qt.Qobj:
+    return reduced_subsystem_state(state, "readout")
 
 
 def bloch_xyz_from_qubit_state(rho_q: qt.Qobj) -> tuple[float, float, float]:
-    """Return standard Pauli Bloch coordinates."""
     return (
         float(np.real((rho_q * qt.sigmax()).tr())),
         float(np.real((rho_q * qt.sigmay()).tr())),
@@ -36,18 +80,19 @@ def bloch_xyz_from_qubit_state(rho_q: qt.Qobj) -> tuple[float, float, float]:
 
 
 def qubit_density_from_bloch_xyz(x: float, y: float, z: float) -> qt.Qobj:
-    """Build a qubit density matrix from standard Pauli Bloch coordinates."""
     return 0.5 * (qt.qeye(2) + float(x) * qt.sigmax() + float(y) * qt.sigmay() + float(z) * qt.sigmaz())
 
 
 def bloch_xyz_from_joint(state: qt.Qobj) -> tuple[float, float, float]:
-    rho_q = reduced_qubit_state(state)
-    return bloch_xyz_from_qubit_state(rho_q)
+    return bloch_xyz_from_qubit_state(reduced_qubit_state(state))
 
 
 def conditioned_population(state: qt.Qobj, n: int) -> float:
     rho = _as_dm(state)
-    n_qubit, n_cav = _joint_dims(rho)
+    dims = _subsystem_dims(rho)
+    if len(dims) != 2:
+        raise ValueError("conditioned_population is only defined for the two-mode qubit-storage path.")
+    n_qubit, n_cav = dims
     if n < 0 or n >= n_cav:
         raise IndexError("Conditioning index n out of range.")
     proj_n = qt.tensor(qt.qeye(n_qubit), fock_projector(n_cav, n))
@@ -56,7 +101,10 @@ def conditioned_population(state: qt.Qobj, n: int) -> float:
 
 def conditioned_qubit_state(state: qt.Qobj, n: int, fallback: str = "nan") -> tuple[qt.Qobj, float, bool]:
     rho = _as_dm(state)
-    n_qubit, n_cav = _joint_dims(rho)
+    dims = _subsystem_dims(rho)
+    if len(dims) != 2:
+        raise ValueError("conditioned_qubit_state is only defined for the two-mode qubit-storage path.")
+    n_qubit, n_cav = dims
     if n < 0 or n >= n_cav:
         raise IndexError("Conditioning index n out of range.")
     proj_n = qt.tensor(qt.qeye(n_qubit), fock_projector(n_cav, n))
@@ -81,15 +129,95 @@ def conditioned_bloch_xyz(state: qt.Qobj, n: int, fallback: str = "nan") -> tupl
     return (x, y, z, p_n, valid)
 
 
-def cavity_moments(state: qt.Qobj, n_cav: int | None = None) -> dict[str, complex]:
-    rho_c = reduced_cavity_state(state)
-    n_c = n_cav if n_cav is not None else rho_c.dims[0][0]
-    a = qt.destroy(n_c)
+def mode_moments(state: qt.Qobj, subsystem: int | str, dim: int | None = None) -> dict[str, complex]:
+    rho_mode = reduced_subsystem_state(state, subsystem)
+    n_mode = int(rho_mode.dims[0][0] if dim is None else dim)
+    a = qt.destroy(n_mode)
     adag = a.dag()
     return {
-        "a": complex((rho_c * a).tr()),
-        "adag_a": complex((rho_c * adag * a).tr()),
-        "n": float(np.real((rho_c * adag * a).tr())),
+        "a": complex((rho_mode * a).tr()),
+        "adag_a": complex((rho_mode * adag * a).tr()),
+        "n": float(np.real((rho_mode * adag * a).tr())),
+    }
+
+
+def cavity_moments(state: qt.Qobj, n_cav: int | None = None) -> dict[str, complex]:
+    return mode_moments(state, "storage", dim=n_cav)
+
+
+def storage_moments(state: qt.Qobj, n_storage: int | None = None) -> dict[str, complex]:
+    return mode_moments(state, "storage", dim=n_storage)
+
+
+def readout_moments(state: qt.Qobj, n_readout: int | None = None) -> dict[str, complex]:
+    return mode_moments(state, "readout", dim=n_readout)
+
+
+def storage_photon_number(state: qt.Qobj) -> float:
+    return float(np.real(storage_moments(state)["n"]))
+
+
+def readout_photon_number(state: qt.Qobj) -> float:
+    return float(np.real(readout_moments(state)["n"]))
+
+
+def joint_expectation(state: qt.Qobj, operator: qt.Qobj) -> complex:
+    rho = _as_dm(state)
+    return complex((rho * operator).tr())
+
+
+def qubit_conditioned_subsystem_state(
+    state: qt.Qobj,
+    subsystem: int | str,
+    qubit_level: int,
+    fallback: str = "nan",
+) -> tuple[qt.Qobj, float, bool]:
+    rho = _as_dm(state)
+    dims = _subsystem_dims(rho)
+    qubit_level = int(qubit_level)
+    if qubit_level < 0 or qubit_level >= dims[0]:
+        raise IndexError("qubit_level out of range.")
+
+    factors = [qt.basis(dims[0], qubit_level) * qt.basis(dims[0], qubit_level).dag()]
+    factors.extend(qt.qeye(dim) for dim in dims[1:])
+    proj_q = qt.tensor(*factors)
+    block = proj_q * rho * proj_q
+    subsystem_index = _resolve_subsystem_index(rho, subsystem)
+    rho_sub_tilde = qt.ptrace(block, subsystem_index)
+    p_q = float(np.real(rho_sub_tilde.tr()))
+    if p_q > 1.0e-15:
+        return rho_sub_tilde / p_q, p_q, True
+    dim_sub = int(dims[subsystem_index])
+    if fallback == "zero":
+        return 0 * qt.qeye(dim_sub), 0.0, False
+    if fallback == "nan":
+        nan_dm = qt.Qobj(np.full((dim_sub, dim_sub), np.nan, dtype=np.complex128), dims=[[dim_sub], [dim_sub]])
+        return nan_dm, 0.0, False
+    raise ValueError(f"Unsupported fallback '{fallback}'.")
+
+
+def qubit_conditioned_mode_moments(
+    state: qt.Qobj,
+    subsystem: int | str,
+    qubit_level: int,
+) -> dict[str, complex | float | bool]:
+    rho_sub, prob, valid = qubit_conditioned_subsystem_state(state, subsystem, qubit_level, fallback="zero")
+    n_mode = int(rho_sub.dims[0][0])
+    a = qt.destroy(n_mode)
+    adag = a.dag()
+    return {
+        "probability": prob,
+        "valid": valid,
+        "a": complex((rho_sub * a).tr()),
+        "adag_a": complex((rho_sub * adag * a).tr()),
+        "n": float(np.real((rho_sub * adag * a).tr())),
+    }
+
+
+def readout_response_by_qubit_state(state: qt.Qobj) -> dict[int, dict[str, complex | float | bool]]:
+    return {
+        0: qubit_conditioned_mode_moments(state, "readout", 0),
+        1: qubit_conditioned_mode_moments(state, "readout", 1),
     }
 
 

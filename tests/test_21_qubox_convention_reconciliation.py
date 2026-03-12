@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-import examples.sqr_convention_metric_audit as audit
+import examples.audits.sqr_convention_metric_audit as audit
 
 
 def test_qubox_rotation_and_sqr_sign_mapping():

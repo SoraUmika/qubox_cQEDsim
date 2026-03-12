@@ -1,11 +1,13 @@
+Status: fixed on 2026-03-11.
+
 ## Confirmed issues
 
 ### 1. `usage_examples.ipynb` mixed raw carrier semantics with physical-detuning plotting
 
 - Where:
-  - `usage_examples.ipynb`, bare-spectroscopy section
-  - `usage_examples.ipynb`, displacement-conditioned qubit spectroscopy section
-  - `usage_examples.ipynb`, AC-Stark / centroid section
+  - originally `usage_examples.ipynb`, now `examples/workflows/cqed_sim_usage_examples.ipynb`, bare-spectroscopy section
+  - originally `usage_examples.ipynb`, now `examples/workflows/cqed_sim_usage_examples.ipynb`, displacement-conditioned qubit spectroscopy section
+  - originally `usage_examples.ipynb`, now `examples/workflows/cqed_sim_usage_examples.ipynb`, AC-Stark / centroid section
 - What:
   - The notebook scanned `carrier=MHz(detuning_mhz)` directly while presenting the x-axis as a qubit detuning in the rotating frame.
   - In `cqed_sim`, `Pulse.carrier` is the negative of the rotating-frame transition frequency it resonantly addresses.
@@ -18,7 +20,7 @@
 ### 2. The selective-spectroscopy markdown still described the old `-chi` wording
 
 - Where:
-  - `usage_examples.ipynb`, markdown introducing displacement-conditioned spectroscopy
+  - originally `usage_examples.ipynb`, now `examples/workflows/cqed_sim_usage_examples.ipynb`, markdown introducing displacement-conditioned spectroscopy
 - What:
   - The text said each photon number shifts the qubit transition by roughly `-chi`.
 - Why inconsistent:
@@ -26,6 +28,13 @@
   - Negative `chi` lowers the transition frequency directly; the shift is not described as `-chi`.
 - Consequence:
   - The text could reinforce the same sign confusion as the stale plotting cell.
+
+## Resolution
+
+- The notebook was updated to scan physical transition detuning and convert to raw waveform carrier with `carrier_for_transition_frequency(...)`.
+- Predicted line overlays now come from `manifold_transition_frequency(...)` instead of a stale sign shortcut.
+- The notebook was relocated to `examples/workflows/cqed_sim_usage_examples.ipynb` to reflect that it is a maintained user workflow notebook rather than a repo-root scratch file.
+- Regression coverage now lives in `tests/test_33_usage_examples_spectroscopy_sign.py`.
 
 ## Suspected / unresolved issues
 

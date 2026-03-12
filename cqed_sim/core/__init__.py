@@ -30,10 +30,15 @@ from .ideal_gates import (
 )
 from .model import DispersiveTransmonCavityModel
 from .readout_model import DispersiveReadoutTransmonStorageModel
+from .universal_model import BosonicModeSpec, DispersiveCouplingSpec, TransmonModeSpec, UniversalCQEDModel
 
 __all__ = [
     "DispersiveTransmonCavityModel",
     "DispersiveReadoutTransmonStorageModel",
+    "UniversalCQEDModel",
+    "TransmonModeSpec",
+    "BosonicModeSpec",
+    "DispersiveCouplingSpec",
     "FrameSpec",
     "TransmonTransitionDriveSpec",
     "SidebandDriveSpec",

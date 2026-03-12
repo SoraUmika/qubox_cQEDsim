@@ -13,6 +13,7 @@
 1. [Overview](#1-overview)
 2. [Package Architecture](#2-package-architecture)
 3. [Core Abstractions (`cqed_sim.core`)](#3-core-abstractions)
+   - [UniversalCQEDModel and Subsystem Specs](#universalcqedmodel-and-subsystem-specs)
    - 3.1 [DispersiveTransmonCavityModel](#31-dispersivetransmoncavitymodel)
    - 3.2 [DispersiveReadoutTransmonStorageModel](#32-dispersivereadouttransmonstoragemodel)
    - 3.3 [FrameSpec](#33-framespec)
@@ -100,7 +101,7 @@ cqed_sim/
 
 **Main simulation path for a typical user:**
 
-1. Build a model (`DispersiveTransmonCavityModel` or `DispersiveReadoutTransmonStorageModel`).
+1. Build a model (`UniversalCQEDModel`, `DispersiveTransmonCavityModel`, or `DispersiveReadoutTransmonStorageModel`).
 2. Define a `FrameSpec`.
 3. Construct `Pulse` objects (directly or via builders).
 4. Compile with `SequenceCompiler`.
@@ -115,11 +116,76 @@ Or use the convenience wrapper `SimulationExperiment` which combines steps 1–6
 
 **Module:** `cqed_sim.core`
 
+### UniversalCQEDModel and Subsystem Specs
+
+`UniversalCQEDModel` is the generalized model-layer abstraction used by the
+current wrapper models. It centralizes operator construction, basis helpers,
+static Hamiltonian assembly, multilevel ancilla transitions, and bosonic-mode
+transition helpers.
+
+```python
+@dataclass(frozen=True)
+class TransmonModeSpec:
+    omega: float
+    dim: int = 3
+    alpha: float = 0.0
+    label: str = "qubit"
+    aliases: Sequence[str] = ("qubit", "transmon")
+    frame_channel: str = "q"
+
+@dataclass(frozen=True)
+class BosonicModeSpec:
+    label: str
+    omega: float
+    dim: int
+    kerr: float = 0.0
+    kerr_higher: Sequence[float] = ()
+    aliases: Sequence[str] = ()
+    frame_channel: str = "c"
+
+@dataclass(frozen=True)
+class DispersiveCouplingSpec:
+    mode: str
+    chi: float = 0.0
+    chi_higher: Sequence[float] = ()
+    transmon: str = "qubit"
+
+@dataclass
+class UniversalCQEDModel:
+    transmon: TransmonModeSpec | None = None
+    bosonic_modes: Sequence[BosonicModeSpec] = ()
+    dispersive_couplings: Sequence[DispersiveCouplingSpec] = ()
+    cross_kerr_terms: Sequence[CrossKerrSpec] = ()
+    self_kerr_terms: Sequence[SelfKerrSpec] = ()
+    exchange_terms: Sequence[ExchangeSpec] = ()
+```
+
+#### Notes
+
+- `UniversalCQEDModel` supports transmon-only, cavity-only, and multilevel transmon-plus-multimode systems.
+- Tensor ordering is transmon first when present, followed by bosonic modes in declaration order.
+- The existing `DispersiveTransmonCavityModel` and `DispersiveReadoutTransmonStorageModel` are compatibility frontends that delegate to this shared core.
+
+#### Common methods
+
+| Method | Signature | Description |
+|---|---|---|
+| `operators()` | `-> dict[str, qt.Qobj]` | Cached full-space ladder and number operators, including compatibility aliases |
+| `hamiltonian(frame=None)` | `-> qt.Qobj` | Alias of `static_hamiltonian(frame)` |
+| `basis_state(*levels)` | `-> qt.Qobj` | Basis ket using subsystem declaration order |
+| `basis_energy(*levels, frame=None)` | `-> float` | Diagonal basis energy under the static Hamiltonian |
+| `transmon_lowering()` | `-> qt.Qobj` | Full-space transmon lowering operator |
+| `mode_annihilation(mode)` | `(str) -> qt.Qobj` | Full-space bosonic lowering operator for the named mode |
+| `transmon_transition_frequency(...)` | `-> float` | Multilevel transmon transition at fixed bosonic occupations |
+| `mode_transition_frequency(...)` | `-> float` | Bosonic ladder spacing at fixed occupations |
+| `sideband_transition_frequency(...)` | `-> float` | Effective red/blue sideband manifold transition |
+
 ### 3.1 DispersiveTransmonCavityModel
 
 **Module path:** `cqed_sim.core.model.DispersiveTransmonCavityModel`
 
-Two-mode (qubit + cavity/storage) dispersive system model.
+Two-mode (qubit + cavity/storage) dispersive system model. This class is a
+thin compatibility wrapper around `UniversalCQEDModel`.
 
 ```python
 @dataclass
@@ -167,7 +233,7 @@ n_c(n_c−1)···(n_c−i), **not** n_c^(i+1).
 | `drive_coupling_operators()` | `-> dict[str, tuple[qt.Qobj, qt.Qobj]]` | `(raising, lowering)` pairs keyed by `"cavity"`, `"storage"`, `"qubit"`, `"sideband"` |
 | `transmon_level_projector(level)` | `(int) -> qt.Qobj` | Projector onto a transmon level in the full tensor-product space |
 | `transmon_transition_operators(lower_level, upper_level)` | `(int, int) -> tuple[qt.Qobj, qt.Qobj]` | Full-space raising/lowering operators for a selected transmon ladder transition |
-| `mode_operators(mode="storage")` | `(str) -> tuple[qt.Qobj, qt.Qobj]` | Retrieve `(creation, annihilation)` operators for the named bosonic mode |
+| `mode_operators(mode="storage")` | `(str) -> tuple[qt.Qobj, qt.Qobj]` | Retrieve `(annihilation, creation)` operators for the named bosonic mode |
 | `sideband_drive_operators(mode="storage", lower_level=0, upper_level=1, sideband="red")` | `(str, int, int, str) -> tuple[qt.Qobj, qt.Qobj]` | Effective multilevel sideband coupling operators |
 | `static_hamiltonian(frame)` | `(frame: FrameSpec \| None = None) -> qt.Qobj` | Full static Hamiltonian including all coupling terms. Cached by frame parameters. |
 | `basis_state(q_level, cavity_level)` | `(int, int) -> qt.Qobj` | Returns \|q⟩⊗\|n⟩ ket |
@@ -176,6 +242,10 @@ n_c(n_c−1)···(n_c−i), **not** n_c^(i+1).
 | `manifold_transition_frequency(n, frame)` | `(int, FrameSpec \| None) -> float` | &#124;g,n⟩ ↔ &#124;e,n⟩ transition in given frame |
 | `transmon_transition_frequency(cavity_level=0, lower_level=0, upper_level=1, frame=None)` | `(int, int, int, FrameSpec \| None) -> float` | General transmon transition frequency at fixed cavity Fock number |
 | `sideband_transition_frequency(cavity_level=0, lower_level=0, upper_level=1, sideband="red", frame=None)` | `(int, int, int, str, FrameSpec \| None) -> float` | Rotating-frame frequency addressed by the effective sideband transition |
+| `hamiltonian(frame=None)` | `(FrameSpec \| None) -> qt.Qobj` | Alias of `static_hamiltonian(frame)` |
+| `transmon_lowering()` / `transmon_raising()` / `transmon_number()` | `-> qt.Qobj` | Convenience accessors for the full-space transmon operators |
+| `cavity_annihilation()` / `cavity_creation()` / `cavity_number()` | `-> qt.Qobj` | Convenience accessors for the storage/cavity mode |
+| `as_universal_model()` | `-> UniversalCQEDModel` | Return the delegated universal model instance |
 
 ---
 
@@ -183,7 +253,8 @@ n_c(n_c−1)···(n_c−i), **not** n_c^(i+1).
 
 **Module path:** `cqed_sim.core.readout_model.DispersiveReadoutTransmonStorageModel`
 
-Three-mode (qubit + storage + readout) dispersive system.
+Three-mode (qubit + storage + readout) dispersive system. This class is a thin
+compatibility wrapper around `UniversalCQEDModel`.
 
 ```python
 @dataclass
@@ -220,7 +291,7 @@ $$H_0/\hbar = \delta_s\, n_s + \delta_r\, n_r + \delta_q\, n_q + \frac{\alpha}{2
 | `drive_coupling_operators()` | `-> dict[str, tuple[qt.Qobj, qt.Qobj]]` | Keys: `"storage"`, `"cavity"`, `"qubit"`, `"transmon"`, `"readout"` |
 | `transmon_level_projector(level)` | `(int) -> qt.Qobj` | Projector onto a transmon level in the full tensor-product space |
 | `transmon_transition_operators(lower_level, upper_level)` | `(int, int) -> tuple[qt.Qobj, qt.Qobj]` | Full-space raising/lowering operators for a selected ancilla transition |
-| `mode_operators(mode="storage")` | `(str) -> tuple[qt.Qobj, qt.Qobj]` | Retrieve `(creation, annihilation)` operators for `"storage"` or `"readout"` |
+| `mode_operators(mode="storage")` | `(str) -> tuple[qt.Qobj, qt.Qobj]` | Retrieve `(annihilation, creation)` operators for `"storage"` or `"readout"` |
 | `sideband_drive_operators(mode="storage", lower_level=0, upper_level=1, sideband="red")` | `(str, int, int, str) -> tuple[qt.Qobj, qt.Qobj]` | Effective multilevel sideband coupling operators on the selected bosonic mode |
 | `static_hamiltonian(frame)` | `(FrameSpec \| None) -> qt.Qobj` | Full three-mode static Hamiltonian |
 | `basis_state(q, ns, nr)` | `(int, int, int) -> qt.Qobj` | \|q⟩⊗\|n_s⟩⊗\|n_r⟩ |
@@ -230,6 +301,11 @@ $$H_0/\hbar = \delta_s\, n_s + \delta_r\, n_r + \delta_q\, n_q + \frac{\alpha}{2
 | `readout_transition_frequency(q, ns, nr, frame)` | `(...) -> float` | Readout transition frequency |
 | `transmon_transition_frequency(storage_level=0, readout_level=0, lower_level=0, upper_level=1, frame=None)` | `(...) -> float` | General transmon transition frequency in the three-mode model |
 | `sideband_transition_frequency(mode="storage", storage_level=0, readout_level=0, lower_level=0, upper_level=1, sideband="red", frame=None)` | `(...) -> float` | Rotating-frame frequency addressed by the effective sideband transition |
+| `hamiltonian(frame=None)` | `(FrameSpec \| None) -> qt.Qobj` | Alias of `static_hamiltonian(frame)` |
+| `transmon_lowering()` / `transmon_raising()` / `transmon_number()` | `-> qt.Qobj` | Convenience accessors for the full-space transmon operators |
+| `storage_annihilation()` / `storage_creation()` / `storage_number()` | `-> qt.Qobj` | Convenience accessors for the storage mode |
+| `readout_annihilation()` / `readout_creation()` / `readout_number()` | `-> qt.Qobj` | Convenience accessors for the readout mode |
+| `as_universal_model()` | `-> UniversalCQEDModel` | Return the delegated universal model instance |
 
 ---
 

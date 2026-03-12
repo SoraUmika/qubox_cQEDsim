@@ -562,7 +562,7 @@ def mismatch_rows() -> list[dict[str, str]]:
             "symptom": "Older notebook outputs and audit tables still referenced the historical flipped-Y quantity even though runtime simulation and current experiment reports use standard sigma_y.",
             "minimal_example": "The historical comparison helper returns 2 Im(rho_ge), so an ideal +Y state gives -1 there while the runtime extractor and Tr(rho sigma_y) both give +1.",
             "likely_root_cause": "A legacy qubox-facing reporting layer survived in diagnostics after the main simulator and experiment-side tomography had already been standardized.",
-            "files": "chi_evolution_copy.ipynb, cqed_sim/plotting/bloch_plots.py, cqed_sim/analysis/experiment_convention_audit.py",
+            "files": "examples/audits/chi_phase_evolution_audit.ipynb, cqed_sim/plotting/bloch_plots.py, cqed_sim/analysis/experiment_convention_audit.py",
             "portability_impact": "Resolved at runtime. The flipped-Y formula remains only as an explicitly named historical comparator inside the audit module.",
         },
     ]
@@ -571,7 +571,7 @@ def mismatch_rows() -> list[dict[str, str]]:
 def proposed_patch_plan() -> list[dict[str, str]]:
     return [
         {
-            "file": "chi_evolution_copy.ipynb, cqed_sim/plotting/bloch_plots.py, tests/test_16_ideal_primitives_and_extractors.py, tests/test_26_experiment_convention_audit.py",
+            "file": "examples/audits/chi_phase_evolution_audit.ipynb, cqed_sim/plotting/bloch_plots.py, tests/test_16_ideal_primitives_and_extractors.py, tests/test_26_experiment_convention_audit.py",
             "behavior": "Keep standard Pauli Bloch coordinates as the only runtime convention, relabel plots accordingly, and preserve the flipped-Y formula only as a clearly named historical audit helper.",
             "why": "This removes ambiguous mixed usage while still documenting legacy qubox comparisons in one isolated place.",
             "backwards_compatibility": "Runtime behavior stays standard; only audit-only legacy comparison fields remain for before/after checks.",

@@ -110,7 +110,7 @@ def test_build_sqr_transfer_artifact_records_waveform_and_corrections():
         cfg,
         calibration=_calibration(gate.name),
         reference_pulse=_reference_spec(),
-        source_notebook="SQR_three_gate_optimization.ipynb",
+        source_notebook="examples/studies/sqr_three_gate_duration_optimization.ipynb",
     )
     assert artifact["schema_version"] == SQR_TRANSFER_SCHEMA_VERSION
     assert artifact["gate"]["name"] == gate.name

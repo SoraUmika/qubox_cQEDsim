@@ -79,7 +79,7 @@ def test_negative_chi_transition_detuning_axis_moves_left_with_photon_number():
 
 
 def test_usage_examples_notebook_uses_transition_detuning_not_raw_carrier():
-    notebook = Path("usage_examples.ipynb")
+    notebook = Path("examples/workflows/cqed_sim_usage_examples.ipynb")
     nb = json.loads(notebook.read_text(encoding="utf-8"))
     content = "\n".join("".join(cell.get("source", [])) for cell in nb["cells"])
 

@@ -1,24 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-import math
 from typing import Sequence
 
 import qutip as qt
 
-from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec, assemble_static_hamiltonian, coupling_term_key
+from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec, coupling_term_key
 from .frame import FrameSpec
 from .frequencies import manifold_transition_frequency
-
-
-def _falling_factorial_number_op(n_op: qt.Qobj, order: int) -> qt.Qobj:
-    """Return n(n-1)...(n-order+1) for number operator n."""
-    if order <= 0:
-        return 0 * n_op + qt.qeye(n_op.dims[0])
-    out = 0 * n_op + qt.qeye(n_op.dims[0])
-    for k in range(order):
-        out = out * (n_op - k * qt.qeye(n_op.dims[0]))
-    return out
+from .universal_model import BosonicModeSpec, DispersiveCouplingSpec, TransmonModeSpec, UniversalCQEDModel
 
 
 @dataclass
@@ -37,54 +27,27 @@ class DispersiveTransmonCavityModel:
     n_tr: int = 3
 
     subsystem_labels: tuple[str, ...] = ("qubit", "storage")
-    _operators_cache: dict[str, qt.Qobj] | None = field(default=None, init=False, repr=False, compare=False)
-    _static_h_cache: dict[tuple[float, ...], qt.Qobj] = field(default_factory=dict, init=False, repr=False, compare=False)
+    _delegate_cache: UniversalCQEDModel | None = field(default=None, init=False, repr=False, compare=False)
+    _delegate_signature: tuple | None = field(default=None, init=False, repr=False, compare=False)
 
     @property
     def subsystem_dims(self) -> tuple[int, ...]:
-        return (int(self.n_tr), int(self.n_cav))
+        return self.as_universal_model().subsystem_dims
 
     def operators(self) -> dict[str, qt.Qobj]:
-        if self._operators_cache is None:
-            a = qt.tensor(qt.qeye(self.n_tr), qt.destroy(self.n_cav))
-            b = qt.tensor(qt.destroy(self.n_tr), qt.qeye(self.n_cav))
-            adag = a.dag()
-            bdag = b.dag()
-            n_c = adag * a
-            n_q = bdag * b
-            self._operators_cache = {"a": a, "adag": adag, "b": b, "bdag": bdag, "n_c": n_c, "n_q": n_q}
-        return self._operators_cache
+        return self.as_universal_model().operators()
 
     def drive_coupling_operators(self) -> dict[str, tuple[qt.Qobj, qt.Qobj]]:
-        ops = self.operators()
-        return {
-            "cavity": (ops["adag"], ops["a"]),
-            "storage": (ops["adag"], ops["a"]),
-            "qubit": (ops["bdag"], ops["b"]),
-            "sideband": (ops["adag"] * ops["b"], ops["a"] * ops["bdag"]),
-        }
+        return self.as_universal_model().drive_coupling_operators()
 
     def transmon_level_projector(self, level: int) -> qt.Qobj:
-        level = int(level)
-        projector = qt.basis(self.n_tr, level) * qt.basis(self.n_tr, level).dag()
-        return qt.tensor(projector, qt.qeye(self.n_cav))
+        return self.as_universal_model().transmon_level_projector(level)
 
     def transmon_transition_operators(self, lower_level: int, upper_level: int) -> tuple[qt.Qobj, qt.Qobj]:
-        lower_level = int(lower_level)
-        upper_level = int(upper_level)
-        transition_up = qt.basis(self.n_tr, upper_level) * qt.basis(self.n_tr, lower_level).dag()
-        transition_down = transition_up.dag()
-        return (
-            qt.tensor(transition_up, qt.qeye(self.n_cav)),
-            qt.tensor(transition_down, qt.qeye(self.n_cav)),
-        )
+        return self.as_universal_model().transmon_transition_operators(lower_level, upper_level)
 
     def mode_operators(self, mode: str = "storage") -> tuple[qt.Qobj, qt.Qobj]:
-        ops = self.operators()
-        mode_key = str(mode).strip().lower()
-        if mode_key not in {"storage", "cavity"}:
-            raise ValueError(f"Unsupported bosonic mode '{mode}'.")
-        return ops["a"], ops["adag"]
+        return self.as_universal_model().mode_operators(mode)
 
     def sideband_drive_operators(
         self,
@@ -94,89 +57,24 @@ class DispersiveTransmonCavityModel:
         upper_level: int = 1,
         sideband: str = "red",
     ) -> tuple[qt.Qobj, qt.Qobj]:
-        mode_lowering, mode_raising = self.mode_operators(mode)
-        transmon_up, transmon_down = self.transmon_transition_operators(lower_level, upper_level)
-        sideband_key = str(sideband).strip().lower()
-        if sideband_key == "red":
-            return 1j * transmon_up * mode_lowering, -1j * transmon_down * mode_raising
-        if sideband_key == "blue":
-            return 1j * transmon_up * mode_raising, -1j * transmon_down * mode_lowering
-        raise ValueError(f"Unsupported sideband '{sideband}'.")
+        return self.as_universal_model().sideband_drive_operators(
+            mode=mode,
+            lower_level=lower_level,
+            upper_level=upper_level,
+            sideband=sideband,
+        )
 
     def static_hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
-        frame = frame or FrameSpec()
-        key = (
-            float(self.omega_c),
-            float(self.omega_q),
-            float(self.alpha),
-            float(self.chi),
-            tuple(float(value) for value in self.chi_higher),
-            float(self.kerr),
-            tuple(float(value) for value in self.kerr_higher),
-            coupling_term_key(self.cross_kerr_terms, self.self_kerr_terms, self.exchange_terms),
-            float(frame.omega_c_frame),
-            float(frame.omega_q_frame),
-        )
-        cached = self._static_h_cache.get(key)
-        if cached is not None:
-            return cached
-        ops = self.operators()
-        n_c, n_q = ops["n_c"], ops["n_q"]
-        b, bdag = ops["b"], ops["bdag"]
+        return self.as_universal_model().static_hamiltonian(frame=frame)
 
-        delta_c = self.omega_c - frame.omega_c_frame
-        delta_q = self.omega_q - frame.omega_q_frame
-        h = delta_c * n_c + delta_q * n_q
-
-        h += 0.5 * self.alpha * (bdag * bdag * b * b)
-
-        if self.kerr != 0.0:
-            h += self.kerr * _falling_factorial_number_op(n_c, 2) / math.factorial(2)
-        for i, coeff in enumerate(self.kerr_higher, start=2):
-            order = i + 1
-            h += coeff * _falling_factorial_number_op(n_c, order) / math.factorial(order)
-
-        if self.chi != 0.0:
-            h += self.chi * n_c * n_q
-        for i, coeff in enumerate(self.chi_higher, start=2):
-            h += coeff * _falling_factorial_number_op(n_c, i) * n_q
-        h = assemble_static_hamiltonian(
-            h,
-            ops,
-            cross_kerr_terms=self.cross_kerr_terms,
-            self_kerr_terms=self.self_kerr_terms,
-            exchange_terms=self.exchange_terms,
-        )
-        self._static_h_cache[key] = h
-        return h
+    def hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
+        return self.static_hamiltonian(frame=frame)
 
     def basis_energy(self, q_level: int, cavity_level: int, frame: FrameSpec | None = None) -> float:
-        frame = frame or FrameSpec()
-        q_level = int(q_level)
-        cavity_level = int(cavity_level)
-
-        delta_c = float(self.omega_c - frame.omega_c_frame)
-        delta_q = float(self.omega_q - frame.omega_q_frame)
-        energy = delta_c * cavity_level + delta_q * q_level
-        energy += 0.5 * float(self.alpha) * q_level * (q_level - 1)
-        energy += 0.5 * float(self.kerr) * cavity_level * (cavity_level - 1)
-        for i, coeff in enumerate(self.kerr_higher, start=2):
-            order = i + 1
-            factor = 1
-            for k in range(order):
-                factor *= cavity_level - k
-            energy += float(coeff) * factor / math.factorial(order)
-        energy += float(self.chi) * cavity_level * q_level
-        for i, coeff in enumerate(self.chi_higher, start=2):
-            factor = 1
-            for k in range(i):
-                factor *= cavity_level - k
-            energy += float(coeff) * factor * q_level
-        return float(energy)
+        return self.as_universal_model().basis_energy(int(q_level), int(cavity_level), frame=frame)
 
     def basis_state(self, q_level: int, cavity_level: int) -> qt.Qobj:
-        """Return the joint basis ket |q> tensor |n> with qubit first, cavity second."""
-        return qt.tensor(qt.basis(self.n_tr, q_level), qt.basis(self.n_cav, cavity_level))
+        return self.as_universal_model().basis_state(int(q_level), int(cavity_level))
 
     def coherent_qubit_superposition(self, n_cav: int = 0) -> qt.Qobj:
         g = self.basis_state(0, n_cav)
@@ -194,9 +92,11 @@ class DispersiveTransmonCavityModel:
         upper_level: int = 1,
         frame: FrameSpec | None = None,
     ) -> float:
-        return float(
-            self.basis_energy(int(upper_level), int(cavity_level), frame=frame)
-            - self.basis_energy(int(lower_level), int(cavity_level), frame=frame)
+        return self.as_universal_model().transmon_transition_frequency(
+            mode_levels={"storage": int(cavity_level)},
+            lower_level=lower_level,
+            upper_level=upper_level,
+            frame=frame,
         )
 
     def sideband_transition_frequency(
@@ -208,20 +108,78 @@ class DispersiveTransmonCavityModel:
         sideband: str = "red",
         frame: FrameSpec | None = None,
     ) -> float:
-        cavity_level = int(cavity_level)
-        sideband_key = str(sideband).strip().lower()
-        if sideband_key == "red":
-            if cavity_level + 1 >= self.n_cav:
-                raise IndexError("red sideband requires cavity_level + 1 to be within the cavity dimension.")
-            return float(
-                self.basis_energy(int(upper_level), cavity_level, frame=frame)
-                - self.basis_energy(int(lower_level), cavity_level + 1, frame=frame)
+        return self.as_universal_model().sideband_transition_frequency(
+            mode="storage",
+            mode_levels={"storage": int(cavity_level)},
+            lower_level=lower_level,
+            upper_level=upper_level,
+            sideband=sideband,
+            frame=frame,
+        )
+
+    def transmon_lowering(self) -> qt.Qobj:
+        return self.as_universal_model().transmon_lowering()
+
+    def transmon_raising(self) -> qt.Qobj:
+        return self.as_universal_model().transmon_raising()
+
+    def transmon_number(self) -> qt.Qobj:
+        return self.as_universal_model().transmon_number()
+
+    def cavity_annihilation(self) -> qt.Qobj:
+        return self.as_universal_model().cavity_annihilation()
+
+    def cavity_creation(self) -> qt.Qobj:
+        return self.as_universal_model().cavity_creation()
+
+    def cavity_number(self) -> qt.Qobj:
+        return self.as_universal_model().cavity_number()
+
+    def as_universal_model(self) -> UniversalCQEDModel:
+        signature = (
+            float(self.omega_c),
+            float(self.omega_q),
+            float(self.alpha),
+            float(self.chi),
+            tuple(float(value) for value in self.chi_higher),
+            float(self.kerr),
+            tuple(float(value) for value in self.kerr_higher),
+            int(self.n_cav),
+            int(self.n_tr),
+            coupling_term_key(self.cross_kerr_terms, self.self_kerr_terms, self.exchange_terms),
+        )
+        if self._delegate_signature != signature or self._delegate_cache is None:
+            self._delegate_signature = signature
+            self._delegate_cache = UniversalCQEDModel(
+                transmon=TransmonModeSpec(
+                    omega=float(self.omega_q),
+                    dim=int(self.n_tr),
+                    alpha=float(self.alpha),
+                    label="qubit",
+                    aliases=("qubit", "transmon"),
+                    frame_channel="q",
+                ),
+                bosonic_modes=(
+                    BosonicModeSpec(
+                        label="storage",
+                        omega=float(self.omega_c),
+                        dim=int(self.n_cav),
+                        kerr=float(self.kerr),
+                        kerr_higher=tuple(float(value) for value in self.kerr_higher),
+                        aliases=("storage", "cavity"),
+                        frame_channel="c",
+                    ),
+                ),
+                dispersive_couplings=(
+                    DispersiveCouplingSpec(
+                        mode="storage",
+                        chi=float(self.chi),
+                        chi_higher=tuple(float(value) for value in self.chi_higher),
+                        transmon="qubit",
+                    ),
+                ),
+                cross_kerr_terms=self.cross_kerr_terms,
+                self_kerr_terms=self.self_kerr_terms,
+                exchange_terms=self.exchange_terms,
             )
-        if sideband_key == "blue":
-            if cavity_level + 1 >= self.n_cav:
-                raise IndexError("blue sideband requires cavity_level + 1 to be within the cavity dimension.")
-            return float(
-                self.basis_energy(int(upper_level), cavity_level + 1, frame=frame)
-                - self.basis_energy(int(lower_level), cavity_level, frame=frame)
-            )
-        raise ValueError(f"Unsupported sideband '{sideband}'.")
+        return self._delegate_cache

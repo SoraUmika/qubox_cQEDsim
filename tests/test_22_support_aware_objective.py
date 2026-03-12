@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-import examples.sqr_multitone_study as sms
+import examples.studies.sqr_multitone_study as sms
 
 
 def test_resolve_active_support_explicit_weights():

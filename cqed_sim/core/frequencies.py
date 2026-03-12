@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING
 
 from cqed_sim.core.frame import FrameSpec
@@ -36,16 +37,24 @@ def transmon_transition_frequency(
     cavity_level: int = 0,
     storage_level: int = 0,
     readout_level: int = 0,
+    mode_levels: dict[str, int] | tuple[int, ...] | list[int] | None = None,
     lower_level: int = 0,
     upper_level: int = 1,
     frame: FrameSpec | None = None,
 ) -> float:
     if hasattr(model, "transmon_transition_frequency"):
+        method = model.transmon_transition_frequency
+        parameters = inspect.signature(method).parameters
         kwargs = {"lower_level": int(lower_level), "upper_level": int(upper_level), "frame": frame}
-        dims = tuple(int(dim) for dim in getattr(model, "subsystem_dims", ()))
-        if len(dims) == 2:
+        if "mode_levels" in parameters:
+            kwargs["mode_levels"] = (
+                mode_levels
+                if mode_levels is not None
+                else {"storage": int(storage_level), "readout": int(readout_level), "cavity": int(cavity_level)}
+            )
+        elif "cavity_level" in parameters:
             kwargs["cavity_level"] = int(cavity_level)
-        elif len(dims) == 3:
+        else:
             kwargs["storage_level"] = int(storage_level)
             kwargs["readout_level"] = int(readout_level)
         return float(model.transmon_transition_frequency(**kwargs))
@@ -58,6 +67,7 @@ def sideband_transition_frequency(
     cavity_level: int = 0,
     storage_level: int = 0,
     readout_level: int = 0,
+    mode_levels: dict[str, int] | tuple[int, ...] | list[int] | None = None,
     lower_level: int = 0,
     upper_level: int = 1,
     mode: str = "storage",
@@ -65,17 +75,25 @@ def sideband_transition_frequency(
     frame: FrameSpec | None = None,
 ) -> float:
     if hasattr(model, "sideband_transition_frequency"):
+        method = model.sideband_transition_frequency
+        parameters = inspect.signature(method).parameters
         kwargs = {
             "lower_level": int(lower_level),
             "upper_level": int(upper_level),
             "sideband": str(sideband),
             "frame": frame,
         }
-        dims = tuple(int(dim) for dim in getattr(model, "subsystem_dims", ()))
-        if len(dims) == 2:
-            kwargs["cavity_level"] = int(cavity_level)
-        elif len(dims) == 3:
+        if "mode" in parameters:
             kwargs["mode"] = str(mode)
+        if "mode_levels" in parameters:
+            kwargs["mode_levels"] = (
+                mode_levels
+                if mode_levels is not None
+                else {"storage": int(storage_level), "readout": int(readout_level), "cavity": int(cavity_level)}
+            )
+        elif "cavity_level" in parameters:
+            kwargs["cavity_level"] = int(cavity_level)
+        else:
             kwargs["storage_level"] = int(storage_level)
             kwargs["readout_level"] = int(readout_level)
         return float(model.sideband_transition_frequency(**kwargs))

@@ -15,7 +15,7 @@ Study code, audits, paper reproductions, and workflow-specific helpers are inten
 Core library:
 
 - `cqed_sim/core`
-  - Hilbert-space conventions, frames, two-mode and three-mode dispersive models, ideal gates, manifold-frequency helpers.
+  - Hilbert-space conventions, frames, the universal subsystem-based cQED model, thin two-mode and three-mode compatibility wrappers, ideal gates, manifold-frequency helpers.
 - `cqed_sim/pulses`
   - `Pulse`, standard envelopes, standard pulse builders, calibration formulas, hardware distortion models.
 - `cqed_sim/sequence`
@@ -41,6 +41,8 @@ Example-side code:
   - Paper-specific reproduction code.
 - `examples/smoke_tests`
   - Smoke and integration checks for the moved example paths.
+- `test_against_papers`
+  - Notebook-style literature checks and paper-alignment diagnostics that are retained outside the reusable package and outside the automated `examples/*` workflows.
 
 ## Core conventions
 
@@ -60,6 +62,10 @@ The canonical source of truth for physics conventions, caveats, and verified tes
 - `physics_and_conventions/physics_conventions_report.tex`
 
 ## Common API
+
+`UniversalCQEDModel` is the generalized model-layer entry point. The existing
+`DispersiveTransmonCavityModel` and `DispersiveReadoutTransmonStorageModel`
+remain supported as convenience wrappers around that shared core.
 
 ### Build a two-mode model and frame
 
@@ -127,6 +133,60 @@ Useful entry points:
 - `DispersiveReadoutTransmonStorageModel.qubit_transition_frequency(...)`
 - `DispersiveReadoutTransmonStorageModel.storage_transition_frequency(...)`
 - `DispersiveReadoutTransmonStorageModel.readout_transition_frequency(...)`
+
+### Build a generalized multilevel model directly
+
+```python
+import numpy as np
+
+from cqed_sim.core import (
+    BosonicModeSpec,
+    DispersiveCouplingSpec,
+    TransmonModeSpec,
+    UniversalCQEDModel,
+)
+
+model = UniversalCQEDModel(
+    transmon=TransmonModeSpec(
+        omega=2.0 * np.pi * 6.0e9,
+        dim=5,
+        alpha=2.0 * np.pi * (-200.0e6),
+        label="qubit",
+        aliases=("qubit", "transmon"),
+        frame_channel="q",
+    ),
+    bosonic_modes=(
+        BosonicModeSpec(
+            label="storage",
+            omega=2.0 * np.pi * 5.0e9,
+            dim=12,
+            kerr=2.0 * np.pi * (-2.0e3),
+            aliases=("storage", "cavity"),
+            frame_channel="c",
+        ),
+        BosonicModeSpec(
+            label="readout",
+            omega=2.0 * np.pi * 7.5e9,
+            dim=10,
+            aliases=("readout",),
+            frame_channel="r",
+        ),
+    ),
+    dispersive_couplings=(
+        DispersiveCouplingSpec(mode="storage", chi=2.0 * np.pi * (-2.8e6)),
+        DispersiveCouplingSpec(mode="readout", chi=2.0 * np.pi * (-1.1e6)),
+    ),
+)
+```
+
+Useful entry points:
+
+- `UniversalCQEDModel.hamiltonian(frame=...)`
+- `UniversalCQEDModel.basis_state(...)`
+- `UniversalCQEDModel.transmon_lowering()`
+- `UniversalCQEDModel.mode_annihilation("storage")`
+- `UniversalCQEDModel.transmon_transition_frequency(...)`
+- `UniversalCQEDModel.mode_transition_frequency(...)`
 
 ### Build pulses
 

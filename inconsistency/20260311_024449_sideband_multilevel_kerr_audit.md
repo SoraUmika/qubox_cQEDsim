@@ -1,6 +1,7 @@
 # Sideband / Multilevel / Kerr Audit Inconsistency Report
 
 Created: 2026-03-11 02:44:49 local time
+Status: fixed on 2026-03-11 for items 1-3; item 4 remained a confirmed non-issue.
 
 ## Confirmed issues
 
@@ -59,7 +60,7 @@ Created: 2026-03-11 02:44:49 local time
 - What was checked:
   - documented convention in `README.md`, `API_REFERENCE.md`, and `physics_and_conventions/physics_conventions_report.tex`
   - implemented convention in `cqed_sim/core/model.py` and `cqed_sim/sim/couplings.py`
-  - notebook logic in `test_against_papers/bosonic_controls.ipynb`
+  - notebook logic in `test_against_papers/prl115_137002_bosonic_controls.ipynb`
 - Conclusion:
   - the notebook uses the documented negative Kerr parameter in the rotating frame, and its short-time coherent-state phase direction matches the documented Hamiltonian sign.
 - Why this still matters:
@@ -82,3 +83,10 @@ Created: 2026-03-11 02:44:49 local time
   - the Kerr-sign diagnosis should live in a normal Python example and test, with the notebook reduced to presentation-only content.
 - Why unresolved:
   - this depends on how much of the notebook is kept after the new regression benchmark is added.
+
+## Resolution summary
+
+- Item 1 was resolved by adding structured multilevel drive targets and sideband helpers in the core model/runner path.
+- Item 2 was resolved by extending multilevel noise support with per-transition ancilla relaxation handling.
+- Item 3 was resolved by adding multilevel extractors, shelving helpers, and explicit sideband validation tests/examples.
+- The literature notebook was retained under `test_against_papers/` and renamed to `prl115_137002_bosonic_controls.ipynb` so its role is explicit.

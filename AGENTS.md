@@ -31,7 +31,7 @@
 - If QuTiP does not support the needed functionality natively, document that gap clearly in the implementation or task notes before introducing a custom implementation.
 - Any wrapper introduced around QuTiP functionality should also be reflected in `API_REFERENCE.md` if it is part of the intended public or developer-facing API.
 - If the wrapped QuTiP functionality carries physics assumptions or convention-sensitive meaning, ensure those assumptions are also documented in `physics_and_conventions/physics_conventions_report.tex` when relevant.
-
+- If changes are made to the `physics_and_conventions/physics_conventions_report.tex` file , you must also run  `physics_and_conventions/build_physics_conventions_report.bat` to ensure it compiles
 ## cQED Simulation Usage Policy
 
 - For tasks that require simulation, numerical modeling, or reproducing a particular cQED experiment, prefer using `cqed_sim` whenever it is applicable.

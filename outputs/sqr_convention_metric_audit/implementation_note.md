@@ -8,7 +8,7 @@
 ## Minimal Fix Applied
 - Updated `cqed_sim/pulses/envelopes.py::multitone_gaussian_envelope` to use `exp(+i*omega*t)`.
 - Updated `cqed_sim/pulses/calibration.py::build_sqr_tone_specs` to set `omega_waveform = -manifold_transition_frequency(...)` so resonant physical tones remain unchanged while parameter semantics are unified.
-- Updated `examples/sqr_multitone_study.py::multitone_envelope` and spectrum marker sign to the same canonical convention.
+- Updated `examples/studies/sqr_multitone_study.py::multitone_envelope` and spectrum marker sign to the same canonical convention.
 
 ## Post-fix Verification
 - Rotation sign match vs lab waveform: phase_sign=+1, omega_sign=+1.

@@ -22,7 +22,7 @@
 \section{Overview of cqed\_sim}
 \texttt{cqed\_sim/} now contains only reusable simulator code:
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{core}: Hilbert-space conventions, frames, the two-mode dispersive transmon-storage model, the three-mode storage-transmon-readout model, ideal gates, and manifold-frequency helpers.
+  \item \texttt{core}: Hilbert-space conventions, frames, the universal subsystem-based cQED model layer, the two-mode and three-mode compatibility wrappers, ideal gates, and manifold-frequency helpers.
   \item \texttt{pulses}, \texttt{sequence}, \texttt{sim}: pulse objects, envelopes, channel compilation, hardware distortion, the solver path, collapse operators, and extractors.
   \item \texttt{experiment}: reusable state preparation, qubit measurement, and a lightweight protocol wrapper built on the same compile-and-simulate path as the low-level runtime.
   \item \texttt{calibration}, \texttt{observables}, \texttt{operators}, \texttt{tomo}, \texttt{io}, \texttt{plotting}, \texttt{unitary\_synthesis}: reusable helpers that still belong to the library surface.
@@ -99,6 +99,14 @@ Direct tests: \texttt{tests/experiment/test\_readout\_chain.py}.
   \item This ordering is implemented in \texttt{cqed\_sim/core/conventions.py} and \texttt{cqed\_sim/core/readout\_model.py}, and all new extractors assume subsystem \(0\) is the transmon, subsystem \(1\) is storage, subsystem \(2\) is readout.
 \end{itemize}
 
+\subsection*{Universal model layer}
+\begin{itemize}[leftmargin=1.5em]
+  \item The reusable model core now lives in \texttt{cqed\_sim/core/universal\_model.py}.
+  \item \texttt{UniversalCQEDModel} accepts an optional \texttt{TransmonModeSpec}, a sequence of \texttt{BosonicModeSpec} entries, explicit \texttt{DispersiveCouplingSpec} entries, and the existing generic \texttt{CrossKerrSpec}, \texttt{SelfKerrSpec}, and \texttt{ExchangeSpec} terms.
+  \item Tensor ordering remains explicit: the transmon is first when present, followed by bosonic modes in declaration order.
+  \item \texttt{DispersiveTransmonCavityModel} and \texttt{DispersiveReadoutTransmonStorageModel} preserve their previous public constructors and delegate their Hamiltonian and operator logic to that shared universal layer.
+\end{itemize}
+
 \subsection*{Synthesis subspace}
 The unitary-synthesis layer retains the same full-space qubit-first ordering, but restricted subspace bases are explicitly reordered in \texttt{cqed\_sim/unitary\_synthesis/subspace.py}; for example, a qubit-cavity block is ordered as \(|g,0\rangle, |e,0\rangle, |g,1\rangle, |e,1\rangle, \ldots\).
 
@@ -114,8 +122,9 @@ Direct tests: \texttt{tests/test\_25\_tensor\_product\_convention.py}, \texttt{t
   \[
   n_q = |e\rangle \langle e| = \frac{I-\sigma_z}{2}.
   \]
-  \item Two-mode operators in \texttt{cqed\_sim/core/model.py} are embedded as \(a = I_q \otimes a_{\mathrm{storage}}\) and \(b = b_{\mathrm{transmon}} \otimes I_s\).
-  \item Three-mode operators in \texttt{cqed\_sim/core/readout\_model.py} are embedded as
+  \item The shared operator builder now lives in \texttt{cqed\_sim/core/universal\_model.py}; the specialized wrapper models keep the same user-facing operator semantics while delegating tensor lifting and caching to that shared path.
+  \item Two-mode operators remain embedded as \(a = I_q \otimes a_{\mathrm{storage}}\) and \(b = b_{\mathrm{transmon}} \otimes I_s\).
+  \item Three-mode operators remain embedded as
   \[
   b = b_{\mathrm{transmon}} \otimes I_s \otimes I_r,\quad
   a_s = I_q \otimes a_{\mathrm{storage}} \otimes I_r,\quad
@@ -127,7 +136,7 @@ Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \t
 
 \section{Hamiltonian Definitions}
 \subsection*{Two-mode runtime Hamiltonian}
-The reusable two-mode Hamiltonian in \texttt{cqed\_sim/core/model.py} is
+The reusable two-mode Hamiltonian exposed by \texttt{cqed\_sim/core/model.py} and assembled by the shared universal model layer is
 \[
 H_0
 =
@@ -293,7 +302,7 @@ The readout frequency \(\omega_{ro}\) is stored with the preset metadata for con
 measured parameter set, but it is not part of the two-mode Kerr free-evolution Hamiltonian.
 
 \subsection*{Three-mode storage-transmon-readout Hamiltonian}
-The three-mode model in \texttt{cqed\_sim/core/readout\_model.py} implements
+The three-mode model exposed by \texttt{cqed\_sim/core/readout\_model.py} and assembled by the shared universal model layer implements
 \[
 \frac{H}{\hbar}
 =
@@ -407,7 +416,7 @@ Direct tests: \texttt{tests/test\_05\_detuning\_and\_frames.py}, \texttt{tests/t
   \]
   \item \texttt{cqed\_sim/sim/runner.py} inserts \(\epsilon(t)\) and \(\epsilon^*(t)\) as raising and lowering couplings obtained from the model, rather than from a hard-coded target list.
   \item Because the runtime drive term is \(\epsilon(t)\,b^\dagger + \epsilon^*(t)\,b\), a rotating-frame transition at frequency \(\omega_{\mathrm{transition}}\) is resonantly addressed by \(\texttt{carrier}=-\omega_{\mathrm{transition}}\). The public helpers \texttt{carrier\_for\_transition\_frequency(...)} and \texttt{transition\_frequency\_from\_carrier(...)} make that mapping explicit.
-  \item User-facing spectroscopy examples and the updated \texttt{usage\_examples.ipynb} therefore plot physical transition detuning on the x-axis and convert that value to the internal raw carrier with \texttt{carrier\_for\_transition\_frequency(...)} before simulation.
+  \item User-facing spectroscopy examples and the updated \texttt{examples/workflows/cqed\_sim\_usage\_examples.ipynb} therefore plot physical transition detuning on the x-axis and convert that value to the internal raw carrier with \texttt{carrier\_for\_transition\_frequency(...)} before simulation.
   \item The two-mode path supports \texttt{"cavity"} or \texttt{"storage"}, \texttt{"qubit"}, and the legacy \texttt{"sideband"} target, plus the structured targets \texttt{TransmonTransitionDriveSpec(lower\_level, upper\_level)} and \texttt{SidebandDriveSpec(mode, lower\_level, upper\_level, sideband)}.
   \item The three-mode path supports \texttt{"storage"}, \texttt{"readout"}, \texttt{"qubit"}, and \texttt{"transmon"} targets, plus the same structured transition and sideband targets. The readout and storage drives use the same complex-envelope sign convention as the existing qubit and storage drives.
   \item The effective three-mode drive Hamiltonian is
@@ -447,7 +456,7 @@ This path is intended for fast-control and synchronization studies where the eff
 manifold dynamics are the quantity of interest.
 
 \subsection*{Kerr-sign notebook diagnosis}
-The paper-comparison notebook \texttt{test\_against\_papers/bosonic\_controls.ipynb} was
+The paper-comparison notebook \texttt{test\_against\_papers/prl115\_137002\_bosonic\_controls.ipynb} was
 audited against the runtime implementation. The core simulator and the documented physics
 convention both use
 \[
@@ -463,7 +472,7 @@ and exposed through \texttt{cqed\_sim.experiment.verify\_kerr\_sign(...)}.
 \begin{itemize}[leftmargin=1.5em]
   \item \texttt{NoiseSpec} in \texttt{cqed\_sim/sim/noise.py} now supports \texttt{t1}, \texttt{transmon\_t1}, \texttt{tphi}, \texttt{kappa}, \texttt{nth}, \texttt{kappa\_storage}, \texttt{kappa\_readout}, \texttt{nth\_storage}, and \texttt{nth\_readout}.
   \item The implemented convention is \(\gamma_1 = 1/T_1\) and \(\gamma_\phi = 1/(2 T_\phi)\).
-  \item If \texttt{transmon\_t1=(T_{1,ge}, T_{1,fe}, \ldots)} is supplied, the collapse-operator builder emits explicit ladder decays \(\sqrt{1/T_{1,j}}\,|j-1\rangle\langle j|\). If it is not supplied, the older aggregate \(\sqrt{\gamma_1}\,b\) path remains available through \texttt{t1}.
+    \item If \texttt{transmon\_t1=(T1\_ge, T1\_fe, ...)} is supplied, the collapse-operator builder emits explicit ladder decays \(\sqrt{1/T_{1,j}}\,|j-1\rangle\langle j|\). If it is not supplied, the older aggregate \(\sqrt{\gamma_1}\,b\) path remains available through \texttt{t1}.
   \item Two-level dephasing uses \(\sqrt{\gamma_\phi}\,\sigma_z\) with \(\sigma_z = I - 2 n_q\). Multi-level transmon dephasing uses \(\sqrt{\gamma_\phi}\,n_q\).
   \item In the two-mode path, \texttt{kappa} and \texttt{nth} still drive storage loss and thermal excitation.
   \item In the three-mode path, storage and readout can decay independently via \texttt{kappa\_storage} and \texttt{kappa\_readout}, with separate thermal occupations.
@@ -487,6 +496,7 @@ Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \t
 \begin{itemize}[leftmargin=1.5em]
   \item The two-mode model uses \texttt{n\_cav} for storage truncation and \texttt{n\_tr} for transmon truncation.
   \item The three-mode model uses \texttt{n\_storage}, \texttt{n\_readout}, and \texttt{n\_tr}.
+  \item The universal model layer also supports transmon-only and cavity-only special cases through the same subsystem-spec representation, while the wrapper models keep the historically used two-mode and three-mode constructor surfaces.
   \item The multilevel sideband and structured-transition helpers assume the selected ancilla levels lie within the chosen transmon truncation and will raise if the requested transition falls outside \([0, \texttt{n\_tr}-1]\).
   \item State preparation helpers pad or truncate explicit amplitude vectors to the requested subsystem dimension.
   \item SQR angle arrays are still padded to the storage dimension in \texttt{cqed\_sim/pulses/calibration.py}.
@@ -535,7 +545,8 @@ File & Targets, type, and main assertion & Status \\
 \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py} & drive isolation, storage/readout ringdown, transmon \(T_1\), transmon dephasing, positivity, and readout-response checks for the three-mode path. & Passed \\
 \texttt{tests/test\_31\_multilevel\_sideband\_extension.py} & effective multilevel sideband Hermiticity, \(g\leftrightarrow f\) swap, detuned synchronization, shelving isolation, and multilevel-noise regression checks. & Passed \\
 \texttt{tests/test\_32\_kerr\_sign\_notebook\_regression.py} & regression that the notebook-scale Kerr evolution matches the documented self-Kerr sign rather than a flipped-sign surrogate. & Passed \\
-\texttt{tests/test\_33\_usage\_examples\_spectroscopy\_sign.py} & fixed-Fock negative-\(\chi\) spectroscopy regression plus a guard that \texttt{usage\_examples.ipynb} plots physical transition detuning instead of raw carrier. & Passed \\
+\texttt{tests/test\_33\_usage\_examples\_spectroscopy\_sign.py} & fixed-Fock negative-\(\chi\) spectroscopy regression plus a guard that \texttt{examples/workflows/cqed\_sim\_usage\_examples.ipynb} plots physical transition detuning instead of raw carrier. & Passed \\
+\texttt{tests/test\_34\_universal\_cqed\_model.py} & universal-model equivalence to the compatibility wrappers, multilevel anharmonicity, and cavity-only runtime support. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_subspace.py} & restricted-basis ordering and round-trip embedding. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_metrics.py} & fidelity gauges and leakage metrics. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_primitives\_and\_backends.py} & synthesis primitives and ideal/pulse backends. & Passed \\
@@ -577,7 +588,7 @@ E:\Programs\python.exe -m pytest examples/audits/tests examples/workflows/tests 
 \end{verbatim}
 Observed results:
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{tests/}: 218 collected, 217 passed, 1 skipped, 0 failed.
+  \item \texttt{tests/}: 222 collected, 221 passed, 1 skipped, 0 failed.
   \item \texttt{examples/*/tests}: 49 collected, 49 passed, 0 failed.
   \item The single skip is the optional external MPS-reference check in \texttt{tests/unitary\_synthesis/test\_synthesis\_and\_targets.py}.
   \item Warning-only notes: two \texttt{numpy.trapz} deprecation warnings in \texttt{tests/test\_12\_pulse\_semantics.py} and \texttt{tests/test\_20\_gaussian\_iq\_convention.py}, plus one QuTiP \texttt{sqrtm} singular-matrix warning in the open-system sideband fidelity regression.
@@ -599,7 +610,7 @@ Interpreter note: \verb|E:\Program Files\Python311\python.exe| from \texttt{AGEN
 
 \section{Gaps Between Code Conventions and Test Coverage}
 \begin{itemize}[leftmargin=1.5em]
-  \item The new runtime-to-synthesis translation helper exposes \(\chi_{\mathrm{synth}}=-\chi_{\mathrm{runtime}}/2\), but the library still does not force every synthesis-side caller to use that mapping automatically.
+  \item The runtime-to-synthesis translation helper now exposes synthesis coefficients aligned with the runtime convention, but the library still does not force every synthesis-side caller to route through that helper automatically.
   \item Higher-order \(\chi_2\), \(\chi_3\), and higher-order Kerr coefficients are covered indirectly, but not with isolated sign-and-factor analytic tests of the same style now used for the three-mode diagonal-energy checks.
   \item The readout-chain model is physically motivated, but it is still an effective resonator/filter/amplifier abstraction rather than a full microwave network or POVM calibration workflow.
   \item The backend path is dense and piecewise constant; it is intended for parity and small-system acceleration checks, not as a drop-in replacement for every QuTiP workflow.
@@ -614,6 +625,6 @@ Interpreter note: \verb|E:\Program Files\Python311\python.exe| from \texttt{AGEN
 \textbf{Low:} \texttt{FrameSpec} still stores the storage frame in the legacy field \texttt{omega\_c\_frame}; the \texttt{omega\_s\_frame} alias removes ambiguity but does not rename the underlying field.
 
 \section{Summary}
-\texttt{cqed\_sim} is now a coherent reusable library for pulse-level cQED simulation with both a two-mode transmon-storage path and a three-mode storage-transmon-readout extension. The authoritative runtime conventions are: qubit-first tensor ordering; \(|g\rangle=|0\rangle\), \(|e\rangle=|1\rangle\); QuTiP-standard Pauli signs; rad/s internally and seconds for time; complex envelopes with \(e^{+i(\omega t+\phi)}\) and therefore \(\texttt{carrier}=-\omega_{\mathrm{transition}}\) for resonant rotating-frame spectroscopy; dispersive physics written in terms of \(n_q=b^\dagger b\) with \(+\chi n_c n_q\)-style conditional terms; and Lindblad collapse operators as implemented in \texttt{cqed\_sim/sim/noise.py}. Negative \(\chi\) now means that higher cavity photon number lowers the qubit transition frequency, and positive Kerr coefficients raise adjacent bosonic transition spacings. The experiment-facing layer now has two measurement modes: a default lightweight exact-probability path and an opt-in physical readout-chain path with resonator response, Purcell filtering, amplifier noise, and reduced-state backaction. The library also exposes optional nonlinear/exchange Hamiltonian terms, aligned runtime/synthesis parameter translation helpers, calibration-target utilities, and an opt-in dense NumPy/JAX backend path.
+\texttt{cqed\_sim} is now a coherent reusable library for pulse-level cQED simulation with a universal subsystem-based model core plus thin compatibility wrappers for the two-mode transmon-storage path and the three-mode storage-transmon-readout extension. The authoritative runtime conventions are: qubit-first tensor ordering; \(|g\rangle=|0\rangle\), \(|e\rangle=|1\rangle\); QuTiP-standard Pauli signs; rad/s internally and seconds for time; complex envelopes with \(e^{+i(\omega t+\phi)}\) and therefore \(\texttt{carrier}=-\omega_{\mathrm{transition}}\) for resonant rotating-frame spectroscopy; dispersive physics written in terms of \(n_q=b^\dagger b\) with \(+\chi n_c n_q\)-style conditional terms; and Lindblad collapse operators as implemented in \texttt{cqed\_sim/sim/noise.py}. Negative \(\chi\) now means that higher cavity photon number lowers the qubit transition frequency, and positive Kerr coefficients raise adjacent bosonic transition spacings. The experiment-facing layer now has two measurement modes: a default lightweight exact-probability path and an opt-in physical readout-chain path with resonator response, Purcell filtering, amplifier noise, and reduced-state backaction. The library also exposes optional nonlinear/exchange Hamiltonian terms, aligned runtime/synthesis parameter translation helpers, calibration-target utilities, and an opt-in dense NumPy/JAX backend path.
 
 \end{document}

@@ -4,8 +4,9 @@ from dataclasses import dataclass, field
 
 import qutip as qt
 
-from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec, assemble_static_hamiltonian, coupling_term_key
 from .frame import FrameSpec
+from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec, coupling_term_key
+from .universal_model import BosonicModeSpec, DispersiveCouplingSpec, TransmonModeSpec, UniversalCQEDModel
 
 
 @dataclass
@@ -27,75 +28,27 @@ class DispersiveReadoutTransmonStorageModel:
     n_tr: int = 3
 
     subsystem_labels: tuple[str, ...] = ("qubit", "storage", "readout")
-    _operators_cache: dict[str, qt.Qobj] | None = field(default=None, init=False, repr=False, compare=False)
-    _static_h_cache: dict[tuple[float, ...], qt.Qobj] = field(default_factory=dict, init=False, repr=False, compare=False)
+    _delegate_cache: UniversalCQEDModel | None = field(default=None, init=False, repr=False, compare=False)
+    _delegate_signature: tuple | None = field(default=None, init=False, repr=False, compare=False)
 
     @property
     def subsystem_dims(self) -> tuple[int, ...]:
-        return (int(self.n_tr), int(self.n_storage), int(self.n_readout))
+        return self.as_universal_model().subsystem_dims
 
     def operators(self) -> dict[str, qt.Qobj]:
-        if self._operators_cache is None:
-            i_q = qt.qeye(self.n_tr)
-            i_s = qt.qeye(self.n_storage)
-            i_r = qt.qeye(self.n_readout)
-
-            b = qt.tensor(qt.destroy(self.n_tr), i_s, i_r)
-            a_s = qt.tensor(i_q, qt.destroy(self.n_storage), i_r)
-            a_r = qt.tensor(i_q, i_s, qt.destroy(self.n_readout))
-
-            bdag = b.dag()
-            adag_s = a_s.dag()
-            adag_r = a_r.dag()
-            n_q = bdag * b
-            n_s = adag_s * a_s
-            n_r = adag_r * a_r
-            self._operators_cache = {
-                "b": b,
-                "bdag": bdag,
-                "a_s": a_s,
-                "adag_s": adag_s,
-                "a_r": a_r,
-                "adag_r": adag_r,
-                "n_q": n_q,
-                "n_s": n_s,
-                "n_r": n_r,
-            }
-        return self._operators_cache
+        return self.as_universal_model().operators()
 
     def drive_coupling_operators(self) -> dict[str, tuple[qt.Qobj, qt.Qobj]]:
-        ops = self.operators()
-        return {
-            "storage": (ops["adag_s"], ops["a_s"]),
-            "cavity": (ops["adag_s"], ops["a_s"]),
-            "qubit": (ops["bdag"], ops["b"]),
-            "transmon": (ops["bdag"], ops["b"]),
-            "readout": (ops["adag_r"], ops["a_r"]),
-        }
+        return self.as_universal_model().drive_coupling_operators()
 
     def transmon_level_projector(self, level: int) -> qt.Qobj:
-        level = int(level)
-        projector = qt.basis(self.n_tr, level) * qt.basis(self.n_tr, level).dag()
-        return qt.tensor(projector, qt.qeye(self.n_storage), qt.qeye(self.n_readout))
+        return self.as_universal_model().transmon_level_projector(level)
 
     def transmon_transition_operators(self, lower_level: int, upper_level: int) -> tuple[qt.Qobj, qt.Qobj]:
-        lower_level = int(lower_level)
-        upper_level = int(upper_level)
-        transition_up = qt.basis(self.n_tr, upper_level) * qt.basis(self.n_tr, lower_level).dag()
-        transition_down = transition_up.dag()
-        return (
-            qt.tensor(transition_up, qt.qeye(self.n_storage), qt.qeye(self.n_readout)),
-            qt.tensor(transition_down, qt.qeye(self.n_storage), qt.qeye(self.n_readout)),
-        )
+        return self.as_universal_model().transmon_transition_operators(lower_level, upper_level)
 
     def mode_operators(self, mode: str = "storage") -> tuple[qt.Qobj, qt.Qobj]:
-        ops = self.operators()
-        mode_key = str(mode).strip().lower()
-        if mode_key in {"storage", "cavity"}:
-            return ops["a_s"], ops["adag_s"]
-        if mode_key == "readout":
-            return ops["a_r"], ops["adag_r"]
-        raise ValueError(f"Unsupported bosonic mode '{mode}'.")
+        return self.as_universal_model().mode_operators(mode)
 
     def sideband_drive_operators(
         self,
@@ -105,67 +58,18 @@ class DispersiveReadoutTransmonStorageModel:
         upper_level: int = 1,
         sideband: str = "red",
     ) -> tuple[qt.Qobj, qt.Qobj]:
-        mode_lowering, mode_raising = self.mode_operators(mode)
-        transmon_up, transmon_down = self.transmon_transition_operators(lower_level, upper_level)
-        sideband_key = str(sideband).strip().lower()
-        if sideband_key == "red":
-            return 1j * transmon_up * mode_lowering, -1j * transmon_down * mode_raising
-        if sideband_key == "blue":
-            return 1j * transmon_up * mode_raising, -1j * transmon_down * mode_lowering
-        raise ValueError(f"Unsupported sideband '{sideband}'.")
+        return self.as_universal_model().sideband_drive_operators(
+            mode=mode,
+            lower_level=lower_level,
+            upper_level=upper_level,
+            sideband=sideband,
+        )
 
     def static_hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
-        frame = frame or FrameSpec()
-        key = (
-            float(self.omega_s),
-            float(self.omega_r),
-            float(self.omega_q),
-            float(self.alpha),
-            float(self.chi_s),
-            float(self.chi_r),
-            float(self.chi_sr),
-            float(self.kerr_s),
-            float(self.kerr_r),
-            coupling_term_key(self.cross_kerr_terms, self.self_kerr_terms, self.exchange_terms),
-            float(frame.omega_c_frame),
-            float(frame.omega_q_frame),
-            float(frame.omega_r_frame),
-        )
-        cached = self._static_h_cache.get(key)
-        if cached is not None:
-            return cached
-        ops = self.operators()
-        n_q = ops["n_q"]
-        n_s = ops["n_s"]
-        n_r = ops["n_r"]
-        b = ops["b"]
-        bdag = ops["bdag"]
+        return self.as_universal_model().static_hamiltonian(frame=frame)
 
-        delta_s = self.omega_s - frame.omega_s_frame
-        delta_r = self.omega_r - frame.omega_r_frame
-        delta_q = self.omega_q - frame.omega_q_frame
-
-        h = delta_s * n_s + delta_r * n_r + delta_q * n_q
-        h += 0.5 * self.alpha * (bdag * bdag * b * b)
-        if self.chi_s != 0.0:
-            h += self.chi_s * n_s * n_q
-        if self.chi_r != 0.0:
-            h += self.chi_r * n_r * n_q
-        if self.chi_sr != 0.0:
-            h += self.chi_sr * n_s * n_r
-        if self.kerr_s != 0.0:
-            h += 0.5 * self.kerr_s * n_s * (n_s - qt.qeye(n_s.dims[0]))
-        if self.kerr_r != 0.0:
-            h += 0.5 * self.kerr_r * n_r * (n_r - qt.qeye(n_r.dims[0]))
-        h = assemble_static_hamiltonian(
-            h,
-            ops,
-            cross_kerr_terms=self.cross_kerr_terms,
-            self_kerr_terms=self.self_kerr_terms,
-            exchange_terms=self.exchange_terms,
-        )
-        self._static_h_cache[key] = h
-        return h
+    def hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
+        return self.static_hamiltonian(frame=frame)
 
     def basis_energy(
         self,
@@ -174,30 +78,10 @@ class DispersiveReadoutTransmonStorageModel:
         readout_level: int,
         frame: FrameSpec | None = None,
     ) -> float:
-        frame = frame or FrameSpec()
-        q_level = int(q_level)
-        storage_level = int(storage_level)
-        readout_level = int(readout_level)
-
-        delta_s = float(self.omega_s - frame.omega_s_frame)
-        delta_r = float(self.omega_r - frame.omega_r_frame)
-        delta_q = float(self.omega_q - frame.omega_q_frame)
-        energy = delta_s * storage_level + delta_r * readout_level + delta_q * q_level
-        energy += 0.5 * float(self.alpha) * q_level * (q_level - 1)
-        energy += float(self.chi_s) * storage_level * q_level
-        energy += float(self.chi_r) * readout_level * q_level
-        energy += float(self.chi_sr) * storage_level * readout_level
-        energy += 0.5 * float(self.kerr_s) * storage_level * (storage_level - 1)
-        energy += 0.5 * float(self.kerr_r) * readout_level * (readout_level - 1)
-        return float(energy)
+        return self.as_universal_model().basis_energy(int(q_level), int(storage_level), int(readout_level), frame=frame)
 
     def basis_state(self, q_level: int, storage_level: int, readout_level: int) -> qt.Qobj:
-        """Return |q,n_s,n_r> = |q> tensor |n_s> tensor |n_r>."""
-        return qt.tensor(
-            qt.basis(self.n_tr, q_level),
-            qt.basis(self.n_storage, storage_level),
-            qt.basis(self.n_readout, readout_level),
-        )
+        return self.as_universal_model().basis_state(int(q_level), int(storage_level), int(readout_level))
 
     def coherent_qubit_superposition(self, storage_level: int = 0, readout_level: int = 0) -> qt.Qobj:
         g = self.basis_state(0, storage_level, readout_level)
@@ -211,13 +95,12 @@ class DispersiveReadoutTransmonStorageModel:
         qubit_level: int = 0,
         frame: FrameSpec | None = None,
     ) -> float:
-        frame = frame or FrameSpec()
-        delta_q = float(self.omega_q - frame.omega_q_frame)
-        return float(
-            delta_q
-            + float(self.alpha) * int(qubit_level)
-            + float(self.chi_s) * int(storage_level)
-            + float(self.chi_r) * int(readout_level)
+        return self.transmon_transition_frequency(
+            storage_level=storage_level,
+            readout_level=readout_level,
+            lower_level=qubit_level,
+            upper_level=int(qubit_level) + 1,
+            frame=frame,
         )
 
     def transmon_transition_frequency(
@@ -229,9 +112,11 @@ class DispersiveReadoutTransmonStorageModel:
         upper_level: int = 1,
         frame: FrameSpec | None = None,
     ) -> float:
-        return float(
-            self.basis_energy(int(upper_level), int(storage_level), int(readout_level), frame=frame)
-            - self.basis_energy(int(lower_level), int(storage_level), int(readout_level), frame=frame)
+        return self.as_universal_model().transmon_transition_frequency(
+            mode_levels={"storage": int(storage_level), "readout": int(readout_level)},
+            lower_level=lower_level,
+            upper_level=upper_level,
+            frame=frame,
         )
 
     def sideband_transition_frequency(
@@ -245,37 +130,14 @@ class DispersiveReadoutTransmonStorageModel:
         sideband: str = "red",
         frame: FrameSpec | None = None,
     ) -> float:
-        storage_level = int(storage_level)
-        readout_level = int(readout_level)
-        mode_key = str(mode).strip().lower()
-        sideband_key = str(sideband).strip().lower()
-        if mode_key in {"storage", "cavity"}:
-            if storage_level + 1 >= self.n_storage:
-                raise IndexError("selected storage sideband requires storage_level + 1 within the storage dimension.")
-            if sideband_key == "red":
-                return float(
-                    self.basis_energy(int(upper_level), storage_level, readout_level, frame=frame)
-                    - self.basis_energy(int(lower_level), storage_level + 1, readout_level, frame=frame)
-                )
-            if sideband_key == "blue":
-                return float(
-                    self.basis_energy(int(upper_level), storage_level + 1, readout_level, frame=frame)
-                    - self.basis_energy(int(lower_level), storage_level, readout_level, frame=frame)
-                )
-        if mode_key == "readout":
-            if readout_level + 1 >= self.n_readout:
-                raise IndexError("selected readout sideband requires readout_level + 1 within the readout dimension.")
-            if sideband_key == "red":
-                return float(
-                    self.basis_energy(int(upper_level), storage_level, readout_level, frame=frame)
-                    - self.basis_energy(int(lower_level), storage_level, readout_level + 1, frame=frame)
-                )
-            if sideband_key == "blue":
-                return float(
-                    self.basis_energy(int(upper_level), storage_level, readout_level + 1, frame=frame)
-                    - self.basis_energy(int(lower_level), storage_level, readout_level, frame=frame)
-                )
-        raise ValueError(f"Unsupported sideband '{sideband}' for mode '{mode}'.")
+        return self.as_universal_model().sideband_transition_frequency(
+            mode=mode,
+            mode_levels={"storage": int(storage_level), "readout": int(readout_level)},
+            lower_level=lower_level,
+            upper_level=upper_level,
+            sideband=sideband,
+            frame=frame,
+        )
 
     def storage_transition_frequency(
         self,
@@ -284,13 +146,11 @@ class DispersiveReadoutTransmonStorageModel:
         readout_level: int = 0,
         frame: FrameSpec | None = None,
     ) -> float:
-        frame = frame or FrameSpec()
-        delta_s = float(self.omega_s - frame.omega_s_frame)
-        return float(
-            delta_s
-            + float(self.chi_s) * int(qubit_level)
-            + float(self.chi_sr) * int(readout_level)
-            + float(self.kerr_s) * int(storage_level)
+        return self.as_universal_model().mode_transition_frequency(
+            "storage",
+            mode_levels={"storage": int(storage_level), "readout": int(readout_level)},
+            transmon_level=qubit_level,
+            frame=frame,
         )
 
     def readout_transition_frequency(
@@ -300,11 +160,94 @@ class DispersiveReadoutTransmonStorageModel:
         readout_level: int = 0,
         frame: FrameSpec | None = None,
     ) -> float:
-        frame = frame or FrameSpec()
-        delta_r = float(self.omega_r - frame.omega_r_frame)
-        return float(
-            delta_r
-            + float(self.chi_r) * int(qubit_level)
-            + float(self.chi_sr) * int(storage_level)
-            + float(self.kerr_r) * int(readout_level)
+        return self.as_universal_model().mode_transition_frequency(
+            "readout",
+            mode_levels={"storage": int(storage_level), "readout": int(readout_level)},
+            transmon_level=qubit_level,
+            frame=frame,
         )
+
+    def transmon_lowering(self) -> qt.Qobj:
+        return self.as_universal_model().transmon_lowering()
+
+    def transmon_raising(self) -> qt.Qobj:
+        return self.as_universal_model().transmon_raising()
+
+    def transmon_number(self) -> qt.Qobj:
+        return self.as_universal_model().transmon_number()
+
+    def storage_annihilation(self) -> qt.Qobj:
+        return self.as_universal_model().storage_annihilation()
+
+    def storage_creation(self) -> qt.Qobj:
+        return self.as_universal_model().storage_creation()
+
+    def storage_number(self) -> qt.Qobj:
+        return self.as_universal_model().storage_number()
+
+    def readout_annihilation(self) -> qt.Qobj:
+        return self.as_universal_model().readout_annihilation()
+
+    def readout_creation(self) -> qt.Qobj:
+        return self.as_universal_model().readout_creation()
+
+    def readout_number(self) -> qt.Qobj:
+        return self.as_universal_model().readout_number()
+
+    def as_universal_model(self) -> UniversalCQEDModel:
+        signature = (
+            float(self.omega_s),
+            float(self.omega_r),
+            float(self.omega_q),
+            float(self.alpha),
+            float(self.chi_s),
+            float(self.chi_r),
+            float(self.chi_sr),
+            float(self.kerr_s),
+            float(self.kerr_r),
+            int(self.n_storage),
+            int(self.n_readout),
+            int(self.n_tr),
+            coupling_term_key(self.cross_kerr_terms, self.self_kerr_terms, self.exchange_terms),
+        )
+        if self._delegate_signature != signature or self._delegate_cache is None:
+            self._delegate_signature = signature
+            base_cross_kerr_terms = ()
+            if float(self.chi_sr) != 0.0:
+                base_cross_kerr_terms = (CrossKerrSpec("storage", "readout", float(self.chi_sr)),)
+            self._delegate_cache = UniversalCQEDModel(
+                transmon=TransmonModeSpec(
+                    omega=float(self.omega_q),
+                    dim=int(self.n_tr),
+                    alpha=float(self.alpha),
+                    label="qubit",
+                    aliases=("qubit", "transmon"),
+                    frame_channel="q",
+                ),
+                bosonic_modes=(
+                    BosonicModeSpec(
+                        label="storage",
+                        omega=float(self.omega_s),
+                        dim=int(self.n_storage),
+                        kerr=float(self.kerr_s),
+                        aliases=("storage", "cavity"),
+                        frame_channel="c",
+                    ),
+                    BosonicModeSpec(
+                        label="readout",
+                        omega=float(self.omega_r),
+                        dim=int(self.n_readout),
+                        kerr=float(self.kerr_r),
+                        aliases=("readout",),
+                        frame_channel="r",
+                    ),
+                ),
+                dispersive_couplings=(
+                    DispersiveCouplingSpec(mode="storage", chi=float(self.chi_s), transmon="qubit"),
+                    DispersiveCouplingSpec(mode="readout", chi=float(self.chi_r), transmon="qubit"),
+                ),
+                cross_kerr_terms=base_cross_kerr_terms + tuple(self.cross_kerr_terms),
+                self_kerr_terms=self.self_kerr_terms,
+                exchange_terms=self.exchange_terms,
+            )
+        return self._delegate_cache

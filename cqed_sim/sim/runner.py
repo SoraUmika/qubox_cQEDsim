@@ -57,16 +57,19 @@ def default_observables(model: Any) -> dict[str, qt.Qobj]:
 
     ops = model.operators()
     dims = tuple(int(dim) for dim in getattr(model, "subsystem_dims"))
-    observables: dict[str, qt.Qobj] = {"P_e": _projector_onto_first_excited_state(dims)}
-    for level in range(dims[0]):
-        projector = _projector_onto_transmon_level(dims, level)
-        observables[f"P_q{level}"] = projector
-        if level == 0:
-            observables["P_g"] = projector
-        elif level == 1:
-            observables["P_e"] = projector
-        elif level == 2:
-            observables["P_f"] = projector
+    has_transmon = bool(getattr(model, "has_transmon", "n_q" in ops and "b" in ops))
+    observables: dict[str, qt.Qobj] = {}
+    if has_transmon:
+        observables["P_e"] = _projector_onto_first_excited_state(dims)
+        for level in range(dims[0]):
+            projector = _projector_onto_transmon_level(dims, level)
+            observables[f"P_q{level}"] = projector
+            if level == 0:
+                observables["P_g"] = projector
+            elif level == 1:
+                observables["P_e"] = projector
+            elif level == 2:
+                observables["P_f"] = projector
 
     if "a" in ops:
         x_c, p_c = _mode_quadratures(ops["a"], ops["adag"])

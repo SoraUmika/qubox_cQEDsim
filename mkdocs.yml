@@ -1,0 +1,98 @@
+site_name: "qubox_cqedsim Documentation"
+site_description: "Hardware-faithful time-domain cQED pulse simulator built on QuTiP"
+site_url: ""
+
+docs_dir: documentations
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Overview: getting_started.md
+      - Installation: installation.md
+  - Physics & Conventions: physics_conventions.md
+  - User Guides:
+      - Defining Models: user_guides/defining_models.md
+      - Frames: user_guides/frames.md
+      - Pulse Construction: user_guides/pulse_construction.md
+      - Sequence Compilation: user_guides/sequence_compilation.md
+      - Running Simulations: user_guides/running_simulations.md
+      - Extracting Observables: user_guides/extracting_observables.md
+      - State Preparation & Measurement: user_guides/state_prep_measurement.md
+      - Open System Dynamics: user_guides/open_system_dynamics.md
+  - Tutorials:
+      - Displacement & Qubit Spectroscopy: tutorials/displacement_spectroscopy.md
+      - Kerr Free Evolution: tutorials/kerr_free_evolution.md
+      - Sideband Swap: tutorials/sideband_swap.md
+      - Unitary Synthesis: tutorials/unitary_synthesis.md
+  - API Reference:
+      - Overview: api/overview.md
+      - Core (Models, Frames, Conventions): api/core.md
+      - Pulse System: api/pulses.md
+      - Sequence Compilation: api/sequence.md
+      - Simulation Engine: api/simulation.md
+      - Experiment Layer: api/experiment.md
+      - Gate I/O: api/gate_io.md
+      - Analysis: api/analysis.md
+      - Calibration: api/calibration.md
+      - Calibration Targets: api/calibration_targets.md
+      - Tomography: api/tomography.md
+      - Observables: api/observables.md
+      - Operators: api/operators.md
+      - Plotting: api/plotting.md
+      - Backends: api/backends.md
+      - Unitary Synthesis: api/unitary_synthesis.md
+  - Examples: examples.md
+  - Architecture: architecture.md

@@ -93,6 +93,16 @@
 - If a refactor does not require changes to these documents, verify that explicitly before leaving them unchanged.
 - Refactors should preserve consistency between implementation, API documentation, and physics/conventions documentation at the end of the task.
 
+## API Reference and Website Documentation Synchronization
+
+- `API_REFERENCE.md` must remain consistent with the website documentation located under the `documentations` folder.
+- When public APIs, module organization, function signatures, class behavior, configuration structures, usage patterns, or developer-facing workflows change, update both `API_REFERENCE.md` and the relevant website documentation pages under `documentations`.
+- Do not update one documentation surface while leaving the other stale when they are intended to describe the same public behavior.
+- If `API_REFERENCE.md` is treated as the canonical reference for the public API, ensure that the website documentation reflects that reference accurately in wording, signatures, examples, and module/class/function coverage.
+- If the website documentation contains higher-level guides, tutorials, walkthroughs, or reorganized API material, those pages must still remain semantically consistent with `API_REFERENCE.md`.
+- Any inconsistency discovered between `API_REFERENCE.md` and the website documentation should be treated as a documentation inconsistency and should be corrected as part of the task when relevant.
+- If a refactor or feature addition changes the intended public or developer-facing interface, verify explicitly that `API_REFERENCE.md` and the `documentations` folder are synchronized before considering the task complete.
+
 ## Expected Refactor Workflow
 
 - When performing a refactor, follow this general sequence unless the task explicitly requires a different order:

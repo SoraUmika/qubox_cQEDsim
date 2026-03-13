@@ -1,0 +1,12 @@
+{
+  "compiled_samples": 111,
+  "final_excited_population": 0.496079092469442,
+  "measurement_counts": {
+    "g": 1043,
+    "e": 1005
+  },
+  "measurement_probabilities": {
+    "g": 0.5039209075305581,
+    "e": 0.496079092469442
+  }
+}

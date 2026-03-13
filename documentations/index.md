@@ -90,7 +90,7 @@ print(result.expectations)
 | **Simulation** | `simulate_sequence()`, `SimulationConfig`, `SimulationResult` |
 | **State preparation** | `StatePreparationSpec`, `prepare_state()` |
 | **Measurement** | `QubitMeasurementSpec`, `measure_qubit()` |
-| **Experiment wrapper** | `SimulationExperiment` |
+| **Readout model** | `ReadoutChain`, `ReadoutResonator`, `PurcellFilter`, `AmplifierChain` |
 
 ---
 

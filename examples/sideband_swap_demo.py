@@ -26,7 +26,7 @@ def _mhz(value_hz: float) -> float:
 
 
 def main() -> None:
-    out_dir = Path("examples") / "outputs" / "sideband_swap_demo"
+    out_dir = ROOT / "examples" / "outputs" / "sideband_swap_demo"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     g_sb = to_internal_units(8.0e6)

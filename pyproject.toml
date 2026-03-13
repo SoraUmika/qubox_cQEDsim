@@ -6,9 +6,12 @@ build-backend = "setuptools.build_meta"
 name = "cqed-sim"
 version = "0.1.0"
 description = "Hardware-faithful time-domain cQED pulse simulator using QuTiP"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+  "matplotlib>=3.8",
   "numpy>=1.24",
+  "pandas>=2.0",
   "scipy>=1.10",
   "qutip>=5.0",
 ]
@@ -17,8 +20,12 @@ dependencies = [
 dev = [
   "pytest>=8.0",
 ]
+jax = [
+  "jax",
+  "jaxlib",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["cqed_sim*"]
+include = ["cqed_sim*", "physics_and_conventions"]
 

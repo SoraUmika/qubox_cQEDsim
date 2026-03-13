@@ -8,11 +8,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from cqed_sim import verify_kerr_sign
+from examples.workflows.kerr_free_evolution import verify_kerr_sign
 
 
 def main() -> None:
-    out_dir = Path("examples") / "outputs" / "kerr_sign_verification"
+    out_dir = ROOT / "examples" / "outputs" / "kerr_sign_verification"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     result = verify_kerr_sign(comparison_time_s=1.0e-6, alpha=2.0, n_cav=30, n_tr=3)

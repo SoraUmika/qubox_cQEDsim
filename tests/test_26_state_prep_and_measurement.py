@@ -4,18 +4,11 @@ import numpy as np
 import qutip as qt
 
 from cqed_sim.core import DispersiveReadoutTransmonStorageModel, DispersiveTransmonCavityModel, FrameSpec
-from cqed_sim.experiment import (
-    QubitMeasurementSpec,
-    SimulationExperiment,
-    StatePreparationSpec,
-    density_matrix_state,
-    fock_state,
-    measure_qubit,
-    prepare_state,
-    qubit_state,
-)
+from cqed_sim.core import StatePreparationSpec, density_matrix_state, fock_state, prepare_state, qubit_state
+from cqed_sim.measurement import QubitMeasurementSpec, measure_qubit
 from cqed_sim.pulses.pulse import Pulse
-from cqed_sim.sim import reduced_qubit_state
+from cqed_sim.sequence import SequenceCompiler
+from cqed_sim.sim import SimulationConfig, reduced_qubit_state, simulate_sequence
 
 
 def _square(t_rel: np.ndarray) -> np.ndarray:
@@ -90,7 +83,7 @@ def test_measure_qubit_sampled_mode_tracks_observed_probabilities():
     assert np.isclose(freq_e, 0.24, atol=0.03)
 
 
-def test_simulation_experiment_runs_protocol_style_workflow():
+def test_direct_prepare_compile_simulate_measure_workflow():
     model = DispersiveTransmonCavityModel(
         omega_c=0.0,
         omega_q=0.0,
@@ -101,20 +94,21 @@ def test_simulation_experiment_runs_protocol_style_workflow():
         n_tr=2,
     )
     pulse = Pulse("q", 0.0, 1.0, _square, amp=np.pi / 4.0)
-    experiment = SimulationExperiment(
-        model=model,
-        pulses=[pulse],
-        drive_ops={"q": "qubit"},
-        dt=0.01,
-        t_end=1.1,
-        frame=FrameSpec(),
-        state_prep=StatePreparationSpec(qubit=qubit_state("g"), storage=fock_state(0)),
-        measurement=QubitMeasurementSpec(shots=2000, seed=5),
+    initial = prepare_state(
+        model,
+        StatePreparationSpec(qubit=qubit_state("g"), storage=fock_state(0)),
     )
+    compiled = SequenceCompiler(dt=0.01).compile([pulse], t_end=1.1)
+    simulation = simulate_sequence(
+        model,
+        compiled,
+        initial,
+        {"q": "qubit"},
+        config=SimulationConfig(frame=FrameSpec()),
+    )
+    measurement = measure_qubit(simulation.final_state, QubitMeasurementSpec(shots=2000, seed=5))
 
-    result = experiment.run()
-
-    assert result.compiled.tlist.size > 50
-    assert np.isclose(result.simulation.expectations["P_e"][-1], 0.5, atol=3.0e-2)
-    assert result.measurement is not None
-    assert np.isclose(result.measurement.counts["e"] / 2000.0, 0.5, atol=0.05)
+    assert compiled.tlist.size > 50
+    assert np.isclose(simulation.expectations["P_e"][-1], 0.5, atol=3.0e-2)
+    assert measurement.counts is not None
+    assert np.isclose(measurement.counts["e"] / 2000.0, 0.5, atol=0.05)

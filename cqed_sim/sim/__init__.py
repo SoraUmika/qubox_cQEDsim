@@ -25,7 +25,7 @@ from .extractors import (
     transmon_level_populations,
 )
 from .couplings import TunableCoupler, cross_kerr, exchange, self_kerr
-from .noise import NoiseSpec, collapse_operators
+from .noise import NoiseSpec, collapse_operators, pure_dephasing_time_from_t1_t2
 from .runner import (
     SimulationConfig,
     SimulationResult,
@@ -72,6 +72,7 @@ __all__ = [
     "cavity_wigner",
     "NoiseSpec",
     "collapse_operators",
+    "pure_dephasing_time_from_t1_t2",
     "cross_kerr",
     "self_kerr",
     "exchange",

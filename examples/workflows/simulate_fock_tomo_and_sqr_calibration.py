@@ -58,6 +58,8 @@ DEVICE_CONFIG = {
     ],
 }
 
+DEFAULT_OUTPUT_ROOT = Path(__file__).resolve().parents[1] / "outputs_fock_tomo"
+
 
 def hz_to_rad_per_ns(hz: float) -> float:
     return float(2.0 * np.pi * hz * 1e-9)
@@ -688,7 +690,7 @@ def run_mode1_direct_spsa(plant: SyntheticSQRPlant, out_dir: Path):
     }
 
 
-def run_all(output_root: Path | str = "outputs"):
+def run_all(output_root: Path | str = DEFAULT_OUTPUT_ROOT):
     output_root = Path(output_root)
     fig_dir = output_root / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
@@ -854,7 +856,7 @@ def run_all(output_root: Path | str = "outputs"):
 
 
 if __name__ == "__main__":
-    s = run_all("outputs")
+    s = run_all(DEFAULT_OUTPUT_ROOT)
     print(json.dumps({
         "rmse_before": s["cross_validation_rmse"]["before"],
         "rmse_after": s["cross_validation_rmse"]["after"],

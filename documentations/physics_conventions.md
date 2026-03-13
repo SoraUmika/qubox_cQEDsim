@@ -137,6 +137,28 @@ FrameSpec(
 
 ---
 
+## Energy Spectrum Reference
+
+`compute_energy_spectrum(...)` and `model.energy_spectrum(...)` diagonalize the
+model's static Hamiltonian in the selected frame and then subtract the bare
+vacuum-state energy before reporting `EnergySpectrum.energies`.
+
+The vacuum basis state means all subsystems are in level `0`:
+
+- two-mode: `|g,0⟩`
+- three-mode: `|g,0,0⟩`
+- cavity-only: `|0⟩`
+
+This keeps the reported spectrum anchored at a physically clear zero of energy
+without changing which Hamiltonian was diagonalized. In rotating frames, some
+vacuum-referenced excited levels can therefore appear at negative energy.
+
+For intuitive ladder plots and absolute dressed level spacings, prefer the lab
+frame `FrameSpec()`. For detuning-style analysis, a rotating frame can still be
+useful, but the resulting energies must be interpreted in that frame.
+
+---
+
 ## Drive Convention
 
 ### Complex Envelope
@@ -181,12 +203,37 @@ When open-system dynamics are enabled via `NoiseSpec`:
 | Qubit relaxation (per-transition) | $\sqrt{1/T_{1,j}} \, \|j{-}1\rangle\langle j\|$ for each level |
 | Qubit dephasing (two-level) | $\sqrt{\gamma_\phi} \, \sigma_z$ |
 | Qubit dephasing (multilevel) | $\sqrt{\gamma_\phi} \, n_q$ |
+| Storage pure dephasing | $\sqrt{1/T_{\phi,s}} \, n_s$ |
+| Readout pure dephasing | $\sqrt{1/T_{\phi,r}} \, n_r$ |
 | Cavity decay | $\sqrt{\kappa(n_{\text{th}}+1)} \, a$ |
 | Cavity thermal excitation | $\sqrt{\kappa \cdot n_{\text{th}}} \, a^\dagger$ |
 
 where $\gamma_1 = 1/T_1$ and $\gamma_\phi = 1/(2T_\phi)$.
 
+For storage-mode Ramsey data, the helper `cqed_sim.sim.pure_dephasing_time_from_t1_t2(...)` uses
+
+$$
+\frac{1}{T_2} = \frac{1}{2T_1} + \frac{1}{T_\phi}
+$$
+
+so that
+
+$$
+\frac{1}{T_\phi} = \max\left(0, \frac{1}{T_2} - \frac{1}{2T_1}\right).
+$$
+
 Per-transition ancilla decay is activated by setting `NoiseSpec(transmon_t1=(T1_ge, T1_fe, ...))`.
+
+---
+
+## Sequential Sideband Reset Approximation
+
+The staged storage-reset workflow uses the explicit three-mode storage-transmon-readout model together with two driven effective red sidebands:
+
+- a storage sideband that transfers $|g,n_s,0_r\rangle \leftrightarrow |f,n_s-1,0_r\rangle$
+- a readout sideband that transfers $|f,n_s,0_r\rangle \leftrightarrow |g,n_s,1_r\rangle$
+
+The lossy readout mode is then emptied by the Lindblad readout decay rate $\kappa_r$. This is a controlled effective-model approximation of the experimental reset channel rather than an autonomous microscopic exchange Hamiltonian between the transmon and readout.
 
 ---
 

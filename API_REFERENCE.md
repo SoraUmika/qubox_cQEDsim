@@ -21,6 +21,7 @@
    - 3.5 [Basis Conventions](#35-basis-conventions)
    - 3.6 [Frequency Helpers](#36-frequency-helpers)
    - 3.7 [Ideal Gate Operators](#37-ideal-gate-operators)
+   - 3.8 [Energy Spectrum](#38-energy-spectrum)
 4. [Pulse System (`cqed_sim.pulses`)](#4-pulse-system)
    - 4.1 [Pulse](#41-pulse)
    - 4.2 [Envelopes](#42-envelopes)
@@ -39,12 +40,10 @@
    - 6.6 [Coupling Helpers](#66-coupling-helpers)
    - 6.7 [State Extractors](#67-state-extractors)
    - 6.8 [Diagnostics](#68-diagnostics)
-7. [Experiment Layer (`cqed_sim.experiment`)](#7-experiment-layer)
+7. [State Preparation and Measurement (`cqed_sim.core`, `cqed_sim.measurement`)](#7-state-preparation-and-measurement)
    - 7.1 [State Preparation](#71-state-preparation)
    - 7.2 [Qubit Measurement](#72-qubit-measurement)
-   - 7.3 [SimulationExperiment](#73-simulationexperiment)
-   - 7.4 [Readout Chain](#74-readout-chain)
-   - 7.5 [Kerr Free Evolution](#75-kerr-free-evolution)
+   - 7.3 [Readout Chain](#73-readout-chain)
 8. [Gate I/O (`cqed_sim.io`)](#8-gate-io)
 9. [Analysis (`cqed_sim.analysis`)](#9-analysis)
 10. [Backends (`cqed_sim.backends`)](#10-backends)
@@ -70,7 +69,10 @@ regime with explicit pulse-level drive schedules, Lindblad open-system dynamics,
 calibration / tomography helpers.
 
 **Dependencies:** NumPy ≥ 1.24, SciPy ≥ 1.10, QuTiP ≥ 5.0. Optional: JAX for the
-dense-matrix backend path.
+dense-matrix backend path. The current top-level package import also relies on
+matplotlib ≥ 3.8 and pandas ≥ 2.0 because progress-reporting utilities are part of
+the public import surface. The packaged runtime also includes the local
+`physics_and_conventions` module because several public APIs import it directly.
 
 **Internal units:** Hamiltonian coefficients and rotating-frame frequencies are in
 **rad/s**; times are in **seconds**. All user-facing constructors accept these units
@@ -82,11 +84,11 @@ unless suffixed otherwise (e.g., `_hz`, `_ns`).
 
 ```
 cqed_sim/
-├── core/            # Hilbert-space conventions, models, frames, ideal gates
+├── core/            # Hilbert-space conventions, models, frames, ideal gates, state-prep primitives
 ├── pulses/          # Pulse dataclass, envelopes, builders, calibration formulas, hardware
 ├── sequence/        # SequenceCompiler, compiled-channel timeline
 ├── sim/             # Hamiltonian assembly, solver, noise, extractors, couplings
-├── experiment/      # State preparation, measurement, readout chain, protocols
+├── measurement/     # Qubit measurement and readout-chain modeling
 ├── analysis/        # Parameter translation (bare → dressed)
 ├── backends/        # Dense NumPy/JAX solver backends
 ├── calibration/     # SQR gate calibration
@@ -107,8 +109,6 @@ cqed_sim/
 4. Compile with `SequenceCompiler`.
 5. Simulate with `simulate_sequence(...)`.
 6. Extract results with extractors or `measure_qubit(...)`.
-
-Or use the convenience wrapper `SimulationExperiment` which combines steps 1–6.
 
 ---
 
@@ -172,6 +172,7 @@ class UniversalCQEDModel:
 |---|---|---|
 | `operators()` | `-> dict[str, qt.Qobj]` | Cached full-space ladder and number operators, including compatibility aliases |
 | `hamiltonian(frame=None)` | `-> qt.Qobj` | Alias of `static_hamiltonian(frame)` |
+| `energy_spectrum(frame=None, levels=None)` | `-> EnergySpectrum` | Exact diagonalization of the static Hamiltonian with vacuum-referenced energies |
 | `basis_state(*levels)` | `-> qt.Qobj` | Basis ket using subsystem declaration order |
 | `basis_energy(*levels, frame=None)` | `-> float` | Diagonal basis energy under the static Hamiltonian |
 | `transmon_lowering()` | `-> qt.Qobj` | Full-space transmon lowering operator |
@@ -243,6 +244,7 @@ n_c(n_c−1)···(n_c−i), **not** n_c^(i+1).
 | `transmon_transition_frequency(cavity_level=0, lower_level=0, upper_level=1, frame=None)` | `(int, int, int, FrameSpec \| None) -> float` | General transmon transition frequency at fixed cavity Fock number |
 | `sideband_transition_frequency(cavity_level=0, lower_level=0, upper_level=1, sideband="red", frame=None)` | `(int, int, int, str, FrameSpec \| None) -> float` | Rotating-frame frequency addressed by the effective sideband transition |
 | `hamiltonian(frame=None)` | `(FrameSpec \| None) -> qt.Qobj` | Alias of `static_hamiltonian(frame)` |
+| `energy_spectrum(frame=None, levels=None)` | `(FrameSpec \| None, int \| None) -> EnergySpectrum` | Vacuum-referenced eigenspectrum of the static Hamiltonian |
 | `transmon_lowering()` / `transmon_raising()` / `transmon_number()` | `-> qt.Qobj` | Convenience accessors for the full-space transmon operators |
 | `cavity_annihilation()` / `cavity_creation()` / `cavity_number()` | `-> qt.Qobj` | Convenience accessors for the storage/cavity mode |
 | `as_universal_model()` | `-> UniversalCQEDModel` | Return the delegated universal model instance |
@@ -302,6 +304,7 @@ $$H_0/\hbar = \delta_s\, n_s + \delta_r\, n_r + \delta_q\, n_q + \frac{\alpha}{2
 | `transmon_transition_frequency(storage_level=0, readout_level=0, lower_level=0, upper_level=1, frame=None)` | `(...) -> float` | General transmon transition frequency in the three-mode model |
 | `sideband_transition_frequency(mode="storage", storage_level=0, readout_level=0, lower_level=0, upper_level=1, sideband="red", frame=None)` | `(...) -> float` | Rotating-frame frequency addressed by the effective sideband transition |
 | `hamiltonian(frame=None)` | `(FrameSpec \| None) -> qt.Qobj` | Alias of `static_hamiltonian(frame)` |
+| `energy_spectrum(frame=None, levels=None)` | `(FrameSpec \| None, int \| None) -> EnergySpectrum` | Vacuum-referenced eigenspectrum of the static Hamiltonian |
 | `transmon_lowering()` / `transmon_raising()` / `transmon_number()` | `-> qt.Qobj` | Convenience accessors for the full-space transmon operators |
 | `storage_annihilation()` / `storage_creation()` / `storage_number()` | `-> qt.Qobj` | Convenience accessors for the storage mode |
 | `readout_annihilation()` / `readout_creation()` / `readout_number()` | `-> qt.Qobj` | Convenience accessors for the readout mode |
@@ -437,6 +440,64 @@ All functions return QuTiP `Qobj` unitaries.
 | `embed_qubit_op(op_q, n_cav)` | `(qt.Qobj, int) -> qt.Qobj` | op_q ⊗ I_cav |
 | `embed_cavity_op(op_c, n_tr)` | `(qt.Qobj, int) -> qt.Qobj` | I_qubit ⊗ op_c. Default `n_tr=2`. |
 | `beamsplitter_unitary(n_a, n_b, theta)` | `(int, int, float) -> qt.Qobj` | exp[−iθ(a b† + a† b)]. Full two-mode unitary. |
+
+### 3.8 Energy Spectrum
+
+**Module path:** `cqed_sim.core.spectrum`
+
+```python
+@dataclass(frozen=True)
+class EnergyLevel:
+    index: int
+    energy: float
+    raw_energy: float
+    eigenstate: qt.Qobj
+    dominant_basis_levels: tuple[int, ...]
+    dominant_basis_label: str
+    dominant_basis_overlap: float
+
+@dataclass(frozen=True)
+class EnergySpectrum:
+    hamiltonian: qt.Qobj
+    frame: FrameSpec
+    levels: tuple[EnergyLevel, ...]
+    vacuum_energy: float
+    vacuum_basis_levels: tuple[int, ...]
+    vacuum_basis_label: str
+    vacuum_level_index: int | None
+    vacuum_level_overlap: float
+    vacuum_residual_norm: float
+    subsystem_labels: tuple[str, ...]
+    subsystem_dims: tuple[int, ...]
+    basis_levels: tuple[tuple[int, ...], ...]
+    basis_labels: tuple[str, ...]
+```
+
+```python
+def compute_energy_spectrum(
+    model,
+    *,
+    frame: FrameSpec | None = None,
+    levels: int | None = None,
+    sort: str = "low",
+) -> EnergySpectrum
+```
+
+The helper diagonalizes the model's static Hamiltonian with QuTiP's native eigensolver.
+Reported `EnergySpectrum.energies` are always shifted so the bare vacuum basis state has
+energy `0`, while `raw_energy` retains the unshifted eigenvalue in the selected frame.
+
+For ladder-style plots or physically intuitive absolute level spacings, the lab frame
+`FrameSpec()` is usually the clearest choice. In rotating frames, vacuum-referenced
+energies can still be negative because only the zero of energy is shifted.
+
+| Symbol | Description |
+|---|---|
+| `EnergySpectrum.energies` | Vacuum-referenced eigenenergies as a NumPy array |
+| `EnergySpectrum.raw_energies` | Unshifted eigenenergies as a NumPy array |
+| `EnergySpectrum.eigenstates` | Tuple of QuTiP eigenkets |
+| `EnergySpectrum.find_level(label)` | Retrieve a level by its dominant bare-basis label |
+| `EnergySpectrum.level_rows(max_levels=None)` | Compact list-of-dicts summary for tables or notebooks |
 
 ---
 
@@ -845,6 +906,8 @@ class NoiseSpec:
     t1: float | None = None              # T₁ relaxation (s)
     transmon_t1: tuple[float | None, ...] | None = None  # Explicit ladder T1 values: (T1_ge, T1_fe, ...)
     tphi: float | None = None            # T_φ dephasing (s)
+    tphi_storage: float | None = None    # Storage pure dephasing time (s)
+    tphi_readout: float | None = None    # Readout pure dephasing time (s)
     kappa: float | None = None           # Cavity decay rate (1/s)
     nth: float = 0.0                     # Cavity thermal occupation
     kappa_storage: float | None = None   # Storage decay (defaults to kappa)
@@ -857,6 +920,8 @@ class NoiseSpec:
 |---|---|---|
 | `gamma1` | `float` | 1/t1 if set, else 0.0 |
 | `gamma_phi` | `float` | 1/(2·tphi) if set, else 0.0 |
+| `gamma_phi_storage` | `float` | 1/tphi_storage if set, else 0.0 |
+| `gamma_phi_readout` | `float` | 1/tphi_readout if set, else 0.0 |
 
 ```python
 def collapse_operators(model, noise: NoiseSpec | None) -> list[qt.Qobj]
@@ -867,6 +932,8 @@ Returns Lindblad jump operators:
 - `sqrt(1/T1_j) * |j-1><j|` for each explicit transmon ladder transition listed in `transmon_t1`
 - √γ_φ · σ_z (dephasing for 2-level) or √γ_φ · n_q (multi-level)
 - √(κ(n_th+1)) · a and √(κ·n_th) · a† per bosonic mode
+- `sqrt(1/tphi_storage) * n_s` for storage pure dephasing when `tphi_storage` is set
+- `sqrt(1/tphi_readout) * n_r` for readout pure dephasing when `tphi_readout` is set
 
 ---
 
@@ -965,20 +1032,20 @@ Returns `(xvec, yvec, W)`. The `"quadrature"` coordinate uses natural units;
 
 ---
 
-## 7. Experiment Layer
+## 7. State Preparation and Measurement
 
-**Module:** `cqed_sim.experiment`
+**Modules:** `cqed_sim.core.state_prep`, `cqed_sim.measurement`
 
 ### 7.1 State Preparation
 
-**Module path:** `cqed_sim.experiment.state_prep`
+**Module path:** `cqed_sim.core.state_prep`
 
 #### SubsystemStateSpec
 
 ```python
 @dataclass(frozen=True)
 class SubsystemStateSpec:
-    kind: str                           # "qubit", "vacuum", "fock", "coherent", "amplitudes", "density_matrix"
+    kind: str
     label: str | None = None
     level: int | None = None
     alpha: complex | None = None
@@ -993,7 +1060,7 @@ class SubsystemStateSpec:
 class StatePreparationSpec:
     qubit: SubsystemStateSpec = qubit_state("g")
     storage: SubsystemStateSpec = vacuum_state()
-    readout: SubsystemStateSpec | None = None  # For 3-mode models
+    readout: SubsystemStateSpec | None = None
 ```
 
 #### State Constructor Helpers
@@ -1001,10 +1068,10 @@ class StatePreparationSpec:
 | Function | Signature | Description |
 |---|---|---|
 | `qubit_state(label)` | `(str) -> SubsystemStateSpec` | Labels: `"g"`, `"e"`, `"+x"`, `"-x"`, `"+y"`, `"-y"` |
-| `qubit_level(level)` | `(int) -> SubsystemStateSpec` | Qubit by Fock level |
-| `vacuum_state()` | `() -> SubsystemStateSpec` | Cavity ground state \|0⟩ |
-| `fock_state(level)` | `(int) -> SubsystemStateSpec` | Cavity Fock state \|n⟩ |
-| `coherent_state(alpha)` | `(complex) -> SubsystemStateSpec` | Coherent state \|α⟩ |
+| `qubit_level(level)` | `(int) -> SubsystemStateSpec` | Qubit by level index |
+| `vacuum_state()` | `() -> SubsystemStateSpec` | Bosonic vacuum |
+| `fock_state(level)` | `(int) -> SubsystemStateSpec` | Bosonic Fock state |
+| `coherent_state(alpha)` | `(complex) -> SubsystemStateSpec` | Bosonic coherent state |
 | `amplitude_state(amplitudes)` | `(Any) -> SubsystemStateSpec` | Arbitrary state from amplitudes |
 | `density_matrix_state(rho)` | `(Any) -> SubsystemStateSpec` | State from density matrix |
 
@@ -1012,33 +1079,27 @@ class StatePreparationSpec:
 
 ```python
 def prepare_state(model, spec: StatePreparationSpec | None = None) -> qt.Qobj
-```
-
-Builds the tensor-product initial state. Supports 2-mode and 3-mode models
-automatically. Defaults to \|g⟩\|0⟩ (or \|g⟩\|0⟩\|0⟩) if spec is None.
-
-```python
 def prepare_ground_state(model) -> qt.Qobj
 ```
 
-Convenience: prepare \|g,0⟩ (or \|g,0,0⟩ for 3-mode).
+`prepare_state(...)` builds a tensor-product state that follows model subsystem ordering automatically.
 
 ---
 
 ### 7.2 Qubit Measurement
 
-**Module path:** `cqed_sim.experiment.measurement`
+**Module path:** `cqed_sim.measurement.qubit`
 
 #### QubitMeasurementSpec
 
 ```python
 @dataclass(frozen=True)
 class QubitMeasurementSpec:
-    shots: int | None = None                      # None = exact probabilities only
-    confusion_matrix: np.ndarray | None = None    # Shape (2,2), ordering (g, e)
-    iq_sigma: float | None = None                 # IQ noise std deviation
-    seed: int | None = None                       # RNG seed for reproducibility
-    lump_other_into: str = "e"                    # "g" or "e" for higher levels
+    shots: int | None = None
+    confusion_matrix: np.ndarray | None = None
+    iq_sigma: float | None = None
+    seed: int | None = None
+    lump_other_into: str = "e"
     readout_chain: ReadoutChain | None = None
     readout_duration: float | None = None
     readout_dt: float | None = None
@@ -1056,12 +1117,12 @@ class QubitMeasurementSpec:
 ```python
 @dataclass
 class QubitMeasurementResult:
-    probabilities: dict[str, float]              # {"g": p_g, "e": p_e}
-    observed_probabilities: dict[str, float]     # After confusion matrix
-    expectation_z: float                         # p_g_obs − p_e_obs
-    counts: dict[str, int] | None = None         # Shot counts
-    samples: np.ndarray | None = None            # (shots,) of 0/1
-    iq_samples: np.ndarray | None = None         # (shots, 2)
+    probabilities: dict[str, float]
+    observed_probabilities: dict[str, float]
+    expectation_z: float
+    counts: dict[str, int] | None = None
+    samples: np.ndarray | None = None
+    iq_samples: np.ndarray | None = None
     post_measurement_state: qt.Qobj | None = None
     readout_centers: dict[str, np.ndarray] | None = None
     readout_metadata: dict[str, float] | None = None
@@ -1073,241 +1134,55 @@ class QubitMeasurementResult:
 def measure_qubit(state: qt.Qobj, spec: QubitMeasurementSpec | None = None) -> QubitMeasurementResult
 ```
 
-**Pipeline:**
+Pipeline:
 
-1. Extract reduced qubit state via `reduced_qubit_state()`.
-2. Compute latent probabilities (p_g, p_e), lumping higher levels.
-3. Apply confusion matrix: p_obs = M @ p_latent.
-4. If readout chain is attached: apply backaction (dephasing, Purcell), generate IQ.
-5. If shots requested: sample from p_obs (or classify from IQ).
-6. Return comprehensive result.
+1. Extract the reduced qubit state.
+2. Compute latent probabilities `(p_g, p_e)`.
+3. Apply the optional confusion matrix.
+4. Apply readout-chain backaction and/or I/Q generation when requested.
+5. Sample outcomes when `shots` is set.
 
-**Confusion matrix convention:** column ordering is (g, e).
-
----
-
-### 7.3 SimulationExperiment
-
-**Module path:** `cqed_sim.experiment.protocol.SimulationExperiment`
-
-Convenience wrapper that combines state preparation, compilation, simulation, and
-measurement in a single object.
-
-```python
-@dataclass
-class SimulationExperiment:
-    model: Any
-    pulses: list[Pulse]
-    drive_ops: dict[str, str]
-    dt: float
-    t_end: float | None = None
-    frame: FrameSpec = FrameSpec()
-    initial_state: qt.Qobj | None = None
-    state_prep: StatePreparationSpec | None = None
-    noise: NoiseSpec | None = None
-    e_ops: dict[str, qt.Qobj] | None = None
-    measurement: QubitMeasurementSpec | None = None
-    hardware: dict[str, HardwareConfig] | None = None
-    crosstalk_matrix: dict[str, dict[str, float]] | None = None
-    metadata: ExperimentMetadata = ExperimentMetadata()
-```
-
-| Method | Signature | Description |
-|---|---|---|
-| `resolve_initial_state()` | `-> qt.Qobj` | Returns `initial_state` or prepares from `state_prep` |
-| `compile()` | `-> CompiledSequence` | Creates SequenceCompiler and compiles pulses |
-| `run()` | `-> ExperimentResult` | Full pipeline: prepare → compile → simulate → measure |
-
-```python
-@dataclass
-class ExperimentResult:
-    initial_state: qt.Qobj
-    compiled: CompiledSequence
-    simulation: SimulationResult
-    measurement: QubitMeasurementResult | None
-    metadata: ExperimentMetadata
-
-@dataclass
-class ExperimentMetadata:
-    label: str = ""
-    target_state: qt.Qobj | None = None
-    target_unitary: qt.Qobj | None = None
-    notes: dict[str, Any] = field(default_factory=dict)
-```
+Confusion-matrix convention: `p_observed = M @ p_latent` with `(g, e)` ordering.
 
 ---
 
-### 7.4 Readout Chain
+### 7.3 Readout Chain
 
-**Module path:** `cqed_sim.experiment.readout_chain`
+**Module path:** `cqed_sim.measurement.readout_chain`
 
-Physical readout model with resonator, Purcell filter, and amplifier chain.
-
-#### ReadoutResonator
-
-```python
-@dataclass(frozen=True)
-class ReadoutResonator:
-    omega_r: float        # Resonator frequency (rad/s)
-    kappa: float          # Linewidth (rad/s)
-    g: float              # Coupling to qubit (rad/s)
-    epsilon: complex      # Drive amplitude (rad/s)
-    chi: float = 0.0      # Dispersive shift (rad/s)
-    drive_frequency: float | None = None
-```
-
-**Key methods:**
-
-| Method | Returns | Description |
-|---|---|---|
-| `dispersive_shift(qubit_state, chi)` | `float` | 0 for "g", +χ for "e" |
-| `resonant_frequency(qubit_state, chi)` | `float` | ω_r + dispersive_shift |
-| `steady_state_amplitude(qubit_state, ...)` | `complex` | α_ss = −iε / (κ_eff/2 + i(ω_r,q − ω_d)) |
-| `gamma_meas(...)` | `float` | Measurement-induced dephasing rate |
-| `purcell_rate(omega_q, ...)` | `float` | Purcell decay rate at qubit frequency |
-| `purcell_limited_t1(omega_q, ...)` | `float` | 1 / purcell_rate |
-| `response_trace(qubit_state, *, duration, dt, ...)` | `(tlist, field)` | Time-domain cavity response |
-
-#### PurcellFilter
-
-```python
-@dataclass(frozen=True)
-class PurcellFilter:
-    omega_f: float | None = None           # Center frequency
-    bandwidth: float | None = None         # Filter bandwidth (rad/s)
-    quality_factor: float | None = None    # Q = center / bandwidth
-    coupling_rate: float | None = None     # 0.5·√(κ·BW)
-```
-
-Implements frequency-dependent linewidth suppression:
-
-$$\kappa_\text{eff}(\omega) = \frac{4J^2 \kappa_f}{\kappa_f^2 + 4(\omega - \omega_f)^2}$$
-
-#### AmplifierChain
-
-```python
-@dataclass(frozen=True)
-class AmplifierChain:
-    noise_temperature: float = 0.0   # Kelvin
-    gain: float = 1.0
-    impedance_ohm: float = 50.0
-    mixer_phase: float = 0.0         # Downconversion phase
-```
-
-| Method | Description |
+| Dataclass | Description |
 |---|---|
-| `noise_std(dt, n_samples)` | RMS noise per quadrature |
-| `amplify(trace, *, dt, seed)` | Apply gain and thermal noise |
-| `mix_down(trace)` | Multiply by exp(−i·phase) |
-| `iq_sample(trace)` | Integrated I/Q: [mean_I, mean_Q] |
+| `ReadoutResonator` | Single-pole dispersive readout resonator model |
+| `PurcellFilter` | Frequency-selective linewidth suppression model |
+| `AmplifierChain` | Linear gain plus additive thermal noise |
+| `ReadoutChain` | Resonator + optional filter + amplifier + integration settings |
+| `ReadoutTrace` | Time-domain cavity/output/voltage/I/Q record |
 
-#### ReadoutChain
+Common methods:
 
-```python
-@dataclass
-class ReadoutChain:
-    resonator: ReadoutResonator
-    amplifier: AmplifierChain = AmplifierChain()
-    purcell_filter: PurcellFilter | None = None
-    integration_time: float = 1e-6    # s
-    dt: float = 4e-9                  # s
-```
-
-| Method | Description |
+| API | Description |
 |---|---|
-| `simulate_trace(qubit_state, ...)` | Full readout trace with noise → `ReadoutTrace` |
-| `iq_centers(...)` | Noiseless IQ centers: `{"g": [I,Q], "e": [I,Q]}` |
-| `sample_iq(latent_states, ...)` | Noisy IQ samples (n × 2) |
-| `classify_iq(iq_samples, ...)` | Nearest-neighbor classification → 0/1 |
-| `apply_backaction(rho_q, *, omega_q, ...)` | Measurement dephasing ± Purcell relaxation on qubit ρ |
+| `ReadoutChain.simulate_trace(...)` | Time-domain resonator response and downconverted trace |
+| `ReadoutChain.iq_centers(...)` | Noiseless I/Q centers for `g` and `e` |
+| `ReadoutChain.sample_iq(...)` | Noisy I/Q sampling from latent labels |
+| `ReadoutChain.classify_iq(...)` | Nearest-center classification |
+| `ReadoutChain.apply_backaction(...)` | Measurement dephasing and optional Purcell relaxation |
+| `ReadoutChain.gamma_meas(...)` | Measurement-induced dephasing rate |
+| `ReadoutChain.purcell_rate(...)` | Purcell decay rate |
+| `ReadoutChain.purcell_limited_t1(...)` | Purcell-limited `T1` |
 
-```python
-@dataclass
-class ReadoutTrace:
-    tlist: np.ndarray          # (n_steps,)
-    cavity_field: np.ndarray   # (n_steps,) complex
-    output_field: np.ndarray   # √κ · cavity_field
-    voltage_trace: np.ndarray  # Amplified + noise
-    iq_sample: np.ndarray      # [I, Q]
-```
+Workflow boundary:
 
----
+- high-level orchestration no longer lives in `cqed_sim`
+- protocol recipes now live under `examples/`
+- the reusable helper `pure_dephasing_time_from_t1_t2(...)` lives in `cqed_sim.sim.noise`
 
-### 7.5 Kerr Free Evolution
+Example-side workflow entry points:
 
-**Module path:** `cqed_sim.experiment.kerr_free_evolution`
-
-Specialized helpers for simulating cavity free evolution under Kerr nonlinearity.
-
-#### KerrParameterSet
-
-```python
-@dataclass(frozen=True)
-class KerrParameterSet:
-    name: str
-    omega_q_hz: float
-    omega_c_hz: float
-    omega_ro_hz: float
-    alpha_q_hz: float
-    kerr_hz: float
-    kerr2_hz: float = 0.0
-    chi_hz: float = 0.0
-    chi2_hz: float = 0.0
-    chi3_hz: float = 0.0
-```
-
-Has a `build_model(*, n_cav=28, n_tr=3)` method that converts Hz → rad/s and
-constructs a `DispersiveTransmonCavityModel`.
-
-**Predefined sets:** `KERR_FREE_EVOLUTION_PARAMETER_SETS` is a dict with keys
-`"phase_evolution"` and `"value_2"`.
-
-#### Main Functions
-
-| Function | Signature | Description |
-|---|---|---|
-| `run_kerr_free_evolution(times_s, *, parameter_set="phase_evolution", cavity_state=None, qubit=None, state_prep=None, n_cav=28, n_tr=3, use_rotating_frame=True, wigner_times_s=None, ...)` | `-> KerrFreeEvolutionResult` | Full free-evolution simulator with optional Wigner snapshots |
-| `build_kerr_free_evolution_model(parameter_set, ...)` | `-> DispersiveTransmonCavityModel` | Build model from preset |
-| `build_kerr_free_evolution_frame(model, *, use_rotating_frame)` | `-> FrameSpec` | Rotating-frame FrameSpec |
-| `times_us_to_seconds(times_us)` | `-> ndarray` | Convert µs to seconds |
-| `available_kerr_parameter_sets()` | `-> tuple[str, ...]` | Available preset names |
-| `plot_kerr_wigner_snapshots(result, ...)` | `-> fig` | Grid of Wigner function snapshots |
-| `verify_kerr_sign(...)` | `-> KerrSignVerificationResult` | Compare the documented Kerr sign against a flipped-sign control run for notebook-scale diagnostics |
-
-#### Result Dataclasses
-
-```python
-@dataclass
-class KerrEvolutionSnapshot:
-    time_s: float
-    time_us: float
-    joint_state: qt.Qobj
-    cavity_state: qt.Qobj
-    cavity_mean: complex         # ⟨a⟩
-    cavity_photon_number: float  # ⟨a†a⟩
-    wigner: dict | None          # {"xvec", "yvec", "w"} if computed
-
-@dataclass
-class KerrFreeEvolutionResult:
-    parameter_set: KerrParameterSet
-    model: DispersiveTransmonCavityModel
-    frame: FrameSpec
-    initial_state: qt.Qobj
-    state_prep: StatePreparationSpec
-    snapshots: list[KerrEvolutionSnapshot]
-    metadata: dict[str, Any]
-    # Properties: times_s, times_us → ndarray
-
-@dataclass(frozen=True)
-class KerrSignVerificationResult:
-    documented_kerr_hz: float
-    flipped_kerr_hz: float
-    cavity_mean_documented: complex
-    cavity_mean_flipped: complex
-    documented_phase_rad: float
-    flipped_phase_rad: float
-    matches_documented_sign: bool
-```
+- `examples/protocol_style_simulation.py`
+- `examples/kerr_free_evolution.py`
+- `examples/kerr_sign_verification.py`
+- `examples/sequential_sideband_reset.py`
 
 ---
 
@@ -1873,6 +1748,7 @@ diagnostic visualization.
 | Function | Description |
 |---|---|
 | `plot_sqr_calibration_result(result)` | 4-panel: d_lambda, d_alpha, d_omega_hz, loss vs Fock level |
+| `plot_energy_levels(spectrum, max_levels=None, energy_scale=1.0, energy_unit_label="rad/s", annotate=True, title=None, ax=None)` | Ladder-style plot of vacuum-referenced energy levels |
 
 ### Gate Diagnostics (`plotting.gate_diagnostics`)
 
@@ -2177,21 +2053,21 @@ results = simulate_batch(session,
     [model.basis_state(0, n) for n in range(4)], max_workers=1)
 ```
 
-### Workflow C: SimulationExperiment wrapper
+### Workflow C: Direct prepare-compile-simulate-measure path
 
 ```python
-from cqed_sim.experiment import (
-    SimulationExperiment, StatePreparationSpec,
-    QubitMeasurementSpec, qubit_state, fock_state,
-)
+from cqed_sim.core import StatePreparationSpec, fock_state, prepare_state, qubit_state
+from cqed_sim.measurement import QubitMeasurementSpec, measure_qubit
 
-experiment = SimulationExperiment(
-    model=model, pulses=[pulse], drive_ops={"q": "qubit"},
-    dt=2e-9, frame=frame,
-    state_prep=StatePreparationSpec(qubit=qubit_state("g"), storage=fock_state(0)),
-    measurement=QubitMeasurementSpec(shots=2048, seed=42),
+initial = prepare_state(
+    model,
+    StatePreparationSpec(qubit=qubit_state("g"), storage=fock_state(0)),
 )
-result = experiment.run()
+result = simulate_sequence(
+    model, compiled, initial, {"q": "qubit"},
+    config=SimulationConfig(frame=frame),
+)
+measurement = measure_qubit(result.final_state, QubitMeasurementSpec(shots=2048, seed=42))
 ```
 
 ### Workflow D: Unitary synthesis
@@ -2246,6 +2122,13 @@ APIs. The canonical reference is `physics_and_conventions/physics_conventions_re
 
 - **Convention:** exp(+i(ω·t + φ)) throughout (positive exponent)
 - A transition at rotating-frame frequency `ω_transition` is resonantly addressed by `Pulse.carrier = -ω_transition`
+
+### Energy Spectrum Reference
+
+- `compute_energy_spectrum(...)` and `model.energy_spectrum(...)` always subtract the bare vacuum-state energy before reporting `EnergySpectrum.energies`.
+- The vacuum basis state means all subsystems are in level `0`: `|g,0>` for the two-mode model, `|g,0,0>` for the three-mode model, and `|0>` for cavity-only models.
+- The diagonalized Hamiltonian is still the model's static Hamiltonian in the selected frame. Only the reported zero of energy is shifted.
+- For interpretable absolute ladder plots, use the lab frame `FrameSpec()`. Rotating-frame spectra can contain negative energies even though the vacuum remains the zero-reference state.
 
 ### Confusion Matrix
 

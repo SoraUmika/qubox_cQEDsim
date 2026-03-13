@@ -455,6 +455,11 @@ class UniversalCQEDModel:
     def hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
         return self.static_hamiltonian(frame=frame)
 
+    def energy_spectrum(self, *, frame: FrameSpec | None = None, levels: int | None = None):
+        from .spectrum import compute_energy_spectrum
+
+        return compute_energy_spectrum(self, frame=frame, levels=levels)
+
     def _normalize_basis_levels(self, levels: Sequence[int] | tuple[int, ...]) -> tuple[int, ...]:
         if len(levels) == 1 and isinstance(levels[0], (tuple, list)):  # type: ignore[index]
             levels = tuple(levels[0])  # type: ignore[assignment]

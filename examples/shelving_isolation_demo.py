@@ -23,7 +23,7 @@ from cqed_sim import (
 
 
 def main() -> None:
-    out_dir = Path("examples") / "outputs" / "shelving_isolation_demo"
+    out_dir = ROOT / "examples" / "outputs" / "shelving_isolation_demo"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     model = DispersiveTransmonCavityModel(

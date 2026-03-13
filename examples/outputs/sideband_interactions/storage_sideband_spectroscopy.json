@@ -1,0 +1,20 @@
+[
+  {
+    "target_storage_level": 0,
+    "predicted_hz": -255669694.5244608,
+    "peak_hz": -255669694.5244608,
+    "peak_minus_predicted_hz": 0.0
+  },
+  {
+    "target_storage_level": 1,
+    "predicted_hz": -261350536.5244608,
+    "peak_hz": -261350536.5244608,
+    "peak_minus_predicted_hz": 0.0
+  },
+  {
+    "target_storage_level": 2,
+    "predicted_hz": -267031378.52446076,
+    "peak_hz": -267031378.52446076,
+    "peak_minus_predicted_hz": 0.0
+  }
+]

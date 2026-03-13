@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from cqed_sim.experiment import verify_kerr_sign
+from examples.workflows.kerr_free_evolution import verify_kerr_sign
 
 
 def test_notebook_kerr_diagnostic_matches_documented_runtime_convention():

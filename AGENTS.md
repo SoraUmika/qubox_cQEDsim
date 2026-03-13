@@ -4,7 +4,7 @@
 
 - Before taking any action, first read `README.md` to gather project context.
 - Do not create, activate, or rely on a virtual environment unless the user explicitly asks for one.
-- For Python execution, use the existing system Python at `E:\Program Files\Python311\python.exe` or `E:\Programs\python.exe`.
+- For Python execution, use the existing system Python at `E:\Program Files\Python311\python.exe` or `E:\Programs\python.exe` for existing python version 3.12.10.
 - Do not run dependency installation or environment-management commands unless the user explicitly requests them.
 
 ## Python Environment
@@ -112,7 +112,7 @@
   4. Write an inconsistency report in the `inconsistency` folder if issues are found.
   5. Apply the refactor with minimal necessary changes that match project conventions.
   6. Update `API_REFERENCE.md` if the refactor changes public-facing code behavior or usage.
-  7. Update `physics_and_conventions/physics_conventions_report.tex` if the refactor changes physical meaning, conventions, or modeling assumptions.
+  7. Update `physics_and_conventions/physics_conventions_report.tex` if the refactor changes physical meaning, conventions, or modeling assumptions. Generally this should be treated as a source of truth and should not need explicit change unless otherwise told to do so
   8. Add or update tests under `tests` as needed.
   9. Add or update examples under `examples` if the intended user workflow or recommended usage has changed.
 

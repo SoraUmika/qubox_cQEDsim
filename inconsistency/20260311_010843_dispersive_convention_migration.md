@@ -1,3 +1,5 @@
+Status: fixed on 2026-03-13 after re-audit.
+
 ## Confirmed issues
 
 ### 1. Runtime dispersive sign is opposite to the new requested canonical convention
@@ -90,7 +92,9 @@
 - Affected components:
   - resonator-response helpers
   - Purcell and measurement-rate examples/tests
-- Open question: The user request focuses on the transmon-cavity dispersive convention, but repository-wide consistency may also require aligning the readout-chain `chi` meaning.
+- Resolution on 2026-03-13:
+  - `cqed_sim/measurement/readout_chain.py` now uses the same canonical sign language as the runtime Hamiltonian: the excited state shifts the resonator by `+chi` relative to `|g>`.
+  - This follow-up item is resolved rather than left open.
 
 ### B. Example artifacts and study scripts likely encode old sign assumptions outside the main test path
 
@@ -102,3 +106,10 @@
   - saved JSON/PNG artifacts
   - study-specific reports
 - Open question: Some of these are smoke-test assets or archived studies and may need either migration or a historical note, depending on whether they are intended to remain active user-facing references.
+
+## Resolution summary
+
+- Runtime dispersive and Kerr semantics are now centralized in `UniversalCQEDModel` and inherited by the compatibility wrappers in `cqed_sim/core/model.py` and `cqed_sim/core/readout_model.py`.
+- `cqed_sim/analysis/parameter_translation.py` now exposes the same canonical `chi` and `chi_2` values for runtime and synthesis callers instead of a separate sign-converted mapping.
+- `cqed_sim/unitary_synthesis/sequence.py`, `README.md`, `API_REFERENCE.md`, and the physics documentation now describe the same projector-based `+chi * n * |e><e|` and `+(K/2) n(n-1)` conventions.
+- The readout-chain follow-up item was re-audited and confirmed aligned with the canonical sign convention.

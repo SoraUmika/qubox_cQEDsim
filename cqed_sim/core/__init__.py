@@ -30,12 +30,29 @@ from .ideal_gates import (
 )
 from .model import DispersiveTransmonCavityModel
 from .readout_model import DispersiveReadoutTransmonStorageModel
+from .spectrum import EnergyLevel, EnergySpectrum, compute_energy_spectrum
+from .state_prep import (
+    StatePreparationSpec,
+    SubsystemStateSpec,
+    amplitude_state,
+    coherent_state,
+    density_matrix_state,
+    fock_state,
+    prepare_ground_state,
+    prepare_state,
+    qubit_level,
+    qubit_state,
+    vacuum_state,
+)
 from .universal_model import BosonicModeSpec, DispersiveCouplingSpec, TransmonModeSpec, UniversalCQEDModel
 
 __all__ = [
     "DispersiveTransmonCavityModel",
     "DispersiveReadoutTransmonStorageModel",
     "UniversalCQEDModel",
+    "EnergyLevel",
+    "EnergySpectrum",
+    "compute_energy_spectrum",
     "TransmonModeSpec",
     "BosonicModeSpec",
     "DispersiveCouplingSpec",
@@ -66,4 +83,15 @@ __all__ = [
     "sqr_op",
     "embed_qubit_op",
     "embed_cavity_op",
+    "SubsystemStateSpec",
+    "StatePreparationSpec",
+    "qubit_state",
+    "qubit_level",
+    "vacuum_state",
+    "fock_state",
+    "coherent_state",
+    "amplitude_state",
+    "density_matrix_state",
+    "prepare_state",
+    "prepare_ground_state",
 ]

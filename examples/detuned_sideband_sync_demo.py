@@ -27,7 +27,7 @@ def _square(t_rel):
 
 
 def main() -> None:
-    out_dir = Path("examples") / "outputs" / "detuned_sideband_sync_demo"
+    out_dir = ROOT / "examples" / "outputs" / "detuned_sideband_sync_demo"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     g_sb = 0.35

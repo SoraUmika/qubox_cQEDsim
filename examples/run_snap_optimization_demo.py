@@ -9,7 +9,7 @@ from examples.studies.snap_opt import SnapModelConfig, SnapRunConfig, SnapTonePa
 
 
 def main():
-    out = Path("examples") / "outputs_snap_opt"
+    out = Path(__file__).resolve().parent / "outputs_snap_opt"
     out.mkdir(parents=True, exist_ok=True)
     model = SnapModelConfig(n_cav=7, n_tr=2, chi=2 * np.pi * 0.02).build_model()
     target = np.array([0.0, 1.1, -0.7, 0.4], dtype=float)

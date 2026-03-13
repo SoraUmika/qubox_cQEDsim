@@ -10,13 +10,14 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from cqed_sim import coherent_state, plot_kerr_wigner_snapshots, run_kerr_free_evolution, times_us_to_seconds
+from cqed_sim.core import coherent_state
+from examples.workflows.kerr_free_evolution import plot_kerr_wigner_snapshots, run_kerr_free_evolution, times_us_to_seconds
 
 TIMES_US = [0, 1, 2, 4, 6, 8, 10, 12, 14]
 
 
 def main() -> None:
-    out_dir = Path("examples") / "outputs" / "kerr_free_evolution"
+    out_dir = ROOT / "examples" / "outputs" / "kerr_free_evolution"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     result = run_kerr_free_evolution(

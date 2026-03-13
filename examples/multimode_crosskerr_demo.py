@@ -14,7 +14,7 @@ from cqed_sim import DispersiveReadoutTransmonStorageModel, SequenceCompiler, Si
 
 
 def main() -> None:
-    out_dir = Path("examples") / "outputs" / "multimode_crosskerr_demo"
+    out_dir = ROOT / "examples" / "outputs" / "multimode_crosskerr_demo"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     chi_sr = 0.14

@@ -1,128 +1,57 @@
 # Tutorial: Kerr Free Evolution
 
-This tutorial demonstrates cavity free evolution under Kerr nonlinearity — a fundamental diagnostic for verifying the self-Kerr sign and magnitude in the simulator.
+This tutorial points to the repo-side Kerr workflow, which now lives under `examples/` rather than inside the installed `cqed_sim` package.
 
 ---
 
-## Physics Background
+## Workflow Location
 
-A cavity initialized in a coherent state $|\alpha\rangle$ evolves under the Kerr Hamiltonian:
+Use the example-side helpers and scripts:
 
-$$H_K = \frac{K}{2} \, n_c(n_c - 1)$$
+- `examples/workflows/kerr_free_evolution.py`
+- `examples/kerr_free_evolution.py`
+- `examples/kerr_sign_verification.py`
 
-The Kerr nonlinearity causes photon-number-dependent phase evolution, leading to characteristic features in the Wigner function over time. At specific revival times, the state exhibits quantum interference patterns.
+Run the script directly from the repository root:
 
----
-
-## Using the Built-in Workflow
-
-`cqed_sim` provides a dedicated Kerr free-evolution workflow:
-
-```python
-import numpy as np
-from cqed_sim.experiment import (
-    run_kerr_free_evolution,
-    available_kerr_parameter_sets,
-)
-
-# See available preset parameter sets
-print(available_kerr_parameter_sets())
-# ("phase_evolution", "value_2")
-
-# Run free evolution with Wigner snapshots
-times_us = np.linspace(0, 50, 6)  # Snapshot times in microseconds
-result = run_kerr_free_evolution(
-    times_us * 1e-6,              # Convert to seconds
-    parameter_set="phase_evolution",
-    n_cav=28,
-    n_tr=3,
-    use_rotating_frame=True,
-    wigner_times_s=times_us * 1e-6,
-)
+```bash
+python examples/kerr_free_evolution.py
+python examples/kerr_sign_verification.py
 ```
 
 ---
 
-## Inspecting Results
+## Library Building Blocks Used By The Workflow
 
-```python
-# Access snapshots
-for snap in result.snapshots:
-    print(f"t = {snap.time_us:.1f} µs, ⟨n⟩ = {snap.cavity_photon_number:.3f}")
-    print(f"  ⟨a⟩ = {snap.cavity_mean:.4f}")
+The Kerr workflow is built from reusable library primitives:
 
-# Model and frame used
-print(result.model)
-print(result.frame)
-```
+- `DispersiveTransmonCavityModel` and `FrameSpec` from `cqed_sim.core`
+- `StatePreparationSpec`, `coherent_state`, and `prepare_state(...)` from `cqed_sim.core`
+- `reduced_cavity_state(...)` and `cavity_wigner(...)` from `cqed_sim.sim`
 
-### Wigner Snapshots
+That means you can either:
 
-```python
-from cqed_sim.experiment import plot_kerr_wigner_snapshots
-
-fig = plot_kerr_wigner_snapshots(result)
-```
+1. run the repo example as-is, or
+2. compose the same behavior manually from the stable low-level modules.
 
 ---
 
-## Custom Initial States
+## Minimal Manual Pattern
 
 ```python
-from cqed_sim.experiment import (
-    run_kerr_free_evolution,
-    StatePreparationSpec,
-    qubit_state,
-    coherent_state,
-)
+from cqed_sim.core import FrameSpec, StatePreparationSpec, coherent_state, prepare_state, qubit_state
+from cqed_sim.sim import cavity_wigner, reduced_cavity_state
 
-result = run_kerr_free_evolution(
-    times_us * 1e-6,
-    parameter_set="phase_evolution",
-    state_prep=StatePreparationSpec(
+initial_state = prepare_state(
+    model,
+    StatePreparationSpec(
         qubit=qubit_state("g"),
-        storage=coherent_state(3.0),  # Larger coherent state
+        storage=coherent_state(2.0),
     ),
-    n_cav=40,
 )
+
+rho_c = reduced_cavity_state(initial_state)
+xvec, yvec, wigner = cavity_wigner(rho_c)
 ```
 
----
-
-## Kerr Sign Verification
-
-Verify that the documented Kerr sign matches the expected physical behavior:
-
-```python
-from cqed_sim.experiment import verify_kerr_sign
-
-verification = verify_kerr_sign()
-print(f"Documented Kerr: {verification.documented_kerr_hz:.1f} Hz")
-print(f"Flipped Kerr:    {verification.flipped_kerr_hz:.1f} Hz")
-print(f"Matches documented sign: {verification.matches_documented_sign}")
-```
-
-This compares the phase evolution under the documented Kerr value against a flipped-sign control run.
-
----
-
-## Predefined Parameter Sets
-
-The `KerrParameterSet` dataclass stores device parameters in Hz:
-
-```python
-from cqed_sim.experiment import KERR_FREE_EVOLUTION_PARAMETER_SETS
-
-params = KERR_FREE_EVOLUTION_PARAMETER_SETS["phase_evolution"]
-print(f"Kerr = {params.kerr_hz} Hz")
-print(f"Chi  = {params.chi_hz} Hz")
-```
-
-Each parameter set has a `build_model()` method that converts Hz → rad/s and constructs a `DispersiveTransmonCavityModel`.
-
----
-
-## Existing Examples
-
-- `examples/kerr_free_evolution.py` — full Kerr free-evolution workflow
-- `examples/kerr_sign_verification.py` — sign verification diagnostic
+For the full time-evolution recipe, use the example workflow module.

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 import qutip as qt
 
-from cqed_sim.experiment.readout_chain import ReadoutChain
+from cqed_sim.measurement.readout_chain import ReadoutChain
 from cqed_sim.sim.extractors import reduced_qubit_state
 
 

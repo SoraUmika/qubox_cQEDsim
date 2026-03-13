@@ -1,12 +1,31 @@
 # `cqed_sim`
 
-`cqed_sim` is the reusable cQED simulator library in this repository. It is intended to cover both clean Hamiltonian-level simulation and experiment-style protocol simulation for:
+`cqed_sim` is the reusable cQED simulator library in this repository. It is intended to cover low-level Hamiltonian and pulse simulation, plus reusable preparation and measurement primitives, for:
 
 - qubit/transmon + storage-cavity systems,
 - storage + transmon + readout-resonator systems,
 - pulse-level schedules compiled onto explicit drive channels,
 - deterministic open-system evolution,
 - lightweight state-preparation and measurement wrappers.
+
+## Installation
+
+Install from the repository root, which is the standard location for the package metadata:
+
+```bash
+cd path/to/cQED_simulation
+pip install -e .
+```
+
+For a non-editable install:
+
+```bash
+pip install .
+```
+
+The install metadata lives in `pyproject.toml` at the repository root. Do not create a second setup file inside `cqed_sim/`; that directory is the import package, not the build/install entry point.
+
+The wheel also bundles `physics_and_conventions`, which is used by parts of the public `cqed_sim` API at runtime.
 
 Study code, audits, paper reproductions, and workflow-specific helpers are intentionally outside the core package under `examples/`.
 
@@ -22,8 +41,8 @@ Core library:
   - `SequenceCompiler` and compiled-channel timeline assembly.
 - `cqed_sim/sim`
   - Hamiltonian assembly, solver entry points, noise model, extractors, readout-conditioned response helpers.
-- `cqed_sim/experiment`
-  - Reusable state preparation, qubit measurement, and lightweight protocol wrappers built on the core simulator path.
+- `cqed_sim/measurement`
+  - Reusable qubit measurement primitives and readout-chain modeling.
 - `cqed_sim/analysis`, `cqed_sim/calibration_targets`, `cqed_sim/backends`
   - Parameter translation, calibration-target surrogates, and optional dense NumPy/JAX backend support.
 - `cqed_sim/calibration`, `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`, `cqed_sim/unitary_synthesis`
@@ -182,11 +201,33 @@ model = UniversalCQEDModel(
 Useful entry points:
 
 - `UniversalCQEDModel.hamiltonian(frame=...)`
+- `UniversalCQEDModel.energy_spectrum(frame=..., levels=...)`
 - `UniversalCQEDModel.basis_state(...)`
 - `UniversalCQEDModel.transmon_lowering()`
 - `UniversalCQEDModel.mode_annihilation("storage")`
 - `UniversalCQEDModel.transmon_transition_frequency(...)`
 - `UniversalCQEDModel.mode_transition_frequency(...)`
+
+### Inspect dressed energy levels
+
+```python
+import numpy as np
+
+from cqed_sim import FrameSpec, compute_energy_spectrum
+from cqed_sim.plotting import plot_energy_levels
+
+lab_spectrum = compute_energy_spectrum(model, frame=FrameSpec(), levels=12)
+fig = plot_energy_levels(
+    lab_spectrum,
+    max_levels=12,
+    energy_scale=1.0 / (2.0 * np.pi * 1.0e6),
+    energy_unit_label="MHz",
+)
+```
+
+The returned energies are always shifted so the vacuum basis state has energy `0`.
+For physically interpretable ladder plots, prefer `frame=FrameSpec()` unless you
+explicitly want rotating-frame energies.
 
 ### Build pulses
 
@@ -250,14 +291,8 @@ For multilevel ancilla decay, `NoiseSpec(transmon_t1=(T1_ge, T1_fe, ...))` build
 ### State preparation and measurement
 
 ```python
-from cqed_sim.experiment import (
-    QubitMeasurementSpec,
-    StatePreparationSpec,
-    fock_state,
-    measure_qubit,
-    prepare_state,
-    qubit_state,
-)
+from cqed_sim.core import StatePreparationSpec, fock_state, prepare_state, qubit_state
+from cqed_sim.measurement import QubitMeasurementSpec, measure_qubit
 
 initial = prepare_state(
     model,
@@ -307,14 +342,7 @@ Example:
 ```python
 import numpy as np
 
-from cqed_sim.experiment import (
-    AmplifierChain,
-    PurcellFilter,
-    QubitMeasurementSpec,
-    ReadoutChain,
-    ReadoutResonator,
-    measure_qubit,
-)
+from cqed_sim.measurement import AmplifierChain, PurcellFilter, QubitMeasurementSpec, ReadoutChain, ReadoutResonator, measure_qubit
 
 readout_chain = ReadoutChain(
     resonator=ReadoutResonator(
@@ -342,65 +370,23 @@ measurement = measure_qubit(
 )
 ```
 
-## Experimental-style workflows
+## Example workflows
 
-The recommended experiment-style path is:
+The recommended library path is:
 
 1. Prepare an initial state with `StatePreparationSpec` and `prepare_state(...)`.
 2. Build pulses or gate-derived pulse segments.
 3. Compile onto a global timeline with `SequenceCompiler`.
-4. Simulate with `simulate_sequence(...)` or use `SimulationExperiment` as a wrapper.
+4. Simulate with `simulate_sequence(...)`.
 5. Extract reduced states, photon numbers, conditioned responses, or tomography observables.
 6. Optionally sample qubit measurement outcomes with `measure_qubit(...)`.
 
-The lightest wrapper for this flow is `SimulationExperiment`:
+Protocol-style recipes now live in `examples/` instead of the import package:
 
-```python
-import numpy as np
-
-from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec
-from cqed_sim.experiment import (
-    QubitMeasurementSpec,
-    SimulationExperiment,
-    StatePreparationSpec,
-    fock_state,
-    qubit_state,
-)
-from cqed_sim.pulses import Pulse
-
-
-def square(t_rel):
-    return np.ones_like(t_rel, dtype=np.complex128)
-
-
-model = DispersiveTransmonCavityModel(
-    omega_c=0.0,
-    omega_q=0.0,
-    alpha=0.0,
-    chi=0.0,
-    kerr=0.0,
-    n_cav=3,
-    n_tr=2,
-)
-
-experiment = SimulationExperiment(
-    model=model,
-    pulses=[Pulse("q", 0.0, 1.0, square, amp=np.pi / 4.0)],
-    drive_ops={"q": "qubit"},
-    dt=0.01,
-    t_end=1.1,
-    frame=FrameSpec(),
-    state_prep=StatePreparationSpec(
-        qubit=qubit_state("g"),
-        storage=fock_state(0),
-    ),
-    measurement=QubitMeasurementSpec(shots=2048, seed=7),
-)
-
-experiment_result = experiment.run()
-```
-
-`SimulationExperiment` is a reusable wrapper, not a separate solver. It still compiles with `SequenceCompiler` and simulates through `simulate_sequence(...)`.
+- `examples/protocol_style_simulation.py`
+- `examples/kerr_free_evolution.py`
+- `examples/kerr_sign_verification.py`
+- `examples/sequential_sideband_reset.py`
 
 ## Performance-oriented usage
 

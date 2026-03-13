@@ -80,7 +80,7 @@ pulses, drive_ops, meta = build_sideband_pulse(
 ## Running the Simulation
 
 ```python
-from cqed_sim.experiment import (
+from cqed_sim.core import (
     StatePreparationSpec,
     qubit_state,
     fock_state,

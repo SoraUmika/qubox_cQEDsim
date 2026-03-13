@@ -1,6 +1,12 @@
+matplotlib>=3.8
 numpy>=1.24
+pandas>=2.0
 scipy>=1.10
 qutip>=5.0
 
 [dev]
 pytest>=8.0
+
+[jax]
+jax
+jaxlib

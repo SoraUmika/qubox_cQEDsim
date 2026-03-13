@@ -52,7 +52,7 @@ cells: list[dict] = [
         2. Run the notebook top-to-bottom.
         3. Inspect the overlay diagnostics for Cases B/C/D in **Section Y**.
         4. Review the weakness comparisons in **Section 8**.
-        5. Saved figures are written under `outputs/figures/`.
+        5. Saved figures are written under `examples/outputs/figures/`.
 
         Note: the notebook intentionally omits the old test-suite and final-summary sections.
         """
@@ -64,7 +64,24 @@ cells: list[dict] = [
 
         import importlib
         import importlib.metadata
+        import sys
         from pathlib import Path
+
+        REPO_ROOT = next(
+            (
+                candidate
+                for candidate in (Path.cwd(), *Path.cwd().parents)
+                if (candidate / "pyproject.toml").exists() and (candidate / "cqed_sim").is_dir()
+            ),
+            None,
+        )
+        if REPO_ROOT is None:
+            raise RuntimeError("Could not resolve the cqed_sim repository root from the notebook working directory.")
+        if str(REPO_ROOT) not in sys.path:
+            sys.path.insert(0, str(REPO_ROOT))
+        EXAMPLES_ROOT = REPO_ROOT / "examples"
+        EXAMPLES_OUTPUT_ROOT = EXAMPLES_ROOT / "outputs"
+        EXAMPLES_OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
 
         REQUIRED_HINTS = {
             "numpy": "pip install numpy",
@@ -112,14 +129,17 @@ cells: list[dict] = [
             plot_cavity_population_comparison,
             plot_component_comparison,
             plot_weakness,
-            print_mapping_rows,
         )
         from cqed_sim.plotting.wigner_grids import plot_wigner_grid
-        from cqed_sim.simulators.ideal import run_case_a
-        from cqed_sim.simulators.pulse_calibrated import run_case_d
-        from cqed_sim.simulators.pulse_open import run_case_c
-        from cqed_sim.simulators.pulse_unitary import run_case_b
-        from cqed_sim.simulators.trajectories import ideal_gate_bloch_trajectory, simulate_gate_bloch_trajectory
+        from examples.workflows.sequential import (
+            ideal_gate_bloch_trajectory,
+            print_mapping_rows,
+            run_case_a,
+            run_case_b,
+            run_case_c,
+            run_case_d,
+            simulate_gate_bloch_trajectory,
+        )
 
         def package_version(dist_name: str, default: str = "editable/local") -> str:
             try:
@@ -141,7 +161,7 @@ cells: list[dict] = [
         r"""
         CONFIG = {
             "json_path": r"C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\JJL_Experiments\decomposition\cluster_U_T_1-1e+03ns-3_sqr-no_phases.josn",
-            "json_fallback_path": "examples/sequences/sequential_demo.json",
+            "json_fallback_path": str(EXAMPLES_ROOT / "sequences" / "sequential_demo.json"),
             "cavity_fock_cutoff": 12,
             "initial_qubit": "g",
             "initial_cavity_kind": "fock",
@@ -162,7 +182,7 @@ cells: list[dict] = [
             "trajectory_gate_index": None,
             "trajectory_conditioned_max_n": 2,
             "gate_diag_probability_threshold": 1.0e-6,
-            "output_figure_dir": "outputs/figures",
+            "output_figure_dir": str(EXAMPLES_OUTPUT_ROOT / "figures"),
             "save_output_figures": True,
             "output_figure_dpi": 160,
             "dt_s": 1.0e-9,
@@ -198,7 +218,7 @@ cells: list[dict] = [
             "regularization_lambda": 1.0e-6,
             "regularization_alpha": 1.0e-6,
             "regularization_omega": 1.0e-18,
-            "calibration_cache_dir": "calibrations",
+            "calibration_cache_dir": str(EXAMPLES_OUTPUT_ROOT / "calibrations"),
             "calibration_force_recompute": False,
             "case_d_include_dissipation": True,
         }
@@ -292,7 +312,7 @@ cells: list[dict] = [
         `cqed_sim` provides dispersive manifold-frequency helpers, but not a fully hardware-calibrated selective-SQR compiler. Cases B and C therefore use a simplified multitone Gaussian rotating-wave model:
 
         - one Gaussian-windowed tone per active Fock manifold,
-        - tone frequencies from `cqed_sim.snap_opt.model.manifold_transition_frequency(...)`,
+        - tone frequencies from `cqed_sim.manifold_transition_frequency(...)`,
         - per-tone area calibration `theta_n ~= integral Omega_n(t) dt`.
         """
     ),

@@ -70,6 +70,9 @@ class DispersiveTransmonCavityModel:
     def hamiltonian(self, frame: FrameSpec | None = None) -> qt.Qobj:
         return self.static_hamiltonian(frame=frame)
 
+    def energy_spectrum(self, *, frame: FrameSpec | None = None, levels: int | None = None):
+        return self.as_universal_model().energy_spectrum(frame=frame, levels=levels)
+
     def basis_energy(self, q_level: int, cavity_level: int, frame: FrameSpec | None = None) -> float:
         return self.as_universal_model().basis_energy(int(q_level), int(cavity_level), frame=frame)
 

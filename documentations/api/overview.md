@@ -22,7 +22,7 @@ This section provides a complete reference for the `cqed_sim` public API, organi
 | [`pulses`](pulses.md) | Pulse dataclass, envelopes, builders, calibration formulas, hardware |
 | [`sequence`](sequence.md) | SequenceCompiler, compiled-channel timeline |
 | [`simulation`](simulation.md) | Hamiltonian assembly, solver, noise, extractors, couplings |
-| [`experiment`](experiment.md) | State preparation, measurement, readout chain, protocols |
+| [`measurement`](measurement.md) | State preparation, qubit measurement, readout-chain modeling |
 | [`gate_io`](gate_io.md) | Gate sequence JSON I/O |
 | [`analysis`](analysis.md) | Parameter translation (bare → dressed) |
 | [`backends`](backends.md) | Dense NumPy/JAX solver backends |
@@ -48,8 +48,6 @@ Model → FrameSpec → Pulses → SequenceCompiler → simulate_sequence → Ex
 4. Compile with `SequenceCompiler`
 5. Simulate with `simulate_sequence(...)`
 6. Extract results with extractors or `measure_qubit(...)`
-
-Or use the convenience wrapper `SimulationExperiment` which combines steps 1–6.
 
 ---
 

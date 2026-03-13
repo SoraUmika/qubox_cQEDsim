@@ -26,7 +26,7 @@ def _plot_or_dump(path: Path, x, ys, labels, title, ylabel):
 
 
 def main():
-    out = Path("examples") / "outputs_snap_opt"
+    out = Path(__file__).resolve().parents[1] / "outputs_snap_opt"
     out.mkdir(parents=True, exist_ok=True)
 
     model = SnapModelConfig(n_cav=7, n_tr=2, chi=2 * np.pi * 0.02).build_model()

@@ -8,168 +8,125 @@ This page describes the internal architecture of `cqed_sim` for developers and a
 
 ```
 cqed_sim/
-├── core/                 # Models, frames, conventions, ideal gates, frequency helpers
-├── pulses/               # Pulse dataclass, envelopes, builders, calibration formulas, hardware
-├── sequence/             # SequenceCompiler, compiled-channel timeline
-├── sim/                  # Hamiltonian assembly, solver, noise, extractors, couplings
-├── experiment/           # State preparation, measurement, readout chain, protocols
-├── analysis/             # Parameter translation (bare → dressed)
-├── backends/             # Dense NumPy/JAX solver backends
-├── calibration/          # SQR gate calibration
-├── calibration_targets/  # Spectroscopy, Rabi, Ramsey, T₁, T₂ echo, DRAG tuning
-├── io/                   # Gate sequence JSON I/O
-├── observables/          # Bloch, Fock-resolved, phase, trajectory, Wigner diagnostics
-├── operators/            # Pauli, cavity ladder, embedding helpers
-├── plotting/             # Visualization (Bloch, calibration, gate diagnostics, Wigner)
-├── tomo/                 # Fock-resolved tomography, all-XY calibration
-└── unitary_synthesis/    # Subspace optimization, gate sequences, constraints
+|-- core/                 # Models, frames, conventions, ideal gates, state-prep primitives
+|-- measurement/          # Qubit measurement and readout-chain modeling
+|-- pulses/               # Pulse dataclass, envelopes, builders, calibration formulas, hardware
+|-- sequence/             # SequenceCompiler, compiled-channel timeline
+|-- sim/                  # Hamiltonian assembly, solver, noise, extractors, couplings
+|-- analysis/             # Parameter translation (bare -> dressed)
+|-- backends/             # Dense NumPy/JAX solver backends
+|-- calibration/          # SQR gate calibration
+|-- calibration_targets/  # Spectroscopy, Rabi, Ramsey, T1, T2 echo, DRAG tuning
+|-- io/                   # Gate sequence JSON I/O
+|-- observables/          # Bloch, Fock-resolved, phase, trajectory, Wigner diagnostics
+|-- operators/            # Pauli, cavity ladder, embedding helpers
+|-- plotting/             # Visualization (Bloch, calibration, gate diagnostics, Wigner)
+|-- tomo/                 # Fock-resolved tomography, all-XY calibration
+`-- unitary_synthesis/    # Subspace optimization, gate sequences, constraints
 ```
+
+Workflow recipes now live under `examples/`, not inside the import package.
 
 ---
 
 ## Module Responsibilities
 
-### `core` — System Definition
+### `core` — System Definition and State Preparation
 
 The foundation of the package. Contains:
 
-- **Model classes:** `UniversalCQEDModel` (general), `DispersiveTransmonCavityModel` (two-mode), `DispersiveReadoutTransmonStorageModel` (three-mode)
-- **Subsystem specs:** `TransmonModeSpec`, `BosonicModeSpec`, `DispersiveCouplingSpec`
-- **Frame:** `FrameSpec` for rotating-frame definition
-- **Conventions:** Hilbert-space dimension helpers, basis indexing
-- **Frequency helpers:** Manifold transition frequencies, carrier conversion
-- **Ideal gates:** Qubit rotations, displacement, SNAP, SQR, beamsplitter
-- **Coupling specs:** `CrossKerrSpec`, `SelfKerrSpec`, `ExchangeSpec`
-- **Drive targets:** `TransmonTransitionDriveSpec`, `SidebandDriveSpec`
+- model classes: `UniversalCQEDModel`, `DispersiveTransmonCavityModel`, `DispersiveReadoutTransmonStorageModel`
+- subsystem specs: `TransmonModeSpec`, `BosonicModeSpec`, `DispersiveCouplingSpec`
+- `FrameSpec` for rotating-frame definition
+- Hilbert-space conventions and basis indexing
+- frequency helpers and ideal gates
+- structured drive targets
+- state-preparation primitives: `StatePreparationSpec`, `prepare_state(...)`, and subsystem-state helpers
 
-The two-mode and three-mode models are **compatibility wrappers** that delegate to `UniversalCQEDModel`. New code should prefer `UniversalCQEDModel` for flexibility.
+### `measurement` — Reusable Readout Primitives
+
+Contains the reusable measurement layer:
+
+- `QubitMeasurementSpec` and `measure_qubit(...)`
+- `ReadoutResonator`, `PurcellFilter`, `AmplifierChain`, `ReadoutChain`
+- synthetic I/Q generation, nearest-center classification, and readout backaction helpers
 
 ### `pulses` — Waveform Construction
 
-- **`Pulse`** dataclass: channel, timing, envelope, carrier, amplitude, phase, DRAG
-- **Envelopes:** `square_envelope`, `gaussian_envelope`, `cosine_rise_envelope`, `normalized_gaussian`, `multitone_gaussian_envelope`
-- **Builders:** `build_rotation_pulse`, `build_displacement_pulse`, `build_sideband_pulse`, `build_sqr_multitone_pulse`
-- **Calibration formulas:** Amplitude scaling for displacement, rotation, SQR
-- **`HardwareConfig`:** IQ distortion, quantization, filtering model
+- `Pulse` dataclass
+- standard envelopes
+- common pulse builders
+- calibration formulas
+- `HardwareConfig`
 
 ### `sequence` — Timeline Assembly
 
-`SequenceCompiler` takes a list of `Pulse` objects and produces a `CompiledSequence` with per-channel sampled waveforms. The compilation pipeline includes:
-
-1. Uniform time grid construction
-2. Per-pulse envelope sampling with carrier
-3. Crosstalk mixing between channels
-4. Per-channel hardware processing (ZOH, lowpass, quantization, IQ distortion)
+`SequenceCompiler` samples pulses onto a uniform grid and applies crosstalk and hardware processing.
 
 ### `sim` — Solver and Extractors
 
 The simulation engine:
 
-- **`simulate_sequence()`** — main entry point
-- **`SimulationSession` / `prepare_simulation()`** — session reuse for sweeps
-- **`NoiseSpec`** — Lindblad noise specification
-- **State extractors:** Partial traces, Bloch coordinates, photon numbers, Wigner functions, conditioned observables
-- **Couplings:** `cross_kerr()`, `self_kerr()`, `exchange()`, `TunableCoupler`
-- **Diagnostics:** Channel norms, instantaneous frequency analysis
+- `simulate_sequence(...)`
+- `SimulationSession` / `prepare_simulation(...)`
+- `NoiseSpec` and collapse-operator generation
+- reduced states, Bloch coordinates, photon numbers, Wigner functions, conditioned observables
+- coupling helpers such as `cross_kerr()`, `self_kerr()`, `exchange()`
 
-### `experiment` — Protocol Layer
+### Other Reusable Library Areas
 
-High-level experiment abstractions:
+- `analysis` for parameter translation
+- `calibration` and `calibration_targets` for reusable calibration helpers
+- `tomo` for tomography primitives
+- `observables` and `plotting` for diagnostics and visualization
+- `unitary_synthesis` for gate-sequence optimization
 
-- **State preparation:** `prepare_state()`, `StatePreparationSpec`
-- **Measurement:** `measure_qubit()`, `QubitMeasurementSpec`
-- **Readout chain:** `ReadoutResonator`, `PurcellFilter`, `AmplifierChain`, `ReadoutChain`
-- **Protocol wrapper:** `SimulationExperiment` combines prepare → compile → simulate → measure
-- **Kerr free evolution:** Specialized cavity free-evolution workflow
+---
 
-### `analysis` — Parameter Translation
+## Example Boundary
 
-Translates between bare transmon parameters (E_J, E_C, g) and dressed dispersive parameters (ω_q, α, χ) used at runtime.
+`cqed_sim` intentionally does not ship protocol orchestration modules anymore. The following belong under `examples/`:
 
-### `backends` — Alternative Solvers
+- typical end-to-end workflow recipes
+- Kerr free-evolution demonstrations
+- sequential sideband-reset recipes
+- tutorial-style prepare -> compile -> simulate -> measure scripts
+- paper reproductions, audits, and one-off studies
 
-Dense piecewise-constant solver backends (`NumPyBackend`, `JaxBackend`) for small-system checks and backend parity validation. Not intended as primary solvers for large systems.
+Representative example entry points:
 
-### `calibration` — SQR Gate Calibration
-
-Per-manifold amplitude, phase, and frequency correction optimization for Selective Qubit Rotation gates.
-
-### `calibration_targets` — Surrogate Experiments
-
-Lightweight surrogate-model calibration sweeps: spectroscopy, Rabi, Ramsey, T₁, T₂ echo, DRAG tuning. Each returns a `CalibrationResult` with fitted parameters.
-
-### `io` — Gate Sequence I/O
-
-JSON-based gate sequence loading and serialization. Gate types: `DisplacementGate`, `RotationGate`, `SQRGate`.
-
-### `observables` — Diagnostic Observables
-
-Post-simulation analysis: Fock-resolved Bloch diagnostics, relative phase families, Bloch trajectories, weakness metrics, Wigner functions.
-
-### `operators` — Primitive Operators
-
-Pauli matrices, cavity ladder operators, embedding helpers, state constructors.
-
-### `plotting` — Visualization
-
-Matplotlib-based plotting for Bloch tracks, calibration results, gate diagnostics, phase evolution, weakness comparisons, and Wigner grids.
-
-### `tomo` — Tomography
-
-Fock-resolved tomography protocol, all-XY calibration, selective π-pulses, leakage matrix calibration.
-
-### `unitary_synthesis` — Gate Optimization
-
-Gradient-free optimization of gate sequences (Displacement, Rotation, SQR, SNAP) to implement target unitaries within qubit–cavity subspaces. Includes subspace targeting, leakage penalties, time constraints, and progress reporting.
+- `examples/protocol_style_simulation.py`
+- `examples/kerr_free_evolution.py`
+- `examples/kerr_sign_verification.py`
+- `examples/sequential_sideband_reset.py`
 
 ---
 
 ## Data Flow
 
 ```
-UniversalCQEDModel
-        │
-        ├── FrameSpec ──► static_hamiltonian(frame)
-        │
-        ├── Pulse objects ──► SequenceCompiler.compile() ──► CompiledSequence
-        │                                                          │
-        │                                   ┌──────────────────────┘
-        │                                   ▼
-        └── simulate_sequence(model, compiled, initial_state, drive_ops, config)
-                                            │
-                                            ▼
-                                    SimulationResult
-                                            │
-                    ┌───────────────────────┼──────────────────┐
-                    ▼                       ▼                  ▼
-            reduced_qubit_state()   cavity_wigner()    measure_qubit()
-            bloch_xyz_from_joint()  cavity_moments()   QubitMeasurementResult
+UniversalCQEDModel / wrapper models
+        |
+        +--> FrameSpec --> static_hamiltonian(frame)
+        |
+        +--> prepare_state(...)
+        |
+        +--> Pulse objects --> SequenceCompiler.compile() --> CompiledSequence
+                                                           |
+                                                           v
+                              simulate_sequence(model, compiled, initial_state, drive_ops, config)
+                                                           |
+                                                           v
+                                                   SimulationResult
+                                                           |
+                               +---------------------------+---------------------------+
+                               v                           v                           v
+                     reduced_qubit_state()        cavity_wigner()             measure_qubit()
+                     bloch_xyz_from_joint()       mode_moments()              ReadoutChain
 ```
 
 ---
 
 ## Stable Public API vs Internal
 
-### Public API
-
-Everything exported through `cqed_sim/__init__.py` and subpackage `__init__.py` files is part of the public API. The full reference is in [API Reference](api/overview.md) and `API_REFERENCE.md`.
-
-### Internal / Semi-Internal
-
-The following are implementation details and should not be relied upon:
-
-- `_operators_cache`, `_static_h_cache` on model dataclasses
-- `_legacy_drive_couplings()` in `sim.runner`
-- `DenseSolverResult` in `sim.solver`
-- `coupling_term_key()`, `resolve_operator()` in `core.hamiltonian`
-- `PHASE_FAMILY_SPECS` in `observables.fock`
-
----
-
-## Extension Points
-
-- **New models:** Subclass or compose using `UniversalCQEDModel` with custom `TransmonModeSpec` and `BosonicModeSpec` configurations
-- **New pulse envelopes:** Pass any callable `f(t_rel) -> ndarray` as the envelope argument to `Pulse`
-- **New backends:** Implement `BaseBackend` abstract interface
-- **New calibration targets:** Follow the pattern in `calibration_targets/` returning `CalibrationResult`
-- **New gate types:** For unitary synthesis, implement `GateBase` interface
+Everything exported through `cqed_sim/__init__.py` and the active subpackage `__init__.py` files is part of the public API. Workflow modules under `examples/` are repository-side examples, not part of the installed library surface.

@@ -169,7 +169,7 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
 
 
 def save_artifacts(result: dict[str, object]) -> tuple[Path, Path]:
-    out_dir = Path(__file__).resolve().parents[1] / "outputs"
+    out_dir = Path(__file__).resolve().parent / "outputs"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     json_path = out_dir / "displacement_qubit_spectroscopy_chi_minus_2p84MHz.json"

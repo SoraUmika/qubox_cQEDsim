@@ -7,6 +7,17 @@ import numpy as np
 import qutip as qt
 
 
+def pure_dephasing_time_from_t1_t2(*, t1_s: float | None, t2_s: float | None) -> float | None:
+    if t2_s is None:
+        return None
+    if t1_s is None:
+        return float(t2_s)
+    inv_tphi = max(0.0, 1.0 / float(t2_s) - 1.0 / (2.0 * float(t1_s)))
+    if inv_tphi <= 0.0:
+        return None
+    return 1.0 / inv_tphi
+
+
 @dataclass(frozen=True)
 class NoiseSpec:
     """Lindblad noise parameters in SI-style units.
@@ -18,6 +29,8 @@ class NoiseSpec:
     t1: float | None = None
     transmon_t1: tuple[float | None, ...] | None = None
     tphi: float | None = None
+    tphi_storage: float | None = None
+    tphi_readout: float | None = None
     kappa: float | None = None
     nth: float = 0.0
     kappa_storage: float | None = None
@@ -32,6 +45,14 @@ class NoiseSpec:
     @property
     def gamma_phi(self) -> float:
         return 0.0 if self.tphi is None else 1.0 / (2.0 * self.tphi)
+
+    @property
+    def gamma_phi_storage(self) -> float:
+        return 0.0 if self.tphi_storage is None else 1.0 / float(self.tphi_storage)
+
+    @property
+    def gamma_phi_readout(self) -> float:
+        return 0.0 if self.tphi_readout is None else 1.0 / float(self.tphi_readout)
 
 
 def _total_identity(subsystem_dims: tuple[int, ...]) -> qt.Qobj:
@@ -58,6 +79,12 @@ def _append_bosonic_loss(
         c_ops.append(np.sqrt(float(kappa) * nth) * raising)
     if seen_targets is not None:
         seen_targets.add(target_key)
+
+
+def _append_bosonic_dephasing(c_ops: list[qt.Qobj], number: qt.Qobj, tphi: float | None) -> None:
+    if tphi is None or tphi <= 0.0:
+        return
+    c_ops.append(np.sqrt(1.0 / float(tphi)) * number)
 
 
 def _embed_transmon_relaxation(subsystem_dims: tuple[int, ...], upper_level: int) -> qt.Qobj:
@@ -114,6 +141,7 @@ def collapse_operators(model: Any, noise: NoiseSpec | None) -> list[qt.Qobj]:
             nth_storage,
             seen_targets=seen_bosonic_targets,
         )
+        _append_bosonic_dephasing(c_ops, ops["n_s"], noise.tphi_storage)
 
     if "a_r" in ops:
         _append_bosonic_loss(
@@ -124,5 +152,6 @@ def collapse_operators(model: Any, noise: NoiseSpec | None) -> list[qt.Qobj]:
             noise.nth_readout,
             seen_targets=seen_bosonic_targets,
         )
+        _append_bosonic_dephasing(c_ops, ops["n_r"], noise.tphi_readout)
 
     return c_ops

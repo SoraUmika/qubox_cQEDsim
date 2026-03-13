@@ -52,7 +52,24 @@ cells: list[dict] = [
         import importlib
         import importlib.metadata
         import json
+        import sys
         from pathlib import Path
+
+        REPO_ROOT = next(
+            (
+                candidate
+                for candidate in (Path.cwd(), *Path.cwd().parents)
+                if (candidate / "pyproject.toml").exists() and (candidate / "cqed_sim").is_dir()
+            ),
+            None,
+        )
+        if REPO_ROOT is None:
+            raise RuntimeError("Could not resolve the cqed_sim repository root from the notebook working directory.")
+        if str(REPO_ROOT) not in sys.path:
+            sys.path.insert(0, str(REPO_ROOT))
+        EXAMPLES_ROOT = REPO_ROOT / "examples"
+        EXAMPLES_OUTPUT_ROOT = EXAMPLES_ROOT / "outputs"
+        EXAMPLES_OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
 
         REQUIRED_HINTS = {
             "numpy": "pip install numpy",
@@ -102,7 +119,7 @@ cells: list[dict] = [
         )
         from cqed_sim.io.gates import load_gate_sequence, render_gate_table
         from cqed_sim.plotting.calibration_plots import plot_sqr_calibration_result
-        from cqed_sim.tests.test_sqr_calibration import run_sqr_calibration_sanity_suite
+        from examples.smoke_tests.tests import run_sqr_calibration_sanity_suite
 
         def package_version(dist_name: str, default: str = "editable/local") -> str:
             try:
@@ -123,7 +140,7 @@ cells: list[dict] = [
         r"""
         CONFIG = {
           "json_path": r"C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\JJL_Experiments\decomposition\cluster_U_T_1-1e+03ns-3_sqr-no_phases.josn",
-          "json_fallback_path": "examples/sequences/sequential_demo.json",
+          "json_fallback_path": str(EXAMPLES_ROOT / "sequences" / "sequential_demo.json"),
           "cavity_fock_cutoff": 24,
           "initial_qubit": "g",
           "initial_cavity_kind": "fock",
@@ -174,7 +191,7 @@ cells: list[dict] = [
           "regularization_lambda": 1.0e-6,
           "regularization_alpha": 1.0e-6,
           "regularization_omega": 1.0e-18,
-          "calibration_cache_dir": "calibrations",
+          "calibration_cache_dir": str(EXAMPLES_OUTPUT_ROOT / "calibrations"),
           "calibration_force_recompute": False,
           "qutip_nsteps_sqr_calibration": 100000,
 
@@ -194,8 +211,8 @@ cells: list[dict] = [
           "benchmark_optimizer_maxiter_stage2": 7,
           "benchmark_representative_target_index": 0,
           "benchmark_representative_duration_indices": (0, 1, 2),
-          "benchmark_output_dir": "outputs/figures",
-          "benchmark_export_path": "outputs/sqr_guard_benchmark_results.json",
+          "benchmark_output_dir": str(EXAMPLES_OUTPUT_ROOT / "figures"),
+          "benchmark_export_path": str(EXAMPLES_OUTPUT_ROOT / "sqr_guard_benchmark_results.json"),
         }
         CONFIG["n_cav_dim"] = int(CONFIG["cavity_fock_cutoff"]) + 1
 
@@ -248,7 +265,7 @@ cells: list[dict] = [
         print(f"  sigma_sqr_s        : {sigma_sqr_s}")
         print(f"  calibrated max_n   : {max_n_target}")
         print("  Hamiltonian model  : H^(n) = 0.5 * Delta(n) * sigma_z + 0.5 * Omega(t) * [cos(phi) sigma_x + sin(phi) sigma_y] + 0.5 * d_omega * sigma_z")
-        print("  Detuning convention: Delta(n) = 2*pi*(chi*n + chi2*n^2 + chi3*n^3)")
+        print("  Detuning convention: Delta(n) = 2*pi*(chi*n + chi2*n*(n-1) + chi3*n*(n-1)*(n-2))")
         print("  Benchmark model    : multitone off-resonant Gaussian drive evaluated per manifold with logical + guard levels.")
         """
     ),
@@ -343,7 +360,11 @@ cells: list[dict] = [
     md_cell("## Section 9: Export Calibration Result"),
     code_cell(
         """
-        EXPORT_PATH = export_calibration_result(CALIBRATION_RESULT, Path("sqr_calibration_result.json"), config=CONFIG)
+        EXPORT_PATH = export_calibration_result(
+            CALIBRATION_RESULT,
+            EXAMPLES_OUTPUT_ROOT / "sqr_calibration_result.json",
+            config=CONFIG,
+        )
         CACHE_PATH = calibration_cache_path(SELECTED_SQR_GATE, CONFIG, cache_dir=CONFIG["calibration_cache_dir"])
         print(f"Exported calibration result to: {EXPORT_PATH}")
         print(f"Cache file path: {CACHE_PATH}")

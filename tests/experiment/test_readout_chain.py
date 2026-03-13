@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import qutip as qt
 
-from cqed_sim.experiment import (
+from cqed_sim.measurement import (
     AmplifierChain,
     PurcellFilter,
     QubitMeasurementSpec,

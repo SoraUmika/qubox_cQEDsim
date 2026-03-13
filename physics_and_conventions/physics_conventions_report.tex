@@ -17,36 +17,35 @@
 \begin{document}
 \maketitle
 
-\noindent This document is the source of truth for the reusable simulator code under \texttt{cqed\_sim/}. It records the active physics conventions, the protocol-facing abstractions that now sit on top of the simulator, the cleaned package boundary versus \texttt{examples/}, and the tests that directly back the main conventions.
+\noindent This document is the source of truth for the reusable simulator code under \texttt{cqed\_sim/}. It records the active physics conventions, the low-level state-preparation, measurement, and spectral primitives that remain inside the library, the cleaned package boundary versus \texttt{examples/}, and the tests that directly back the main conventions.
 
 \section{Overview of cqed\_sim}
 \texttt{cqed\_sim/} now contains only reusable simulator code:
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{core}: Hilbert-space conventions, frames, the universal subsystem-based cQED model layer, the two-mode and three-mode compatibility wrappers, ideal gates, and manifold-frequency helpers.
+  \item \texttt{core}: Hilbert-space conventions, frames, the universal subsystem-based cQED model layer, the two-mode and three-mode compatibility wrappers, reusable state-preparation helpers, static-spectrum helpers, ideal gates, and manifold-frequency helpers.
   \item \texttt{pulses}, \texttt{sequence}, \texttt{sim}: pulse objects, envelopes, channel compilation, hardware distortion, the solver path, collapse operators, and extractors.
-  \item \texttt{experiment}: reusable state preparation, qubit measurement, and a lightweight protocol wrapper built on the same compile-and-simulate path as the low-level runtime.
+  \item \texttt{measurement}: reusable qubit readout abstractions, physical readout-chain models, and measurement utilities that remain backend-agnostic and library-oriented.
   \item \texttt{calibration}, \texttt{observables}, \texttt{operators}, \texttt{tomo}, \texttt{io}, \texttt{plotting}, \texttt{unitary\_synthesis}: reusable helpers that still belong to the library surface.
 \end{itemize}
 Study, workflow, paper-reproduction, audit, and smoke-test code remains under \texttt{examples/}. The alignment note for the experiment-facing cleanup is kept in \texttt{physics\_and\_conventions/experimental\_protocol\_alignment\_note.md}.
 
-\section{Experimental Protocol Layer}
-The main experiment-facing additions are implemented in:
+\section{State Preparation and Measurement Primitives}
+The reusable preparation and measurement helpers that remain in the library are implemented in:
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{cqed\_sim/experiment/state\_prep.py}: \texttt{StatePreparationSpec} and reusable subsystem state specs.
-  \item \texttt{cqed\_sim/experiment/measurement.py}: \texttt{QubitMeasurementSpec} and \texttt{measure\_qubit(...)}.
-  \item \texttt{cqed\_sim/experiment/readout\_chain.py}: \texttt{ReadoutResonator}, \texttt{PurcellFilter}, \texttt{AmplifierChain}, and \texttt{ReadoutChain}.
-  \item \texttt{cqed\_sim/experiment/protocol.py}: \texttt{SimulationExperiment}, \texttt{ExperimentResult}, and metadata wrappers.
+  \item \texttt{cqed\_sim/core/state\_prep.py}: \texttt{StatePreparationSpec}, reusable subsystem state specs, and helpers such as \texttt{prepare\_state(...)}.
+  \item \texttt{cqed\_sim/measurement/qubit.py}: \texttt{QubitMeasurementSpec} and \texttt{measure\_qubit(...)}.
+  \item \texttt{cqed\_sim/measurement/readout\_chain.py}: \texttt{ReadoutResonator}, \texttt{PurcellFilter}, \texttt{AmplifierChain}, and \texttt{ReadoutChain}.
+  \item \texttt{cqed\_sim/sim/noise.py}: reusable noise helpers such as \texttt{pure\_dephasing\_time\_from\_t1\_t2(...)} used by library code and example workflows.
 \end{itemize}
-These objects are not a second solver stack. They are a thin reusable layer above \texttt{SequenceCompiler} plus \texttt{simulate\_sequence(...)}. In particular:
+High-level experiment recipes and canned workflows no longer live under \texttt{cqed\_sim/}; they now live under \texttt{examples/workflows/}. These library objects are not a second solver stack. They are reusable primitives that compose with \texttt{SequenceCompiler} plus \texttt{simulate\_sequence(...)}. In particular:
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{SimulationExperiment} is executable, not merely declarative. It resolves an initial state, compiles pulses, runs the existing solver path, and optionally performs qubit measurement on the resulting runtime state.
   \item State preparation may return either a ket or a density matrix. If any subsystem spec is mixed, the joint initial state is promoted to a density matrix before tensoring.
   \item \texttt{measure\_qubit(...)} returns exact probabilities by default. Sampled outcomes appear only when \texttt{shots} is set.
   \item When a confusion matrix is supplied, the code applies \(\mathbf{p}_{\mathrm{obs}} = M \mathbf{p}_{\mathrm{latent}}\) with columns ordered as latent \((g,e)\) and rows ordered as reported \((g,e)\).
   \item If \texttt{QubitMeasurementSpec.readout\_chain} is omitted, synthetic I/Q points are still generated from the previous Gaussian cluster model.
   \item If a \texttt{ReadoutChain} is provided, the measurement layer instead uses a resonator response, optional Purcell filter, amplifier noise, and mixer-style I/Q integration. The same API can also report \(\gamma_{\mathrm{meas}}\) and a Purcell-limited \(T_1\), and can optionally apply readout-induced dephasing plus Purcell relaxation as a reduced-state backaction model.
 \end{itemize}
-Direct tests: \texttt{tests/test\_26\_experimental\_protocols.py}.
+Direct tests: \texttt{tests/test\_26\_state\_prep\_and\_measurement.py}, \texttt{tests/experiment/test\_readout\_chain.py}.
 
 \section{Physical Readout Chain}
 The physical readout-chain path models a driven dispersive resonator with optional Purcell filtering and additive amplifier noise:
@@ -74,6 +73,28 @@ The physical readout-chain path models a driven dispersive resonator with option
   \item \texttt{AmplifierChain} applies linear gain and additive thermal noise before mixer-phase rotation and I/Q integration.
 \end{itemize}
 Direct tests: \texttt{tests/experiment/test\_readout\_chain.py}.
+
+\section{Sequential Sideband Reset Approximation}
+The sequential storage-reset workflow now lives in \texttt{examples/workflows/sequential\_sideband\_reset.py}. It remains an example-level orchestration built on the existing explicit three-mode dispersive runtime rather than a second simulator stack. The modeled protocol is:
+\[
+|g,0_r,n_s\rangle \overset{\text{storage red sideband}}{\leftrightarrow} |f,0_r,n_s-1\rangle
+\overset{\text{readout red sideband}}{\leftrightarrow} |g,1_r,n_s-1\rangle
+\xrightarrow{\kappa_r} |g,0_r,n_s-1\rangle.
+\]
+For initial \(|e,0_r,n_s\rangle\) population, the helper first applies an explicit \(e\rightarrow f\) transmon pulse and then performs the readout-sideband dump before entering the photon-removal loop.
+
+This is a controlled effective-model approximation. The readout-assisted evacuation stage is represented as a driven effective \(g\leftrightarrow f\) red sideband on the readout mode followed by explicit Lindblad readout loss, not as an autonomous always-on microscopic transmon--readout exchange Hamiltonian.
+
+\section{Static Spectrum Convention}
+The reusable spectral helper in \texttt{cqed\_sim/core/spectrum.py} diagonalizes the static Hamiltonian selected by the caller and returns a structured \texttt{EnergySpectrum} result with both raw eigenvalues and vacuum-referenced energies.
+\begin{itemize}[leftmargin=1.5em]
+  \item The diagonalized operator is exactly \texttt{model.static\_hamiltonian(frame)} for the chosen \texttt{FrameSpec}.
+  \item Reported \texttt{EnergySpectrum.energies} are shifted by subtracting the energy of the bare vacuum basis state.
+  \item The bare vacuum means every subsystem is in level \(0\): \(|g,0\rangle\) for the two-mode model, \(|g,0_s,0_r\rangle\) for the three-mode model, and \(|0\rangle\) for cavity-only models.
+  \item This shift changes only the reported zero of energy. It does not change which Hamiltonian was diagonalized or which transition frequencies follow from energy differences.
+  \item In the lab frame, the low-lying spectrum is the most directly interpretable dressed ladder. In rotating frames, excited levels can appear at negative energy even though the vacuum remains the zero-reference state.
+\end{itemize}
+Direct tests: \texttt{tests/analysis/test\_spectrum.py}.
 
 \section{Hilbert Space Structure}
 \subsection*{Two-mode runtime}
@@ -245,7 +266,7 @@ The compatibility fields \texttt{synthesis\_chi} and \texttt{synthesis\_chi\_2} 
 \texttt{cqed\_sim/analysis/parameter\_translation.py} are therefore aligned copies rather than sign-converted quantities.
 
 \subsection*{Kerr free-evolution workflow presets}
-The reusable workflow in \texttt{cqed\_sim/experiment/kerr\_free\_evolution.py} builds a two-mode
+The example workflow in \texttt{examples/workflows/kerr\_free\_evolution.py} builds a two-mode
 storage--transmon model from human-readable frequencies in Hz and converts them to the runtime's
 angular-frequency units with \texttt{physics\_and\_conventions.conventions.to\_internal\_units()}.
 Its default frame is
@@ -470,12 +491,14 @@ and exposed through \texttt{cqed\_sim.experiment.verify\_kerr\_sign(...)}.
 
 \section{Dissipation and Lindblad Terms}
 \begin{itemize}[leftmargin=1.5em]
-  \item \texttt{NoiseSpec} in \texttt{cqed\_sim/sim/noise.py} now supports \texttt{t1}, \texttt{transmon\_t1}, \texttt{tphi}, \texttt{kappa}, \texttt{nth}, \texttt{kappa\_storage}, \texttt{kappa\_readout}, \texttt{nth\_storage}, and \texttt{nth\_readout}.
+  \item \texttt{NoiseSpec} in \texttt{cqed\_sim/sim/noise.py} now supports \texttt{t1}, \texttt{transmon\_t1}, \texttt{tphi}, \texttt{tphi\_storage}, \texttt{tphi\_readout}, \texttt{kappa}, \texttt{nth}, \texttt{kappa\_storage}, \texttt{kappa\_readout}, \texttt{nth\_storage}, and \texttt{nth\_readout}.
   \item The implemented convention is \(\gamma_1 = 1/T_1\) and \(\gamma_\phi = 1/(2 T_\phi)\).
     \item If \texttt{transmon\_t1=(T1\_ge, T1\_fe, ...)} is supplied, the collapse-operator builder emits explicit ladder decays \(\sqrt{1/T_{1,j}}\,|j-1\rangle\langle j|\). If it is not supplied, the older aggregate \(\sqrt{\gamma_1}\,b\) path remains available through \texttt{t1}.
   \item Two-level dephasing uses \(\sqrt{\gamma_\phi}\,\sigma_z\) with \(\sigma_z = I - 2 n_q\). Multi-level transmon dephasing uses \(\sqrt{\gamma_\phi}\,n_q\).
+  \item Storage and readout pure dephasing use \(\sqrt{1/T_{\phi,s}}\,n_s\) and \(\sqrt{1/T_{\phi,r}}\,n_r\) respectively, so a storage \(|0\rangle\langle 1|\) coherence decays as \(e^{-t/T_{\phi,s}}\).
   \item In the two-mode path, \texttt{kappa} and \texttt{nth} still drive storage loss and thermal excitation.
   \item In the three-mode path, storage and readout can decay independently via \texttt{kappa\_storage} and \texttt{kappa\_readout}, with separate thermal occupations.
+  \item The helper \texttt{pure\_dephasing\_time\_from\_t1\_t2(...)} uses \(1/T_2 = 1/(2T_1) + 1/T_\phi\) and clamps negative inferred \(1/T_\phi\) to zero.
   \item \texttt{simulate\_sequence(...)} uses \texttt{mesolve} when collapse operators are present or when the initial state is already a density matrix; otherwise it uses \texttt{sesolve}.
 \end{itemize}
 Direct tests: \texttt{tests/test\_14\_dissipation.py}, \texttt{tests/test\_18\_noise\_and\_sideband.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}, \texttt{tests/test\_31\_multilevel\_sideband\_extension.py}.
@@ -490,7 +513,7 @@ Direct tests: \texttt{tests/test\_14\_dissipation.py}, \texttt{tests/test\_18\_n
   \item Synthetic I/Q points remain available for lightweight sampling-only usage.
   \item The new readout-chain path adds optional state-conditioned resonator traces, amplifier-noise I/Q sampling, and a reduced-state backaction model without changing the default no-chain behavior.
 \end{itemize}
-Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \texttt{tests/test\_19\_fock\_tomo.py}, \texttt{tests/test\_26\_experimental\_protocols.py}, \texttt{tests/test\_27\_three\_mode\_model.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}.
+Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \texttt{tests/test\_19\_fock\_tomo.py}, \texttt{tests/test\_26\_state\_prep\_and\_measurement.py}, \texttt{tests/test\_27\_three\_mode\_model.py}, \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py}.
 
 \section{Hilbert Space Truncation}
 \begin{itemize}[leftmargin=1.5em]
@@ -502,7 +525,7 @@ Direct tests: \texttt{tests/test\_16\_ideal\_primitives\_and\_extractors.py}, \t
   \item SQR angle arrays are still padded to the storage dimension in \texttt{cqed\_sim/pulses/calibration.py}.
   \item The synthesis layer still distinguishes the full Hilbert dimension from restricted subspace dimension in \texttt{cqed\_sim/unitary\_synthesis/subspace.py}.
 \end{itemize}
-Direct tests: \texttt{tests/test\_11\_model\_invariants.py}, \texttt{tests/test\_24\_displacement\_selective\_spectroscopy.py}, \texttt{tests/test\_26\_experimental\_protocols.py}, \texttt{tests/test\_27\_three\_mode\_model.py}, \texttt{tests/unitary\_synthesis/test\_subspace.py}.
+Direct tests: \texttt{tests/test\_11\_model\_invariants.py}, \texttt{tests/test\_24\_displacement\_selective\_spectroscopy.py}, \texttt{tests/test\_26\_state\_prep\_and\_measurement.py}, \texttt{tests/test\_27\_three\_mode\_model.py}, \texttt{tests/unitary\_synthesis/test\_subspace.py}.
 
 \section{Test Suite Audit}
 \small
@@ -540,9 +563,10 @@ File & Targets, type, and main assertion & Status \\
 \texttt{tests/test\_23\_sqr\_additive\_amplitude\_correction.py} & additive \(d\lambda\) amplitude convention for SQR tones. & Passed \\
 \texttt{tests/test\_24\_displacement\_selective\_spectroscopy.py} & selective-spectroscopy frequencies and displacement conventions. & Passed \\
 \texttt{tests/test\_25\_tensor\_product\_convention.py} & direct checks of tensor ordering, block indices, and active \(\sigma_z\) sign. & Passed \\
-\texttt{tests/test\_26\_experimental\_protocols.py} & new protocol-layer tests for state preparation ordering, mixed initial states, sampled qubit measurement, and \texttt{SimulationExperiment}. & Passed \\
+\texttt{tests/test\_26\_state\_prep\_and\_measurement.py} & state-preparation ordering, mixed initial states, sampled qubit measurement, and the direct prepare-compile-simulate-measure workflow. & Passed \\
 \texttt{tests/test\_27\_three\_mode\_model.py} & explicit basis-index, operator-embedding, partial-trace, analytic diagonal-energy, two-mode reduction, and dispersive shift checks for the three-mode model. & Passed \\
 \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py} & drive isolation, storage/readout ringdown, transmon \(T_1\), transmon dephasing, positivity, and readout-response checks for the three-mode path. & Passed \\
+\texttt{tests/analysis/test\_spectrum.py} & vacuum-referenced eigenspectrum output, bare-state labeling, sideband level-spacing interpretation, and energy-level plotting smoke checks. & Passed \\
 \texttt{tests/test\_31\_multilevel\_sideband\_extension.py} & effective multilevel sideband Hermiticity, \(g\leftrightarrow f\) swap, detuned synchronization, shelving isolation, and multilevel-noise regression checks. & Passed \\
 \texttt{tests/test\_32\_kerr\_sign\_notebook\_regression.py} & regression that the notebook-scale Kerr evolution matches the documented self-Kerr sign rather than a flipped-sign surrogate. & Passed \\
 \texttt{tests/test\_33\_usage\_examples\_spectroscopy\_sign.py} & fixed-Fock negative-\(\chi\) spectroscopy regression plus a guard that \texttt{examples/workflows/cqed\_sim\_usage\_examples.ipynb} plots physical transition detuning instead of raw carrier. & Passed \\
@@ -604,7 +628,8 @@ Interpreter note: \verb|E:\Program Files\Python311\python.exe| from \texttt{AGEN
   \item The three-mode solver path is directly tested for drive isolation, storage/readout-specific damping, transmon relaxation, transmon dephasing, positivity, and qubit-conditioned readout response.
   \item State preparation helpers are directly tested for ordering and mixed-state behavior.
   \item The qubit measurement abstraction is directly tested for exact probabilities, confusion-matrix application, finite-shot sampling, and synthetic I/Q output shape.
-  \item \texttt{SimulationExperiment} is directly tested as the recommended light protocol wrapper over the compile-and-run path.
+  \item The static-spectrum helper is directly tested for vacuum-referenced energies, bare-state labeling, and sideband-relevant energy differences.
+  \item The direct prepare-compile-simulate-measure composition path is directly tested as the recommended library usage pattern.
   \item The moved example workflows still execute correctly in their new locations.
 \end{itemize}
 
@@ -620,6 +645,7 @@ Interpreter note: \verb|E:\Program Files\Python311\python.exe| from \texttt{AGEN
 \textbf{Moderate:} the repository migrated on March 11, 2026 from an older \(-\chi n_c n_q\) convention to the current \(+\chi n_c n_q\) convention. Historical notes or saved plots created before that migration may still use the old sign.\\
 \textbf{Moderate:} higher-order pull and Kerr parameters are falling-factorial coefficients, not ordinary polynomial coefficients.\\
 \textbf{Moderate:} the runtime writes transmon physics in terms of \(n_q\) rather than \(\sigma_z/2\), so ground-state energy offsets differ from some textbook presentations.\\
+\textbf{Moderate:} \texttt{EnergySpectrum.energies} are vacuum-referenced in the selected frame, so rotating-frame spectra can contain negative excited-state energies even though the vacuum is fixed at zero.\\
 \textbf{Moderate:} synthetic I/Q output is a convenience sampling layer, not a calibrated hardware-response model.\\
 \textbf{Low:} the explicit complex-envelope sign \(e^{+i(\omega t+\phi)}\) is repo-specific and must be preserved when adding pulse families.\\
 \textbf{Low:} \texttt{FrameSpec} still stores the storage frame in the legacy field \texttt{omega\_c\_frame}; the \texttt{omega\_s\_frame} alias removes ambiguity but does not rename the underlying field.

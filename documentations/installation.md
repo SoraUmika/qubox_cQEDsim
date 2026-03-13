@@ -3,27 +3,30 @@
 ## Requirements
 
 - **Python** ≥ 3.10
+- **matplotlib** ≥ 3.8
 - **NumPy** ≥ 1.24
+- **pandas** ≥ 2.0
 - **SciPy** ≥ 1.10
 - **QuTiP** ≥ 5.0
 
 Optional:
 
 - **JAX** — for the dense-matrix backend (`JaxBackend`)
-- **matplotlib** — for plotting functions
 - **pytest** ≥ 8.0 — for running tests
 
 ---
 
 ## Development Install
 
-The package is currently used as a development install from the repository. Clone or obtain the repository, then install in editable mode:
+The standard install entry point is the repository root. Clone or obtain the repository, then install in editable mode:
 
 ```bash
 pip install -e .
 ```
 
 This installs `cqed_sim` as a package that can be imported from anywhere on the system, while changes to the source code take effect immediately.
+
+The install also includes the local `physics_and_conventions` package required by parts of the public runtime API.
 
 ### From the Repository Root
 
@@ -47,7 +50,9 @@ Core dependencies are declared in `pyproject.toml` and will be installed automat
 
 ```toml
 dependencies = [
+  "matplotlib>=3.8",
   "numpy>=1.24",
+  "pandas>=2.0",
   "scipy>=1.10",
   "qutip>=5.0",
 ]
@@ -58,7 +63,7 @@ dependencies = [
 To use the dense JAX backend for parity checks on small systems:
 
 ```bash
-pip install jax jaxlib
+pip install .[jax]
 ```
 
 Then configure:

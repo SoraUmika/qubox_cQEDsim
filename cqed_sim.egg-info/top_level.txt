@@ -1,1 +1,2 @@
 cqed_sim
+physics_and_conventions

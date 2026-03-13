@@ -1,5 +1,6 @@
 from .bloch_plots import GATE_COLORS, add_gate_type_axis, plot_bloch_track
 from .calibration_plots import plot_sqr_calibration_result
+from .energy_levels import plot_energy_levels
 from .gate_diagnostics import (
     plot_combined_gate_diagnostics,
     plot_fock_resolved_bloch_grouped_bars,
@@ -26,6 +27,7 @@ __all__ = [
     "add_gate_type_axis",
     "plot_bloch_track",
     "plot_sqr_calibration_result",
+    "plot_energy_levels",
     "plot_fock_resolved_bloch_grouped_bars",
     "plot_fock_resolved_bloch_overlay",
     "plot_phase_overlay_lines",

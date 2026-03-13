@@ -83,7 +83,7 @@ nav:
       - Pulse System: api/pulses.md
       - Sequence Compilation: api/sequence.md
       - Simulation Engine: api/simulation.md
-      - Experiment Layer: api/experiment.md
+      - State Prep & Measurement: api/measurement.md
       - Gate I/O: api/gate_io.md
       - Analysis: api/analysis.md
       - Calibration: api/calibration.md

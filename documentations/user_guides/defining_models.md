@@ -204,3 +204,34 @@ universal = model.as_universal_model()
 ```
 
 All three model types expose the same core interface: `operators()`, `static_hamiltonian()`, `basis_state()`, `drive_coupling_operators()`, etc.
+
+---
+
+## Inspecting Energy Levels
+
+Every model now exposes `energy_spectrum(...)` for exact diagonalization of the
+static Hamiltonian:
+
+```python
+import numpy as np
+from cqed_sim import FrameSpec
+from cqed_sim.plotting import plot_energy_levels
+
+lab_spectrum = model.energy_spectrum(frame=FrameSpec(), levels=12)
+
+print(lab_spectrum.level_rows(5))
+
+fig = plot_energy_levels(
+    lab_spectrum,
+    max_levels=12,
+    energy_scale=1.0 / (2.0 * np.pi * 1.0e6),
+    energy_unit_label="MHz",
+)
+```
+
+Important conventions:
+
+- `EnergySpectrum.energies` are always shifted so the bare vacuum basis state has energy `0`.
+- `EnergyLevel.raw_energy` keeps the unshifted eigenvalue in the selected frame.
+- Use the lab frame `FrameSpec()` when you want an intuitive absolute ladder plot.
+- Use a rotating frame only when you explicitly want dressed detunings in that frame.

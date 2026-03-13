@@ -63,6 +63,7 @@ class UniversalCQEDModel:
 |---|---|---|
 | `operators()` | `-> dict[str, qt.Qobj]` | Cached full-space ladder and number operators |
 | `hamiltonian(frame=None)` | `-> qt.Qobj` | Alias of `static_hamiltonian(frame)` |
+| `energy_spectrum(frame=None, levels=None)` | `-> EnergySpectrum` | Exact diagonalization of the static Hamiltonian with vacuum-referenced energies |
 | `basis_state(*levels)` | `-> qt.Qobj` | Basis ket using subsystem declaration order |
 | `basis_energy(*levels, frame=None)` | `-> float` | Diagonal basis energy under the static Hamiltonian |
 | `transmon_lowering()` | `-> qt.Qobj` | Full-space transmon lowering operator |
@@ -134,6 +135,7 @@ Higher-order coefficients use **falling-factorial** form: `chi_higher[i]` multip
 | `transmon_transition_frequency(cavity_level, lower, upper, frame)` | `-> float` | General transmon transition |
 | `sideband_transition_frequency(cavity_level, lower, upper, sideband, frame)` | `-> float` | Effective sideband transition |
 | `hamiltonian(frame=None)` | `(FrameSpec \| None) -> qt.Qobj` | Alias of `static_hamiltonian(frame)` |
+| `energy_spectrum(frame=None, levels=None)` | `(FrameSpec \| None, int \| None) -> EnergySpectrum` | Vacuum-referenced eigenspectrum of the static Hamiltonian |
 | `as_universal_model()` | `-> UniversalCQEDModel` | Return delegated universal model |
 
 ---
@@ -177,7 +179,56 @@ $$H_0/\hbar = \delta_s n_s + \delta_r n_r + \delta_q n_q + \frac{\alpha}{2} b^{\
 | `drive_coupling_operators()` | `-> dict[str, tuple]` | Keys: `"storage"`, `"cavity"`, `"qubit"`, `"transmon"`, `"readout"` |
 | `static_hamiltonian(frame)` | `(FrameSpec \| None) -> qt.Qobj` | Full three-mode static Hamiltonian |
 | `basis_state(q, ns, nr)` | `(int, int, int) -> qt.Qobj` | \|q⟩⊗\|n_s⟩⊗\|n_r⟩ |
+| `energy_spectrum(frame=None, levels=None)` | `(FrameSpec \| None, int \| None) -> EnergySpectrum` | Vacuum-referenced eigenspectrum of the static Hamiltonian |
 | `as_universal_model()` | `-> UniversalCQEDModel` | Return delegated universal model |
+
+---
+
+## Energy Spectrum
+
+**Module path:** `cqed_sim.core.spectrum`
+
+```python
+@dataclass(frozen=True)
+class EnergyLevel:
+    index: int
+    energy: float
+    raw_energy: float
+    eigenstate: qt.Qobj
+    dominant_basis_levels: tuple[int, ...]
+    dominant_basis_label: str
+    dominant_basis_overlap: float
+
+@dataclass(frozen=True)
+class EnergySpectrum:
+    hamiltonian: qt.Qobj
+    frame: FrameSpec
+    levels: tuple[EnergyLevel, ...]
+    vacuum_energy: float
+    vacuum_basis_levels: tuple[int, ...]
+    vacuum_basis_label: str
+    vacuum_level_index: int | None
+    vacuum_level_overlap: float
+    vacuum_residual_norm: float
+    subsystem_labels: tuple[str, ...]
+    subsystem_dims: tuple[int, ...]
+```
+
+```python
+def compute_energy_spectrum(
+    model,
+    *,
+    frame: FrameSpec | None = None,
+    levels: int | None = None,
+    sort: str = "low",
+) -> EnergySpectrum
+```
+
+- The helper diagonalizes the static Hamiltonian with QuTiP's native eigensolver.
+- Returned energies are shifted so the bare vacuum basis state has energy `0`.
+- `raw_energy` retains the unshifted eigenvalue in the selected frame.
+- For intuitive absolute energy ladders, prefer the lab frame `FrameSpec()`.
+- Rotating-frame spectra can contain negative energies even though the vacuum remains the zero reference.
 
 ---
 

@@ -1,4 +1,4 @@
-Status: partially fixed on 2026-03-11.
+Status: fixed on 2026-03-13.
 
 ## Confirmed issues
 
@@ -69,10 +69,15 @@ Status: partially fixed on 2026-03-11.
 - Consequence:
   - Broken links, stale metadata, and regeneration to the wrong location.
 
-## Suspected / unresolved issues
+## Follow-up items re-audited on 2026-03-13
 
-- `outputs/chi_evolution_copy_HEAD.ipynb` appears to be an archival snapshot rather than a live workflow notebook. It should either be moved to a clearly labeled archive location or explicitly kept as an artifact with that status documented.
-- The `examples/paper_reproductions/` subtree is clearly named, but it partially overlaps in purpose with `test_against_papers/`. This audit will prioritize the obvious root-level notebook misplacements first and only change that subtree if a minimal move is justified by the surrounding references.
+- `outputs/chi_evolution_copy_HEAD.ipynb`
+  - This remains an output-side artifact rather than a maintained workflow notebook, so it is no longer treated as an active layout inconsistency.
+- `examples/paper_reproductions/` vs `test_against_papers/`
+  - The repository now documents this boundary explicitly:
+    - `examples/paper_reproductions/` for maintained example-side reproduction code
+    - `test_against_papers/` for notebook-style literature checks and validation workflows
+  - With that documented separation in `README.md` and `documentations/examples.md`, this is no longer tracked as an unresolved inconsistency.
 
 ## Resolution status
 
@@ -81,5 +86,6 @@ Status: partially fixed on 2026-03-11.
   - vague notebook names were replaced with purpose-specific names
   - root-level example scripts were moved into `examples/workflows`, `examples/studies`, `examples/audits`, or `examples/smoke_tests`
   - generator scripts, provenance strings, import paths, and notebook references were updated to the new locations
+  - maintained example scripts and workflow notebooks now resolve outputs from canonical `examples/outputs*` locations instead of depending on the current working directory
 - Remaining open:
-  - the purpose boundary between `examples/paper_reproductions/` and `test_against_papers/` is still broader than this minimal reorganization pass and should be normalized only with a dedicated migration plan
+  - none from this audit after the 2026-03-13 re-audit

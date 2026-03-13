@@ -36,7 +36,7 @@ def _save_plot(path: Path, x, ys, labels, title, ylabel):
 
 
 def main():
-    out_dir = Path("examples") / "outputs_fock_tomo"
+    out_dir = Path(__file__).resolve().parents[1] / "outputs_fock_tomo"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     model = DispersiveTransmonCavityModel(

@@ -126,6 +126,8 @@ class NoiseSpec:
     t1: float | None = None
     transmon_t1: tuple[float | None, ...] | None = None
     tphi: float | None = None
+    tphi_storage: float | None = None
+    tphi_readout: float | None = None
     kappa: float | None = None
     nth: float = 0.0
     kappa_storage: float | None = None
@@ -138,6 +140,8 @@ class NoiseSpec:
 |---|---|---|
 | `gamma1` | `float` | 1/t1 if set, else 0.0 |
 | `gamma_phi` | `float` | 1/(2·tphi) if set, else 0.0 |
+| `gamma_phi_storage` | `float` | 1/tphi_storage if set, else 0.0 |
+| `gamma_phi_readout` | `float` | 1/tphi_readout if set, else 0.0 |
 
 ```python
 def collapse_operators(model, noise: NoiseSpec | None) -> list[qt.Qobj]
@@ -149,6 +153,8 @@ Returns Lindblad jump operators:
 - $\sqrt{1/T_{1,j}} \cdot |j-1\rangle\langle j|$ for each explicit ladder transition
 - $\sqrt{\gamma_\phi} \cdot \sigma_z$ (2-level) or $\sqrt{\gamma_\phi} \cdot n_q$ (multilevel)
 - $\sqrt{\kappa(n_{\text{th}}+1)} \cdot a$ and $\sqrt{\kappa \cdot n_{\text{th}}} \cdot a^\dagger$ per bosonic mode
+- $\sqrt{1/T_{\phi,s}} \cdot n_s$ for storage pure dephasing
+- $\sqrt{1/T_{\phi,r}} \cdot n_r$ for readout pure dephasing
 
 ---
 

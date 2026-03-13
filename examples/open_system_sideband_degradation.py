@@ -28,7 +28,7 @@ def _square(t_rel):
 
 
 def main() -> None:
-    out_dir = Path("examples") / "outputs" / "open_system_sideband_degradation"
+    out_dir = ROOT / "examples" / "outputs" / "open_system_sideband_degradation"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     g_sb = 0.3

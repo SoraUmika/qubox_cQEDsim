@@ -24,7 +24,7 @@ def _mhz(value_mhz: float) -> float:
 
 
 def main() -> None:
-    out_dir = Path("examples") / "outputs" / "universal_cqed_model_demo"
+    out_dir = ROOT / "examples" / "outputs" / "universal_cqed_model_demo"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     frame = FrameSpec(omega_c_frame=0.0, omega_q_frame=0.0, omega_r_frame=0.0)

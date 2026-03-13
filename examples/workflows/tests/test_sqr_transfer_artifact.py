@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import numpy as np
 
@@ -67,7 +68,7 @@ def _track_config() -> dict[str, float | int | bool | str | dict[str, float] | N
             "t2_source": "ramsey",
             "cavity_kappa_1_per_s": 0.0,
             "save_output_figures": False,
-            "output_figure_dir": "outputs/figures",
+            "output_figure_dir": str(Path(__file__).resolve().parents[2] / "outputs" / "figures"),
             "output_figure_dpi": 150,
         }
     )

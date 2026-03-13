@@ -1,0 +1,501 @@
+{
+  "levels": [
+    {
+      "index": 0,
+      "energy": 0.0,
+      "raw_energy": 0.0,
+      "dominant_basis_label": "|g,0_storage,0_readout>",
+      "dominant_basis_levels": [
+        0,
+        0,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 1,
+      "energy": 32929751964.87557,
+      "raw_energy": 32929751964.87557,
+      "dominant_basis_label": "|g,1_storage,0_readout>",
+      "dominant_basis_levels": [
+        0,
+        1,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 2,
+      "energy": 38643843822.88308,
+      "raw_energy": 38643843822.88308,
+      "dominant_basis_label": "|e,0_storage,0_readout>",
+      "dominant_basis_levels": [
+        1,
+        0,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 3,
+      "energy": 54011659261.60004,
+      "raw_energy": 54011659261.60004,
+      "dominant_basis_label": "|g,0_storage,1_readout>",
+      "dominant_basis_levels": [
+        0,
+        0,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 4,
+      "energy": 65859503929.75115,
+      "raw_energy": 65859503929.75115,
+      "dominant_basis_label": "|g,2_storage,0_readout>",
+      "dominant_basis_levels": [
+        0,
+        2,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 5,
+      "energy": 71555748896.26524,
+      "raw_energy": 71555748896.26524,
+      "dominant_basis_label": "|e,1_storage,0_readout>",
+      "dominant_basis_levels": [
+        1,
+        1,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 6,
+      "energy": 75681267577.63899,
+      "raw_energy": 75681267577.63899,
+      "dominant_basis_label": "|f,0_storage,0_readout>",
+      "dominant_basis_levels": [
+        2,
+        0,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 7,
+      "energy": 86941411226.4756,
+      "raw_energy": 86941411226.4756,
+      "dominant_basis_label": "|g,1_storage,1_readout>",
+      "dominant_basis_levels": [
+        0,
+        1,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 8,
+      "energy": 92636653528.56158,
+      "raw_energy": 92636653528.56158,
+      "dominant_basis_label": "|e,0_storage,1_readout>",
+      "dominant_basis_levels": [
+        1,
+        0,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 9,
+      "energy": 98789255894.6267,
+      "raw_energy": 98789255894.6267,
+      "dominant_basis_label": "|g,3_storage,0_readout>",
+      "dominant_basis_levels": [
+        0,
+        3,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 10,
+      "energy": 104467653969.64743,
+      "raw_energy": 104467653969.64743,
+      "dominant_basis_label": "|e,2_storage,0_readout>",
+      "dominant_basis_levels": [
+        1,
+        2,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 11,
+      "energy": 108023318523.2001,
+      "raw_energy": 108023318523.2001,
+      "dominant_basis_label": "|g,0_storage,2_readout>",
+      "dominant_basis_levels": [
+        0,
+        0,
+        2
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 12,
+      "energy": 108575325759.52776,
+      "raw_energy": 108575325759.52776,
+      "dominant_basis_label": "|f,1_storage,0_readout>",
+      "dominant_basis_levels": [
+        2,
+        1,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 13,
+      "energy": 119871163191.3512,
+      "raw_energy": 119871163191.3512,
+      "dominant_basis_label": "|g,2_storage,1_readout>",
+      "dominant_basis_levels": [
+        0,
+        2,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 14,
+      "energy": 125548558601.94374,
+      "raw_energy": 125548558601.94374,
+      "dominant_basis_label": "|e,1_storage,1_readout>",
+      "dominant_basis_levels": [
+        1,
+        1,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 15,
+      "energy": 129655227727.39595,
+      "raw_energy": 129655227727.39595,
+      "dominant_basis_label": "|f,0_storage,1_readout>",
+      "dominant_basis_levels": [
+        2,
+        0,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 16,
+      "energy": 131719007859.50227,
+      "raw_energy": 131719007859.50227,
+      "dominant_basis_label": "|g,4_storage,0_readout>",
+      "dominant_basis_levels": [
+        0,
+        4,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 17,
+      "energy": 137379559043.02956,
+      "raw_energy": 137379559043.02956,
+      "dominant_basis_label": "|e,3_storage,0_readout>",
+      "dominant_basis_levels": [
+        1,
+        3,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 18,
+      "energy": 140953070488.07568,
+      "raw_energy": 140953070488.07568,
+      "dominant_basis_label": "|g,1_storage,2_readout>",
+      "dominant_basis_levels": [
+        0,
+        1,
+        2
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 19,
+      "energy": 141469383941.41653,
+      "raw_energy": 141469383941.41653,
+      "dominant_basis_label": "|f,2_storage,0_readout>",
+      "dominant_basis_levels": [
+        2,
+        2,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 20,
+      "energy": 146629463234.2401,
+      "raw_energy": 146629463234.2401,
+      "dominant_basis_label": "|e,0_storage,2_readout>",
+      "dominant_basis_levels": [
+        1,
+        0,
+        2
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 21,
+      "energy": 152800915156.22675,
+      "raw_energy": 152800915156.22675,
+      "dominant_basis_label": "|g,3_storage,1_readout>",
+      "dominant_basis_levels": [
+        0,
+        3,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 22,
+      "energy": 158460463675.3259,
+      "raw_energy": 158460463675.3259,
+      "dominant_basis_label": "|e,2_storage,1_readout>",
+      "dominant_basis_levels": [
+        1,
+        2,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 23,
+      "energy": 162034977784.80008,
+      "raw_energy": 162034977784.80008,
+      "dominant_basis_label": "|g,0_storage,3_readout>",
+      "dominant_basis_levels": [
+        0,
+        0,
+        3
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 24,
+      "energy": 162549285909.2847,
+      "raw_energy": 162549285909.2847,
+      "dominant_basis_label": "|f,1_storage,1_readout>",
+      "dominant_basis_levels": [
+        2,
+        1,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 25,
+      "energy": 164648759824.37787,
+      "raw_energy": 164648759824.37787,
+      "dominant_basis_label": "|g,5_storage,0_readout>",
+      "dominant_basis_levels": [
+        0,
+        5,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 26,
+      "energy": 170291464116.41174,
+      "raw_energy": 170291464116.41174,
+      "dominant_basis_label": "|e,4_storage,0_readout>",
+      "dominant_basis_levels": [
+        1,
+        4,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 27,
+      "energy": 173882822452.95126,
+      "raw_energy": 173882822452.95126,
+      "dominant_basis_label": "|g,2_storage,2_readout>",
+      "dominant_basis_levels": [
+        0,
+        2,
+        2
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 28,
+      "energy": 174363442123.30527,
+      "raw_energy": 174363442123.30527,
+      "dominant_basis_label": "|f,3_storage,0_readout>",
+      "dominant_basis_levels": [
+        2,
+        3,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 29,
+      "energy": 179541368307.62225,
+      "raw_energy": 179541368307.62225,
+      "dominant_basis_label": "|e,1_storage,2_readout>",
+      "dominant_basis_levels": [
+        1,
+        1,
+        2
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 30,
+      "energy": 183629187877.15295,
+      "raw_energy": 183629187877.15295,
+      "dominant_basis_label": "|f,0_storage,2_readout>",
+      "dominant_basis_levels": [
+        2,
+        0,
+        2
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 31,
+      "energy": 185730667121.1023,
+      "raw_energy": 185730667121.1023,
+      "dominant_basis_label": "|g,4_storage,1_readout>",
+      "dominant_basis_levels": [
+        0,
+        4,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 32,
+      "energy": 191372368748.70804,
+      "raw_energy": 191372368748.70804,
+      "dominant_basis_label": "|e,3_storage,1_readout>",
+      "dominant_basis_levels": [
+        1,
+        3,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 33,
+      "energy": 194964729749.67566,
+      "raw_energy": 194964729749.67566,
+      "dominant_basis_label": "|g,1_storage,3_readout>",
+      "dominant_basis_levels": [
+        0,
+        1,
+        3
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 34,
+      "energy": 195443344091.1735,
+      "raw_energy": 195443344091.1735,
+      "dominant_basis_label": "|f,2_storage,1_readout>",
+      "dominant_basis_levels": [
+        2,
+        2,
+        1
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 35,
+      "energy": 200622272939.91855,
+      "raw_energy": 200622272939.91855,
+      "dominant_basis_label": "|e,0_storage,3_readout>",
+      "dominant_basis_levels": [
+        1,
+        0,
+        3
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 36,
+      "energy": 203203369189.79395,
+      "raw_energy": 203203369189.79395,
+      "dominant_basis_label": "|e,5_storage,0_readout>",
+      "dominant_basis_levels": [
+        1,
+        5,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 37,
+      "energy": 206812574417.82678,
+      "raw_energy": 206812574417.82678,
+      "dominant_basis_label": "|g,3_storage,2_readout>",
+      "dominant_basis_levels": [
+        0,
+        3,
+        2
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 38,
+      "energy": 207257500305.19403,
+      "raw_energy": 207257500305.19403,
+      "dominant_basis_label": "|f,4_storage,0_readout>",
+      "dominant_basis_levels": [
+        2,
+        4,
+        0
+      ],
+      "dominant_basis_overlap": 1.0
+    },
+    {
+      "index": 39,
+      "energy": 212453273381.00446,
+      "raw_energy": 212453273381.00446,
+      "dominant_basis_label": "|e,2_storage,2_readout>",
+      "dominant_basis_levels": [
+        1,
+        2,
+        2
+      ],
+      "dominant_basis_overlap": 1.0
+    }
+  ],
+  "transitions": {
+    "device_reference_hz": {
+      "storage_gf_sideband": 6803533628.0
+    },
+    "lab_frame_from_levels_hz": {
+      "storage_gf_red": 6804115034.441639,
+      "readout_gf_red": 3448825278.362842
+    },
+    "lab_frame_helpers_hz": {
+      "storage_gf_red": 6804115034.441636,
+      "readout_gf_red": 3448825278.3628397
+    },
+    "rotating_frame_helpers_hz": {
+      "storage_gf_red": -255669694.5244608,
+      "readout_gf_red": -255669694.5244608
+    }
+  }
+}

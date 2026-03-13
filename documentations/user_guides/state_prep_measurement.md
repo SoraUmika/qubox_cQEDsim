@@ -1,130 +1,84 @@
 # State Preparation & Measurement
 
-`cqed_sim` provides structured state preparation and qubit measurement abstractions for experiment-style simulation workflows.
+This guide covers the reusable state-preparation and qubit-measurement primitives in the library.
 
 ---
 
 ## State Preparation
 
-### StatePreparationSpec
-
-Define the initial state of each subsystem:
+Import state-preparation helpers from `cqed_sim.core`:
 
 ```python
-from cqed_sim.experiment import (
+from cqed_sim.core import (
     StatePreparationSpec,
-    qubit_state,
-    fock_state,
-    coherent_state,
-    vacuum_state,
-    qubit_level,
     amplitude_state,
+    coherent_state,
     density_matrix_state,
-    prepare_state,
+    fock_state,
     prepare_ground_state,
+    prepare_state,
+    qubit_level,
+    qubit_state,
+    vacuum_state,
 )
-
-spec = StatePreparationSpec(
-    qubit=qubit_state("g"),       # Qubit in |g⟩
-    storage=fock_state(3),        # Storage in |3⟩
-)
-
-initial = prepare_state(model, spec)
 ```
 
-### State Constructor Helpers
-
-| Function | Description | Example |
-|---|---|---|
-| `qubit_state(label)` | Named qubit state | `"g"`, `"e"`, `"+x"`, `"-x"`, `"+y"`, `"-y"` |
-| `qubit_level(level)` | Qubit by Fock level | `qubit_level(2)` for $\|f\rangle$ |
-| `vacuum_state()` | Cavity ground state | $\|0\rangle$ |
-| `fock_state(n)` | Cavity Fock state | `fock_state(5)` |
-| `coherent_state(alpha)` | Coherent state | `coherent_state(2.0+1j)` |
-| `amplitude_state(amps)` | Arbitrary from amplitudes | Custom superposition |
-| `density_matrix_state(rho)` | From density matrix | Mixed state |
-
-### Three-Mode Preparation
+Example:
 
 ```python
 spec = StatePreparationSpec(
     qubit=qubit_state("g"),
-    storage=fock_state(0),
-    readout=vacuum_state(),     # Include readout for three-mode models
+    storage=fock_state(3),
 )
+
+initial = prepare_state(model, spec)
+ground = prepare_ground_state(model)
 ```
 
-### Convenience
+`StatePreparationSpec` follows model tensor ordering automatically:
 
-```python
-ground = prepare_ground_state(model)  # |g, 0⟩ or |g, 0, 0⟩
-```
+- two-mode models: qubit, storage
+- three-mode models: qubit, storage, readout
 
 ---
 
 ## Qubit Measurement
 
-### QubitMeasurementSpec
+Import measurement helpers from `cqed_sim.measurement`:
 
 ```python
-from cqed_sim.experiment import QubitMeasurementSpec, measure_qubit
+from cqed_sim.measurement import QubitMeasurementSpec, measure_qubit
 
 spec = QubitMeasurementSpec(
-    shots=1024,                    # Number of measurement shots (None = exact only)
-    confusion_matrix=None,         # 2×2 confusion matrix, (g,e) ordering
-    seed=42,                       # RNG seed for reproducibility
+    shots=1024,
+    seed=42,
 )
 
 result = measure_qubit(state, spec)
 ```
 
-### QubitMeasurementResult
+The returned `QubitMeasurementResult` exposes:
 
-```python
-result.probabilities              # {"g": p_g, "e": p_e} — exact latent probabilities
-result.observed_probabilities     # After confusion matrix application
-result.expectation_z              # p_g_obs − p_e_obs
-result.counts                     # {"g": n_g, "e": n_e} — shot counts (if shots > 0)
-result.samples                    # ndarray of 0/1 outcomes
-```
-
-### Measurement Pipeline
-
-1. Extract reduced qubit state via `reduced_qubit_state()`
-2. Compute latent probabilities $(p_g, p_e)$, lumping higher levels
-3. Apply confusion matrix: $p_{\text{obs}} = M \cdot p_{\text{latent}}$
-4. If readout chain attached: apply backaction (dephasing, Purcell), generate I/Q
-5. If shots requested: sample from $p_{\text{obs}}$ (or classify from I/Q)
-
-### Confusion Matrix
-
-Ordering: columns are latent states (g, e), rows are observed states (g, e).
-
-```python
-import numpy as np
-
-confusion = np.array([
-    [0.98, 0.03],   # P(observe g | latent g), P(observe g | latent e)
-    [0.02, 0.97],   # P(observe e | latent g), P(observe e | latent e)
-])
-
-spec = QubitMeasurementSpec(shots=1024, confusion_matrix=confusion)
-```
+- `probabilities`
+- `observed_probabilities`
+- `expectation_z`
+- `counts`, `samples`, `iq_samples` when sampling is requested
 
 ---
 
-## Physical Readout Chain
+## Readout Chain
 
-For experiment-realistic readout modeling:
+The physical readout-chain model also lives in `cqed_sim.measurement`:
 
 ```python
 import numpy as np
-from cqed_sim.experiment import (
-    ReadoutResonator,
-    PurcellFilter,
+
+from cqed_sim.measurement import (
     AmplifierChain,
-    ReadoutChain,
+    PurcellFilter,
     QubitMeasurementSpec,
+    ReadoutChain,
+    ReadoutResonator,
     measure_qubit,
 )
 
@@ -150,34 +104,14 @@ spec = QubitMeasurementSpec(
 )
 
 result = measure_qubit(state, spec)
-result.iq_samples        # (shots, 2) I/Q samples
-result.readout_centers   # {"g": [I, Q], "e": [I, Q]} noiseless centers
-result.readout_metadata  # Dephasing rates, Purcell T₁, etc.
 ```
 
 ---
 
-## SimulationExperiment Wrapper
+## Workflow Boundary
 
-Combine preparation, compilation, simulation, and measurement in one object:
+Protocol-style orchestration is example-side now. For full prepare -> compile -> simulate -> measure recipes, see:
 
-```python
-from cqed_sim.experiment import SimulationExperiment
-
-experiment = SimulationExperiment(
-    model=model,
-    pulses=pulses,
-    drive_ops={"q": "qubit"},
-    dt=2e-9,
-    frame=frame,
-    state_prep=StatePreparationSpec(
-        qubit=qubit_state("g"),
-        storage=fock_state(0),
-    ),
-    measurement=QubitMeasurementSpec(shots=2048, seed=42),
-)
-
-result = experiment.run()
-result.simulation.final_state    # SimulationResult
-result.measurement.probabilities # QubitMeasurementResult
-```
+- `examples/protocol_style_simulation.py`
+- `examples/kerr_free_evolution.py`
+- `examples/sequential_sideband_reset.py`

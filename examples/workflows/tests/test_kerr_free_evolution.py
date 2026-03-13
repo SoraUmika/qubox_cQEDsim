@@ -3,10 +3,9 @@ from __future__ import annotations
 import numpy as np
 import qutip as qt
 
-from cqed_sim.experiment import (
+from cqed_sim.core import coherent_state, fock_state
+from examples.workflows.kerr_free_evolution import (
     build_kerr_free_evolution_model,
-    coherent_state,
-    fock_state,
     resolve_kerr_parameter_set,
     run_kerr_free_evolution,
     times_us_to_seconds,

@@ -20,6 +20,7 @@ All plotting functions return matplotlib `Figure` objects and are designed for d
 | Function | Description |
 |---|---|
 | `plot_sqr_calibration_result(result)` | 4-panel: d_lambda, d_alpha, d_omega_hz, loss vs Fock level |
+| `plot_energy_levels(spectrum, max_levels=None, energy_scale=1.0, energy_unit_label="rad/s", annotate=True, title=None, ax=None)` | Ladder-style plot of vacuum-referenced energy levels |
 
 ---
 

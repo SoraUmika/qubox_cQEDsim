@@ -109,7 +109,7 @@ print(result.expectations)
 - [Installation](installation.md) — how to set up the package
 - [Physics & Conventions](physics_conventions.md) — Hamiltonian, signs, frames, units
 - [User Guides](user_guides/defining_models.md) — step-by-step workflow documentation
-- [Tutorials](tutorials/displacement_spectroscopy.md) — complete worked examples
+- [Tutorials](tutorials/index.md) — structured notebook curriculum
 - [API Reference](api/overview.md) — full public API documentation
 - [Examples](examples.md) — index of example scripts and notebooks
 - [Architecture](architecture.md) — package structure and design

@@ -7,6 +7,7 @@ import qutip as qt
 
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.sequence.scheduler import SequenceCompiler
+from cqed_sim.sim.noise import pure_dephasing_time_from_t1_t2
 from cqed_sim.sim.runner import SimulationConfig, simulate_sequence
 
 
@@ -55,4 +56,13 @@ def test_chi_with_t1_does_not_break_trace_or_positivity():
         ev = np.linalg.eigvalsh(s.full())
         assert np.min(ev) > -1e-8
     assert (time.perf_counter() - start) < 1.6
+
+
+def test_pure_dephasing_time_helper_returns_none_when_extra_rate_vanishes():
+    assert pure_dephasing_time_from_t1_t2(t1_s=12.0e-6, t2_s=24.0e-6) is None
+
+    inferred = pure_dephasing_time_from_t1_t2(t1_s=20.0e-6, t2_s=8.0e-6)
+    expected = 1.0 / (1.0 / (8.0e-6) - 1.0 / (2.0 * 20.0e-6))
+    assert inferred is not None
+    assert np.isclose(inferred, expected, rtol=1.0e-12, atol=0.0)
 

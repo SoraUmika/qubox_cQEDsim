@@ -8,6 +8,13 @@ import qutip as qt
 
 
 def pure_dephasing_time_from_t1_t2(*, t1_s: float | None, t2_s: float | None) -> float | None:
+    """Infer ``T_phi`` from ``T1`` and ``T2`` in seconds.
+
+    Returns ``None`` when ``T2`` is not supplied or when the inferred extra pure-dephasing
+    rate is non-positive. Callers treat that ``None`` value as "no additional dephasing
+    term" rather than as a literal zero-valued time.
+    """
+
     if t2_s is None:
         return None
     if t1_s is None:

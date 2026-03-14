@@ -16,12 +16,15 @@ from cqed_sim.sequence.scheduler import SequenceCompiler
 from cqed_sim.sim.runner import SimulationConfig, simulate_sequence
 
 
-def mhz_to_rad_per_ns(mhz: float) -> float:
-    return float(2.0 * np.pi * mhz * 1e-3)
+ns = 1.0e-9
 
 
-def rad_per_ns_to_mhz(omega: float) -> float:
-    return float(omega / (2.0 * np.pi) * 1.0e3)
+def MHz(value: float) -> float:
+    return float(2.0 * np.pi * value * 1.0e6)
+
+
+def angular_to_mhz(omega: float) -> float:
+    return float(omega / (2.0 * np.pi * 1.0e6))
 
 
 def gauss_sigma_018(t_rel: np.ndarray) -> np.ndarray:
@@ -33,7 +36,7 @@ def build_model(chi_mhz: float = -2.84, n_cav: int = 24) -> DispersiveTransmonCa
         omega_c=0.0,
         omega_q=0.0,
         alpha=0.0,
-        chi=mhz_to_rad_per_ns(chi_mhz),
+        chi=MHz(chi_mhz),
         kerr=0.0,
         n_cav=n_cav,
         n_tr=2,
@@ -43,23 +46,23 @@ def build_model(chi_mhz: float = -2.84, n_cav: int = 24) -> DispersiveTransmonCa
 def simulate_post_displacement_state(
     model: DispersiveTransmonCavityModel,
     disp_amp: float,
-    disp_duration_ns: float,
-    dt_ns: float,
+    disp_duration_s: float,
+    dt_s: float,
 ) -> qt.Qobj:
     disp = Pulse(
         channel="c",
         t0=0.0,
-        duration=disp_duration_ns,
+        duration=disp_duration_s,
         envelope=gauss_sigma_018,
         carrier=0.0,
         phase=0.0,
         amp=disp_amp,
     )
-    compiled = SequenceCompiler(dt=dt_ns).compile([disp], t_end=disp_duration_ns + dt_ns)
+    compiled = SequenceCompiler(dt=dt_s).compile([disp], t_end=disp_duration_s + dt_s)
     result = simulate_sequence(
         model,
         compiled,
-        model.basis_state( 0,0),
+        model.basis_state(0, 0),
         drive_ops={"c": "cavity"},
         config=SimulationConfig(frame=FrameSpec()),
     )
@@ -71,19 +74,19 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
     model = build_model(chi_mhz=chi_mhz, n_cav=24)
     q_frame = FrameSpec(omega_q_frame=model.omega_q)
 
-    dt_ns = 0.5
-    disp_duration_ns = 80.0
-    spec_duration_ns = 1200.0
-    gap_ns = 20.0
-    disp_amp = 0.035
-    spec_amp = 0.004
+    dt_s = 0.5 * ns
+    disp_duration_s = 80.0 * ns
+    spec_duration_s = 1200.0 * ns
+    gap_s = 20.0 * ns
+    disp_amp = 0.035 / ns
+    spec_amp = 0.004 / ns
     transition_detunings_mhz = np.linspace(-12.0, 2.0, 71)
 
     rho_after_disp = simulate_post_displacement_state(
         model=model,
         disp_amp=disp_amp,
-        disp_duration_ns=disp_duration_ns,
-        dt_ns=dt_ns,
+        disp_duration_s=disp_duration_s,
+        dt_s=dt_s,
     )
 
     nbar = float(np.real(qt.expect(model.operators()["n_c"], rho_after_disp)))
@@ -97,20 +100,20 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
     for i, det_mhz in enumerate(transition_detunings_mhz):
         spec = Pulse(
             channel="q",
-            t0=disp_duration_ns + gap_ns,
-            duration=spec_duration_ns,
+            t0=disp_duration_s + gap_s,
+            duration=spec_duration_s,
             envelope=square_envelope,
-            carrier=carrier_for_transition_frequency(mhz_to_rad_per_ns(float(det_mhz))),
+            carrier=carrier_for_transition_frequency(MHz(float(det_mhz))),
             phase=0.0,
             amp=spec_amp,
         )
-        t_end = disp_duration_ns + gap_ns + spec_duration_ns + dt_ns
-        compiled = SequenceCompiler(dt=dt_ns).compile(
+        t_end = disp_duration_s + gap_s + spec_duration_s + dt_s
+        compiled = SequenceCompiler(dt=dt_s).compile(
             [
                 Pulse(
                     channel="c",
                     t0=0.0,
-                    duration=disp_duration_ns,
+                    duration=disp_duration_s,
                     envelope=gauss_sigma_018,
                     carrier=0.0,
                     phase=0.0,
@@ -125,7 +128,7 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
         result = simulate_sequence(
             model,
             compiled,
-            model.basis_state( 0,0),
+            model.basis_state(0, 0),
             drive_ops={"c": "cavity", "q": "qubit"},
             config=SimulationConfig(frame=q_frame),
         )
@@ -136,7 +139,7 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
 
     top_n = int(min(8, model.n_cav))
     predicted_lines_mhz = [
-        rad_per_ns_to_mhz(model.manifold_transition_frequency(n, frame=q_frame))
+        angular_to_mhz(model.manifold_transition_frequency(n, frame=q_frame))
         for n in range(top_n)
     ]
     predicted_weights = [float(p_n[n]) for n in range(top_n)]
@@ -145,14 +148,14 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
         "chi_mhz": float(chi_mhz),
         "displacement": {
             "amp": float(disp_amp),
-            "duration_ns": float(disp_duration_ns),
+            "duration_ns": float(disp_duration_s / ns),
             "nbar_after_displacement": float(nbar),
             "p_n_first_8": [float(x) for x in p_n[:8]],
         },
         "spectroscopy": {
             "amp": float(spec_amp),
-            "duration_ns": float(spec_duration_ns),
-            "gap_ns": float(gap_ns),
+            "duration_ns": float(spec_duration_s / ns),
+            "gap_ns": float(gap_s / ns),
             "transition_detunings_mhz": [float(x) for x in transition_detunings_mhz],
             "pe_final": [float(x) for x in pe],
             "peak_detuning_mhz": peak_detuning_mhz,
@@ -162,7 +165,8 @@ def run_displacement_then_qubit_spectroscopy() -> dict[str, object]:
         "units": {
             "transition_detuning": "MHz relative to the qubit rotating frame",
             "chi": "MHz",
-            "carrier": "internal waveform carrier in rad/ns; carrier = -transition_detuning",
+            "carrier": "internal waveform carrier in rad/s; carrier = -transition_detuning",
+            "pulse_amplitude": "rad/s",
         },
     }
     return output

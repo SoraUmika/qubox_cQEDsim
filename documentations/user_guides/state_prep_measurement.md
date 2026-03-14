@@ -110,7 +110,13 @@ result = measure_qubit(state, spec)
 
 ## Workflow Boundary
 
-Protocol-style orchestration is example-side now. For full prepare -> compile -> simulate -> measure recipes, see:
+Protocol-style orchestration is repository-side now. For guided prepare -> compile -> simulate -> measure walkthroughs, start with:
+
+- `tutorials/00_tutorial_index.ipynb`
+- `tutorials/03_cavity_displacement_basics.ipynb`
+- `tutorials/17_readout_resonator_response.ipynb`
+
+For standalone scripts, see:
 
 - `examples/protocol_style_simulation.py`
 - `examples/kerr_free_evolution.py`

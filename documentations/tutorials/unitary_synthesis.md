@@ -2,6 +2,8 @@
 
 This tutorial demonstrates how to use `cqed_sim`'s unitary synthesis module to find gate sequences that implement target unitaries within a qubit–cavity subspace.
 
+Unlike the numbered notebook curriculum under `tutorials/`, this page documents an advanced workflow area that still primarily lives in repo-side study material.
+
 ---
 
 ## Overview

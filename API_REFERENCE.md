@@ -1174,11 +1174,16 @@ Common methods:
 Workflow boundary:
 
 - high-level orchestration no longer lives in `cqed_sim`
-- protocol recipes now live under `examples/`
+- guided notebook tutorials now live under `tutorials/`
+- standalone protocol recipes now live under `examples/`
 - the reusable helper `pure_dephasing_time_from_t1_t2(...)` lives in `cqed_sim.sim.noise`
 
-Example-side workflow entry points:
+Repository-side workflow entry points:
 
+- `tutorials/README.md`
+- `tutorials/00_tutorial_index.ipynb`
+- `tutorials/03_cavity_displacement_basics.ipynb`
+- `tutorials/17_readout_resonator_response.ipynb`
 - `examples/protocol_style_simulation.py`
 - `examples/kerr_free_evolution.py`
 - `examples/kerr_sign_verification.py`

@@ -2,6 +2,8 @@
 
 This tutorial demonstrates how to simulate a sideband transition — a common operation for transferring excitations between a transmon and a bosonic mode.
 
+For the current numbered notebook curriculum, see `tutorials/24_sideband_like_interactions.ipynb`. This page remains a topical summary, while the more elaborate standalone scripts stay under `examples/`.
+
 ---
 
 ## Physics Background

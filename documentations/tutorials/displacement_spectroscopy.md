@@ -1,6 +1,12 @@
 # Tutorial: Displacement & Qubit Spectroscopy
 
-This tutorial demonstrates how to simulate a displacement of the storage cavity followed by qubit spectroscopy — a common cQED workflow for probing the photon-number-dependent qubit frequency.
+The primary guided notebook path for this topic now lives in the top-level `tutorials/` curriculum:
+
+- `tutorials/03_cavity_displacement_basics.ipynb`
+- `tutorials/06_qubit_spectroscopy.ipynb`
+- `tutorials/07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb`
+
+This page remains as a compact topical summary of the same physics.
 
 ---
 
@@ -127,12 +133,9 @@ with amplitudes following the Poisson distribution $P(n) = e^{-|\alpha|^2} |\alp
 
 ---
 
-## Existing Example
+## Related Repo Assets
 
-A complete implementation is available at:
+- Guided notebooks: `tutorials/03_cavity_displacement_basics.ipynb`, `tutorials/06_qubit_spectroscopy.ipynb`, `tutorials/07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb`
+- Standalone script: `examples/displacement_qubit_spectroscopy.py`
 
-```
-examples/displacement_qubit_spectroscopy.py
-```
-
-This script includes parameter configuration and a polished spectroscopy sweep.
+Use the numbered notebooks when you want the full teaching flow and the standalone script when you want one compact executable example.

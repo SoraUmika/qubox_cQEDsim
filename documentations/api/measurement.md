@@ -1,6 +1,6 @@
 # API Reference — State Preparation & Measurement
 
-This page documents the reusable state-preparation and measurement primitives that remain part of the `cqed_sim` library. High-level protocol recipes now live under `examples/`, not under `cqed_sim`.
+This page documents the reusable state-preparation and measurement primitives that remain part of the `cqed_sim` library. Guided notebook tutorials now live under `tutorials/`, while standalone protocol recipes live under `examples/`, not under `cqed_sim`.
 
 ---
 
@@ -130,11 +130,9 @@ The confusion matrix convention remains `p_observed = M @ p_latent` with `(g, e)
 
 ## Workflow Boundary
 
-Protocol-style orchestration is intentionally example-side now:
+Protocol-style orchestration is intentionally repository-side now:
 
-- `examples/protocol_style_simulation.py`
-- `examples/kerr_free_evolution.py`
-- `examples/kerr_sign_verification.py`
-- `examples/sequential_sideband_reset.py`
+- guided walkthroughs: `tutorials/00_tutorial_index.ipynb`, `tutorials/03_cavity_displacement_basics.ipynb`, `tutorials/17_readout_resonator_response.ipynb`
+- standalone scripts: `examples/protocol_style_simulation.py`, `examples/kerr_free_evolution.py`, `examples/kerr_sign_verification.py`, `examples/sequential_sideband_reset.py`
 
-Use `cqed_sim.core`, `cqed_sim.sequence`, `cqed_sim.sim`, and `cqed_sim.measurement` for reusable library code. Use `examples/` for end-to-end workflow recipes.
+Use `cqed_sim.core`, `cqed_sim.sequence`, `cqed_sim.sim`, and `cqed_sim.measurement` for reusable library code. Use `tutorials/` for guided learning and `examples/` for standalone repo-side workflows.

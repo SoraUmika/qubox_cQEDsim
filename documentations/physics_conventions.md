@@ -222,6 +222,9 @@ $$
 \frac{1}{T_\phi} = \max\left(0, \frac{1}{T_2} - \frac{1}{2T_1}\right).
 $$
 
+When that inferred rate vanishes, the helper returns `None`, which the runtime interprets
+as "do not add an extra pure-dephasing term".
+
 Per-transition ancilla decay is activated by setting `NoiseSpec(transmon_t1=(T1_ge, T1_fe, ...))`.
 
 ---

@@ -1,18 +1,23 @@
 # Examples
 
-This page indexes the example scripts, notebooks, and workflow helpers in the repository's `examples/` directory.
+This page indexes the repository-side assets that remain in `examples/`.
+
+The primary guided learning path no longer lives here. Use the top-level `tutorials/` curriculum for numbered notebook walkthroughs, starting with:
+
+- `tutorials/README.md`
+- `tutorials/00_tutorial_index.ipynb`
 
 ---
 
-## Top-Level Example Scripts
+## Top-Level Standalone Scripts
 
 | Script | Description |
 |---|---|
 | `protocol_style_simulation.py` | Direct prepare -> compile -> simulate -> measure workflow using stable library primitives |
-| `kerr_free_evolution.py` | Kerr free-evolution recipe built on low-level `cqed_sim` primitives |
+| `kerr_free_evolution.py` | Standalone Kerr free-evolution script built on low-level `cqed_sim` primitives |
 | `kerr_sign_verification.py` | Kerr-sign diagnostic companion to the Kerr workflow |
 | `sequential_sideband_reset.py` | Sequential sideband-reset recipe for the explicit three-mode model |
-| `displacement_qubit_spectroscopy.py` | Cavity displacement followed by qubit spectroscopy |
+| `displacement_qubit_spectroscopy.py` | Standalone displacement-plus-spectroscopy script using the current SI-style runtime convention |
 | `sideband_swap_demo.py` | Basic sideband swap between transmon and storage |
 | `sideband_swap.py` | Extended sideband swap workflow |
 | `detuned_sideband_sync_demo.py` | Detuned sideband synchronization |
@@ -23,22 +28,20 @@ This page indexes the example scripts, notebooks, and workflow helpers in the re
 
 ---
 
-## Workflow Modules and Notebooks
+## Workflow Helpers
 
 Under `examples/workflows/`:
 
 | File | Description |
 |---|---|
-| `kerr_free_evolution.py` | Workflow helper backing the Kerr example scripts and workflow tests |
-| `sequential_sideband_reset.py` | Workflow helper backing the sideband-reset example script and notebook |
-| `cqed_sim_usage_examples.ipynb` | Interactive usage notebook using stable low-level imports |
-| `sequential_simulation.ipynb` | Sequential gate-by-gate simulation |
-| `sqr_calibration_workflow.ipynb` | SQR calibration workflow notebook |
+| `kerr_free_evolution.py` | Workflow helper backing the Kerr scripts and workflow tests |
+| `sequential_sideband_reset.py` | Workflow helper backing the sideband-reset script |
 | `fock_tomo_workflow.py` | Fock-resolved tomography workflow |
 | `sqr_transfer.py` | SQR transfer artifact generation |
 | `simulate_fock_tomo_and_sqr_calibration.py` | Combined Fock tomography and SQR calibration |
+| `universal_cqed_model_demo.py` | Generalized-model workflow example |
 
-### Sequential Simulation Helpers
+### Sequential Workflow Modules
 
 Under `examples/workflows/sequential/`:
 
@@ -46,8 +49,8 @@ Under `examples/workflows/sequential/`:
 |---|---|
 | `common.py` | Shared sequential simulation setup |
 | `ideal.py` | Ideal gate-level sequential simulation |
-| `pulse_calibrated.py` | Pulse-level with calibrated corrections |
-| `pulse_open.py` | Pulse-level with open-system dynamics |
+| `pulse_calibrated.py` | Pulse-level sequential simulation with calibrated corrections |
+| `pulse_open.py` | Pulse-level sequential simulation with dissipation |
 | `pulse_unitary.py` | Pulse-level unitary simulation |
 | `trajectories.py` | Trajectory extraction helpers |
 
@@ -62,9 +65,17 @@ Under `examples/workflows/sequential/`:
 
 ---
 
+## Examples vs Tutorials
+
+- Use `tutorials/` for structured, user-facing notebook lessons.
+- Use `examples/` for standalone scripts, advanced study helpers, repo-side workflow utilities, and non-curriculum artifacts.
+- Use `tests/` for automated correctness and regression coverage.
+
+---
+
 ## Example-Side Tests
 
-Workflow validation now lives next to the example code when it tests example-only orchestration rather than reusable library primitives:
+Workflow validation that is specific to repo-side examples still lives next to the example code:
 
 - `examples/workflows/tests/`
 - `examples/audits/tests/`

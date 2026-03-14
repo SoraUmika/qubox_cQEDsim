@@ -73,6 +73,7 @@ nav:
       - State Preparation & Measurement: user_guides/state_prep_measurement.md
       - Open System Dynamics: user_guides/open_system_dynamics.md
   - Tutorials:
+      - Overview: tutorials/index.md
       - Displacement & Qubit Spectroscopy: tutorials/displacement_spectroscopy.md
       - Kerr Free Evolution: tutorials/kerr_free_evolution.md
       - Sideband Swap: tutorials/sideband_swap.md

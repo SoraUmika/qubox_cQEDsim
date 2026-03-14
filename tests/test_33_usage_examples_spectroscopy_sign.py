@@ -78,13 +78,23 @@ def test_negative_chi_transition_detuning_axis_moves_left_with_photon_number():
     assert observed[0] > observed[1] > observed[2]
 
 
-def test_usage_examples_notebook_uses_transition_detuning_not_raw_carrier():
-    notebook = Path("examples/workflows/cqed_sim_usage_examples.ipynb")
+def test_qubit_spectroscopy_tutorial_uses_transition_detuning_mapping():
+    notebook = Path("tutorials/06_qubit_spectroscopy.ipynb")
+    nb = json.loads(notebook.read_text(encoding="utf-8"))
+    content = "\n".join("".join(cell.get("source", [])) for cell in nb["cells"])
+
+    assert "carrier_for_transition_frequency(MHz(point_mhz))" in content
+    assert content.count("carrier_for_transition_frequency") >= 2
+    assert "fit_lorentzian_peak" in content
+    assert "the simulator receives the internal raw carrier through `carrier_for_transition_frequency(...)`" in content
+
+
+def test_number_splitting_tutorial_tracks_negative_chi_with_manifold_helper():
+    notebook = Path("tutorials/07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb")
     nb = json.loads(notebook.read_text(encoding="utf-8"))
     content = "\n".join("".join(cell.get("source", [])) for cell in nb["cells"])
 
     assert "carrier_for_transition_frequency(MHz(detuning_mhz))" in content
-    assert content.count("carrier_for_transition_frequency(MHz(detuning_mhz))") >= 3
+    assert "predicted_lines_mhz = [angular_to_mhz(manifold_transition_frequency(model, n, frame=frame)) for n in fock_levels]" in content
     assert "predicted_lines_mhz = np.arange(6) * chi_mhz" not in content
-    assert "dispersive_model.manifold_transition_frequency(n, frame=dispersive_frame)" in content
     assert "negative `chi` moves the `n`-resolved qubit lines to lower transition detuning" in content

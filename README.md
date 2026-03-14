@@ -27,7 +27,7 @@ The install metadata lives in `pyproject.toml` at the repository root. Do not cr
 
 The wheel also bundles `physics_and_conventions`, which is used by parts of the public `cqed_sim` API at runtime.
 
-Study code, audits, paper reproductions, and workflow-specific helpers are intentionally outside the core package under `examples/`.
+Structured tutorial notebooks live under `tutorials/`. Study code, audits, paper reproductions, and workflow-specific helpers remain outside the core package under `examples/`.
 
 ## Package layout
 
@@ -50,8 +50,10 @@ Core library:
 
 Example-side code:
 
+- `tutorials`
+  - Numbered notebook curriculum for guided learning, API onboarding, and physically annotated walkthroughs.
 - `examples/workflows`
-  - Sequential workflow helpers and SQR transfer artifacts.
+  - Standalone workflow helpers and specialized repo-side orchestration that is not part of the numbered tutorial curriculum.
 - `examples/audits`
   - Convention-audit utilities.
 - `examples/studies`
@@ -370,7 +372,7 @@ measurement = measure_qubit(
 )
 ```
 
-## Example workflows
+## Tutorials and example workflows
 
 The recommended library path is:
 
@@ -381,7 +383,16 @@ The recommended library path is:
 5. Extract reduced states, photon numbers, conditioned responses, or tomography observables.
 6. Optionally sample qubit measurement outcomes with `measure_qubit(...)`.
 
-Protocol-style recipes now live in `examples/` instead of the import package:
+For the guided learning path, start in `tutorials/`:
+
+- `tutorials/README.md`
+- `tutorials/00_tutorial_index.ipynb`
+- `tutorials/01_getting_started_minimal_dispersive_model.ipynb`
+- `tutorials/02_units_frames_and_conventions.ipynb`
+- `tutorials/06_qubit_spectroscopy.ipynb`
+- `tutorials/25_small_calibration_workflow_end_to_end.ipynb`
+
+Standalone repo-side scripts still live in `examples/`:
 
 - `examples/protocol_style_simulation.py`
 - `examples/kerr_free_evolution.py`
@@ -544,6 +555,7 @@ Unitary-synthesis entry points:
 
 The core library intentionally does not contain:
 
+- the numbered tutorial curriculum,
 - paper reproductions,
 - one-off optimization studies,
 - experiment-specific reconciliation scripts,
@@ -566,6 +578,8 @@ Use `examples/` for those:
 
 These are example or study APIs, not part of the canonical `cqed_sim` library surface.
 
+Use `tutorials/` when you want the supported user-facing learning path.
+
 ## Tests
 
 Core reusable-library suite:
@@ -585,3 +599,5 @@ pytest examples/audits/tests \
 ```
 
 The core suite is the canonical validation path for the reusable library. The example-side suites validate the moved workflow, study, audit, and reproduction code separately.
+
+The `tutorials/` notebooks are intentionally not treated as replacements for automated tests.

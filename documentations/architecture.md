@@ -25,7 +25,7 @@ cqed_sim/
 `-- unitary_synthesis/    # Subspace optimization, gate sequences, constraints
 ```
 
-Workflow recipes now live under `examples/`, not inside the import package.
+Guided notebook tutorials now live under the top-level `tutorials/` directory. Standalone scripts, audits, studies, and specialized workflow helpers live under `examples/`, not inside the import package.
 
 ---
 
@@ -85,16 +85,18 @@ The simulation engine:
 
 ## Example Boundary
 
-`cqed_sim` intentionally does not ship protocol orchestration modules anymore. The following belong under `examples/`:
+`cqed_sim` intentionally keeps user-facing educational notebooks and specialized repo workflows outside the import package:
 
-- typical end-to-end workflow recipes
+- numbered tutorial notebooks under `tutorials/`
+- typical standalone end-to-end workflow recipes
 - Kerr free-evolution demonstrations
 - sequential sideband-reset recipes
-- tutorial-style prepare -> compile -> simulate -> measure scripts
 - paper reproductions, audits, and one-off studies
 
 Representative example entry points:
 
+- `tutorials/README.md`
+- `tutorials/00_tutorial_index.ipynb`
 - `examples/protocol_style_simulation.py`
 - `examples/kerr_free_evolution.py`
 - `examples/kerr_sign_verification.py`
@@ -129,4 +131,4 @@ UniversalCQEDModel / wrapper models
 
 ## Stable Public API vs Internal
 
-Everything exported through `cqed_sim/__init__.py` and the active subpackage `__init__.py` files is part of the public API. Workflow modules under `examples/` are repository-side examples, not part of the installed library surface.
+Everything exported through `cqed_sim/__init__.py` and the active subpackage `__init__.py` files is part of the public API. The notebooks under `tutorials/` and the workflow modules under `examples/` are repository-side teaching or study assets, not part of the installed library surface.

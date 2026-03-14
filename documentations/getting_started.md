@@ -15,7 +15,7 @@ This page introduces the core mental model for working with `cqed_sim` as a reus
 - qubit-measurement and readout-chain primitives
 - calibration, tomography, and synthesis helpers
 
-High-level workflow recipes now live under `examples/`.
+Guided notebook tutorials now live under the top-level `tutorials/` directory, while standalone scripts and study code remain under `examples/`.
 
 ---
 
@@ -74,7 +74,13 @@ result = simulate_sequence(model, compiled, initial, drive_ops, config=Simulatio
 measurement = measure_qubit(result.final_state, QubitMeasurementSpec(shots=2048, seed=42))
 ```
 
-For repo-side end-to-end recipes, see:
+For the structured notebook path, start with:
+
+- `tutorials/00_tutorial_index.ipynb`
+- `tutorials/01_getting_started_minimal_dispersive_model.ipynb`
+- `tutorials/02_units_frames_and_conventions.ipynb`
+
+For standalone repo-side scripts, see:
 
 - `examples/protocol_style_simulation.py`
 - `examples/kerr_free_evolution.py`
@@ -87,4 +93,4 @@ For repo-side end-to-end recipes, see:
 - [Installation](installation.md) — set up the package
 - [Physics & Conventions](physics_conventions.md) — understand the Hamiltonian and sign conventions
 - [Defining Models](user_guides/defining_models.md) — build your first model
-- [Tutorials](tutorials/displacement_spectroscopy.md) — complete worked examples
+- [Tutorials](tutorials/index.md) — structured notebook curriculum

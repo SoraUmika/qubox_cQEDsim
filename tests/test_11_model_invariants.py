@@ -84,3 +84,19 @@ def test_truncation_monotonicity_cavity_cutoff():
     d2 = abs(vals[1][0] - vals[2][0]) + abs(vals[1][1] - vals[2][1])
     assert d2 < d1 + 2e-3
     assert (time.perf_counter() - start) < 3.5
+
+
+def test_singleton_cavity_cutoff_supports_default_observables():
+    m = DispersiveTransmonCavityModel(
+        omega_c=2 * np.pi * 5.0,
+        omega_q=2 * np.pi * 6.0,
+        alpha=0.0,
+        chi=0.0,
+        kerr=0.0,
+        n_cav=1,
+        n_tr=2,
+    )
+    c = SequenceCompiler(dt=0.05).compile([], t_end=0.2)
+    r = simulate_sequence(m, c, m.basis_state(0, 0), {}, SimulationConfig(frame=FrameSpec(omega_q_frame=m.omega_q)))
+    assert "n_c" in r.expectations
+    assert np.allclose(np.asarray(r.expectations["n_c"], dtype=float), 0.0, atol=1.0e-12)

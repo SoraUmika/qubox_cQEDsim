@@ -309,3 +309,11 @@ def test_plot_helpers_return_correct_shapes_and_axes():
     joint = qt.tensor(qt.basis(2, 0).proj(), rho)
     moments = cavity_moments(joint)
     assert set(moments.keys()) == {"a", "adag_a", "n"}
+
+
+def test_cavity_moments_handles_trivial_singleton_mode():
+    joint = qt.tensor(qt.basis(2, 0), qt.basis(1, 0))
+    moments = cavity_moments(joint)
+    assert np.isclose(moments["a"], 0.0, atol=1.0e-12)
+    assert np.isclose(moments["adag_a"], 0.0, atol=1.0e-12)
+    assert np.isclose(moments["n"], 0.0, atol=1.0e-12)

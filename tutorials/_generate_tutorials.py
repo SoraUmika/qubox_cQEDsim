@@ -889,6 +889,7 @@ def generate_batch_1() -> None:
             n_tr=2,
         )
         frame = FrameSpec(omega_q_frame=model.omega_q)
+        spectrum_levels = min(6, int(np.prod(model.subsystem_dims)))
         """
             ),
             md("## 6. Pulse / Sequence Construction"),
@@ -985,7 +986,7 @@ def generate_batch_1() -> None:
             n_cav=10,
             n_tr=2,
         )
-        frame = FrameSpec(omega_q_frame=model.omega_q)
+        frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
         predicted_lines_mhz = [angular_to_mhz(manifold_transition_frequency(model, n, frame=frame)) for n in fock_levels]
         """
             ),
@@ -995,13 +996,13 @@ def generate_batch_1() -> None:
         responses = {}
         for n in fock_levels:
             trace = []
-            for detuning_mhz in detuning_mhz:
+            for detuning_point_mhz in detuning_mhz:
                 probe = Pulse(
                     "q",
                     t0=0.0,
                     duration=probe_duration,
                     envelope=square_envelope,
-                    carrier=carrier_for_transition_frequency(MHz(detuning_mhz)),
+                    carrier=carrier_for_transition_frequency(MHz(detuning_point_mhz)),
                     amp=probe_amplitude,
                     label=f"probe_n{n}",
                 )
@@ -1145,6 +1146,7 @@ def generate_batch_1() -> None:
             n_tr=2,
         )
         frame = FrameSpec(omega_q_frame=model.omega_q)
+        spectrum_levels = min(6, int(np.prod(model.subsystem_dims)))
         """
             ),
             md("## 6. Pulse / Sequence Construction"),
@@ -1230,6 +1232,7 @@ def generate_batch_2() -> None:
             n_tr=2,
         )
         frame = FrameSpec(omega_q_frame=model.omega_q)
+        spectrum_levels = min(6, int(np.prod(model.subsystem_dims)))
         """
             ),
             md("## 6. Pulse / Sequence Construction"),
@@ -2056,7 +2059,7 @@ def generate_batch_3() -> None:
             md("## 8. Visualizing the Results"),
             code(
                 """
-        time_ns = weak_result.solver_result.times * 1.0e9
+        time_ns = np.asarray(weak_result.solver_result.times, dtype=float) * 1.0e9
         fig, axes = plt.subplots(1, 2, figsize=(12.0, 4.4), sharey=True)
         axes[0].plot(time_ns, weak_result.expectations["P_e"], label=r"$P_e$")
         axes[0].plot(time_ns, weak_result.expectations["P_f"], label=r"$P_f$")
@@ -2290,7 +2293,7 @@ def generate_batch_3() -> None:
             n_cav=8,
             n_tr=2,
         )
-        frame = FrameSpec(omega_q_frame=model.omega_q)
+        frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
         target_detuning = manifold_transition_frequency(model, 0, frame=frame)
         """
             ),
@@ -2596,12 +2599,12 @@ def generate_batch_3() -> None:
         axes[0, 1].set_title("Power Rabi")
         axes[0, 1].set_xlabel("Normalized amplitude")
 
-        axes[1, 0].plot(t1.raw_data["delays"] / us, t1.raw_data["excited_population"])
+        axes[1, 0].plot(np.asarray(t1.raw_data["delays"], dtype=float) / us, t1.raw_data["excited_population"])
         axes[1, 0].set_title("T1")
         axes[1, 0].set_xlabel("Delay [us]")
 
-        axes[1, 1].plot(ramsey.raw_data["delays"] / us, ramsey.raw_data["excited_population"], label="Ramsey")
-        axes[1, 1].plot(echo.raw_data["delays"] / us, echo.raw_data["excited_population"], label="Echo")
+        axes[1, 1].plot(np.asarray(ramsey.raw_data["delays"], dtype=float) / us, ramsey.raw_data["excited_population"], label="Ramsey")
+        axes[1, 1].plot(np.asarray(echo.raw_data["delays"], dtype=float) / us, echo.raw_data["excited_population"], label="Echo")
         axes[1, 1].set_title("Coherence targets")
         axes[1, 1].set_xlabel("Delay [us]")
         axes[1, 1].legend()
@@ -2649,6 +2652,7 @@ def generate_batch_3() -> None:
             n_tr=2,
         )
         frame = FrameSpec(omega_q_frame=model.omega_q)
+        spectrum_levels = min(6, int(np.prod(model.subsystem_dims)))
         """
             ),
             md("## 6. Pulse / Sequence Construction"),
@@ -2667,8 +2671,8 @@ def generate_batch_3() -> None:
             wrong_response.append(final_expectation(wrong_result, "P_e"))
         correct_response = np.asarray(correct_response, dtype=float)
         wrong_response = np.asarray(wrong_response, dtype=float)
-        matched_spectrum = compute_energy_spectrum(model, frame=frame, levels=6)
-        lab_spectrum = compute_energy_spectrum(model, frame=FrameSpec(), levels=6)
+        matched_spectrum = compute_energy_spectrum(model, frame=frame, levels=spectrum_levels)
+        lab_spectrum = compute_energy_spectrum(model, frame=FrameSpec(), levels=spectrum_levels)
         """
             ),
             md("## 7. Running the Simulation"),
@@ -2693,7 +2697,7 @@ def generate_batch_3() -> None:
         axes[0].set_title("Carrier-sign mistake in spectroscopy")
         axes[0].legend()
 
-        plot_energy_levels(lab_spectrum, max_levels=6, energy_scale=1.0 / (2.0 * np.pi * 1.0e6), energy_unit_label="MHz", title="Lab frame", ax=axes[1])
+        plot_energy_levels(lab_spectrum, max_levels=spectrum_levels, energy_scale=1.0 / (2.0 * np.pi * 1.0e6), energy_unit_label="MHz", title="Lab frame", ax=axes[1])
         plt.show()
         """
             ),

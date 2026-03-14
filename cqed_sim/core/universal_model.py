@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import math
 from typing import Mapping, Sequence
 
+import numpy as np
 import qutip as qt
 
 from .frame import FrameSpec
@@ -33,6 +34,15 @@ def _falling_factorial_scalar(n: int, order: int) -> float:
     for k in range(int(order)):
         out *= float(int(n) - k)
     return out
+
+
+def _bosonic_annihilation_operator(dim: int) -> qt.Qobj:
+    dimension = int(dim)
+    if dimension < 1:
+        raise ValueError("Bosonic mode dimension must be positive.")
+    if dimension == 1:
+        return qt.Qobj(np.zeros((1, 1), dtype=np.complex128), dims=[[1], [1]])
+    return qt.destroy(dimension)
 
 
 def _frame_frequency(frame: FrameSpec, channel: str | None) -> float:
@@ -253,7 +263,7 @@ class UniversalCQEDModel:
             next_index += 1
 
         for mode_index, mode in enumerate(self.bosonic_modes):
-            lowering = self._embed_local_operator(qt.destroy(int(mode.dim)), next_index + mode_index)
+            lowering = self._embed_local_operator(_bosonic_annihilation_operator(int(mode.dim)), next_index + mode_index)
             raising = lowering.dag()
             number = raising * lowering
             lowering_aliases, raising_aliases, number_aliases = self._bosonic_operator_aliases(mode, mode_index=mode_index)

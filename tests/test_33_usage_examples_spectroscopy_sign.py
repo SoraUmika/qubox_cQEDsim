@@ -94,7 +94,7 @@ def test_number_splitting_tutorial_tracks_negative_chi_with_manifold_helper():
     nb = json.loads(notebook.read_text(encoding="utf-8"))
     content = "\n".join("".join(cell.get("source", [])) for cell in nb["cells"])
 
-    assert "carrier_for_transition_frequency(MHz(detuning_mhz))" in content
+    assert "carrier_for_transition_frequency(MHz(detuning_point_mhz))" in content
     assert "predicted_lines_mhz = [angular_to_mhz(manifold_transition_frequency(model, n, frame=frame)) for n in fock_levels]" in content
     assert "predicted_lines_mhz = np.arange(6) * chi_mhz" not in content
     assert "negative `chi` moves the `n`-resolved qubit lines to lower transition detuning" in content

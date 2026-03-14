@@ -166,10 +166,21 @@ def conditioned_bloch_xyz(state: qt.Qobj, n: int, fallback: str = "nan") -> tupl
     return (x, y, z, p_n, valid)
 
 
+def _mode_annihilation_operator(dim: int) -> qt.Qobj:
+    dimension = int(dim)
+    if dimension < 1:
+        raise ValueError("Mode dimension must be positive.")
+    if dimension == 1:
+        return qt.Qobj(np.zeros((1, 1), dtype=np.complex128), dims=[[1], [1]])
+    return qt.destroy(dimension)
+
+
 def mode_moments(state: qt.Qobj, subsystem: int | str, dim: int | None = None) -> dict[str, complex]:
     rho_mode = reduced_subsystem_state(state, subsystem)
     n_mode = int(rho_mode.dims[0][0] if dim is None else dim)
-    a = qt.destroy(n_mode)
+    if n_mode == 1:
+        return {"a": 0.0j, "adag_a": 0.0j, "n": 0.0}
+    a = _mode_annihilation_operator(n_mode)
     adag = a.dag()
     return {
         "a": complex((rho_mode * a).tr()),
@@ -240,7 +251,9 @@ def qubit_conditioned_mode_moments(
 ) -> dict[str, complex | float | bool]:
     rho_sub, prob, valid = qubit_conditioned_subsystem_state(state, subsystem, qubit_level, fallback="zero")
     n_mode = int(rho_sub.dims[0][0])
-    a = qt.destroy(n_mode)
+    if n_mode == 1:
+        return {"probability": prob, "valid": valid, "a": 0.0j, "adag_a": 0.0j, "n": 0.0}
+    a = _mode_annihilation_operator(n_mode)
     adag = a.dag()
     return {
         "probability": prob,

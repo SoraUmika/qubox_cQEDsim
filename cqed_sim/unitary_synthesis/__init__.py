@@ -43,6 +43,7 @@ from .sequence import (
 from .subspace import Subspace
 from .systems import CQEDSystemAdapter, QuantumSystem
 from .targets import TargetStateMapping, TargetUnitary, coerce_target, make_target
+from .waveform_bridge import waveform_primitive_from_gate, waveform_sequence_from_gates
 
 __all__ = [
     "Subspace",
@@ -52,6 +53,8 @@ __all__ = [
     "coerce_target",
     "TargetUnitary",
     "TargetStateMapping",
+    "waveform_primitive_from_gate",
+    "waveform_sequence_from_gates",
     "TimeMapper",
     "SynthesisResult",
     "ParetoFrontResult",

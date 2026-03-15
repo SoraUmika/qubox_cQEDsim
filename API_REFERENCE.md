@@ -54,6 +54,14 @@
 15. [Operators (`cqed_sim.operators`)](#15-operators)
 16. [Plotting (`cqed_sim.plotting`)](#16-plotting)
 17. [Unitary Synthesis (`cqed_sim.unitary_synthesis`)](#17-unitary-synthesis)
+    - 17.1 [Subspace](#171-subspace)
+    - 17.2 [System Backends](#172-system-backends)
+    - 17.3 [Core Targets](#173-core-targets)
+    - 17.4 [Gate Primitives and Sequences](#174-gate-primitives-and-sequences)
+    - 17.5 [Waveform Bridge](#175-waveform-bridge)
+    - 17.6 [Phase 2 Configuration Objects](#176-phase-2-configuration-objects)
+    - 17.7 [UnitarySynthesizer](#177-unitarysynthesizer)
+    - 17.8 [Results and Metrics](#178-results-and-metrics)
 17A. [Holographic Quantum Algorithms (`cqed_sim.quantum_algorithms.holographic_sim`)](#17a-holographic-quantum-algorithms-cqed_simquantum_algorithmsholographic_sim)
 18. [Simulation Workflows / Common Usage Patterns](#18-simulation-workflows)
 19. [Physics-Facing API and Conventions](#19-physics-facing-api-and-conventions)
@@ -1808,30 +1816,112 @@ constraint-aware/robust optimization.
 > `Pulse`, `SequenceCompiler`, and `cqed_sim.sim` runtime stack, including the
 > waveform sign convention `Pulse.carrier = -omega_transition(frame)`.
 
-### System Backends
+---
+
+### 17.1 Subspace
+
+**Module path:** `cqed_sim.unitary_synthesis.subspace.Subspace`
+
+Frozen dataclass that selects a subspace of the full qubit-cavity Hilbert space.
+All synthesis targets, metrics, and leakage computations operate relative to a
+`Subspace` instance.
+
+```python
+@dataclass(frozen=True)
+class Subspace:
+    full_dim: int
+    indices: tuple[int, ...]
+    labels: tuple[str, ...]
+    kind: str = "custom"
+    metadata: dict[str, int | str] | None = None
+```
+
+#### Constructors
+
+| Class method | Signature | Description |
+|---|---|---|
+| `Subspace.qubit_cavity_block(n_match, n_cav=None)` | `(int, int\|None) -> Subspace` | Selects the block spanned by ground/excited states for Fock levels 0…n_match. `n_cav` defaults to `n_match+1`. |
+| `Subspace.cavity_only(n_match, qubit="g", n_cav=None)` | `(int, str, int\|None) -> Subspace` | Selects cavity Fock levels 0…n_match in the ground (`"g"`) or excited (`"e"`) qubit sector. |
+| `Subspace.custom(full_dim, indices, labels=None)` | `(int, Iterable[int], Iterable[str]\|None) -> Subspace` | Arbitrary subspace by explicit index list. |
+
+#### Properties and methods
+
+| Name | Returns | Description |
+|---|---|---|
+| `dim` | `int` | Number of basis vectors in the subspace |
+| `projector()` | `ndarray` | Full-space projector matrix (full_dim × full_dim) |
+| `embed(vec_sub)` | `ndarray` | Embed a subspace vector into the full Hilbert space |
+| `extract(vec_full)` | `ndarray` | Extract subspace components from a full-space vector |
+| `restrict_operator(op_full)` | `ndarray` | Project a full-space operator onto the subspace |
+| `per_fock_blocks()` | `list[slice]` | Block slices for `qubit_cavity_block` subspaces (one 2-element slice per Fock level, spanning the ground and excited entries for that level). Raises if `kind != "qubit_cavity_block"`. |
+
+**Kind values:** `"qubit_cavity_block"`, `"cavity_only"`, `"custom"`.
+
+---
+
+### 17.2 System Backends
+
+**Module path:** `cqed_sim.unitary_synthesis.systems`
 
 ```python
 class QuantumSystem:
-    def hilbert_dimension(...): ...
-    def simulate_sequence(...): ...
-    def simulate_unitary(...): ...
-    def simulate_state(...): ...
+    """Abstract backend interface used by UnitarySynthesizer."""
+    def hilbert_dimension(*, sequence, primitive, subspace, target) -> int | None
+    def subsystem_dimensions(*, sequence, full_dim, subspace) -> tuple[int, ...]
+    def infer_n_cav(*, sequence, full_dim, subspace) -> int | None
+    def configure_sequence(sequence, *, subspace) -> GateSequence
+    def build_sequence_from_gateset(gateset, *, subspace, ...) -> GateSequence
+    def simulate_unitary(sequence, *, backend, **settings) -> np.ndarray
+    def simulate_state(sequence, psi0, *, backend, **settings) -> qt.Qobj
+    def simulate_states(sequence, states, *, backend, **settings) -> list[qt.Qobj]
+    def simulate_sequence(sequence, subspace, *, backend, ...) -> SimulationResult
+    def simulate_primitive_unitary(primitive, *, settings) -> np.ndarray
+    def simulate_primitive_states(primitive, states, *, settings) -> list[qt.Qobj]
+    def runtime_model() -> Any | None
+    def with_model(model) -> QuantumSystem
+    def to_record() -> dict[str, Any]
+
+@dataclass(frozen=True, kw_only=True)
+class CQEDSystemAdapter(QuantumSystem):
+    model: Any   # any cQED model with subsystem_dims, operators(), etc.
+
+@dataclass(frozen=True)
+class GenericQuantumSystem(QuantumSystem):
+    dimension: int | None = None
 ```
+
+**Key points:**
+
+- `UnitarySynthesizer` talks to a `QuantumSystem` backend rather than directly
+  to a raw cQED model.
+- `CQEDSystemAdapter` wraps any cQED model and provides waveform primitive simulation
+  via the standard `Pulse`/`SequenceCompiler`/`cqed_sim.sim` runtime stack.
+  `simulate_primitive_unitary` caches per-parameter operator results.
+- `model=...` in `UnitarySynthesizer` is a compatibility shortcut auto-wrapped to
+  `CQEDSystemAdapter(model=...)`.
+- `GenericQuantumSystem` supports synthesis over any square-matrix gate set
+  without a physical cQED model.
+
+**`resolve_quantum_system` helper:**
 
 ```python
-CQEDSystemAdapter(model=my_cqed_model)
+def resolve_quantum_system(
+    *,
+    system: QuantumSystem | None = None,
+    model: Any | None = None,
+    subspace: Subspace | None = None,
+    primitives: Sequence[Any] | None = None,
+    gateset: Sequence[str] | None = None,
+) -> QuantumSystem
 ```
 
-- `UnitarySynthesizer` now talks to a `QuantumSystem` backend instead of directly
-  to a raw cQED model.
-- `CQEDSystemAdapter` wraps existing cQED model objects and preserves the current
-  waveform/runtime integration.
-- `model=...` remains supported as a compatibility shortcut and is internally
-  resolved to `CQEDSystemAdapter(model=...)`.
-- This makes the optimizer architecture system-agnostic even though only cQED
-  adapters are currently implemented in the repository.
+Selects the right backend automatically: `CQEDSystemAdapter` if `model` is provided,
+a cQED-aware ideal system if cQED gate types are detected in `primitives`/`gateset`,
+or `GenericQuantumSystem` otherwise.
 
-### Core Targets
+---
+
+### 17.3 Core Targets
 
 ```python
 @dataclass(frozen=True)
@@ -1857,35 +1947,224 @@ class TargetStateMapping:
     ): ...
 ```
 
-- `TargetUnitary` validates unitarity on construction.
-- Phase handling now supports global, diagonal, and block-equivalent targets.
-- Noisy/open-system unitary targets are evaluated through propagated probe states.
-- `TargetStateMapping` accepts plural state lists or a single pair.
+**`TargetUnitary` notes:**
 
-### PrimitiveGate
+- Validates unitarity on construction; raises `ValueError` if the matrix is not unitary within `atol=1e-8`.
+- Phase handling supports `ignore_global_phase`, `allow_diagonal_phase`, and per-index `phase_blocks`.
+- Open-system targets use propagated probe states (strategy from `open_system_probe_strategy`).
+
+**`TargetUnitary` methods:**
+
+| Method | Signature | Description |
+|---|---|---|
+| `dim` | property → `int` | Matrix dimension |
+| `resolved_gauge(fallback="global")` | `(str) -> str` | Returns `"block"`, `"diagonal"`, `"global"`, or `fallback` based on flags |
+| `resolved_blocks(subspace=None, fallback="global")` | `-> tuple[tuple[int,...], ...] \| None` | Phase blocks for the block gauge, auto-derived from subspace if not set explicitly |
+| `resolved_probe_pairs(*, full_dim, subspace=None)` | `-> (list[Qobj], list[Qobj])` | Returns `(initial_states, target_states)` for fidelity evaluation |
+
+**`TargetStateMapping` notes:**
+
+- Accepts plural (`initial_states`, `target_states`) or singular (`initial_state`, `target_state`) arguments; not both.
+- Optional `weights` per state pair; uniform if omitted.
+
+**`TargetStateMapping` methods:**
+
+| Method | Signature | Description |
+|---|---|---|
+| `resolved_pairs(*, full_dim, subspace=None)` | `-> (list[Qobj], list[Qobj], ndarray)` | Returns `(initial, targets, weights)` with weights normalized to sum to 1 |
+
+**Convenience target builders** (`cqed_sim.unitary_synthesis.targets`):
+
+| Function | Signature | Description |
+|---|---|---|
+| `make_target(name, n_match, variant="analytic", **kwargs)` | `(str, int, str, ...) -> ndarray` | Build a named target matrix. `name`: `"easy"`, `"ghz"`, `"cluster"`. `variant="mps"` tries to load from reference files first. |
+| `make_easy_target(n_match)` | `(int) -> ndarray` | Easily realizable SQR+SNAP product unitary for dimension `2*(n_match+1)`. |
+| `make_mps_like_target(kind, n_match, **kwargs)` | `(str, int) -> ndarray` | Analytic GHZ or cluster-state transfer matrix for the qubit-cavity block. |
+| `coerce_target(target)` | `(ndarray\|Qobj\|SynthesisTarget) -> SynthesisTarget` | Wrap a raw matrix in `TargetUnitary`. |
+
+For `"cluster"` targets, `kwargs["which"]` selects `"u1"` (default) or `"u2"` (includes a qubit Ry rotation).
+
+---
+
+### 17.4 Gate Primitives and Sequences
+
+**Module path:** `cqed_sim.unitary_synthesis.sequence`
+
+#### PrimitiveGate
 
 ```python
 @dataclass
-class PrimitiveGate(GateBase):
+class PrimitiveGate:
     name: str
     duration: float
-    matrix: np.ndarray | callable | None = None
-    waveform: callable | None = None
+    optimize_time: bool = True
+    time_bounds: tuple[float, float] = (1e-9, 1e-6)
+    duration_ref: float = ...        # reference duration for time-group scaling
+    time_group: Any | None = None    # gates sharing a group share one time parameter
+    time_policy_locked: bool = False
+    hilbert_dim: int | None = None
+    matrix: np.ndarray | Callable | None = None
+    waveform: Callable | None = None
     parameters: dict[str, Any] = field(default_factory=dict)
     parameter_bounds: dict[str, Any] = field(default_factory=dict)
-    hilbert_dim: int | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 ```
 
-Supported modes:
+Supported simulation modes:
 
-- fixed unitary matrices
-- parameterized matrices via `matrix(params, model)`
-- model-backed waveform primitives via `waveform(params, model)`
+- **Fixed matrix:** `matrix` is a constant `ndarray`.
+- **Parameterized matrix:** `matrix` is `(params: dict, model: Any) -> ndarray`.
+- **Waveform-backed:** `waveform` is `(params: dict, model: Any) -> pulses_or_tuple`.
+  May return `list[Pulse]`, `(pulses, drive_ops)`, `(pulses, drive_ops, meta)`, or a dict with those keys.
 
-Waveform functions may return `list[Pulse]`, `(pulses, drive_ops)`, `(pulses, drive_ops, meta)`, or a dict with those keys.
+#### cQED Sequence Gate Types
 
-### Phase 2 Configuration Objects
+All gate types share the common timing fields (`name`, `duration`, `optimize_time`,
+`time_bounds`, `duration_ref`, `time_group`, `time_policy_locked`) plus gate-specific params:
+
+| Class | Gate-specific fields | Physics |
+|---|---|---|
+| `QubitRotation` | `theta: float`, `phi: float` | Qubit rotation R(theta, phi) |
+| `Displacement` | `alpha: complex` | Cavity displacement D(alpha) |
+| `SQR` | `theta_n`, `phi_n`, `tones`, `tone_freqs`, `include_conditional_phase`, `drift_model` | Selective qubit rotation (multi-tone Gaussian) |
+| `SNAP` | `phases: list[float]` | Number-selective phase gate |
+| `ConditionalPhaseSQR` | `phases_n: list[float]`, `drift_model: DriftPhaseModel` | Conditional phase via free-evolution SQR block |
+| `FreeEvolveCondPhase` | `drift_model: DriftPhaseModel` | Free-evolution conditional phase with no explicit drive pulse |
+
+#### GateSequence
+
+```python
+@dataclass
+class GateSequence:
+    gates: list[GateBase]
+    n_cav: int | None = None    # number of cavity Fock levels
+    full_dim: int | None = None # full Hilbert-space dimension (= 2 * n_cav)
+```
+
+Key methods: `serialize()`, `get_parameter_vector()`, `get_time_raw_vector(active_only)`,
+`sync_time_params_from_gates()`, `unitary(backend, backend_settings)`,
+`propagate_states(states, backend, backend_settings)`.
+
+#### GateTimeParam
+
+```python
+@dataclass
+class GateTimeParam:
+    group: Any         # time-group identifier
+    t_raw: float       # unconstrained variable (mapped via sigmoid to [t_min, t_max])
+    t_min: float
+    t_max: float
+    locked: bool = False
+```
+
+#### DriftPhaseModel and drift helpers
+
+```python
+@dataclass(frozen=True)
+class DriftPhaseModel:
+    chi: float = 0.0
+    kerr: float = 0.0
+    chi_higher: tuple[float, ...] = ()
+    kerr_higher: tuple[float, ...] = ()
+```
+
+| Function | Signature | Description |
+|---|---|---|
+| `drift_phase_table(model, n_cav)` | `(DriftPhaseModel, int) -> ndarray` | Per-Fock-level phase accumulated per unit time |
+| `drift_phase_from_hamiltonian(H, n_cav, dt)` | `(Qobj, int, float) -> ndarray` | Extract drift phases numerically |
+| `drift_phase_unitary(phases_per_second, duration, n_cav)` | `(ndarray, float, int) -> ndarray` | Full-space drift unitary matrix |
+| `drift_hamiltonian_qobj(model, n_cav)` | `(DriftPhaseModel, int) -> Qobj` | Static Hamiltonian as QuTiP Qobj |
+
+---
+
+### 17.5 Waveform Bridge
+
+**Module path:** `cqed_sim.unitary_synthesis.waveform_bridge`
+
+Bridges the synthesis gate representation (`QubitRotation`, `Displacement`, `SQR`)
+to waveform-backed `PrimitiveGate` objects. This connects the synthesis optimizer
+to the full `Pulse`/`SequenceCompiler`/`cqed_sim.sim` runtime stack so that
+`CQEDSystemAdapter` can run real-waveform simulations during optimization.
+
+```python
+def waveform_primitive_from_gate(
+    gate: QubitRotation | Displacement | SQR,
+    *,
+    index: int = 0,
+    frame: FrameSpec | None = None,
+    calibration: Any | None = None,
+    config: Mapping[str, Any] | None = None,
+    hilbert_dim: int | None = None,
+) -> PrimitiveGate
+```
+
+| Parameter | Description |
+|---|---|
+| `gate` | Source gate. `QubitRotation`, `Displacement`, or `SQR` only; other types raise `TypeError`. |
+| `index` | Position in the sequence; forwarded to the underlying `io.gates` constructor. |
+| `frame` | `FrameSpec` used for carrier frequency computation; stored in gate metadata. |
+| `calibration` | Optional SQR calibration result forwarded to `build_sqr_multitone_pulse`. |
+| `config` | Optional config dict merged over the following defaults. |
+| `hilbert_dim` | Overrides the inferred Hilbert-space dimension. |
+
+**Default config keys:**
+
+| Key | Default | Description |
+|---|---|---|
+| `rotation_sigma_fraction` | `0.18` | Gaussian sigma as fraction of duration for rotation pulses |
+| `sqr_sigma_fraction` | `0.18` | Same for SQR multi-tone pulses |
+| `sqr_theta_cutoff` | `1e-8` | Amplitude threshold below which SQR tones are dropped |
+| `use_rotating_frame` | `False` | Rotating-frame carrier correction for SQR tones |
+| `fock_fqs_hz` | `None` | Empirical per-Fock-level frequencies (Hz) for SQR |
+
+The returned `PrimitiveGate` has `parameters` (current angles/amplitude + duration),
+`parameter_bounds` (angle range ±2π, duration within `time_bounds`), and
+`metadata["waveform_family"]` (`"rotation_gaussian"`, `"displacement_square"`, or
+`"sqr_multitone_gaussian"`).
+
+**Time bounds:** If the source gate has a `time_bounds` attribute it is used directly;
+otherwise bounds default to `[max(T × 0.25, 1 ns), max(T × 4, lower + 1 ns)]` where
+`T` is `gate.duration`.
+
+```python
+def waveform_sequence_from_gates(
+    sequence: GateSequence,
+    *,
+    frame: FrameSpec | None = None,
+    calibration: Any | None = None,
+    config: Mapping[str, Any] | None = None,
+    hilbert_dim: int | None = None,
+) -> GateSequence
+```
+
+Calls `waveform_primitive_from_gate` on each gate and returns a new `GateSequence`
+with the same `n_cav` and `full_dim`. `hilbert_dim` defaults to `sequence.full_dim`.
+
+**Usage:**
+
+```python
+from cqed_sim.unitary_synthesis import (
+    GateSequence, QubitRotation, SQR, CQEDSystemAdapter, Subspace,
+)
+from cqed_sim.unitary_synthesis.backends import simulate_sequence
+from cqed_sim.unitary_synthesis.waveform_bridge import waveform_sequence_from_gates
+
+seq = GateSequence(gates=[...], n_cav=3)
+wf_seq = waveform_sequence_from_gates(seq, frame=frame)
+result = simulate_sequence(
+    wf_seq, subspace,
+    backend="pulse",
+    system=CQEDSystemAdapter(model=model),
+    state_inputs=[psi0],
+    dt=4e-9,
+    frame=frame,
+    noise=NoiseSpec(t1=60e-6, tphi=80e-6),
+)
+```
+
+---
+
+### 17.6 Phase 2 Configuration Objects
 
 ```python
 @dataclass(frozen=True)
@@ -1895,8 +2174,12 @@ class SynthesisConstraints:
     max_primitives: int | None = None
     allowed_primitive_counts: tuple[int, ...] = ()
     smoothness_penalty: bool = False
+    smoothness_weight: float = 1.0       # penalty weight for smoothness term
     max_bandwidth: float | None = None
-    forbidden_parameter_ranges: dict[str, tuple[tuple[float, float], ...]] = ...
+    bandwidth_weight: float = 1.0        # penalty weight for bandwidth term
+    forbidden_parameter_ranges: dict[str, tuple[tuple[float, float], ...]] = field(default_factory=dict)
+    forbidden_range_weight: float = 1.0  # penalty weight for forbidden-range violations
+    duration_mode: str = "penalty"       # "penalty" or "hard"
 ```
 
 ```python
@@ -1917,6 +2200,7 @@ class MultiObjective:
     robustness_weight: float = 0.0
     smoothness_weight: float = 0.0
     hardware_penalty_weight: float = 1.0
+    mode: str = "weighted_sum"   # currently only "weighted_sum" is supported
 ```
 
 ```python
@@ -1928,7 +2212,7 @@ ParameterDistribution(
 )
 ```
 
-### UnitarySynthesizer
+### 17.7 UnitarySynthesizer
 
 ```python
 class UnitarySynthesizer:
@@ -1964,13 +2248,83 @@ Important behavior:
 - `warm_start` accepts a saved payload, mapping, or previous `SynthesisResult`.
 - `optimizer` supports `auto`, `nelder_mead`, `powell`, `bfgs`, `l_bfgs_b`, `differential_evolution`, and `cma_es`.
 
-### Results and Metrics
+### 17.8 Results and Metrics
 
-- `SynthesisResult.save(...)` exports reusable synthesis artifacts.
-- `SynthesisResult.plot_convergence(...)` plots objective and fidelity history.
-- `ParetoFrontResult` stores the full weighted-run set plus the nondominated subset.
-- `subspace_unitary_fidelity(...)` now supports `none`, `global`, `diagonal`, and `block` gauges.
-- `state_mapping_metrics(...)`, `state_leakage_metrics(...)`, and `objective_breakdown(...)` remain the main low-level metric helpers.
+#### SynthesisResult
+
+```python
+@dataclass
+class SynthesisResult:
+    success: bool
+    objective: float
+    sequence: GateSequence
+    simulation: SimulationResult
+    report: dict[str, Any]
+    history: list[dict[str, Any]] = field(default_factory=list)
+    history_by_run: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    progress_schema_version: int = PROGRESS_SCHEMA_VERSION
+```
+
+| Method | Signature | Description |
+|---|---|---|
+| `save(path, *, include_history=True)` | `(str\|Path, ...) -> Path` | Serialize full result to JSON |
+| `save_history(path)` | `(str\|Path) -> Path` | Save optimization history as JSON |
+| `save_history_csv(path)` | `(str\|Path) -> Path` | Save optimization history as CSV |
+| `to_payload(*, include_history=True)` | `-> dict` | Full JSON-serializable payload (schema version 2) |
+| `diagnostics()` | `-> dict` | Compact diagnostic dict (sequence, report, history) |
+| `plot_convergence(what, fidelity_what)` | `-> Figure` | 2-panel convergence plot (objective + fidelity) |
+
+#### ParetoFrontResult
+
+```python
+@dataclass
+class ParetoFrontResult:
+    results: list[SynthesisResult]
+    nondominated_indices: list[int]
+
+    def nondominated(self) -> list[SynthesisResult]
+```
+
+#### Metric Functions
+
+**Module path:** `cqed_sim.unitary_synthesis.metrics`
+
+```python
+@dataclass(frozen=True)
+class LeakageMetrics:
+    average: float
+    worst: float
+    per_probe: tuple[float, ...]
+```
+
+| Function | Signature | Description |
+|---|---|---|
+| `subspace_unitary_fidelity(actual, target, gauge="global", block_slices=None)` | `(ndarray, ndarray, str, ...) -> float` | Subspace fidelity with gauge `"none"`, `"global"`, `"diagonal"`, or `"block"` |
+| `leakage_metrics(full_operator, subspace, probes=None, n_jobs=1)` | `(ndarray, Subspace, ...) -> LeakageMetrics` | Compute average/worst leakage from subspace basis vectors |
+| `state_leakage_metrics(states, subspace)` | `(Sequence, Subspace) -> LeakageMetrics` | Leakage from already-propagated output states |
+| `state_mapping_metrics(outputs, targets, *, weights=None)` | `(Sequence, Sequence, ...) -> dict` | Weighted state fidelity and error metrics |
+| `objective_breakdown(actual_sub, target_sub, full_op, subspace, ...)` | `-> dict` | Full breakdown: fidelity, leakage, objective |
+| `unitarity_error(op)` | `(ndarray) -> float` | Frobenius norm of U†U − I; 0 for exact unitaries |
+
+`state_mapping_metrics` returns: `state_error_mean`, `state_error_max`,
+`state_fidelity_mean`, `state_fidelity_min`, `weighted_state_error`,
+`weighted_state_infidelity`, `objective`.
+
+#### Progress Reporting
+
+**Module path:** `cqed_sim.unitary_synthesis.progress`
+
+| Class / Function | Description |
+|---|---|
+| `ProgressEvent` | Frozen dataclass: one event per optimizer iteration with `run_id`, `iteration`, `objective_total`, `objective_terms`, `metrics`, `best_so_far`, `params_summary` |
+| `ProgressReporter` | Base class with `on_start`, `on_event`, `on_end` hooks |
+| `NullReporter` | No-op reporter |
+| `HistoryReporter` | Accumulates all events in memory; access via `.events`, `.starts`, `.ends` |
+| `JupyterLiveReporter` | Displays live progress in Jupyter notebooks |
+| `history_to_dataframe(history)` | Convert history list to pandas DataFrame |
+| `plot_history(history_or_dict, what, ax, title)` | Line plot of a named history field |
+
+`PROGRESS_SCHEMA_VERSION = 1` (current event schema version).
 
 ---
 
@@ -2231,6 +2585,22 @@ The `NumPyBackend` and `JaxBackend` implement a dense piecewise-constant solver
 intended for small-system checks and backend parity validation. It is not a
 drop-in replacement for QuTiP's adaptive ODE solver on large systems.
 
+### LOW: Waveform Bridge Gate Type Coverage
+
+`waveform_bridge` (`waveform_primitive_from_gate` / `waveform_sequence_from_gates`)
+supports only `QubitRotation`, `Displacement`, and `SQR`. The synthesis sequence gate
+types `SNAP`, `ConditionalPhaseSQR`, and `FreeEvolveCondPhase` are not currently
+bridged to the waveform path. Passing them raises `TypeError`. Use the ideal or
+symbolic backends for sequences that include these gate types.
+
+### LOW: `targets.py` Contains User-Specific Hardcoded Paths
+
+`targets._default_reference_root()` contains absolute paths specific to
+`C:\Users\dazzl` and `C:\Users\jl82323`. These are fallback candidates for loading
+MPS reference matrices from a sibling repository and are never reached in normal use
+(the analytic formulas are always the default). They have no effect on correctness but
+should be noted when deploying or sharing the repository.
+
 ---
 
-*Generated from codebase inspection. Last updated: 2026-03-10.*
+*Generated from codebase inspection. Last updated: 2026-03-15.*

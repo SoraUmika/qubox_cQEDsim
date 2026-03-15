@@ -4,8 +4,11 @@
 
 - Before taking any action, first read `README.md` to gather project context.
 - Do not create, activate, or rely on a virtual environment unless the user explicitly asks for one.
-- For Python execution, use the existing system Python at `E:\Program Files\Python311\python.exe` or `E:\Programs\python.exe` for existing python version 3.12.10.
+- For Python execution, use the existing system Python at `E:\Program Files\Python311\python.exe` or `E:\Programs\python.exe` (currently Python 3.12.10).
 - Do not run dependency installation or environment-management commands unless the user explicitly requests them.
+- Only install missing packages when they are genuinely needed for analysis, simple calculations, optimization, or other common development tasks.
+- Any package installed should be broadly used, general-purpose, and low-risk.
+- Do not install niche, experimental, or project-specific dependencies unless the user explicitly requests them.
 
 ## Python Environment
 
@@ -41,9 +44,12 @@
 
 ## Physics and Convention Maintenance
 
-- Any new feature added to `cqed_sim` that fundamentally introduces new physics, modifies an existing physical model, changes assumptions, or alters conventions must also update the documentation in the `physics_and_conventions` folder.
-- In particular, such changes must be reflected in `physics_and_conventions/physics_conventions_report.tex` so that the simulator’s documented physics, conventions, assumptions, and implementation remain synchronized.
-- Do not treat physics-documentation updates as optional when a code change affects physical meaning, Hamiltonians, frames, sign conventions, units, approximations, measurement definitions, gate conventions, or parameter mappings.
+- Any new feature added to `cqed_sim` that introduces new physics, modifies an existing physical model, changes assumptions, or alters established conventions must also update the documentation in the `physics_and_conventions` folder.
+- In particular, all such changes must be reflected in `physics_and_conventions/physics_conventions_report.tex` so that the simulator’s documented physics, conventions, assumptions, and implementation remain synchronized.
+- Physics documentation updates are mandatory whenever a code change affects physical meaning, Hamiltonians, reference frames, sign conventions, units, approximations, measurement definitions, gate conventions, parameter interpretations, or parameter mappings.
+- Do not treat physics-documentation updates as optional or defer them to a later cleanup pass when the underlying code change has physical significance.
+- When a task involves reproducing results from a paper, implementing a published method, or aligning simulator behavior with a literature reference, also consult the `paper_summary` folder, which contains reports and summaries for specific papers.
+- If a request depends on methods, assumptions, derivations, conventions, or target results drawn from a summarized paper, use the corresponding material in `paper_summary` as a reference during implementation and documentation updates.
 
 ## Tests and Examples
 

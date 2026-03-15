@@ -78,6 +78,7 @@ nav:
       - Kerr Free Evolution: tutorials/kerr_free_evolution.md
       - Sideband Swap: tutorials/sideband_swap.md
       - Unitary Synthesis: tutorials/unitary_synthesis.md
+      - Holographic Quantum Algorithms: tutorials/holographic_quantum_algorithms.md
   - API Reference:
       - Overview: api/overview.md
       - Core (Models, Frames, Conventions): api/core.md
@@ -95,5 +96,6 @@ nav:
       - Plotting: api/plotting.md
       - Backends: api/backends.md
       - Unitary Synthesis: api/unitary_synthesis.md
+      - Holographic Quantum Algorithms: api/holographic_sim.md
   - Examples: examples.md
   - Architecture: architecture.md

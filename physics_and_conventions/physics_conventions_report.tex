@@ -396,6 +396,49 @@ re-evaluating the same synthesis objective under those sampled parameter sets;
 they do not introduce an alternate Hamiltonian sign convention or basis
 ordering.
 
+\section{Holographic Quantum-Algorithm Conventions}
+The reusable holographic algorithms package in
+\texttt{cqed\_sim/quantum\_algorithms/holographic\_sim/} is intentionally
+system-agnostic. Its core factorization is
+\[
+|\sigma\rangle_{\mathrm{physical}} \otimes |b\rangle_{\mathrm{bond}},
+\]
+with the \emph{physical register first} and the persistent \emph{bond register
+second}. This ordering is independent of the cQED-specific transmon--bosonic
+tensor ordering used by the main simulator runtime.
+
+\noindent
+For a dense joint unitary \(U\) acting on
+\(\mathcal{H}_{\mathrm{physical}} \otimes \mathcal{H}_{\mathrm{bond}}\), the
+implemented holographic channel prepares a fixed physical reference state
+\(|0\rangle_{\mathrm{physical}}\) by default and uses the standard Kraus map
+\[
+\rho_{\mathrm{bond}}
+\mapsto
+\sum_\sigma K_\sigma \rho_{\mathrm{bond}} K_\sigma^\dagger,
+\qquad
+K_\sigma = \langle \sigma | U | 0 \rangle.
+\]
+When a right-canonical MPS tensor is used instead, the implementation stores the
+MPS matrices \(V_\sigma\) together with the standard channel-orientation Kraus
+operators
+\[
+K_\sigma = V_\sigma^\dagger.
+\]
+This keeps the user-facing sampler aligned with standard quantum-channel
+notation while remaining consistent with the transfer-matrix orientation used in
+the holographic report.
+
+\noindent
+The package uses \texttt{burn\_in} to mean repeated application of the same
+holographic channel before observable insertions begin. This is the repository's
+convention for approaching bulk or steady-state behavior in the bond register.
+Observable insertions always refer to measurements on the physical register.
+
+\noindent
+Direct tests:
+\texttt{tests/quantum\_algorithms/test\_holographic\_sim.py}.
+
 \section{Operator Conventions}
 The simulator uses the standard bosonic normalization
 \[

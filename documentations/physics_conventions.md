@@ -42,6 +42,36 @@ Tensor ordering: **qubit first, storage second, readout third**.
 
 ---
 
+## Holographic Quantum-Algorithm Conventions
+
+The generic holographic package in `cqed_sim.quantum_algorithms.holographic_sim`
+uses a different tensor structure from the main cQED runtime:
+
+$$|\sigma\rangle_{\text{physical}} \otimes |b\rangle_{\text{bond}}$$
+
+The **physical register is first** and the persistent **bond register is second**.
+
+For a dense joint unitary $U$ on `physical ⊗ bond`, the implemented channel
+prepares a fixed physical reference state $\lvert 0 \rangle$ by default and uses
+
+$$
+\rho_{\text{bond}} \mapsto \sum_\sigma K_\sigma \rho_{\text{bond}} K_\sigma^\dagger,
+\qquad
+K_\sigma = \langle \sigma | U | 0 \rangle
+$$
+
+When the channel is constructed from a right-canonical MPS tensor, the stored MPS
+matrices $V_\sigma$ are converted to standard channel-orientation Kraus operators
+through
+
+$$K_\sigma = V_\sigma^\dagger$$
+
+`burn-in` means repeated application of the same holographic channel before the
+observable insertions begin. Observable schedules always refer to measurements
+performed on the physical register.
+
+---
+
 ## Computational Basis
 
 - $|g\rangle = |0\rangle$ (ground state)

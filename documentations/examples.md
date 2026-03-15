@@ -31,6 +31,18 @@ The primary guided learning path no longer lives here. Use the top-level `tutori
 
 ---
 
+## Quantum Algorithms Examples
+
+Under `examples/quantum_algorithms/`:
+
+| Script | Description |
+|---|---|
+| `holographic_minimal_correlator.py` | Small ideal correlator example with Monte Carlo and exact branch comparison |
+| `holographic_burn_in_translation_invariant.py` | Translation-invariant channel with explicit burn-in before bulk estimation |
+| `holographic_spin_model_example.py` | Spin-inspired transfer-channel example motivated by the holographic report |
+
+---
+
 ## Workflow Helpers
 
 Under `examples/workflows/`:

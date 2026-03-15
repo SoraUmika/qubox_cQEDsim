@@ -54,6 +54,7 @@
 15. [Operators (`cqed_sim.operators`)](#15-operators)
 16. [Plotting (`cqed_sim.plotting`)](#16-plotting)
 17. [Unitary Synthesis (`cqed_sim.unitary_synthesis`)](#17-unitary-synthesis)
+17A. [Holographic Quantum Algorithms (`cqed_sim.quantum_algorithms.holographic_sim`)](#17a-holographic-quantum-algorithms-cqed_simquantum_algorithmsholographic_sim)
 18. [Simulation Workflows / Common Usage Patterns](#18-simulation-workflows)
 19. [Physics-Facing API and Conventions](#19-physics-facing-api-and-conventions)
 20. [Notes on Internal Utilities](#20-notes-on-internal-utilities)
@@ -98,7 +99,8 @@ cqed_sim/
 ├── operators/       # Pauli, cavity ladder, embedding helpers
 ├── plotting/        # Bloch tracks, calibration, gate diagnostics, Wigner grids
 ├── tomo/            # Fock-resolved tomography, all-XY, leakage calibration
-└── unitary_synthesis/  # Subspace targeting, gate sequences, optimization, constraints
+├── unitary_synthesis/  # Subspace targeting, gate sequences, optimization, constraints
+└── quantum_algorithms/  # Generic holographic quantum-algorithm utilities
 ```
 
 **Main simulation path for a typical user:**
@@ -1969,6 +1971,65 @@ Important behavior:
 - `ParetoFrontResult` stores the full weighted-run set plus the nondominated subset.
 - `subspace_unitary_fidelity(...)` now supports `none`, `global`, `diagonal`, and `block` gauges.
 - `state_mapping_metrics(...)`, `state_leakage_metrics(...)`, and `objective_breakdown(...)` remain the main low-level metric helpers.
+
+---
+
+## 17A. Holographic Quantum Algorithms (`cqed_sim.quantum_algorithms.holographic_sim`)
+
+Generic bond-space holographic estimators inspired by the channel / MPS picture
+in `paper_summary/holographic_quantum_algorithms.pdf`.
+
+> **Convention note:** This package is intentionally system-agnostic. It uses a
+> `physical register ⊗ bond register` factorization, explicit observable
+> insertion schedules, and repeated-channel burn-in. It is not hardcoded to a
+> cQED tensor structure even though it lives inside the `cqed_sim` repository.
+
+### Core Objects
+
+```python
+HolographicChannel.from_unitary(U, physical_dim=2, bond_dim=4)
+HolographicChannel.from_kraus(kraus_ops)
+HolographicChannel.from_right_canonical_mps(tensor)
+```
+
+```python
+ObservableSchedule([
+    {"step": 10, "operator": Z},
+    {"step": 14, "operator": X},
+], total_steps=20)
+```
+
+```python
+sampler = HolographicSampler(channel, burn_in=BurnInConfig(steps=50))
+result = sampler.sample_correlator(schedule, shots=5000)
+exact = sampler.enumerate_correlator(schedule)
+```
+
+Highlights:
+
+- `HolographicChannel` is the main transfer-channel abstraction.
+- `PurifiedChannelStep` formalizes the prepare-apply-measure-reset primitive.
+- `ObservableSchedule` and `ObservableInsertion` make measurement locations explicit.
+- `HolographicSampler` supports Monte Carlo sampling with uncertainty estimates.
+- `HolographicSampler.enumerate_correlator(...)` performs exact branch enumeration for small problems.
+- `MatrixProductState` plus `HolographicChannel.from_right_canonical_mps(...)` connect the estimator path to right-canonical MPS tensors.
+
+### Diagnostics and Results
+
+- `channel_diagnostics(...)` reports unitarity/completeness/trace-preservation checks.
+- `CorrelatorEstimate`, `ExactCorrelatorResult`, and `BurnInSummary` are serializable result objects.
+- `branch_probability_error(...)`, `validate_trace_preservation(...)`, and `fixed_point_residual(...)` expose low-level validation hooks.
+
+### Future-Facing Scaffolding
+
+```python
+HoloVQEObjective([...])
+HoloQUADSProgram([...])
+```
+
+- `HoloVQEObjective` provides a minimal energy-objective wrapper built from correlator schedules.
+- `HoloQUADSProgram` and `TimeSlice` provide a lightweight time-sliced interface for future holographic dynamics workflows.
+- Example constructors in `cqed_sim.quantum_algorithms.holographic_sim.models` provide spin-inspired and partial-swap channels without making them mandatory.
 
 ---
 

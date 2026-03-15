@@ -1,29 +1,38 @@
 # Tutorial Curriculum
 
-The primary guided-learning material for `cqed_sim` now lives in the repository's top-level `tutorials/` directory as a numbered notebook curriculum.
+The primary guided-learning material for `cqed_sim` lives in the repository's top-level `tutorials/` directory. There are now two complementary tutorial tracks:
+
+- a categorized workflow suite that rewrites the representative example scripts as notebook tutorials
+- the earlier flat numbered curriculum, which remains useful as a broader API and conventions primer
 
 Start with:
 
-- `tutorials/README.md` for the full reading order
-- `tutorials/00_tutorial_index.ipynb` for onboarding and suggested learning paths
+- `tutorials/README.md` for the current workflow-first reading order
+- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
+- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
+- `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb`
 
-## Curriculum Summary
+## Workflow Tutorial Taxonomy
 
-- Tier 0: orientation, minimal model building, units, frames, and sign conventions
-- Tier 1: cavity displacement, qubit driving, and basic observables
-- Tier 2: spectroscopy, number splitting, and dressed dispersive signatures
-- Tier 3: Rabi, `T1`, Ramsey, and echo calibration-style notebooks
-- Tier 4: Kerr, cross-Kerr, storage dynamics, and readout response
-- Tier 5: multilevel transmon effects, leakage, and truncation convergence
-- Tier 6: pulse/gate composition, parameter sweeps, and result extraction
-- Tier 7: effective sideband dynamics, compact end-to-end calibration, and debugging workflows
+- `tutorials/00_getting_started/`
+  - first end-to-end protocol notebook
+- `tutorials/10_core_workflows/`
+  - displacement spectroscopy and Kerr free evolution
+- `tutorials/20_bosonic_and_sideband/`
+  - sideband swap, detuned synchronization, sequential reset, and shelving
+- `tutorials/30_advanced_protocols/`
+  - cross-Kerr, open-system degradation, unitary synthesis, and SNAP optimization
+- `tutorials/40_validation_and_conventions/`
+  - convention-validation notebooks such as the Kerr sign check
 
-## Recommended Entry Points
+## Foundational Curriculum Still Available
 
-- First-time user: `00`, `01`, `02`, `03`, `06`
-- Experimentalist workflow: `00`, `02`, `06`, `09`, `11`, `12`, `25`
-- Simulation/theory path: `00`, `01`, `02`, `08`, `14`, `15`, `20`
-- Developer/API path: `00`, `01`, `02`, `21`, `22`, `23`, `26`
+- `tutorials/00_tutorial_index.ipynb`
+- `tutorials/01_getting_started_minimal_dispersive_model.ipynb`
+- `tutorials/02_units_frames_and_conventions.ipynb`
+- `tutorials/06_qubit_spectroscopy.ipynb`
+- `tutorials/24_sideband_like_interactions.ipynb`
+- `tutorials/26_frame_sanity_checks_and_common_failure_modes.ipynb`
 
 ## Conventions
 

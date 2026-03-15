@@ -1,225 +1,220 @@
-# API Reference — Unitary Synthesis (`cqed_sim.unitary_synthesis`)
+# API Reference: Unitary Synthesis (`cqed_sim.unitary_synthesis`)
 
-Gradient-free optimization of pulse/gate sequences to implement target unitaries within a qubit–cavity subspace.
+Flexible gate-sequence synthesis for matrix-defined primitives, model-backed waveform primitives, unitary targets, state-mapping targets, and Phase 2 constraint-aware optimization.
 
 !!! note "Convention"
-    The synthesis drift-phase layer matches the runtime dispersive/Kerr convention. The remaining sign distinction is the waveform convention `Pulse.carrier = -omega_transition(frame)`.
+    The synthesis drift-phase layer matches the runtime dispersive/Kerr convention. Model-backed waveform primitives use the same `Pulse`, `SequenceCompiler`, and `cqed_sim.sim` stack as the rest of the library, including the waveform sign convention `Pulse.carrier = -omega_transition(frame)`.
 
 ---
 
-## Subspace
+## System Interface
 
-**Module path:** `cqed_sim.unitary_synthesis.subspace.Subspace`
+```python
+class QuantumSystem:
+    def hilbert_dimension(...): ...
+    def simulate_sequence(...): ...
+    def simulate_unitary(...): ...
+    def simulate_state(...): ...
+```
+
+```python
+CQEDSystemAdapter(model=my_cqed_model)
+```
+
+Highlights:
+
+- `UnitarySynthesizer` now depends on a `QuantumSystem` backend rather than directly on a raw cQED model.
+- `CQEDSystemAdapter` preserves the current cQED workflow by wrapping existing `cqed_sim.core` model objects.
+- `model=...` is still accepted by `UnitarySynthesizer` and is automatically wrapped into `CQEDSystemAdapter(...)` for backward compatibility.
+- The synthesizer is now architecturally system-agnostic even though only cQED adapters are implemented today.
+
+---
+
+## Core Targets
 
 ```python
 @dataclass(frozen=True)
-class Subspace:
-    full_dim: int                      # Full Hilbert-space dimension
-    indices: tuple[int, ...]           # Subspace state indices in full space
-    labels: tuple[str, ...]            # Human-readable basis labels
-    kind: str = "custom"
-    metadata: dict | None = None
+class TargetUnitary:
+    matrix: np.ndarray
+    ignore_global_phase: bool = False
+    allow_diagonal_phase: bool = False
+    phase_blocks: tuple[tuple[int, ...], ...] | None = None
+    probe_states: tuple[qt.Qobj | np.ndarray, ...] = ()
+    open_system_probe_strategy: str = "basis_plus_uniform"
 ```
-
-| Factory Method | Description |
-|---|---|
-| `Subspace.qubit_cavity_block(n_match, n_cav=None)` | Qubit–cavity block: \|g,0⟩, \|e,0⟩, \|g,1⟩, \|e,1⟩, ... |
-| `Subspace.cavity_only(n_match, qubit="g", n_cav=None)` | Cavity subspace for fixed qubit state |
-| `Subspace.custom(full_dim, indices, labels=None)` | Arbitrary index selection |
-
-| Method | Description |
-|---|---|
-| `projector()` | Full-space projection operator |
-| `embed(vec_sub)` | Subspace → full-space embedding |
-| `extract(vec_full)` | Full-space → subspace extraction |
-| `restrict_operator(op_full)` | Full-space operator → subspace restriction |
-| `per_fock_blocks()` | Block slices for qubit_cavity_block kind |
-
----
-
-## Target Construction
-
-**Module path:** `cqed_sim.unitary_synthesis.targets`
 
 ```python
-def make_target(
-    name: str,               # "easy", "ghz", "cluster"
-    n_match: int,
-    variant: str = "analytic",
-    **kwargs,
-) -> np.ndarray
+class TargetStateMapping:
+    def __init__(
+        self,
+        *,
+        initial_states=None,
+        target_states=None,
+        initial_state=None,
+        target_state=None,
+        weights=None,
+    ): ...
 ```
+
+Highlights:
+
+- `TargetUnitary` still validates unitarity on construction.
+- `ignore_global_phase`, `allow_diagonal_phase`, and `phase_blocks` define phase-equivalence classes for the closed-system fidelity metric.
+- When noisy/open-system synthesis is requested for a unitary target, the target is evaluated through probe-state propagation instead of direct unitary extraction.
+- `TargetStateMapping` accepts either plural state lists or a single `initial_state` / `target_state` pair.
 
 ---
 
-## Gate Sequence Primitives
+## Primitive Gates
 
-**Module path:** `cqed_sim.unitary_synthesis.sequence`
+```python
+PrimitiveGate(
+    name="ry",
+    duration=40e-9,
+    matrix=lambda params, model: build_unitary(params),
+    parameters={"theta": 0.2, "duration": 40e-9},
+    parameter_bounds={"theta": (-np.pi, np.pi), "duration": (10e-9, 100e-9)},
+)
+```
 
-### Gate Types
+```python
+PrimitiveGate(
+    name="drive",
+    duration=80e-9,
+    waveform=waveform_function,  # waveform_function(params, model)
+    parameters={"amp": 0.1, "phase": 0.0, "duration": 80e-9},
+    parameter_bounds={"amp": (-1.0, 1.0), "phase": (-np.pi, np.pi), "duration": (20e-9, 200e-9)},
+    hilbert_dim=full_dim,
+)
+```
 
-| Gate Class | Parameters | Description |
-|---|---|---|
-| `QubitRotation` | `theta`, `phi` | Qubit rotation ⊗ I_cav |
-| `SQR` | `theta_n[]`, `phi_n[]` | Selective qubit rotation per Fock |
-| `SNAP` | `phases[]` | Diagonal cavity phase gate |
-| `Displacement` | `alpha = re + i·im` | D(α) ⊗ I_qubit |
-| `ConditionalPhaseSQR` | `phases_n[]` | Conditional phase per n |
-| `FreeEvolveCondPhase` | (uses drift_model) | Idle evolution under drift |
+Waveform primitives may return:
 
-All gates inherit from `GateBase` with: `parameter_names(n_cav)`, `get_parameters(n_cav)`, `set_parameters(params, n_cav)`, `ideal_unitary(n_cav)`, `pulse_unitary(n_cav)`, `duration`, `optimize_time`, `time_bounds`.
+- `list[Pulse]`
+- `(pulses, drive_ops)`
+- `(pulses, drive_ops, meta)`
+- `{"pulses": ..., "drive_ops": ..., "meta": ...}`
 
-### DriftPhaseModel
+---
+
+## Phase 2 Configuration Objects
 
 ```python
 @dataclass(frozen=True)
-class DriftPhaseModel:
-    chi: float = 0.0; chi2: float = 0.0
-    kerr: float = 0.0; kerr2: float = 0.0
-    delta_c: float = 0.0; delta_q: float = 0.0
-    frame: str = "rotating_omega_c_omega_q"
+class SynthesisConstraints:
+    max_amplitude: float | None = None
+    max_duration: float | None = None
+    max_primitives: int | None = None
+    allowed_primitive_counts: tuple[int, ...] = ()
+    smoothness_penalty: bool = False
+    smoothness_weight: float = 1.0
+    max_bandwidth: float | None = None
+    bandwidth_weight: float = 1.0
+    forbidden_parameter_ranges: dict[str, tuple[tuple[float, float], ...]] = ...
 ```
-
-**Drift energies (shared runtime/synthesis convention):**
-
-$$E_{g,n} = \Delta_c n + K(n)$$
-$$E_{e,n} = \Delta_c n + \Delta_q + (\chi n + \chi_2 n(n-1)) + K(n)$$
-
-| Function | Description |
-|---|---|
-| `drift_phase_table(n_cav, duration, model)` | Precompute drift phases |
-| `drift_phase_unitary(n_cav, duration, model)` | $\exp(-iH_0 t)$ as Qobj |
-| `drift_hamiltonian_qobj(n_cav, model)` | Diagonal $H_0$ Hamiltonian |
-
-### GateSequence
 
 ```python
-@dataclass
-class GateSequence:
-    gates: list[GatePrimitive]
-    n_cav: int
+@dataclass(frozen=True)
+class LeakagePenalty:
+    weight: float = 0.0
+    allowed_subspace: Subspace | Sequence[int] | None = None
+    metric: str = "worst"
 ```
 
-| Method | Description |
-|---|---|
-| `unitary(backend="ideal")` | Full sequence unitary |
-| `total_duration()` | Sum of gate durations |
-| `get_parameter_vector()` / `set_parameter_vector(v)` | Gate-angle parameters |
-| `get_time_vector()` / `set_time_vector(t)` | Duration parameters |
-| `serialize()` | List of gate records |
+```python
+@dataclass(frozen=True)
+class MultiObjective:
+    fidelity_weight: float = 1.0
+    leakage_weight: float = 0.0
+    duration_weight: float = 0.0
+    pulse_power_weight: float = 0.0
+    robustness_weight: float = 0.0
+    smoothness_weight: float = 0.0
+    hardware_penalty_weight: float = 1.0
+```
+
+```python
+ParameterDistribution(
+    sample_count=4,
+    aggregate="mean",
+    chi=Normal(-2.8e6, 0.05e6),
+    kerr=Uniform(-3200.0, -2800.0),
+)
+```
+
+These objects lift the older low-level `hardware_limits`, `constraints`, and leakage knobs into a notebook-facing API.
 
 ---
 
 ## UnitarySynthesizer
 
-**Module path:** `cqed_sim.unitary_synthesis.optim.UnitarySynthesizer`
-
 ```python
 class UnitarySynthesizer:
     def __init__(
         self,
-        subspace: Subspace,
-        backend: str = "ideal",
-        gateset: list[str] | None = None,
-        optimize_times: bool = True,
-        time_bounds: dict | None = None,
-        time_policy: dict | None = None,
-        time_mode: str = "per-instance",
-        time_groups: dict | None = None,
-        leakage_weight: float = 0.0,
-        time_reg_weight: float = 0.0,
-        time_smooth_weight: float = 0.0,
-        gauge: str = "global",
-        drift_config: Mapping | None = None,
-        include_conditional_phase_in_sqr: bool = False,
-        hardware_limits: Mapping | None = None,
-        time_grid: Mapping | None = None,
-        constraints: Mapping | None = None,
-        parallel: Mapping | None = None,
-        progress: Mapping | None = None,
-        seed: int = 0,
+        ...,
+        model: Any | None = None,
+        system: QuantumSystem | None = None,
+        synthesis_constraints: SynthesisConstraints | Mapping | None = None,
+        leakage_penalty: LeakagePenalty | Mapping | None = None,
+        objectives: MultiObjective | Mapping | None = None,
+        parameter_distribution: ParameterDistribution | None = None,
+        warm_start: str | Path | Mapping | SynthesisResult | None = None,
+        ...
     )
 ```
 
 ```python
-def fit(
-    self,
-    target: np.ndarray,
-    init_guess: str = "heuristic",
-    multistart: int = 1,
-    maxiter: int = 300,
-) -> SynthesisResult
+def fit(target=None, init_guess="heuristic", multistart=1, maxiter=300) -> SynthesisResult
 ```
-
-**Optimization objective:**
-
-$$L = (1 - F_{\text{subspace}}) + \lambda_L \cdot \text{leakage}_{\text{worst}} + \lambda_t \cdot \text{time\_reg} + \text{constraint\_penalties}$$
-
-### SynthesisResult
 
 ```python
-@dataclass
-class SynthesisResult:
-    success: bool
-    objective: float
-    sequence: GateSequence
-    simulation: SimulationResult
-    report: dict[str, Any]
-    history: list[dict]
-    history_by_run: dict[str, list[dict]]
+def explore_pareto(weight_sets, *, target=None, init_guess="heuristic", multistart=1, maxiter=300) -> ParetoFrontResult
 ```
+
+Important behavior:
+
+- Closed-system unitary targets still use direct unitary fidelity on the selected subspace.
+- Noisy/open-system unitary targets now use probe-state fidelity automatically.
+- `system=...` is the preferred architecture-facing entry point for future backends.
+- `model=...` remains supported for cQED usage and is auto-wrapped into `CQEDSystemAdapter`.
+- `synthesis_constraints.max_amplitude` is compiled into the existing hardware-amplitude limits.
+- `synthesis_constraints.max_duration` can act as a hard projection or a penalty term.
+- `parameter_distribution` averages or worst-cases the simulation objective across sampled model variants.
+- `warm_start` accepts a saved JSON payload, a mapping, or a previous `SynthesisResult`.
+
+---
+
+## Results and Diagnostics
+
+```python
+result = synth.fit(...)
+result.save("optimized_gate.json")
+result.plot_convergence()
+payload = result.to_payload()
+```
+
+`SynthesisResult.report` now records:
+
+- target/gauge metadata
+- objective-component breakdown
+- leakage and robustness summaries
+- sequence parameters and time-grid details
+- optimizer and multistart history metadata
+
+`ParetoFrontResult` stores the full set of weighted runs plus the nondominated subset.
 
 ---
 
 ## Metrics
 
-**Module path:** `cqed_sim.unitary_synthesis.metrics`
+Key metrics in `cqed_sim.unitary_synthesis.metrics`:
 
-| Function | Signature | Description |
-|---|---|---|
-| `subspace_unitary_fidelity(actual, target, gauge, block_slices)` | `-> float` | Phase-invariant fidelity in [0, 1] |
-| `leakage_metrics(full_operator, subspace, probes, n_jobs)` | `-> LeakageMetrics` | average, worst, per_probe leakage |
-| `objective_breakdown(actual_sub, target_sub, full_op, subspace, ...)` | `-> dict` | Full objective decomposition |
-| `unitarity_error(op)` | `-> float` | $\|U^\dagger U - I\|_F$ |
+- `subspace_unitary_fidelity(...)`
+- `leakage_metrics(...)`
+- `state_leakage_metrics(...)`
+- `state_mapping_metrics(...)`
+- `objective_breakdown(...)`
+- `unitarity_error(...)`
 
----
-
-## Constraints
-
-**Module path:** `cqed_sim.unitary_synthesis.constraints`
-
-| Function | Returns | Description |
-|---|---|---|
-| `snap_times_to_grid(times, dt, mode)` | `TimeGridResult` | Quantize to nearest dt |
-| `piecewise_constant_samples(amplitudes, durations, dt)` | `ndarray` | Sample piecewise-constant waveform |
-| `enforce_slew_limit(samples, dt, s_max, mode)` | `SlewConstraintResult` | Slew-rate violation check |
-| `evaluate_tone_spacing(freqs, domega_min, ...)` | `ToneSpacingResult` | Tone-spacing constraint |
-| `project_tone_frequencies(freqs, domega_min, forbidden_bands)` | `ndarray` | Projected frequencies |
-
----
-
-## Progress Reporting
-
-**Module path:** `cqed_sim.unitary_synthesis.progress`
-
-| Class | Description |
-|---|---|
-| `ProgressReporter` | Base class with `on_start`, `on_event`, `on_end` hooks |
-| `NullReporter` | No-op |
-| `HistoryReporter` | Accumulate events in memory. Has `to_dataframe()`. |
-| `JupyterLiveReporter` | Live Jupyter progress plots |
-
-| Function | Description |
-|---|---|
-| `history_to_dataframe(history)` | Convert events to pandas DataFrame |
-| `plot_history(history, what="objective_total", ...)` | Plot optimization history |
-
----
-
-## Reporting
-
-```python
-def make_run_report(base_report, subspace_operator) -> dict
-```
-
-Adds per-Fock-block breakdown to the synthesis result report.
+Phase handling now supports `none`, `global`, `diagonal`, and `block` gauges.

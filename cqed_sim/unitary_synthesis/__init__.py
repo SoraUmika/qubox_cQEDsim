@@ -1,4 +1,5 @@
 from .backends import SimulationResult, simulate_sequence
+from .config import LeakagePenalty, MultiObjective, Normal, ParameterDistribution, SynthesisConstraints, Uniform
 from .constraints import (
     TimeGridResult,
     SlewConstraintResult,
@@ -11,7 +12,7 @@ from .constraints import (
 )
 from . import metrics
 from .metrics import leakage_metrics, subspace_unitary_fidelity
-from .optim import SynthesisResult, TimeMapper, UnitarySynthesizer
+from .optim import ParetoFrontResult, SynthesisResult, TimeMapper, UnitarySynthesizer
 from .progress import (
     PROGRESS_SCHEMA_VERSION,
     HistoryReporter,
@@ -30,6 +31,7 @@ from .sequence import (
     FreeEvolveCondPhase,
     GateTimeParam,
     GateSequence,
+    PrimitiveGate,
     QubitRotation,
     SNAP,
     SQR,
@@ -39,14 +41,27 @@ from .sequence import (
     drift_phase_unitary,
 )
 from .subspace import Subspace
-from .targets import make_target
+from .systems import CQEDSystemAdapter, QuantumSystem
+from .targets import TargetStateMapping, TargetUnitary, coerce_target, make_target
 
 __all__ = [
     "Subspace",
+    "QuantumSystem",
+    "CQEDSystemAdapter",
     "make_target",
+    "coerce_target",
+    "TargetUnitary",
+    "TargetStateMapping",
     "TimeMapper",
     "SynthesisResult",
+    "ParetoFrontResult",
     "UnitarySynthesizer",
+    "SynthesisConstraints",
+    "LeakagePenalty",
+    "MultiObjective",
+    "Normal",
+    "Uniform",
+    "ParameterDistribution",
     "TimeGridResult",
     "SlewConstraintResult",
     "ToneSpacingResult",
@@ -71,6 +86,7 @@ __all__ = [
     "plot_history",
     "GateSequence",
     "GateTimeParam",
+    "PrimitiveGate",
     "DriftPhaseModel",
     "QubitRotation",
     "SQR",

@@ -1,6 +1,10 @@
 # Tutorial: Displacement & Qubit Spectroscopy
 
-The primary guided notebook path for this topic now lives in the top-level `tutorials/` curriculum:
+The primary guided notebook path for this topic now lives in the workflow tutorial suite:
+
+- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
+
+The earlier foundations material is still useful for background:
 
 - `tutorials/03_cavity_displacement_basics.ipynb`
 - `tutorials/06_qubit_spectroscopy.ipynb`
@@ -135,7 +139,7 @@ with amplitudes following the Poisson distribution $P(n) = e^{-|\alpha|^2} |\alp
 
 ## Related Repo Assets
 
-- Guided notebooks: `tutorials/03_cavity_displacement_basics.ipynb`, `tutorials/06_qubit_spectroscopy.ipynb`, `tutorials/07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb`
+- Guided notebooks: `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`, `tutorials/03_cavity_displacement_basics.ipynb`, `tutorials/07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb`
 - Standalone script: `examples/displacement_qubit_spectroscopy.py`
 
 Use the numbered notebooks when you want the full teaching flow and the standalone script when you want one compact executable example.

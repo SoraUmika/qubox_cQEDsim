@@ -372,6 +372,30 @@ Direct tests:
 \texttt{tests/test\_27\_three\_mode\_model.py},
 \texttt{tests/unitary\_synthesis/test\_subspace.py}.
 
+\noindent
+The flexible synthesis API now also permits matrix-defined primitives and
+model-backed waveform-defined primitives. The waveform-defined path does not
+introduce a second pulse convention: it reuses the same \texttt{Pulse},
+\texttt{SequenceCompiler}, and runtime simulation stack as the rest of
+\texttt{cqed\_sim}. Therefore it inherits the same carrier-sign rule discussed
+later in this document,
+\[
+\texttt{Pulse.carrier}=-\omega_{\mathrm{transition}}(\text{frame}).
+\]
+Unitary targets correspond to closed-system effective propagators, while
+state-mapping targets are the appropriate synthesis-side abstraction when the
+waveform simulation includes dissipation or other open-system effects.
+Phase-2 synthesis extends that rule in a controlled way: when a user supplies a
+unitary target together with open-system waveform simulation, the optimization
+objective is evaluated through propagated probe states rather than by extracting
+an exact effective unitary from Lindblad evolution. This keeps the physical
+meaning aligned with the runtime solver while still allowing unitary-like target
+specification in noisy synthesis workflows. Phase-2 robustness features also
+sample uncertain Hamiltonian parameters by cloning the user model and
+re-evaluating the same synthesis objective under those sampled parameter sets;
+they do not introduce an alternate Hamiltonian sign convention or basis
+ordering.
+
 \section{Operator Conventions}
 The simulator uses the standard bosonic normalization
 \[
@@ -1215,4 +1239,3 @@ runtime/synthesis parameter translation helpers, calibration-target utilities, a
 an opt-in dense NumPy/JAX backend path.
 
 \end{document}
-

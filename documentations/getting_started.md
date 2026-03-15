@@ -76,9 +76,12 @@ measurement = measure_qubit(result.final_state, QubitMeasurementSpec(shots=2048,
 
 For the structured notebook path, start with:
 
-- `tutorials/00_tutorial_index.ipynb`
-- `tutorials/01_getting_started_minimal_dispersive_model.ipynb`
-- `tutorials/02_units_frames_and_conventions.ipynb`
+- `tutorials/README.md`
+- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
+- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
+- `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb`
+
+The earlier flat numbered curriculum under `tutorials/*.ipynb` remains useful for a foundations-first read, but the categorized workflow suite above is now the recommended practical entry point.
 
 For standalone repo-side scripts, see:
 

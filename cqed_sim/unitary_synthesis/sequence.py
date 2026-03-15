@@ -1,18 +1,205 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 import numpy as np
 import qutip as qt
 
 from cqed_sim.core.conventions import qubit_cavity_block_indices, qubit_cavity_dims
+from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.ideal_gates import displacement_op, qubit_rotation_xy, sqr_op
+from cqed_sim.pulses.pulse import Pulse
+from cqed_sim.sequence import SequenceCompiler as RuntimeSequenceCompiler
+from cqed_sim.sim import SimulationConfig as RuntimeSimulationConfig
+from cqed_sim.sim import prepare_simulation, simulate_batch
+from cqed_sim.sim.noise import NoiseSpec
+from cqed_sim.sim.runner import hamiltonian_time_slices
 
 
 def _sigmoid_stable(x: np.ndarray | float) -> np.ndarray:
     arr = np.asarray(x, dtype=float)
     return 1.0 / (1.0 + np.exp(-np.clip(arr, -60.0, 60.0)))
+
+
+def _as_complex_array(value: qt.Qobj | np.ndarray) -> np.ndarray:
+    if isinstance(value, qt.Qobj):
+        return np.asarray(value.full(), dtype=np.complex128)
+    return np.asarray(value, dtype=np.complex128)
+
+
+def _validate_unitary_matrix(matrix: np.ndarray, *, atol: float = 1.0e-8) -> np.ndarray:
+    arr = np.asarray(matrix, dtype=np.complex128)
+    if arr.ndim != 2 or arr.shape[0] != arr.shape[1]:
+        raise ValueError("Primitive matrices must be square.")
+    ident = np.eye(arr.shape[0], dtype=np.complex128)
+    if np.linalg.norm(arr.conj().T @ arr - ident, ord="fro") > atol:
+        raise ValueError("Primitive matrix is not unitary within tolerance.")
+    return arr
+
+
+def _coerce_frame_spec(frame: FrameSpec | Mapping[str, Any] | None) -> FrameSpec:
+    if frame is None:
+        return FrameSpec()
+    if isinstance(frame, FrameSpec):
+        return frame
+    return FrameSpec(
+        omega_c_frame=float(frame.get("omega_c_frame", frame.get("omega_s_frame", 0.0))),
+        omega_q_frame=float(frame.get("omega_q_frame", 0.0)),
+        omega_r_frame=float(frame.get("omega_r_frame", 0.0)),
+    )
+
+
+def _runtime_simulation_config(settings: Mapping[str, Any]) -> RuntimeSimulationConfig:
+    raw = settings.get("simulation_config")
+    if isinstance(raw, RuntimeSimulationConfig):
+        return raw
+
+    frame = _coerce_frame_spec(settings.get("frame"))
+    if isinstance(raw, Mapping):
+        data = dict(raw)
+        if "frame" in data:
+            frame = _coerce_frame_spec(data.pop("frame"))
+        return RuntimeSimulationConfig(
+            frame=frame,
+            atol=float(data.get("atol", 1.0e-8)),
+            rtol=float(data.get("rtol", 1.0e-7)),
+            max_step=None if data.get("max_step") is None else float(data["max_step"]),
+            store_states=bool(data.get("store_states", False)),
+            backend=data.get("backend"),
+        )
+
+    return RuntimeSimulationConfig(
+        frame=frame,
+        atol=float(settings.get("atol", 1.0e-8)),
+        rtol=float(settings.get("rtol", 1.0e-7)),
+        max_step=None if settings.get("max_step") is None else float(settings["max_step"]),
+        store_states=bool(settings.get("store_states", False)),
+        backend=settings.get("runtime_backend"),
+    )
+
+
+def _solver_options(cfg: RuntimeSimulationConfig) -> dict[str, Any]:
+    options: dict[str, Any] = {
+        "atol": float(cfg.atol),
+        "rtol": float(cfg.rtol),
+        "store_final_state": True,
+    }
+    if cfg.max_step is not None:
+        options["max_step"] = float(cfg.max_step)
+    return options
+
+
+def _coerce_state_qobj(state: qt.Qobj | np.ndarray, *, subsystem_dims: list[int] | None = None) -> qt.Qobj:
+    if isinstance(state, qt.Qobj):
+        return state
+    arr = np.asarray(state, dtype=np.complex128)
+    if arr.ndim == 1:
+        if subsystem_dims is None:
+            return qt.Qobj(arr.reshape(-1))
+        return qt.Qobj(arr.reshape(-1), dims=[list(subsystem_dims), [1] * len(subsystem_dims)])
+    if arr.ndim == 2:
+        if subsystem_dims is None:
+            return qt.Qobj(arr)
+        return qt.Qobj(arr, dims=[list(subsystem_dims), list(subsystem_dims)])
+    raise ValueError("States must be vectors or density matrices.")
+
+
+def _apply_operator_to_state(operator: np.ndarray, state: qt.Qobj) -> qt.Qobj:
+    dims = state.dims
+    op = qt.Qobj(np.asarray(operator, dtype=np.complex128), dims=[dims[0], dims[0]])
+    if state.isoper:
+        return op * state * op.dag()
+    return op * state
+
+
+def _waveform_payload(result: Any) -> tuple[list[Pulse], dict[str, Any], dict[str, Any]]:
+    if isinstance(result, dict):
+        pulses = list(result.get("pulses", []))
+        drive_ops = dict(result.get("drive_ops", {}))
+        meta = dict(result.get("meta", {}))
+    elif isinstance(result, tuple):
+        if len(result) == 2:
+            pulses, drive_ops = result
+            meta = {}
+        elif len(result) == 3:
+            pulses, drive_ops, meta = result
+        else:
+            raise ValueError("Waveform primitives must return pulses, (pulses, drive_ops), or (pulses, drive_ops, meta).")
+        pulses = list(pulses)
+        drive_ops = dict(drive_ops)
+        meta = dict(meta)
+    else:
+        pulses = list(result)
+        drive_ops = {}
+        meta = {}
+    if not pulses:
+        raise ValueError("Waveform primitives must return at least one Pulse.")
+    if not drive_ops:
+        drive_ops = {pulse.channel: pulse.channel for pulse in pulses}
+    return pulses, drive_ops, meta
+
+
+def _compile_waveform(
+    pulses: list[Pulse],
+    *,
+    dt: float,
+    hardware: Mapping[str, Any] | None,
+    crosstalk: Mapping[str, Any] | None,
+    t_end: float | None,
+) -> Any:
+    compiler = RuntimeSequenceCompiler(
+        dt=float(dt),
+        hardware=None if hardware is None else dict(hardware),
+        crosstalk_matrix=None if crosstalk is None else dict(crosstalk),
+        enable_cache=True,
+    )
+    if t_end is None:
+        t_end = max(float(pulse.t1) for pulse in pulses) + float(dt)
+    return compiler.compile(pulses, t_end=float(t_end))
+
+
+def _final_unitary_from_compiled(
+    model: Any,
+    compiled: Any,
+    drive_ops: Mapping[str, Any],
+    *,
+    frame: FrameSpec,
+    config: RuntimeSimulationConfig,
+) -> np.ndarray:
+    hamiltonian = hamiltonian_time_slices(model, compiled, dict(drive_ops), frame=frame)
+    propagators = qt.propagator(
+        hamiltonian,
+        compiled.tlist,
+        options=_solver_options(config),
+        tlist=compiled.tlist,
+    )
+    final = propagators[-1] if isinstance(propagators, list) else propagators
+    return np.asarray(final.full(), dtype=np.complex128)
+
+
+def _simulate_waveform_states(
+    model: Any,
+    compiled: Any,
+    drive_ops: Mapping[str, Any],
+    states: list[qt.Qobj],
+    *,
+    config: RuntimeSimulationConfig,
+    c_ops: list[qt.Qobj] | None,
+    noise: NoiseSpec | None,
+    max_workers: int,
+) -> list[qt.Qobj]:
+    session = prepare_simulation(
+        model,
+        compiled,
+        dict(drive_ops),
+        config=config,
+        c_ops=c_ops,
+        noise=noise,
+        e_ops={},
+    )
+    results = simulate_batch(session, states, max_workers=max(1, int(max_workers)))
+    return [row.final_state for row in results]
 
 
 @dataclass
@@ -288,6 +475,9 @@ class GateBase:
         if params.size != 0:
             raise ValueError("No parameters expected for this gate.")
 
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        return [(-np.inf, np.inf) for _ in self.parameter_names(n_cav)]
+
     def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
         raise NotImplementedError
 
@@ -296,6 +486,23 @@ class GateBase:
 
     def phase_decomposition(self, n_cav: int, n_match: int | None = None) -> dict[str, Any] | None:
         return None
+
+    def propagate_states(
+        self,
+        states: list[qt.Qobj],
+        n_cav: int,
+        *,
+        backend: str = "ideal",
+        **kwargs: Any,
+    ) -> list[qt.Qobj]:
+        if backend == "pulse":
+            op = self.pulse_unitary(n_cav, **kwargs)
+        elif backend == "ideal":
+            op = self.ideal_unitary(n_cav, scale_by_time=False, **kwargs)
+        else:
+            raise ValueError("backend must be 'ideal' or 'pulse'.")
+        op_arr = _as_complex_array(op)
+        return [_apply_operator_to_state(op_arr, state) for state in states]
 
 
 @dataclass
@@ -312,6 +519,9 @@ class QubitRotation(GateBase):
     def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
         self.theta = float(params[0])
         self.phi = float(params[1])
+
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        return [(-2.0 * np.pi, 2.0 * np.pi), (-np.pi, np.pi)]
 
     def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
         theta = self.theta
@@ -356,6 +566,9 @@ class SQR(GateBase):
         phi = params[n_cav : 2 * n_cav]
         self.theta_n = [float(x) for x in theta]
         self.phi_n = [float(x) for x in phi]
+
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        return [(-2.0 * np.pi, 2.0 * np.pi) for _ in range(n_cav)] + [(-np.pi, np.pi) for _ in range(n_cav)]
 
     def _drive_unitary(self, n_cav: int, scale_by_time: bool) -> qt.Qobj:
         theta, phi = self._padded(n_cav)
@@ -404,6 +617,9 @@ class SNAP(GateBase):
     def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
         self.phases = [float(x) for x in params[:n_cav]]
 
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        return [(-np.pi, np.pi) for _ in range(n_cav)]
+
     def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
         phases = self.get_parameters(n_cav)
         if scale_by_time:
@@ -424,6 +640,9 @@ class Displacement(GateBase):
 
     def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
         self.alpha = complex(float(params[0]), float(params[1]))
+
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        return [(-2.0, 2.0), (-2.0, 2.0)]
 
     def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
         alpha = self.alpha
@@ -449,6 +668,9 @@ class ConditionalPhaseSQR(GateBase):
 
     def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
         self.phases_n = [float(x) for x in params[:n_cav]]
+
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        return [(-2.0 * np.pi, 2.0 * np.pi) for _ in range(n_cav)]
 
     def _drive_unitary(self, n_cav: int, scale_by_time: bool) -> qt.Qobj:
         phases = self.get_parameters(n_cav)
@@ -534,13 +756,301 @@ class FreeEvolveCondPhase(GateBase):
         return row
 
 
-GatePrimitive = QubitRotation | SQR | SNAP | Displacement | ConditionalPhaseSQR | FreeEvolveCondPhase
+@dataclass
+class PrimitiveGate(GateBase):
+    """Generic synthesis primitive backed by either a matrix or a waveform generator."""
+
+    matrix: np.ndarray | Callable[[dict[str, Any], Any | None], np.ndarray] | None = None
+    waveform: Callable[[dict[str, Any], Any | None], Any] | None = None
+    parameters: dict[str, Any] = field(default_factory=dict)
+    parameter_bounds: dict[str, Any] = field(default_factory=dict)
+    hilbert_dim: int | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    _operator_cache: dict[tuple[Any, ...], np.ndarray] = field(default_factory=dict, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if (self.matrix is None) == (self.waveform is None):
+            raise ValueError("PrimitiveGate requires exactly one of matrix or waveform.")
+        if "duration" in self.parameters:
+            self.duration = float(self.parameters["duration"])
+            if self.duration_ref is None:
+                self.duration_ref = float(self.duration)
+        if self.time_bounds is None and "duration" in self.parameter_bounds:
+            bounds = self.parameter_bounds["duration"]
+            if isinstance(bounds, (list, tuple)) and len(bounds) == 2:
+                self.time_bounds = (float(bounds[0]), float(bounds[1]))
+        if isinstance(self.matrix, np.ndarray):
+            validated = _validate_unitary_matrix(self.matrix)
+            self.matrix = validated
+            if self.hilbert_dim is None:
+                self.hilbert_dim = int(validated.shape[0])
+
+    @property
+    def mode(self) -> str:
+        return "waveform" if self.waveform is not None else "matrix"
+
+    def to_record(self) -> dict[str, Any]:
+        row = super().to_record()
+        row.update(
+            {
+                "mode": self.mode,
+                "hilbert_dim": self.hilbert_dim,
+                "metadata": dict(self.metadata),
+            }
+        )
+        return row
+
+    def _restore_parameter_container(self, raw: Any, data: np.ndarray) -> Any:
+        if isinstance(raw, np.ndarray):
+            return np.asarray(data, dtype=data.dtype)
+        if isinstance(raw, tuple):
+            return tuple(data.tolist())
+        if isinstance(raw, list):
+            return data.tolist()
+        return data.reshape(()).item()
+
+    def parameter_names(self, n_cav: int) -> list[str]:
+        names: list[str] = []
+        for key, raw in self.parameters.items():
+            if key == "duration":
+                continue
+            arr = np.asarray(raw)
+            if arr.ndim == 0:
+                if np.iscomplexobj(arr):
+                    names.extend([f"{key}_re", f"{key}_im"])
+                else:
+                    names.append(str(key))
+                continue
+            if arr.ndim != 1:
+                raise ValueError("PrimitiveGate parameters only support scalars and 1D arrays.")
+            for idx in range(arr.shape[0]):
+                if np.iscomplexobj(arr):
+                    names.extend([f"{key}_{idx}_re", f"{key}_{idx}_im"])
+                else:
+                    names.append(f"{key}_{idx}")
+        return names
+
+    def get_parameters(self, n_cav: int) -> np.ndarray:
+        values: list[float] = []
+        for key, raw in self.parameters.items():
+            if key == "duration":
+                continue
+            arr = np.asarray(raw)
+            if arr.ndim == 0:
+                if np.iscomplexobj(arr):
+                    values.extend([float(arr.real), float(arr.imag)])
+                else:
+                    values.append(float(arr))
+                continue
+            flat = arr.reshape(-1)
+            if np.iscomplexobj(arr):
+                for val in flat:
+                    values.extend([float(np.real(val)), float(np.imag(val))])
+            else:
+                values.extend(float(val) for val in flat)
+        return np.asarray(values, dtype=float)
+
+    def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
+        params = np.asarray(params, dtype=float)
+        offset = 0
+        updated: dict[str, Any] = {}
+        for key, raw in self.parameters.items():
+            if key == "duration":
+                updated[key] = float(self.duration)
+                continue
+            arr = np.asarray(raw)
+            if arr.ndim == 0:
+                if np.iscomplexobj(arr):
+                    updated[key] = complex(float(params[offset]), float(params[offset + 1]))
+                    offset += 2
+                else:
+                    updated[key] = float(params[offset])
+                    offset += 1
+                continue
+            if arr.ndim != 1:
+                raise ValueError("PrimitiveGate parameters only support scalars and 1D arrays.")
+            if np.iscomplexobj(arr):
+                data = np.zeros(arr.shape, dtype=np.complex128)
+                for idx in range(arr.shape[0]):
+                    data[idx] = complex(float(params[offset]), float(params[offset + 1]))
+                    offset += 2
+            else:
+                data = np.asarray(params[offset : offset + arr.shape[0]], dtype=float)
+                offset += arr.shape[0]
+            updated[key] = self._restore_parameter_container(raw, np.asarray(data))
+        if offset != params.size:
+            raise ValueError("Parameter vector length mismatch.")
+        self.parameters.update(updated)
+        self.parameters["duration"] = float(self.duration)
+
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        bounds: list[tuple[float, float]] = []
+        for key, raw in self.parameters.items():
+            if key == "duration":
+                continue
+            arr = np.asarray(raw)
+            count = int(arr.size) * (2 if np.iscomplexobj(arr) else 1)
+            if arr.ndim == 0:
+                count = 2 if np.iscomplexobj(arr) else 1
+            spec = self.parameter_bounds.get(key, (-np.inf, np.inf))
+            if isinstance(spec, (list, tuple)) and len(spec) == count and count > 1 and isinstance(spec[0], (list, tuple)):
+                bounds.extend([(float(row[0]), float(row[1])) for row in spec])
+            else:
+                if not isinstance(spec, (list, tuple)) or len(spec) != 2:
+                    raise ValueError(f"PrimitiveGate parameter_bounds['{key}'] must be a 2-tuple or a per-entry tuple list.")
+                bounds.extend([(float(spec[0]), float(spec[1])) for _ in range(count)])
+        return bounds
+
+    def resolved_dimension(self, model: Any | None = None, system: Any | None = None) -> int:
+        runtime_model = model if model is not None else (None if system is None else system.runtime_model())
+        if self.hilbert_dim is not None:
+            return int(self.hilbert_dim)
+        if isinstance(self.matrix, np.ndarray):
+            self.hilbert_dim = int(self.matrix.shape[0])
+            return int(self.hilbert_dim)
+        if self.matrix is not None and callable(self.matrix):
+            matrix = _validate_unitary_matrix(self.matrix(self.runtime_parameters(), runtime_model))
+            self.hilbert_dim = int(matrix.shape[0])
+            return int(self.hilbert_dim)
+        if system is not None:
+            dim = system.hilbert_dimension(primitive=self)
+            if dim is not None:
+                self.hilbert_dim = int(dim)
+                return int(self.hilbert_dim)
+        if runtime_model is not None and hasattr(runtime_model, "subsystem_dims"):
+            self.hilbert_dim = int(np.prod(tuple(int(dim) for dim in runtime_model.subsystem_dims)))
+            return int(self.hilbert_dim)
+        raise ValueError("Could not infer PrimitiveGate Hilbert dimension. Provide hilbert_dim or a model.")
+
+    def runtime_parameters(self) -> dict[str, Any]:
+        out = dict(self.parameters)
+        out["duration"] = float(self.duration)
+        return out
+
+    def _operator_cache_key(self, model: Any | None, settings: Mapping[str, Any]) -> tuple[Any, ...]:
+        frame = _coerce_frame_spec(settings.get("frame"))
+        dt = float(settings.get("dt", 1.0e-9))
+        params = tuple(np.round(self.get_parameters(-1), 12).tolist())
+        return (
+            self.mode,
+            id(model),
+            params,
+            round(float(self.duration), 15),
+            round(float(frame.omega_c_frame), 9),
+            round(float(frame.omega_q_frame), 9),
+            round(float(frame.omega_r_frame), 9),
+            round(dt, 15),
+        )
+
+    def _matrix_operator(self, model: Any | None = None, system: Any | None = None) -> np.ndarray:
+        runtime_model = model if model is not None else (None if system is None else system.runtime_model())
+        if callable(self.matrix):
+            return _validate_unitary_matrix(self.matrix(self.runtime_parameters(), runtime_model))
+        if self.matrix is None:
+            raise ValueError("PrimitiveGate is not matrix defined.")
+        return _validate_unitary_matrix(self.matrix)
+
+    def _waveform_unitary(self, *, model: Any | None, settings: Mapping[str, Any]) -> np.ndarray:
+        if self.waveform is None:
+            raise ValueError("PrimitiveGate is not waveform defined.")
+        system = settings.get("system")
+        if system is not None:
+            return np.asarray(system.simulate_primitive_unitary(self, settings=settings), dtype=np.complex128)
+        if model is None:
+            raise ValueError("Waveform-defined primitives require a model.")
+        cache_key = self._operator_cache_key(model, settings)
+        cached = self._operator_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        pulses, drive_ops, meta = _waveform_payload(self.waveform(self.runtime_parameters(), model))
+        dt = float(settings.get("dt", 1.0e-9))
+        compiled = _compile_waveform(
+            pulses,
+            dt=dt,
+            hardware=settings.get("compiler_hardware"),
+            crosstalk=settings.get("compiler_crosstalk"),
+            t_end=meta.get("t_end"),
+        )
+        cfg = _runtime_simulation_config(settings)
+        if settings.get("c_ops") or settings.get("noise"):
+            raise ValueError("Waveform primitive unitary extraction only supports closed-system simulation. Use state mappings for dissipative synthesis.")
+        operator = _final_unitary_from_compiled(
+            model,
+            compiled,
+            drive_ops,
+            frame=cfg.frame,
+            config=cfg,
+        )
+        self._operator_cache[cache_key] = operator
+        if self.hilbert_dim is None:
+            self.hilbert_dim = int(operator.shape[0])
+        return operator
+
+    def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **kwargs: Any) -> qt.Qobj:
+        model = kwargs.get("model")
+        system = kwargs.get("system")
+        operator = self._matrix_operator(model=model, system=system) if self.mode == "matrix" else self._waveform_unitary(model=model, settings=kwargs)
+        dim = int(operator.shape[0])
+        return qt.Qobj(operator, dims=[[dim], [dim]])
+
+    def pulse_unitary(self, n_cav: int, **kwargs: Any) -> qt.Qobj:
+        return self.ideal_unitary(n_cav=n_cav, scale_by_time=False, **kwargs)
+
+    def propagate_states(
+        self,
+        states: list[qt.Qobj],
+        n_cav: int,
+        *,
+        backend: str = "ideal",
+        **kwargs: Any,
+    ) -> list[qt.Qobj]:
+        if self.mode == "matrix":
+            operator = self._matrix_operator(model=kwargs.get("model"), system=kwargs.get("system"))
+            return [_apply_operator_to_state(operator, state) for state in states]
+
+        system = kwargs.get("system")
+        if system is not None:
+            return list(system.simulate_primitive_states(self, states, settings=kwargs))
+
+        model = kwargs.get("model")
+        if model is None:
+            raise ValueError("Waveform-defined primitives require a model.")
+        if not kwargs.get("c_ops") and not kwargs.get("noise"):
+            operator = self._waveform_unitary(model=model, settings=kwargs)
+            return [_apply_operator_to_state(operator, state) for state in states]
+
+        pulses, drive_ops, meta = _waveform_payload(self.waveform(self.runtime_parameters(), model))
+        dt = float(kwargs.get("dt", 1.0e-9))
+        compiled = _compile_waveform(
+            pulses,
+            dt=dt,
+            hardware=kwargs.get("compiler_hardware"),
+            crosstalk=kwargs.get("compiler_crosstalk"),
+            t_end=meta.get("t_end"),
+        )
+        cfg = _runtime_simulation_config(kwargs)
+        return _simulate_waveform_states(
+            model,
+            compiled,
+            drive_ops,
+            states,
+            config=cfg,
+            c_ops=None if kwargs.get("c_ops") is None else list(kwargs["c_ops"]),
+            noise=kwargs.get("noise"),
+            max_workers=int(kwargs.get("state_workers", 1)),
+        )
+
+
+GatePrimitive = QubitRotation | SQR | SNAP | Displacement | ConditionalPhaseSQR | FreeEvolveCondPhase | PrimitiveGate
 
 
 @dataclass
 class GateSequence:
     gates: list[GatePrimitive]
-    n_cav: int
+    n_cav: int | None = None
+    full_dim: int | None = None
     time_params: list[GateTimeParam] = field(default_factory=list, init=False)
     _gate_time_param_indices: list[int] = field(default_factory=list, init=False, repr=False)
 
@@ -563,6 +1073,37 @@ class GateSequence:
             if key in time_policy:
                 out.update(time_policy[key])
         return out
+
+    def resolve_full_dim(self, model: Any | None = None, system: Any | None = None) -> int:
+        if self.full_dim is not None:
+            return int(self.full_dim)
+        if self.n_cav is not None:
+            return int(2 * self.n_cav)
+        if system is not None:
+            dim = system.hilbert_dimension(sequence=self)
+            if dim is not None:
+                return int(dim)
+        if model is not None and hasattr(model, "subsystem_dims"):
+            return int(np.prod(tuple(int(dim) for dim in model.subsystem_dims)))
+        for gate in self.gates:
+            if isinstance(gate, PrimitiveGate):
+                return int(gate.resolved_dimension(model=model, system=system))
+        raise ValueError("Could not infer GateSequence full Hilbert dimension.")
+
+    def resolve_n_cav(self, model: Any | None = None, system: Any | None = None) -> int:
+        if self.n_cav is not None:
+            return int(self.n_cav)
+        if system is not None:
+            n_cav = system.infer_n_cav(sequence=self, full_dim=self.full_dim)
+            if n_cav is not None:
+                return int(n_cav)
+        if model is not None and hasattr(model, "subsystem_dims"):
+            dims = tuple(int(dim) for dim in model.subsystem_dims)
+            if len(dims) >= 2 and dims[0] == 2:
+                return int(dims[1])
+        if self.full_dim is not None and int(self.full_dim) % 2 == 0:
+            return int(self.full_dim // 2)
+        raise ValueError("This gate sequence needs n_cav, but it could not be inferred.")
 
     def configure_time_parameters(
         self,
@@ -662,6 +1203,8 @@ class GateSequence:
         for gate_idx, gate in enumerate(self.gates):
             param = self.time_params[self._gate_time_param_indices[gate_idx]]
             gate.duration = float(param.value)
+            if isinstance(gate, PrimitiveGate):
+                gate.parameters["duration"] = float(param.value)
 
     def sync_time_params_from_gates(self) -> None:
         if not self.time_params:
@@ -681,24 +1224,50 @@ class GateSequence:
 
     def unitary(self, backend: str = "ideal", backend_settings: Mapping[str, Any] | None = None) -> np.ndarray:
         settings = dict(backend_settings or {})
+        system = settings.get("system")
+        model = settings.get("model")
+        full_dim = self.resolve_full_dim(model=model, system=system)
+        n_cav = self.resolve_n_cav(model=model, system=system) if any(not isinstance(gate, PrimitiveGate) for gate in self.gates) else -1
         self.sync_time_params_from_gates()
-        u = qt.tensor(qt.qeye(2), qt.qeye(self.n_cav))
+        u = np.eye(full_dim, dtype=np.complex128)
         for gate in self.gates:
             if backend == "pulse":
-                gate_u = gate.pulse_unitary(self.n_cav, **settings)
+                gate_u = gate.pulse_unitary(n_cav, **settings)
             elif backend == "ideal":
-                gate_u = gate.ideal_unitary(self.n_cav, scale_by_time=False, **settings)
+                gate_u = gate.ideal_unitary(n_cav, scale_by_time=False, **settings)
             else:
                 raise ValueError("backend must be 'ideal' or 'pulse'.")
-            u = gate_u * u
-        return np.asarray(u.full(), dtype=np.complex128)
+            u = _as_complex_array(gate_u) @ u
+        return np.asarray(u, dtype=np.complex128)
+
+    def propagate_states(
+        self,
+        states: list[qt.Qobj | np.ndarray],
+        *,
+        backend: str = "ideal",
+        backend_settings: Mapping[str, Any] | None = None,
+    ) -> list[qt.Qobj]:
+        settings = dict(backend_settings or {})
+        system = settings.get("system")
+        model = settings.get("model")
+        full_dim = self.resolve_full_dim(model=model, system=system)
+        if system is not None:
+            dims_raw = list(system.subsystem_dimensions(sequence=self, full_dim=full_dim))
+        else:
+            dims_raw = list(getattr(model, "subsystem_dims", (full_dim,)))
+        n_cav = self.resolve_n_cav(model=model, system=system) if any(not isinstance(gate, PrimitiveGate) for gate in self.gates) else -1
+        outputs = [_coerce_state_qobj(state, subsystem_dims=dims_raw) for state in states]
+        for gate in self.gates:
+            outputs = gate.propagate_states(outputs, n_cav, backend=backend, **settings)
+        return outputs
 
     def serialize(self) -> list[dict[str, Any]]:
         self.sync_time_params_from_gates()
         rows = []
+        n_cav = self.n_cav if self.n_cav is not None else -1
         for gate_idx, gate in enumerate(self.gates):
             row = gate.to_record()
-            row["parameters"] = gate.get_parameters(self.n_cav).tolist()
+            row["parameters"] = gate.get_parameters(n_cav).tolist()
             row["time_param_id"] = self.time_params[self._gate_time_param_indices[gate_idx]].param_id
             rows.append(row)
         return rows
@@ -708,6 +1277,8 @@ class GateSequence:
 
     def phase_decomposition(self, n_match: int | None = None) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
+        if self.n_cav is None:
+            return rows
         for gate in self.gates:
             row = gate.phase_decomposition(self.n_cav, n_match=n_match)
             if row is not None:
@@ -716,26 +1287,36 @@ class GateSequence:
 
     def parameter_layout(self) -> list[tuple[int, str, int]]:
         layout: list[tuple[int, str, int]] = []
+        n_cav = self.n_cav if self.n_cav is not None else -1
         for i, gate in enumerate(self.gates):
-            for j, name in enumerate(gate.parameter_names(self.n_cav)):
+            for j, name in enumerate(gate.parameter_names(n_cav)):
                 layout.append((i, name, j))
         return layout
 
     def get_parameter_vector(self) -> np.ndarray:
-        chunks = [gate.get_parameters(self.n_cav) for gate in self.gates]
+        n_cav = self.n_cav if self.n_cav is not None else -1
+        chunks = [gate.get_parameters(n_cav) for gate in self.gates]
         if not chunks:
             return np.asarray([], dtype=float)
         return np.concatenate(chunks)
 
     def set_parameter_vector(self, values: np.ndarray) -> None:
         values = np.asarray(values, dtype=float)
+        n_cav = self.n_cav if self.n_cav is not None else -1
         offset = 0
         for gate in self.gates:
-            count = gate.get_parameters(self.n_cav).size
-            gate.set_parameters(values[offset : offset + count], self.n_cav)
+            count = gate.get_parameters(n_cav).size
+            gate.set_parameters(values[offset : offset + count], n_cav)
             offset += count
         if offset != values.size:
             raise ValueError("Parameter vector length mismatch.")
+
+    def parameter_bounds_vector(self) -> list[tuple[float, float]]:
+        n_cav = self.n_cav if self.n_cav is not None else -1
+        bounds: list[tuple[float, float]] = []
+        for gate in self.gates:
+            bounds.extend(gate.parameter_bounds_vector(n_cav))
+        return bounds
 
     def active_time_params(self) -> list[GateTimeParam]:
         return [p for p in self.time_params if p.active]

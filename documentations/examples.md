@@ -5,26 +5,29 @@ This page indexes the repository-side assets that remain in `examples/`.
 The primary guided learning path no longer lives here. Use the top-level `tutorials/` curriculum for numbered notebook walkthroughs, starting with:
 
 - `tutorials/README.md`
-- `tutorials/00_tutorial_index.ipynb`
+- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
+- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
 
 ---
 
 ## Top-Level Standalone Scripts
 
-| Script | Description |
-|---|---|
-| `protocol_style_simulation.py` | Direct prepare -> compile -> simulate -> measure workflow using stable library primitives |
-| `kerr_free_evolution.py` | Standalone Kerr free-evolution script built on low-level `cqed_sim` primitives |
-| `kerr_sign_verification.py` | Kerr-sign diagnostic companion to the Kerr workflow |
-| `sequential_sideband_reset.py` | Sequential sideband-reset recipe for the explicit three-mode model |
-| `displacement_qubit_spectroscopy.py` | Standalone displacement-plus-spectroscopy script using the current SI-style runtime convention |
-| `sideband_swap_demo.py` | Basic sideband swap between transmon and storage |
-| `sideband_swap.py` | Extended sideband swap workflow |
-| `detuned_sideband_sync_demo.py` | Detuned sideband synchronization |
-| `shelving_isolation_demo.py` | Shelving isolation with multilevel sideband |
-| `open_system_sideband_degradation.py` | Sideband performance under open-system noise |
-| `multimode_crosskerr_demo.py` | Multi-mode cross-Kerr interaction demo |
-| `ringdown_noise.py` | Cavity ringdown with noise |
+| Script | Description | Notebook companion |
+|---|---|---|
+| `protocol_style_simulation.py` | Direct prepare -> compile -> simulate -> measure workflow using stable library primitives | `tutorials/00_getting_started/01_protocol_style_simulation.ipynb` |
+| `kerr_free_evolution.py` | Standalone Kerr free-evolution script built on low-level `cqed_sim` primitives | `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb` |
+| `kerr_sign_verification.py` | Kerr-sign diagnostic companion to the Kerr workflow | `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb` |
+| `sequential_sideband_reset.py` | Sequential sideband-reset recipe for the explicit three-mode model | `tutorials/20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb` |
+| `displacement_qubit_spectroscopy.py` | Standalone displacement-plus-spectroscopy script using the current SI-style runtime convention | `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb` |
+| `sideband_swap_demo.py` | Basic sideband swap between transmon and storage | `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb` |
+| `sideband_swap.py` | Compatibility wrapper around the sideband swap demo | `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb` |
+| `detuned_sideband_sync_demo.py` | Detuned sideband synchronization | `tutorials/20_bosonic_and_sideband/02_detuned_sideband_synchronization.ipynb` |
+| `shelving_isolation_demo.py` | Shelving isolation with multilevel sideband | `tutorials/20_bosonic_and_sideband/04_shelving_isolation.ipynb` |
+| `open_system_sideband_degradation.py` | Sideband performance under open-system noise | `tutorials/30_advanced_protocols/02_open_system_sideband_degradation.ipynb` |
+| `multimode_crosskerr_demo.py` | Multi-mode cross-Kerr interaction demo | `tutorials/30_advanced_protocols/01_multimode_crosskerr.ipynb` |
+| `run_snap_optimization_demo.py` | SNAP optimization demo using repo-side study helpers | `tutorials/30_advanced_protocols/04_snap_optimization_workflow.ipynb` |
+| `unitary_synthesis_demo.py` | Target-unitary synthesis inside a qubit-cavity subspace | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
+| `ringdown_noise.py` | Cavity ringdown with noise | retained as a compact standalone diagnostic script |
 
 ---
 

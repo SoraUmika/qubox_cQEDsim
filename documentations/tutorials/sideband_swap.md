@@ -2,7 +2,14 @@
 
 This tutorial demonstrates how to simulate a sideband transition — a common operation for transferring excitations between a transmon and a bosonic mode.
 
-For the current numbered notebook curriculum, see `tutorials/24_sideband_like_interactions.ipynb`. This page remains a topical summary, while the more elaborate standalone scripts stay under `examples/`.
+For the current workflow tutorial suite, start with:
+
+- `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb`
+- `tutorials/20_bosonic_and_sideband/02_detuned_sideband_synchronization.ipynb`
+- `tutorials/20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb`
+- `tutorials/20_bosonic_and_sideband/04_shelving_isolation.ipynb`
+
+The earlier numbered notebook `tutorials/24_sideband_like_interactions.ipynb` still remains useful as a broader curriculum summary.
 
 ---
 
@@ -130,8 +137,8 @@ A successful red sideband swap transfers $|e, 0\rangle \to |g, 1\rangle$, with t
 
 ## Existing Examples
 
-- `examples/sideband_swap_demo.py` — basic sideband swap
-- `examples/sideband_swap.py` — extended sideband workflow
-- `examples/detuned_sideband_sync_demo.py` — detuned sideband synchronization
-- `examples/shelving_isolation_demo.py` — shelving with multilevel sideband
-- `examples/open_system_sideband_degradation.py` — sideband with open-system noise
+- `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb` — basic sideband swap
+- `tutorials/20_bosonic_and_sideband/02_detuned_sideband_synchronization.ipynb` — detuned sideband synchronization
+- `tutorials/20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb` — sequential storage reset
+- `tutorials/20_bosonic_and_sideband/04_shelving_isolation.ipynb` — shelving with a multilevel sideband
+- `tutorials/30_advanced_protocols/02_open_system_sideband_degradation.ipynb` — sideband with open-system noise

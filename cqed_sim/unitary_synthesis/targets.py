@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 import qutip as qt
 
 from cqed_sim.core.conventions import qubit_cavity_block_indices
 from cqed_sim.core.ideal_gates import qubit_rotation_xy
+from .subspace import Subspace
 
 
 def _full_dim(n_match: int) -> int:
@@ -30,12 +32,7 @@ def _conditional_z(phases: np.ndarray) -> np.ndarray:
     return out
 
 
-def _qubit_rot(theta: float, phi: float, n_cav: int) -> np.ndarray:
-    return np.asarray(qt.tensor(qubit_rotation_xy(theta, phi), qt.qeye(n_cav)).full(), dtype=np.complex128)
-
-
 def _expand_unitary_qc(uni: np.ndarray, dim_q: int, dim_b: int, dim_c: int) -> np.ndarray:
-    """Embed a small qubit⊗bond unitary into qubit⊗cavity space."""
     new_dim = dim_q * dim_c
     new_indices = [dim_c * iq + jb for iq in range(dim_q) for jb in range(dim_b)]
     expanded = np.eye(new_dim, dtype=np.complex128)
@@ -46,7 +43,6 @@ def _expand_unitary_qc(uni: np.ndarray, dim_q: int, dim_b: int, dim_c: int) -> n
 
 
 def _ghz_reference_target(n_cav: int) -> np.ndarray:
-    # Noah reference: cnot(N=2, control=1, target=0), expanded in qubit⊗cavity.
     cnot_ctrl1_tgt0 = np.array(
         [
             [1.0, 0.0, 0.0, 0.0],
@@ -60,14 +56,6 @@ def _ghz_reference_target(n_cav: int) -> np.ndarray:
 
 
 def _cluster_reference_target(n_cav: int, which: str = "u1") -> np.ndarray:
-    """Noah reference cluster unitary in qubit⊗cavity ordering.
-
-    The reference in `unitary_util.py` is built in qubit⊗cavity order as:
-      U1 = SWAP @ CZ @ (H ⊗ I)
-      U2 = (Ry(pi/2) ⊗ I) @ U1
-
-    `test_decomp.ipynb` uses `U1` as the cluster decomposition target, so that is the default.
-    """
     cz = np.diag([1.0, 1.0, 1.0, -1.0]).astype(np.complex128)
     sw = np.array(
         [
@@ -108,6 +96,236 @@ def _default_reference_root() -> Path | None:
     return None
 
 
+def _validate_unitary_matrix(matrix: np.ndarray, *, atol: float = 1.0e-8) -> np.ndarray:
+    arr = np.asarray(matrix, dtype=np.complex128)
+    if arr.ndim != 2 or arr.shape[0] != arr.shape[1]:
+        raise ValueError("Target matrices must be square.")
+    ident = np.eye(arr.shape[0], dtype=np.complex128)
+    if np.linalg.norm(arr.conj().T @ arr - ident, ord="fro") > atol:
+        raise ValueError("Target matrix is not unitary within tolerance.")
+    return arr
+
+
+def _as_state_qobj(state: qt.Qobj | np.ndarray, *, full_dim: int, subspace: Subspace | None = None) -> qt.Qobj:
+    if isinstance(state, qt.Qobj):
+        obj = state
+        source_dims = obj.dims
+    else:
+        arr = np.asarray(state, dtype=np.complex128)
+        if arr.ndim == 1:
+            obj = qt.Qobj(arr.reshape(-1))
+        elif arr.ndim == 2:
+            obj = qt.Qobj(arr)
+        else:
+            raise ValueError("State targets must be vectors or density matrices.")
+        source_dims = None
+
+    if obj.isket or (obj.shape[1] == 1 and obj.shape[0] > 1):
+        vec = np.asarray(obj.full(), dtype=np.complex128).reshape(-1)
+        if subspace is not None and vec.size == subspace.dim:
+            vec = subspace.embed(vec)
+        if vec.size != full_dim:
+            raise ValueError(f"State vector has dimension {vec.size}, expected {full_dim}.")
+        norm = np.linalg.norm(vec)
+        if norm > 0.0:
+            vec = vec / norm
+        dims = source_dims if source_dims is not None and int(np.prod(source_dims[0])) == full_dim else [[full_dim], [1]]
+        return qt.Qobj(vec.reshape(-1), dims=dims)
+
+    matrix = np.asarray(obj.full(), dtype=np.complex128)
+    if subspace is not None and matrix.shape == (subspace.dim, subspace.dim):
+        embedded = np.zeros((full_dim, full_dim), dtype=np.complex128)
+        idx = np.asarray(subspace.indices, dtype=int)
+        embedded[np.ix_(idx, idx)] = matrix
+        matrix = embedded
+    if matrix.shape != (full_dim, full_dim):
+        raise ValueError(f"State operator has shape {matrix.shape}, expected {(full_dim, full_dim)}.")
+    dims = source_dims if source_dims is not None and int(np.prod(source_dims[0])) == full_dim else [[full_dim], [full_dim]]
+    return qt.Qobj(matrix, dims=dims)
+
+
+def _expand_target_matrix(matrix: np.ndarray, *, full_dim: int, subspace: Subspace | None) -> np.ndarray:
+    arr = np.asarray(matrix, dtype=np.complex128)
+    if arr.shape == (full_dim, full_dim):
+        return arr
+    if subspace is not None and arr.shape == (subspace.dim, subspace.dim):
+        embedded = np.eye(full_dim, dtype=np.complex128)
+        idx = np.asarray(subspace.indices, dtype=int)
+        embedded[np.ix_(idx, idx)] = arr
+        return embedded
+    raise ValueError(f"Target matrix shape {arr.shape} does not match full_dim={full_dim} or subspace dim.")
+
+
+def _default_probe_states(
+    *,
+    full_dim: int,
+    subspace: Subspace | None,
+    strategy: str,
+) -> list[qt.Qobj]:
+    if subspace is None:
+        base_dim = full_dim
+        basis_vectors = [qt.Qobj(np.eye(base_dim, dtype=np.complex128)[:, i], dims=[[full_dim], [1]]) for i in range(base_dim)]
+    else:
+        base_dim = subspace.dim
+        basis_vectors = []
+        for i in range(base_dim):
+            vec = np.zeros(base_dim, dtype=np.complex128)
+            vec[i] = 1.0
+            basis_vectors.append(qt.Qobj(subspace.embed(vec), dims=[[full_dim], [1]]))
+
+    lowered = str(strategy).lower()
+    if lowered == "basis":
+        return basis_vectors
+
+    if lowered == "basis_plus_uniform":
+        uniform = np.ones(base_dim, dtype=np.complex128) / np.sqrt(base_dim)
+        if subspace is not None:
+            uniform = subspace.embed(uniform)
+        basis_vectors.append(qt.Qobj(uniform, dims=[[full_dim], [1]]))
+        return basis_vectors
+
+    if lowered == "basis_plus_blocks":
+        if subspace is None:
+            return basis_vectors
+        blocks = subspace.per_fock_blocks() if subspace.kind == "qubit_cavity_block" else [slice(0, subspace.dim)]
+        for block in blocks:
+            vec_sub = np.zeros(subspace.dim, dtype=np.complex128)
+            vec_sub[block] = 1.0 / np.sqrt(max(block.stop - block.start, 1))
+            basis_vectors.append(qt.Qobj(subspace.embed(vec_sub), dims=[[full_dim], [1]]))
+        return basis_vectors
+
+    raise ValueError(f"Unsupported open-system probe strategy '{strategy}'.")
+
+
+@dataclass(frozen=True)
+class TargetUnitary:
+    matrix: np.ndarray
+    ignore_global_phase: bool = False
+    allow_diagonal_phase: bool = False
+    phase_blocks: tuple[tuple[int, ...], ...] | None = None
+    probe_states: tuple[qt.Qobj | np.ndarray, ...] = field(default_factory=tuple)
+    open_system_probe_strategy: str = "basis_plus_uniform"
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "matrix", _validate_unitary_matrix(self.matrix))
+        if self.phase_blocks is not None:
+            normalized = tuple(tuple(int(idx) for idx in block) for block in self.phase_blocks)
+            object.__setattr__(self, "phase_blocks", normalized)
+        object.__setattr__(self, "probe_states", tuple(self.probe_states))
+
+    @property
+    def dim(self) -> int:
+        return int(self.matrix.shape[0])
+
+    def resolved_gauge(self, fallback: str = "global") -> str:
+        if self.phase_blocks:
+            return "block"
+        if self.allow_diagonal_phase:
+            return "diagonal"
+        if self.ignore_global_phase:
+            return "global"
+        return str(fallback)
+
+    def resolved_blocks(self, subspace: Subspace | None = None, fallback: str = "global") -> tuple[tuple[int, ...], ...] | None:
+        if self.phase_blocks:
+            return self.phase_blocks
+        if subspace is not None and self.resolved_gauge(fallback=fallback) == "block":
+            return tuple(tuple(range(block.start, block.stop)) for block in subspace.per_fock_blocks())
+        return None
+
+    def resolved_probe_pairs(
+        self,
+        *,
+        full_dim: int,
+        subspace: Subspace | None = None,
+    ) -> tuple[list[qt.Qobj], list[qt.Qobj]]:
+        if self.probe_states:
+            initial = [_as_state_qobj(state, full_dim=full_dim, subspace=subspace) for state in self.probe_states]
+        else:
+            strategy = self.open_system_probe_strategy
+            if self.allow_diagonal_phase:
+                strategy = "basis"
+            elif self.phase_blocks:
+                initial = _default_probe_states(full_dim=full_dim, subspace=subspace, strategy="basis")
+                if subspace is None:
+                    for block in self.phase_blocks:
+                        vec = np.zeros(full_dim, dtype=np.complex128)
+                        vec[list(block)] = 1.0 / np.sqrt(max(len(block), 1))
+                        initial.append(qt.Qobj(vec, dims=[[full_dim], [1]]))
+                else:
+                    for block in self.phase_blocks:
+                        vec_sub = np.zeros(subspace.dim, dtype=np.complex128)
+                        vec_sub[list(block)] = 1.0 / np.sqrt(max(len(block), 1))
+                        initial.append(qt.Qobj(subspace.embed(vec_sub), dims=[[full_dim], [1]]))
+            else:
+                initial = _default_probe_states(full_dim=full_dim, subspace=subspace, strategy=strategy)
+
+        target_full = _expand_target_matrix(self.matrix, full_dim=full_dim, subspace=subspace)
+        outputs: list[qt.Qobj] = []
+        for state in initial:
+            if state.isoper:
+                rho = np.asarray(state.full(), dtype=np.complex128)
+                evolved = target_full @ rho @ target_full.conj().T
+                outputs.append(qt.Qobj(evolved, dims=state.dims))
+            else:
+                vec = np.asarray(state.full(), dtype=np.complex128).reshape(-1)
+                evolved = target_full @ vec
+                outputs.append(qt.Qobj(evolved.reshape(-1), dims=state.dims))
+        return initial, outputs
+
+
+class TargetStateMapping:
+    def __init__(
+        self,
+        *,
+        initial_states: Sequence[qt.Qobj | np.ndarray] | None = None,
+        target_states: Sequence[qt.Qobj | np.ndarray] | None = None,
+        initial_state: qt.Qobj | np.ndarray | None = None,
+        target_state: qt.Qobj | np.ndarray | None = None,
+        weights: Sequence[float] | None = None,
+    ) -> None:
+        if initial_state is not None or target_state is not None:
+            if initial_states is not None or target_states is not None:
+                raise ValueError("Use either singular or plural state-mapping arguments, not both.")
+            initial_states = [] if initial_state is None else [initial_state]
+            target_states = [] if target_state is None else [target_state]
+
+        if initial_states is None or target_states is None:
+            raise ValueError("TargetStateMapping requires initial_states and target_states.")
+        if len(initial_states) == 0 or len(target_states) == 0:
+            raise ValueError("TargetStateMapping requires at least one initial/target state pair.")
+        if len(initial_states) != len(target_states):
+            raise ValueError("initial_states and target_states must have the same length.")
+
+        self.initial_states = tuple(initial_states)
+        self.target_states = tuple(target_states)
+        if weights is None:
+            self.weights = tuple(1.0 for _ in self.initial_states)
+        else:
+            if len(weights) != len(self.initial_states):
+                raise ValueError("weights length must match the number of state pairs.")
+            self.weights = tuple(float(w) for w in weights)
+
+    def resolved_pairs(self, *, full_dim: int, subspace: Subspace | None = None) -> tuple[list[qt.Qobj], list[qt.Qobj], np.ndarray]:
+        initial = [_as_state_qobj(state, full_dim=full_dim, subspace=subspace) for state in self.initial_states]
+        targets = [_as_state_qobj(state, full_dim=full_dim, subspace=subspace) for state in self.target_states]
+        weights = np.asarray(self.weights, dtype=float)
+        if np.sum(weights) <= 0.0:
+            raise ValueError("State-mapping weights must sum to a positive value.")
+        return initial, targets, weights / np.sum(weights)
+
+
+SynthesisTarget = TargetUnitary | TargetStateMapping
+
+
+def coerce_target(target: SynthesisTarget | np.ndarray | qt.Qobj) -> SynthesisTarget:
+    if isinstance(target, (TargetUnitary, TargetStateMapping)):
+        return target
+    if isinstance(target, qt.Qobj):
+        return TargetUnitary(np.asarray(target.full(), dtype=np.complex128))
+    return TargetUnitary(np.asarray(target, dtype=np.complex128))
+
+
 def make_easy_target(n_match: int) -> np.ndarray:
     n_cav = n_match + 1
     theta = np.linspace(0.1, 0.7, n_cav)
@@ -122,11 +340,6 @@ def make_easy_target(n_match: int) -> np.ndarray:
 
 
 def make_mps_like_target(kind: str, n_match: int, **kwargs: Any) -> np.ndarray:
-    """Construct a consistent ancilla(qubit)+memory(cavity) target.
-
-    Mapping convention used here: cavity Fock level n encodes the discrete memory/bond index
-    of an MPS sequential unitary, truncated to n=0..n_match. The qubit is the ancilla.
-    """
     n_cav = n_match + 1
     if kind == "ghz":
         return _ghz_reference_target(n_cav)

@@ -1,6 +1,8 @@
 # Tutorial: Kerr Free Evolution
 
-The primary guided notebook for this topic is now `tutorials/14_kerr_free_evolution.ipynb`.
+The primary guided workflow notebook for this topic is now `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`.
+
+The earlier foundations notebook `tutorials/14_kerr_free_evolution.ipynb` still remains useful as a broader curriculum stop.
 
 This page keeps a compact topical summary and points to the related standalone scripts.
 
@@ -10,7 +12,8 @@ This page keeps a compact topical summary and points to the related standalone s
 
 Use the guided notebook and the related repo-side scripts:
 
-- `tutorials/14_kerr_free_evolution.ipynb`
+- `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`
+- `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
 - `examples/workflows/kerr_free_evolution.py`
 - `examples/kerr_free_evolution.py`
 - `examples/kerr_sign_verification.py`
@@ -57,4 +60,4 @@ rho_c = reduced_cavity_state(initial_state)
 xvec, yvec, wigner = cavity_wigner(rho_c)
 ```
 
-For the full guided walkthrough, use `tutorials/14_kerr_free_evolution.ipynb`. For a compact executable script, use the example workflow module or standalone script.
+For the full guided walkthrough, use `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`. For the sign-check companion, use `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`. For a compact executable script, use the example workflow module or standalone script.

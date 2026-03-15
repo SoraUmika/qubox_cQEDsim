@@ -386,11 +386,13 @@ The recommended library path is:
 For the guided learning path, start in `tutorials/`:
 
 - `tutorials/README.md`
-- `tutorials/00_tutorial_index.ipynb`
-- `tutorials/01_getting_started_minimal_dispersive_model.ipynb`
-- `tutorials/02_units_frames_and_conventions.ipynb`
-- `tutorials/06_qubit_spectroscopy.ipynb`
-- `tutorials/25_small_calibration_workflow_end_to_end.ipynb`
+- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
+- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
+- `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`
+- `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb`
+- `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
+
+The earlier flat numbered curriculum under `tutorials/*.ipynb` is still available as a broader API/conventions primer, but the categorized workflow suite above is now the notebook-first entry point for the migrated example programs.
 
 Standalone repo-side scripts still live in `examples/`:
 
@@ -546,10 +548,20 @@ Reusable tomography entry points:
 Unitary-synthesis entry points:
 
 - `Subspace.qubit_cavity_block(...)`
+- `QuantumSystem`
+- `CQEDSystemAdapter(...)`
+- `PrimitiveGate(...)`
+- `TargetUnitary(...)`
+- `TargetStateMapping(...)`
+- `SynthesisConstraints(...)`
+- `LeakagePenalty(...)`
+- `MultiObjective(...)`
+- `ParameterDistribution(...)`
 - `make_target(...)`
 - `UnitarySynthesizer(...).fit(...)`
+- `UnitarySynthesizer(...).explore_pareto(...)`
 
-`cqed_sim/unitary_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. The remaining sign distinction users need to track is the pulse waveform convention: `Pulse.carrier = -omega_transition(frame)`.
+`cqed_sim/unitary_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. Matrix-defined primitives, target-state mappings, and model-backed waveform primitives all route through that same convention set. The synthesizer now talks to a backend `QuantumSystem` interface, with `CQEDSystemAdapter(...)` preserving the existing cQED model workflow while preparing the architecture for future non-cQED systems. Phase 2 adds constraint-aware objectives, leakage-aware/noisy synthesis, robust parameter-distribution sampling, Pareto exploration, warm starts, and result export on top of that same runtime model stack. The remaining sign distinction users need to track is the pulse waveform convention: `Pulse.carrier = -omega_transition(frame)`.
 
 ## What stays in `examples/`
 
@@ -579,6 +591,14 @@ Use `examples/` for those:
 These are example or study APIs, not part of the canonical `cqed_sim` library surface.
 
 Use `tutorials/` when you want the supported user-facing learning path.
+
+For the migrated workflow-tutorial suite, the main starting points are:
+
+- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
+- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
+- `tutorials/20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb`
+- `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
+- `tutorials/TUTORIAL_MIGRATION_PLAN.md`
 
 ## Tests
 

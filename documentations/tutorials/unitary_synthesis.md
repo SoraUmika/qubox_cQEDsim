@@ -1,157 +1,142 @@
 # Tutorial: Unitary Synthesis
 
-This tutorial demonstrates how to use `cqed_sim`'s unitary synthesis module to find gate sequences that implement target unitaries within a qubit–cavity subspace.
+The main workflow notebook is:
 
-Unlike the numbered notebook curriculum under `tutorials/`, this page documents an advanced workflow area that still primarily lives in repo-side study material.
+- `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
+
+Phase 2 extends that notebook beyond the original matrix-vs-waveform examples and adds four realistic synthesis patterns:
+
+1. constraint-limited optimization
+2. leakage-aware synthesis
+3. robust synthesis under model uncertainty
+4. multi-objective / Pareto exploration
 
 ---
 
-## Overview
-
-Unitary synthesis optimizes a sequence of primitive gates (Displacement, Rotation, SQR, SNAP) to approximate a desired unitary transformation. The optimization is gradient-free and operates within a defined subspace of the full Hilbert space.
-
----
-
-## Step 1: Define the Subspace
+## Workflow 1: Constraint-Limited Unitary Synthesis
 
 ```python
-from cqed_sim.unitary_synthesis import Subspace
+from cqed_sim.unitary_synthesis import (
+    MultiObjective,
+    PrimitiveGate,
+    SynthesisConstraints,
+    TargetUnitary,
+    UnitarySynthesizer,
+)
 
-# Qubit–cavity block: |g,0⟩, |e,0⟩, |g,1⟩, |e,1⟩, |g,2⟩, |e,2⟩, |g,3⟩, |e,3⟩
-sub = Subspace.qubit_cavity_block(n_match=3)
-```
-
-### Subspace Types
-
-| Factory | Basis States | Use Case |
-|---|---|---|
-| `Subspace.qubit_cavity_block(n_match)` | $\|g,0\rangle$, $\|e,0\rangle$, ..., $\|g,n\rangle$, $\|e,n\rangle$ | Full qubit–cavity |
-| `Subspace.cavity_only(n_match, qubit="g")` | $\|g,0\rangle$, $\|g,1\rangle$, ..., $\|g,n\rangle$ | Cavity subspace for fixed qubit |
-| `Subspace.custom(full_dim, indices)` | User-specified | Arbitrary subspace |
-
----
-
-## Step 2: Define the Target
-
-```python
-from cqed_sim.unitary_synthesis import make_target
-
-target = make_target("easy", n_match=3)
-```
-
-Available targets:
-
-| Name | Description |
-|---|---|
-| `"easy"` | Simple target for testing |
-| `"ghz"` | GHZ-like entangling unitary |
-| `"cluster"` | Cluster-state unitary |
-
----
-
-## Step 3: Run the Optimizer
-
-```python
-from cqed_sim.unitary_synthesis import UnitarySynthesizer
+primitive = PrimitiveGate(
+    name="ry",
+    duration=40e-9,
+    matrix=lambda params, model: build_unitary(params["theta"]),
+    parameters={"theta": 0.2, "duration": 40e-9},
+    parameter_bounds={"theta": (-np.pi, np.pi), "duration": (20e-9, 100e-9)},
+    hilbert_dim=2,
+)
 
 synth = UnitarySynthesizer(
-    subspace=sub,
-    backend="ideal",              # "ideal" for ideal gate unitaries
-    leakage_weight=0.01,          # Penalize leakage out of subspace
-    optimize_times=True,          # Also optimize gate durations
+    primitives=[primitive],
+    target=TargetUnitary(U_target, ignore_global_phase=True),
+    synthesis_constraints=SynthesisConstraints(max_duration=60e-9),
+    objectives=MultiObjective(fidelity_weight=1.0, duration_weight=0.1),
 )
 
-result = synth.fit(
-    target,
-    init_guess="heuristic",
-    multistart=4,                 # Multiple random restarts
-    maxiter=300,
-)
+result = synth.fit(maxiter=200)
 ```
+
+This is the right entry point when you want a hard or penalized bound on total duration, amplitude, or forbidden parameter regions.
 
 ---
 
-## Step 4: Inspect Results
+## Workflow 2: Leakage-Aware and Open-System State Mapping
 
 ```python
-print(f"Success: {result.success}")
-print(f"Objective: {result.objective:.6f}")
-print(f"Total duration: {result.sequence.total_duration():.3e} s")
-
-# Gate sequence
-for gate in result.sequence.gates:
-    print(f"  {gate}")
-```
-
-### Fidelity Metric
-
-The objective is:
-
-$$L = (1 - F_{\text{subspace}}) + \lambda_L \cdot \text{leakage}_{\text{worst}} + \lambda_t \cdot \text{time\_reg}$$
-
-where $F_{\text{subspace}}$ is the phase-invariant subspace unitary fidelity.
-
----
-
-## Drift Phase Model
-
-The synthesis accounts for dispersive and Kerr drift phases accumulated during gate idle times:
-
-```python
-synth = UnitarySynthesizer(
-    subspace=sub,
-    drift_config={
-        "chi": 2 * np.pi * (-2.84e6),
-        "kerr": 2 * np.pi * (-2e3),
-    },
+from cqed_sim.sim import NoiseSpec
+from cqed_sim.unitary_synthesis import (
+    CQEDSystemAdapter,
+    LeakagePenalty,
+    MultiObjective,
+    PrimitiveGate,
+    TargetStateMapping,
+    UnitarySynthesizer,
 )
-```
 
-The drift convention is aligned with the runtime Hamiltonian: $\chi_{\text{synth}} = \chi_{\text{runtime}}$.
-
----
-
-## Constraints
-
-### Time Grid Quantization
-
-```python
-synth = UnitarySynthesizer(
-    ...,
-    time_grid={"dt": 4e-9, "mode": "round"},
-)
-```
-
-### Tone Spacing
-
-```python
-synth = UnitarySynthesizer(
-    ...,
-    constraints={
-        "tone_spacing": {"domega_min": 2 * np.pi * 1e6},
-    },
-)
-```
-
----
-
-## Progress Reporting
-
-```python
-from cqed_sim.unitary_synthesis import HistoryReporter, plot_history
+system = CQEDSystemAdapter(model=my_cqed_model)
 
 synth = UnitarySynthesizer(
-    ...,
-    progress={"reporter": "history"},
+    system=system,
+    backend="pulse",
+    primitives=[waveform_primitive],
+    target=TargetStateMapping(initial_state=psi0, target_state=phi0),
+    leakage_penalty=LeakagePenalty(weight=0.2),
+    objectives=MultiObjective(fidelity_weight=1.0, leakage_weight=0.2),
+    simulation_options={"noise": NoiseSpec(t1=40e-6, tphi=30e-6), "dt": 2e-9},
 )
 
-result = synth.fit(target)
-plot_history(result.history)
+result = synth.fit(maxiter=200)
 ```
+
+This path is the recommended notebook interface for dissipative state preparation and leakage-sensitive bosonic control problems.
 
 ---
 
-## Existing Example
+## Workflow 3: Robust Optimization Under Parameter Uncertainty
 
-- `examples/unitary_synthesis_demo.py` — complete synthesis workflow
-- `examples/run_snap_optimization_demo.py` — SNAP gate optimization
+```python
+from cqed_sim.unitary_synthesis import (
+    CQEDSystemAdapter,
+    MultiObjective,
+    Normal,
+    ParameterDistribution,
+    UnitarySynthesizer,
+)
+
+system = CQEDSystemAdapter(model=my_cqed_model)
+
+synth = UnitarySynthesizer(
+    system=system,
+    backend="pulse",
+    primitives=[waveform_primitive],
+    target=target,
+    objectives=MultiObjective(fidelity_weight=1.0, robustness_weight=1.0),
+    parameter_distribution=ParameterDistribution(
+        sample_count=4,
+        aggregate="mean",
+        chi=Normal(-2.8e6, 0.05e6),
+    ),
+)
+
+result = synth.fit(maxiter=200)
+```
+
+The synthesizer evaluates sampled model variants during optimization and records the robustness summary in `result.report["robustness"]`.
+
+---
+
+## Workflow 4: Pareto Exploration
+
+```python
+front = synth.explore_pareto(
+    [
+        MultiObjective(fidelity_weight=1.0, duration_weight=0.0),
+        MultiObjective(fidelity_weight=1.0, duration_weight=0.2),
+        MultiObjective(fidelity_weight=1.0, duration_weight=0.5),
+    ],
+    maxiter=120,
+)
+```
+
+`ParetoFrontResult.results` contains every weighted run, and `ParetoFrontResult.nondominated()` returns the nondominated subset.
+
+---
+
+## Notebook Outputs
+
+The updated notebook now demonstrates:
+
+- defining a cQED model and primitive set
+- wrapping that model in `CQEDSystemAdapter(...)`
+- running a constrained unitary-target optimization
+- running leakage-aware noisy state-mapping synthesis
+- adding a `ParameterDistribution` for robustness
+- exporting and warm-starting a saved result
+- plotting convergence and inspecting a small Pareto front

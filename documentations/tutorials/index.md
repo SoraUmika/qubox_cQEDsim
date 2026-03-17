@@ -11,6 +11,7 @@ Start with:
 - `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
 - `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
 - `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb`
+- `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
 - `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
 
 ## Workflow Tutorial Taxonomy
@@ -22,7 +23,7 @@ Start with:
 - `tutorials/20_bosonic_and_sideband/`
   - sideband swap, detuned synchronization, sequential reset, and shelving
 - `tutorials/30_advanced_protocols/`
-  - cross-Kerr, open-system degradation, unitary synthesis, RL-ready hybrid control, and SNAP optimization
+  - cross-Kerr, open-system degradation, unitary synthesis, GRAPE optimal control, RL-ready hybrid control, and SNAP optimization
 - `tutorials/40_validation_and_conventions/`
   - convention-validation notebooks such as the Kerr sign check
 

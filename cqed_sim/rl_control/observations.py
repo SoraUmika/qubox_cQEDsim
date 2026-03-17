@@ -156,6 +156,10 @@ class HistoryObservationWrapper:
         observation_history = [] if observation_history is None else [np.asarray(obs, dtype=float) for obs in observation_history]
         previous = observation_history[-max(self.history_length - 1, 0) :]
         zero_obs = np.zeros_like(current)
+        previous = [
+            np.pad(vector.reshape(-1), (0, max(0, current.size - vector.size)), mode="constant")[: current.size]
+            for vector in previous
+        ]
         padded_observations = [zero_obs.copy() for _ in range(max(self.history_length - 1 - len(previous), 0))]
         padded_observations.extend(previous)
         stacked_observations = padded_observations + [current]

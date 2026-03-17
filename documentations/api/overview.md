@@ -35,6 +35,7 @@ This section provides a complete reference for the `cqed_sim` public API, organi
 | [`operators`](operators.md) | Pauli, cavity ladder, embedding helpers |
 | [`plotting`](plotting.md) | Bloch tracks, calibration, gate diagnostics, Wigner grids |
 | [`unitary_synthesis`](unitary_synthesis.md) | Subspace targeting, gate sequences, optimization, constraints |
+| [`optimal_control`](optimal_control.md) | Direct-control problems, piecewise-constant schedules, GRAPE, penalties, and waveform export |
 | [`quantum_algorithms.holographic_sim`](holographic_sim.md) | Generic holographic channel sampling, exact branch estimation, and MPS-inspired abstractions |
 
 ---

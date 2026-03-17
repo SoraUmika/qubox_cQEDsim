@@ -31,6 +31,7 @@ The primary guided learning path no longer lives here. Use the top-level `tutori
 | `unitary_synthesis_demo.py` | Target-unitary synthesis inside a qubit-cavity subspace | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
 | `unitary_synthesis_relevance_aware_optimizer.py` | Relevance-aware synthesis with observable, state-ensemble, and trajectory objectives plus accelerated ideal evaluation | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
 | `unitary_synthesis_flexible_target_actions.py` | Channel, reduced-state, and isometry target examples with truncation-aware diagnostics | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
+| `grape_storage_subspace_gate_demo.py` | Model-backed GRAPE optimization of a storage logical-subspace gate with pulse export and runtime replay | `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` |
 | `rl_hybrid_control_rollout.py` | Hybrid RL environment rollout with measurement-like observations, diagnostics, and domain-randomized evaluation | `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb` |
 | `ringdown_noise.py` | Cavity ringdown with noise | retained as a compact standalone diagnostic script |
 

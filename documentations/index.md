@@ -18,6 +18,7 @@
 - **Calibration targets** (spectroscopy, Rabi, Ramsey, T₁, T₂ echo, DRAG tuning)
 - **Fock-resolved tomography** and all-XY calibration protocols
 - **Unitary synthesis** for gate-sequence optimization in qubit–cavity subspaces
+- **Optimal control** for model-backed GRAPE waveform design with pulse-runtime replay
 - **Kerr free-evolution** workflows with Wigner-function snapshots
 
 ---
@@ -82,7 +83,7 @@ print(result.expectations)
 ## Key Abstractions
 
 | Concept | Primary Classes |
-|---|---|
+| --- | --- |
 | **System model** | `DispersiveTransmonCavityModel`, `DispersiveReadoutTransmonStorageModel`, `UniversalCQEDModel` |
 | **Rotating frame** | `FrameSpec` |
 | **Drive pulses** | `Pulse`, envelope functions, pulse builders |
@@ -91,6 +92,7 @@ print(result.expectations)
 | **State preparation** | `StatePreparationSpec`, `prepare_state()` |
 | **Measurement** | `QubitMeasurementSpec`, `measure_qubit()` |
 | **Readout model** | `ReadoutChain`, `ReadoutResonator`, `PurcellFilter`, `AmplifierChain` |
+| **Optimal control** | `ControlProblem`, `PiecewiseConstantTimeGrid`, `GrapeSolver`, `GrapeResult` |
 
 ---
 

@@ -18,6 +18,11 @@ REQUIRED_TOP_LEVEL_NAMES = [
     "DispersiveTransmonCavityModel",
     "DispersiveReadoutTransmonStorageModel",
     "UniversalCQEDModel",
+    # optimal control
+    "ControlProblem",
+    "PiecewiseConstantTimeGrid",
+    "GrapeSolver",
+    "solve_grape",
     # simulation core
     "SimulationConfig",
     "SimulationSession",

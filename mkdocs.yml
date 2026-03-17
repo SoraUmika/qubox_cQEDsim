@@ -78,6 +78,7 @@ nav:
       - Kerr Free Evolution: tutorials/kerr_free_evolution.md
       - Sideband Swap: tutorials/sideband_swap.md
       - Unitary Synthesis: tutorials/unitary_synthesis.md
+      - GRAPE Optimal Control: tutorials/optimal_control.md
       - RL Hybrid Control: tutorials/rl_hybrid_control.md
       - Holographic Quantum Algorithms: tutorials/holographic_quantum_algorithms.md
   - API Reference:
@@ -97,7 +98,8 @@ nav:
       - Plotting: api/plotting.md
       - Backends: api/backends.md
       - Unitary Synthesis: api/unitary_synthesis.md
-        - RL Control & System ID: api/rl_control.md
+      - Optimal Control: api/optimal_control.md
+      - RL Control & System ID: api/rl_control.md
       - Holographic Quantum Algorithms: api/holographic_sim.md
   - Examples: examples.md
   - Architecture: architecture.md

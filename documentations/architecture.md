@@ -25,6 +25,7 @@ cqed_sim/
 |-- plotting/             # Visualization (Bloch, calibration, gate diagnostics, Wigner)
 |-- tomo/                 # Fock-resolved tomography, all-XY calibration
 `-- unitary_synthesis/    # Subspace optimization, gate sequences, constraints
+`-- optimal_control/      # Direct-control problems, GRAPE, schedule export, and model-backed builders
 ```
 
 Guided notebook tutorials now live under the top-level `tutorials/` directory. Standalone scripts, audits, studies, and specialized workflow helpers live under `examples/`, not inside the import package.
@@ -84,6 +85,7 @@ The simulation engine:
 - `tomo` for tomography primitives
 - `observables` and `plotting` for diagnostics and visualization
 - `unitary_synthesis` for gate-sequence optimization
+- `optimal_control` for piecewise-constant direct-control optimization and GRAPE-based waveform design
 
 ---
 

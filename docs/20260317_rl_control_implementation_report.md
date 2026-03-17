@@ -94,7 +94,7 @@ The following targeted validation steps were completed during implementation:
 
 The validated script example produced representative output showing:
 
-- baseline total reward of about `0.9409`
+- baseline total reward of about `0.8225`
 - baseline state fidelity of about `0.99995`
 - held-out evaluation mean state fidelity of about `0.99782`
 

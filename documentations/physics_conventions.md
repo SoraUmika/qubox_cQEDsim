@@ -179,6 +179,22 @@ The RL-facing stack in `cqed_sim.rl_control` does not define a second simulator 
 
 ---
 
+## Optimal-Control Conventions
+
+The direct optimal-control layer in `cqed_sim.optimal_control` does not introduce a second Hamiltonian or waveform convention set. It reuses the same model operators, frame semantics, and pulse-runtime sign conventions already documented on this page.
+
+- All drift and control Hamiltonian coefficients remain in `rad/s`, and all slice durations remain in `s`.
+- The current backend is a dense closed-system GRAPE solver for piecewise-constant controls.
+- Model-backed control problems are built from the existing static Hamiltonian and drive-operator helpers rather than from a separate tensor-ordering or Hamiltonian-assembly path.
+- Exported rotating-frame controls use the same complex baseband convention as the pulse runtime:
+
+$$c(t) = I(t) - i Q(t)$$
+
+- That export rule is what makes the optimized real-valued Hermitian `I/Q` control channels replay correctly through standard `Pulse`, `SequenceCompiler`, and `simulate_sequence(...)` workflows.
+- Leakage penalties are defined relative to retained logical subspaces in the same truncated Hilbert space used by the rest of the simulator.
+
+---
+
 ## Energy Spectrum Reference
 
 `compute_energy_spectrum(...)` and `model.energy_spectrum(...)` diagonalize the

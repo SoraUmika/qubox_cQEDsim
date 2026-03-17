@@ -221,6 +221,47 @@ throughout the rest of \texttt{cqed\_sim}.
 Direct tests:
 \texttt{tests/test\_38\_rl\_control\_env.py}.
 
+\section{Optimal-Control Conventions}
+The direct optimal-control layer in \texttt{cqed\_sim/optimal\_control} is a
+wrapper around the existing model and pulse stack rather than a second control
+convention set. It therefore inherits the same Hamiltonian units, frame choices,
+tensor ordering, and drive-target semantics used elsewhere in the repository.
+
+\begin{itemize}[leftmargin=1.5em]
+  \item All drift and control Hamiltonian coefficients remain in rad/s, and all
+  slice durations remain in s.
+  \item The first backend is a dense closed-system GRAPE solver for
+  piecewise-constant controls. This is an implementation scope boundary, not a new
+  physics convention.
+  \item Model-backed control problems are built from the existing
+  \texttt{static\_hamiltonian(frame)} and drive-operator helpers such as
+  \texttt{drive\_coupling\_operators(...)},
+  \texttt{transmon\_transition\_operators(...)}, and
+  \texttt{sideband\_drive\_operators(...)}. The optimizer does not introduce a
+  separate tensor-ordering rule.
+  \item The Hermitian optimizer quadratures are labeled as in-phase and quadrature
+  controls, denoted here by \(I(t)\) and \(Q(t)\). When an optimized schedule is
+  exported back into the standard pulse stack, the complex rotating-frame baseband
+  coefficient is defined by
+  \[
+  c(t) = I(t) - i Q(t).
+  \]
+  This choice is what makes the exported \texttt{Pulse} objects reproduce the same
+  effective Hermitian control Hamiltonian used during optimization under the
+  repository's existing waveform sign convention.
+  \item Leakage penalties are defined relative to a retained subspace in the same
+  full Hilbert space used by the model and by the existing
+  \texttt{unitary\_synthesis} subspace machinery.
+  \item The solver may internally rescale optimization variables to dimensionless
+  bounded coordinates before calling the numerical optimizer. This is only a
+  numerical conditioning step; the public problem definition and all reported
+  physical amplitudes remain in rad/s.
+\end{itemize}
+
+\noindent
+Direct tests:
+\texttt{tests/test\_40\_optimal\_control\_grape.py}.
+
 \section{Physical Readout Chain}
 The physical readout-chain path models a driven dispersive resonator with optional
 Purcell filtering and additive amplifier noise. This section is an \emph{effective

@@ -64,6 +64,7 @@
     - 17.8 [Results and Metrics](#178-results-and-metrics)
 17A. [Holographic Quantum Algorithms (`cqed_sim.quantum_algorithms.holographic_sim`)](#17a-holographic-quantum-algorithms-cqed_simquantum_algorithmsholographic_sim)
 17B. [RL Control And System Identification (`cqed_sim.rl_control`, `cqed_sim.system_id`)](#17b-rl-control-and-system-identification-cqed_simrl_control-cqed_simsystem_id)
+17C. [Optimal Control (`cqed_sim.optimal_control`)](#17c-optimal-control-cqed_simoptimal_control)
 18. [Simulation Workflows / Common Usage Patterns](#18-simulation-workflows)
 19. [Physics-Facing API and Conventions](#19-physics-facing-api-and-conventions)
 20. [Notes on Internal Utilities](#20-notes-on-internal-utilities)
@@ -111,6 +112,7 @@ cqed_sim/
 ├── plotting/        # Bloch tracks, calibration, gate diagnostics, Wigner grids
 ├── tomo/            # Fock-resolved tomography, all-XY, leakage calibration
 ├── unitary_synthesis/  # Subspace targeting, gate sequences, optimization, constraints
+├── optimal_control/  # Direct-control problems, piecewise-constant schedules, GRAPE, penalties, pulse export
 └── quantum_algorithms/  # Generic holographic quantum-algorithm utilities
 ```
 
@@ -2821,6 +2823,210 @@ Approximation boundary:
 - The reduced regime is intended for faster RL iteration with dispersive/Kerr structure.
 - The full regime uses the generalized model stack for a richer multilevel pulse path.
 - Measurement-conditioned stochastic state updates and SME trajectories are not yet implemented in this first pass.
+
+---
+
+## 17C. Optimal Control (`cqed_sim.optimal_control`)
+
+The optimal-control package adds a solver-agnostic direct-control layer on top of the existing model, pulse, and simulator stack. The first backend is a dense closed-system GRAPE solver for piecewise-constant controls.
+
+The intended workflow is:
+
+1. Build a `ControlProblem` directly from dense operators or from an existing `cqed_sim` model.
+2. Define state-transfer and/or unitary objectives plus penalties.
+3. Solve with `GrapeSolver`.
+4. Export the optimized `ControlSchedule` back into standard `Pulse` objects.
+5. Replay through `SequenceCompiler` and `simulate_sequence(...)`.
+
+### Core Problem Objects
+
+```python
+ControlTerm(...)
+ControlSystem(...)
+ControlProblem(...)
+ModelControlChannelSpec(...)
+ModelEnsembleMember(...)
+```
+
+Highlights:
+
+- `ControlTerm` stores one Hermitian control operator, amplitude bounds, export metadata, and quadrature labeling.
+- `ControlSystem` holds the drift Hamiltonian plus the ordered control operators for one system member.
+- `ControlProblem` packages the parameterization, one or more `ControlSystem` members, objectives, penalties, and the ensemble aggregation mode.
+- `ModelControlChannelSpec` describes how model-level targets such as `"qubit"`, `"storage"`, `"readout"`, `"sideband"`, `TransmonTransitionDriveSpec(...)`, or `SidebandDriveSpec(...)` are converted into control terms.
+- `ModelEnsembleMember` supports robust optimization over multiple parameter-shifted systems.
+
+### Piecewise-Constant Parameterization
+
+```python
+PiecewiseConstantTimeGrid.uniform(steps=16, dt_s=4.0e-9)
+PiecewiseConstantParameterization(...)
+ControlSchedule(...)
+```
+
+Key behaviors:
+
+- controls are represented as a dense array of shape `(n_controls, n_slices)`
+- each slice is constant over its time interval
+- hard control bounds are tracked in the parameterization
+- schedules can be flattened/unflattened for optimizers
+- schedules can be exported into standard repository `Pulse` objects
+
+For exported rotating-frame pulses, the complex baseband coefficient follows the same runtime convention as the rest of `cqed_sim`:
+
+\[
+c(t) = I(t) - i Q(t).
+\]
+
+This is the compatibility bridge between the real-valued Hermitian quadrature Hamiltonians used inside the optimizer and the complex envelope convention used by the runtime pulse stack.
+
+### Objectives
+
+```python
+StateTransferPair(...)
+StateTransferObjective(...)
+UnitaryObjective(...)
+
+state_preparation_objective(...)
+multi_state_transfer_objective(...)
+objective_from_unitary_synthesis_target(...)
+```
+
+Supported task styles:
+
+- single-state preparation
+- multi-state transfer
+- retained-subspace gate synthesis
+- full truncated-space unitary synthesis
+- phase-tolerant subspace objectives compatible with the logical-gauge ideas already used by `cqed_sim.unitary_synthesis`
+
+`UnitaryObjective` evaluates unitary targets through weighted probe-state transfer pairs so the same machinery can represent direct full-space targets and restricted logical-subspace targets.
+
+### Penalties
+
+```python
+AmplitudePenalty(weight=..., reference=...)
+SlewRatePenalty(weight=...)
+LeakagePenalty(subspace=..., weight=..., metric="average")
+```
+
+The current penalty layer supports:
+
+- amplitude regularization,
+- finite-difference slew regularization across adjacent slices,
+- final-time leakage penalties outside a retained subspace.
+
+### Model Builders
+
+```python
+build_control_terms_from_model(...)
+build_control_system_from_model(...)
+build_control_problem_from_model(...)
+```
+
+These helpers reuse the existing model-layer drive operators and tensor-ordering conventions instead of introducing a separate Hamiltonian-construction path.
+
+### GRAPE Solver
+
+```python
+GrapeConfig(...)
+GrapeSolver(...)
+solve_grape(...)
+```
+
+Solver behavior:
+
+- dense closed-system propagation with exact matrix exponentials,
+- exact slice derivatives via `scipy.linalg.expm_frechet`,
+- ensemble aggregation with `"mean"` or `"worst"`,
+- support for explicit initial schedules or built-in zero/random initialization.
+
+Implementation note:
+
+- the solver internally rescales the physical control amplitudes into a dimensionless optimization vector using the configured bounds before calling SciPy. This preserves physical `rad/s` units in the public API while avoiding false optimizer stagnation caused by numerically tiny raw gradients on short time slices.
+
+### Results and Runtime Interoperability
+
+```python
+GrapeResult(...)
+GrapeIterationRecord(...)
+```
+
+`GrapeResult` stores:
+
+- the optimized `ControlSchedule`,
+- scalar objective / fidelity summaries,
+- per-system metrics,
+- iteration history,
+- optimizer status text,
+- the nominal final unitary when available.
+
+`GrapeResult.to_pulses()` exports the schedule into standard `Pulse` objects plus the corresponding `drive_ops` mapping so the optimized control can be replayed through the normal `SequenceCompiler` and `simulate_sequence(...)` path.
+
+### Minimal model-backed example
+
+```python
+import numpy as np
+
+from cqed_sim import (
+    DispersiveTransmonCavityModel,
+    FrameSpec,
+    GrapeConfig,
+    GrapeSolver,
+    ModelControlChannelSpec,
+    PiecewiseConstantTimeGrid,
+    UnitaryObjective,
+    build_control_problem_from_model,
+)
+from cqed_sim.unitary_synthesis import Subspace
+
+model = DispersiveTransmonCavityModel(
+    omega_c=2.0 * np.pi * 5.0e9,
+    omega_q=2.0 * np.pi * 6.0e9,
+    alpha=0.0,
+    chi=0.0,
+    kerr=0.0,
+    n_cav=2,
+    n_tr=2,
+)
+frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
+subspace = Subspace.custom(full_dim=4, indices=(0, 1), labels=("|g,0>", "|g,1>"))
+
+problem = build_control_problem_from_model(
+    model,
+    frame=frame,
+    time_grid=PiecewiseConstantTimeGrid.uniform(steps=1, dt_s=40.0e-9),
+    channel_specs=(
+        ModelControlChannelSpec(
+            name="storage_q",
+            target="storage",
+            quadratures=("Q",),
+            amplitude_bounds=(-1.0e8, 1.0e8),
+        ),
+    ),
+    objectives=(
+        UnitaryObjective(
+            target_operator=np.array(
+                [
+                    [np.cos(np.pi / 4.0), -np.sin(np.pi / 4.0)],
+                    [np.sin(np.pi / 4.0), np.cos(np.pi / 4.0)],
+                ],
+                dtype=np.complex128,
+            ),
+            subspace=subspace,
+            ignore_global_phase=True,
+        ),
+    ),
+)
+
+result = GrapeSolver(GrapeConfig(maxiter=80, seed=7)).solve(problem)
+pulses, drive_ops, meta = result.to_pulses()
+```
+
+Primary reference implementations:
+
+- `examples/grape_storage_subspace_gate_demo.py`
+- `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
 
 ---
 

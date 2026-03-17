@@ -1,0 +1,104 @@
+{
+  "task": "coherent_state_preparation",
+  "python_version": "3.12.10",
+  "initial_observation_shape": [
+    4
+  ],
+  "initial_randomization": {
+    "model": {
+      "chi": -14115451.40782667,
+      "kerr": -35934.61681930399
+    },
+    "noise": {},
+    "hardware": {},
+    "measurement": {
+      "iq_sigma": 0.05881259357011753
+    },
+    "drift": {
+      "storage_amplitude_scale": 1.0013511148705267
+    }
+  },
+  "baseline_reward": 0.9408655889590478,
+  "baseline_metrics": {
+    "state_fidelity": 0.9999510756767993,
+    "ancilla_return": 0.9999999999999997,
+    "leakage_average": 3.3306690738754696e-16,
+    "leakage_worst": 3.3306690738754696e-16,
+    "success": 1.0
+  },
+  "random_rollout_reward": 1.0852738228646657,
+  "evaluation_summary": {
+    "ancilla_return": {
+      "mean": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "max": 1.0,
+      "p05": 1.0,
+      "p50": 1.0,
+      "p95": 1.0
+    },
+    "leakage_average": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p05": 0.0,
+      "p50": 0.0,
+      "p95": 0.0
+    },
+    "leakage_worst": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "p05": 0.0,
+      "p50": 0.0,
+      "p95": 0.0
+    },
+    "state_fidelity": {
+      "mean": 0.9978197124183458,
+      "std": 0.0011886796815820141,
+      "min": 0.9964035888186915,
+      "max": 0.9996492905211324,
+      "p05": 0.9965359775061253,
+      "p50": 0.9976129851667797,
+      "p95": 0.9993928654827589
+    },
+    "success": {
+      "mean": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "max": 1.0,
+      "p05": 1.0,
+      "p50": 1.0,
+      "p95": 1.0
+    },
+    "reward": {
+      "mean": 0.9388151863788743,
+      "std": 0.0008446386774092691,
+      "min": 0.9380088448473167,
+      "max": 0.94014902557124,
+      "p05": 0.9380335883984838,
+      "p50": 0.9385514375484701,
+      "p95": 0.9399660327218304
+    }
+  },
+  "diagnostic_keys": [
+    "ancilla_populations",
+    "ancilla_return",
+    "channels",
+    "compiled_tlist",
+    "joint_state",
+    "measurement",
+    "metrics",
+    "model_class",
+    "parity",
+    "photon_number_distribution",
+    "randomization",
+    "reduced_cavity_state",
+    "reduced_qubit_state",
+    "subsystem_dims",
+    "wigner"
+  ],
+  "diagnostic_figure": "C:\\Users\\dazzl\\Box\\Shyam Shankar Quantum Circuits Group\\Users\\Users_JianJun\\cQED_simulation\\examples\\outputs\\rl_hybrid_control_rollout.png"
+}

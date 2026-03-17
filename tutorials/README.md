@@ -15,7 +15,8 @@ If you want the real-world workflow path first, use this order:
 4. `20_bosonic_and_sideband/01_sideband_swap.ipynb`
 5. `20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb`
 6. `30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
-7. `40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
+7. `30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
+8. `40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
 
 If you want the older foundations-first path, start with:
 
@@ -59,6 +60,8 @@ If you want the older foundations-first path, start with:
   - Target-unitary synthesis inside a qubit-cavity subspace.
 - `04_snap_optimization_workflow.ipynb`
   - Repo-side SNAP optimization study helper with an honest scope note.
+- `05_rl_hybrid_control_environment.ipynb`
+  - Hybrid bosonic-ancilla RL environment construction, measurement-like observations, diagnostics, and domain-randomized evaluation.
 
 ### `40_validation_and_conventions`
 

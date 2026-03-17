@@ -5,6 +5,7 @@ import qutip as qt
 
 from cqed_sim.unitary_synthesis.backends import simulate_sequence
 from cqed_sim.unitary_synthesis.sequence import (
+    CavityBlockPhase,
     ConditionalPhaseSQR,
     Displacement,
     DriftPhaseModel,
@@ -69,6 +70,34 @@ def test_c3_snap_diagonal_and_composition() -> None:
     g3 = SNAP(name="s3", phases=list((p1 + p2 + np.pi) % (2 * np.pi) - np.pi), duration=100e-9)
     u3 = np.asarray(g3.ideal_unitary(n_cav).full())
     assert np.allclose(np.abs(np.diag(u12)), np.abs(np.diag(u3)), atol=1e-12)
+
+
+def test_c3b_cavity_block_phase_targets_selected_blocks() -> None:
+    n_cav = 5
+    gate = CavityBlockPhase(name="bp", phases=[0.2, -0.45], fock_levels=(1, 3), duration=80e-9)
+    u = np.asarray(gate.ideal_unitary(n_cav).full())
+    for level in range(n_cav):
+        idx = [level, n_cav + level]
+        block = u[np.ix_(idx, idx)]
+        if level == 1:
+            expected = np.exp(1j * 0.2) * np.eye(2)
+        elif level == 3:
+            expected = np.exp(1j * -0.45) * np.eye(2)
+        else:
+            expected = np.eye(2)
+        assert np.allclose(block, expected, atol=1e-12)
+    report = gate.phase_decomposition(n_cav)
+    assert report is not None
+    assert report["realization"] == "ideal-only"
+
+
+def test_c3c_cavity_block_phase_ideal_backend_matches_gate() -> None:
+    sub = Subspace.qubit_cavity_block(n_match=2, n_cav=4)
+    gate = CavityBlockPhase(name="bp", phases=[0.0, 0.35], fock_levels=(0, 2), duration=60e-9)
+    seq = GateSequence(gates=[gate], n_cav=4)
+    res = simulate_sequence(seq, sub, backend="ideal")
+    target = np.asarray(gate.ideal_unitary(4).full())
+    assert np.allclose(res.full_operator, target, atol=1e-12)
 
 
 def test_c4_sqr_block_structure() -> None:

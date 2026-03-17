@@ -167,6 +167,18 @@ FrameSpec(
 
 ---
 
+## RL Wrapper Conventions
+
+The RL-facing stack in `cqed_sim.rl_control` does not define a second simulator convention set. It reuses the same runtime model, pulse, frame, measurement, and solver semantics as the rest of the package.
+
+- `HybridSystemConfig` keeps all Hamiltonian coefficients in `rad/s` and all durations in `s`.
+- When `use_model_rotating_frame=True` and the configured `FrameSpec` is left at zero, the environment convenience layer uses the model's bare storage and qubit frequencies as the rotating frame. This is a numerical convenience, not a new physical convention.
+- The reduced regime uses `DispersiveTransmonCavityModel`; the fuller pulse regime uses `UniversalCQEDModel` with the same tensor ordering and sign conventions already documented on this page.
+- Measurement-like observations and rewards are derived from `QubitMeasurementSpec` and therefore inherit the same confusion-matrix convention: latent `(g, e)` probabilities are mapped into reported `(g, e)` probabilities by left multiplication with the `2 x 2` confusion matrix.
+- `render_diagnostics()` exposes simulator-only quantities such as the full state, reduced states, Wigner grids, and compiled pulses. Those diagnostics are intentionally richer than the measurement-like observation returned to a policy.
+
+---
+
 ## Energy Spectrum Reference
 
 `compute_energy_spectrum(...)` and `model.energy_spectrum(...)` diagonalize the

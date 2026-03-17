@@ -4,6 +4,39 @@ import numpy as np
 import qutip as qt
 
 
+def _resolve_block_phase_levels(
+    phases: np.ndarray | list[float],
+    *,
+    fock_levels: np.ndarray | list[int] | tuple[int, ...] | None = None,
+    cavity_dim: int | None = None,
+) -> tuple[np.ndarray, tuple[int, ...], int]:
+    phase_array = np.asarray(phases, dtype=float).reshape(-1)
+    if fock_levels is None:
+        dim = int(phase_array.size) if cavity_dim is None else int(cavity_dim)
+        if dim <= 0:
+            raise ValueError("cavity_dim must be positive.")
+        if phase_array.size > dim:
+            raise ValueError("Number of phases cannot exceed cavity_dim.")
+        levels = tuple(range(int(phase_array.size)))
+        return phase_array, levels, dim
+
+    levels = tuple(int(level) for level in fock_levels)
+    if len(levels) != int(phase_array.size):
+        raise ValueError("phases and fock_levels must have the same length.")
+    if len(set(levels)) != len(levels):
+        raise ValueError("fock_levels must not contain duplicates.")
+    if cavity_dim is None:
+        dim = 0 if not levels else int(max(levels) + 1)
+    else:
+        dim = int(cavity_dim)
+    if dim <= 0:
+        raise ValueError("cavity_dim must be positive.")
+    for level in levels:
+        if level < 0 or level >= dim:
+            raise ValueError(f"Fock level {level} is outside the truncated cavity dimension {dim}.")
+    return phase_array, levels, dim
+
+
 def qubit_rotation_xy(theta: float, phi: float) -> qt.Qobj:
     sx = qt.sigmax()
     sy = qt.sigmay()
@@ -31,10 +64,36 @@ def displacement_op(n_cav: int, alpha: complex) -> qt.Qobj:
     return qt.displace(n_cav, alpha)
 
 
+def cavity_block_phase_op(
+    phases: np.ndarray | list[float],
+    *,
+    fock_levels: np.ndarray | list[int] | tuple[int, ...] | None = None,
+    cavity_dim: int | None = None,
+) -> qt.Qobj:
+    phase_array, levels, dim = _resolve_block_phase_levels(phases, fock_levels=fock_levels, cavity_dim=cavity_dim)
+    diag = np.ones(dim, dtype=np.complex128)
+    for phase, level in zip(phase_array, levels, strict=True):
+        diag[int(level)] = np.exp(1j * float(phase))
+    return qt.Qobj(np.diag(diag), dims=[[dim], [dim]])
+
+
+def logical_block_phase_op(
+    phases: np.ndarray | list[float],
+    *,
+    fock_levels: np.ndarray | list[int] | tuple[int, ...] | None = None,
+    cavity_dim: int | None = None,
+    qubit_dim: int = 2,
+) -> qt.Qobj:
+    if int(qubit_dim) <= 0:
+        raise ValueError("qubit_dim must be positive.")
+    return qt.tensor(
+        qt.qeye(int(qubit_dim)),
+        cavity_block_phase_op(phases, fock_levels=fock_levels, cavity_dim=cavity_dim),
+    )
+
+
 def snap_op(phases: np.ndarray | list[float]) -> qt.Qobj:
-    phases = np.asarray(phases, dtype=float)
-    diag = np.exp(1j * phases)
-    return qt.Qobj(np.diag(diag), dims=[[phases.size], [phases.size]])
+    return cavity_block_phase_op(phases)
 
 
 def sqr_op(thetas: np.ndarray | list[float], phis: np.ndarray | list[float]) -> qt.Qobj:

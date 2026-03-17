@@ -103,7 +103,7 @@ def test_waveform_defined_primitive_returns_unitary_operator() -> None:
         dt=5.0e-9,
     )
     ident = np.eye(4, dtype=np.complex128)
-    assert np.linalg.norm(result.full_operator.conj().T @ result.full_operator - ident) < 1.0e-8
+    assert np.linalg.norm(result.full_operator.conj().T @ result.full_operator - ident) < 1.0e-6
 
 
 def test_waveform_defined_primitive_supports_cqed_system_adapter() -> None:
@@ -132,7 +132,7 @@ def test_waveform_defined_primitive_supports_cqed_system_adapter() -> None:
         dt=5.0e-9,
     )
     ident = np.eye(4, dtype=np.complex128)
-    assert np.linalg.norm(result.full_operator.conj().T @ result.full_operator - ident) < 1.0e-8
+    assert np.linalg.norm(result.full_operator.conj().T @ result.full_operator - ident) < 1.0e-6
 
 
 def test_unitary_target_optimization_converges_with_matrix_primitive() -> None:

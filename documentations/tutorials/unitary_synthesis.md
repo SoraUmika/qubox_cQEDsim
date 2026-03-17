@@ -4,12 +4,14 @@ The main workflow notebook is:
 
 - `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
 
-Phase 2 extends that notebook beyond the original matrix-vs-waveform examples and adds four realistic synthesis patterns:
+The unitary-synthesis material now covers six realistic synthesis patterns. The notebook covers the first four workflows below, and the two standalone example scripts at the end cover the new relevance-aware and flexible target-action workflows:
 
 1. constraint-limited optimization
 2. leakage-aware synthesis
 3. robust synthesis under model uncertainty
 4. multi-objective / Pareto exploration
+5. relevance-aware observable and trajectory objectives with accelerated ideal evaluation
+6. flexible target-action matching for reduced states, isometries, and channels
 
 ---
 
@@ -129,9 +131,82 @@ front = synth.explore_pareto(
 
 ---
 
+## Workflow 5: Relevant Observables, Trajectories, and Accelerated Evaluation
+
+```python
+from cqed_sim.unitary_synthesis import (
+    ExecutionOptions,
+    LeakagePenalty,
+    MultiObjective,
+    ObservableTarget,
+    TrajectoryCheckpoint,
+    TrajectoryTarget,
+    UnitarySynthesizer,
+)
+
+synth = UnitarySynthesizer(
+    subspace=subspace,
+    primitives=primitives,
+    target=TrajectoryTarget(
+        initial_states=[psi0],
+        checkpoints=[
+            TrajectoryCheckpoint(step=2, target_states=(phi2,), weight=1.0),
+            TrajectoryCheckpoint(step=4, observables=(number_op,), target_expectations=[[1.0]], weight=0.5),
+        ],
+    ),
+    leakage_penalty=LeakagePenalty(weight=0.05, checkpoint_weight=0.1, checkpoints=(2, 4)),
+    objectives=MultiObjective(task_weight=1.0, duration_weight=0.1, gate_count_weight=0.05),
+    execution=ExecutionOptions(engine="numpy"),
+)
+
+result = synth.fit(maxiter=200)
+```
+
+Use this pattern when the experiment cares about logical outputs, selected observables, and protocol checkpoints more than exact full-Hilbert-space operator agreement. The accelerated path currently targets closed-system `backend="ideal"` synthesis and falls back automatically for waveform-backed or noisy tasks.
+
+---
+
+## Workflow 6: Flexible Target-Action Matching
+
+```python
+from cqed_sim.unitary_synthesis import (
+    ExecutionOptions,
+    PrimitiveGate,
+    TargetChannel,
+    TargetIsometry,
+    TargetReducedStateMapping,
+    UnitarySynthesizer,
+)
+
+channel_synth = UnitarySynthesizer(
+    primitives=[rotation_primitive],
+    target=TargetChannel(unitary=target_qubit_gate, enforce_cptp=True),
+    execution=ExecutionOptions(engine="numpy"),
+)
+
+reduced_state_synth = UnitarySynthesizer(
+    primitives=[two_qubit_primitive],
+    target=TargetReducedStateMapping(
+        initial_states=[psi00, psi10],
+        target_states=[qubit_g, qubit_e],
+        retained_subsystems=(0,),
+        subsystem_dims=(2, 2),
+    ),
+)
+
+isometry_synth = UnitarySynthesizer(
+    primitives=[encoding_primitive],
+    target=TargetIsometry(encoding_columns),
+)
+```
+
+Use this path when the experiment only cares about a logical reduced state, an encoding/isometry, or a full process action rather than a square unitary on the entire retained Hilbert space. `TargetChannel` records Choi/superoperator-style diagnostics, while every target type also reports truncation-edge and outside-tail population summaries to help validate the chosen cutoff.
+
+---
+
 ## Notebook Outputs
 
-The updated notebook now demonstrates:
+The notebook demonstrates:
 
 - defining a cQED model and primitive set
 - wrapping that model in `CQEDSystemAdapter(...)`
@@ -140,3 +215,8 @@ The updated notebook now demonstrates:
 - adding a `ParameterDistribution` for robustness
 - exporting and warm-starting a saved result
 - plotting convergence and inspecting a small Pareto front
+
+The repository also includes standalone example scripts that extend the notebook with the newer workflows:
+
+- `examples/unitary_synthesis_relevance_aware_optimizer.py`
+- `examples/unitary_synthesis_flexible_target_actions.py`

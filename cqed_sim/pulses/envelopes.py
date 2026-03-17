@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Callable, Sequence
 
 import numpy as np
+
+
+BaseEnvelopeFunc = Callable[[np.ndarray], np.ndarray]
 
 
 @dataclass(frozen=True)
@@ -53,16 +57,36 @@ def normalized_gaussian(t_rel: np.ndarray, sigma_fraction: float) -> np.ndarray:
     return base if abs(area) < 1.0e-12 else base / area
 
 
+def multitone_envelope(
+    t_rel: np.ndarray,
+    duration_s: float,
+    tone_specs: Sequence[MultitoneTone],
+    base_envelope: BaseEnvelopeFunc | None = None,
+) -> np.ndarray:
+    env = (
+        np.ones_like(t_rel, dtype=np.complex128)
+        if base_envelope is None
+        else np.asarray(base_envelope(t_rel), dtype=np.complex128)
+    )
+    t = t_rel * duration_s
+    coeff = np.zeros_like(t, dtype=np.complex128)
+    for spec in tone_specs:
+        coeff += spec.amp_rad_s * np.exp(1j * spec.phase_rad) * np.exp(1j * spec.omega_rad_s * t)
+    return env * coeff
+
+
 def multitone_gaussian_envelope(
     t_rel: np.ndarray,
     duration_s: float,
     sigma_fraction: float,
     tone_specs: list[MultitoneTone],
 ) -> np.ndarray:
-    env = normalized_gaussian(t_rel, sigma_fraction=sigma_fraction)
-    t = t_rel * duration_s
-    coeff = np.zeros_like(t, dtype=np.complex128)
-    for spec in tone_specs:
-        # Canonical convention: w(t) ~ exp(+i*omega*t) with phase carried as exp(+i*phase).
-        coeff += spec.amp_rad_s * np.exp(1j * spec.phase_rad) * np.exp(1j * spec.omega_rad_s * t)
-    return env * coeff
+    def base_env(grid: np.ndarray) -> np.ndarray:
+        return normalized_gaussian(grid, sigma_fraction=sigma_fraction)
+
+    return multitone_envelope(
+        t_rel,
+        duration_s=duration_s,
+        tone_specs=tone_specs,
+        base_envelope=base_env,
+    )

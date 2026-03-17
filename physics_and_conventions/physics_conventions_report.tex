@@ -13,7 +13,7 @@
 
 \title{Canonical Physics and Conventions Reference for \texttt{cqed\_sim}}
 \author{Post-cleanup and protocol-alignment reference}
-\date{March 13, 2026}
+\date{March 17, 2026}
 
 \begin{document}
 \maketitle
@@ -39,6 +39,9 @@ workflows:
   \item \texttt{measurement}: reusable qubit readout abstractions, physical
   readout-chain models, and measurement utilities that remain backend-agnostic
   and library-oriented.
+  \item \texttt{rl\_control}, \texttt{system\_id}: RL-facing environment wrappers,
+  benchmark-task interfaces, domain-randomized parameter sampling, and
+  calibration-informed prior hooks built on top of the same runtime stack.
   \item \texttt{calibration}, \texttt{observables}, \texttt{operators},
   \texttt{tomo}, \texttt{io}, \texttt{plotting}, \texttt{unitary\_synthesis}:
   reusable helpers that still belong to the library surface.
@@ -182,6 +185,41 @@ In particular:
 Direct tests:
 \texttt{tests/test\_26\_state\_prep\_and\_measurement.py},
 \texttt{tests/experiment/test\_readout\_chain.py}.
+
+\section{RL Wrapper Conventions}
+The RL-facing stack in \texttt{cqed\_sim/rl\_control} is intentionally a wrapper
+around the existing runtime rather than a second simulator. It exposes a
+Gym-like \texttt{reset(...)} and \texttt{step(...)} interface, but it preserves
+the same unit, frame, pulse, tensor-ordering, and measurement conventions used
+throughout the rest of \texttt{cqed\_sim}.
+
+\begin{itemize}[leftmargin=1.5em]
+  \item All model coefficients remain in rad/s and all durations remain in s.
+  \item The reduced RL regime is built from
+  \texttt{DispersiveTransmonCavityModel}; the fuller pulse regime is built from
+  \texttt{UniversalCQEDModel}. Neither path changes the transmon-first tensor
+  ordering described later in this document.
+  \item When \texttt{HybridSystemConfig.use\_model\_rotating\_frame=True} and the
+  configured \texttt{FrameSpec} is left at zero, the convenience layer uses the
+  model's bare storage and qubit frequencies as the numerical rotating frame.
+  This is a frame-selection convenience, not a new physical sign convention.
+  \item Measurement-like RL observations are derived from
+  \texttt{QubitMeasurementSpec} and therefore inherit the same confusion-matrix
+  rule,
+  \[
+  \mathbf{p}_{\mathrm{obs}} = M \mathbf{p}_{\mathrm{latent}},
+  \]
+  with latent columns ordered as \((g,e)\) and reported rows ordered as
+  \((g,e)\).
+  \item RL diagnostics may expose simulator-only quantities such as the full
+  state, reduced states, Wigner data, or compiled pulses. Those are debugging
+  and evaluation outputs only; they are not implied to be directly available to
+  a laboratory policy.
+\end{itemize}
+
+\noindent
+Direct tests:
+\texttt{tests/test\_38\_rl\_control\_env.py}.
 
 \section{Physical Readout Chain}
 The physical readout-chain path models a driven dispersive resonator with optional
@@ -382,6 +420,16 @@ later in this document,
 \[
 \texttt{Pulse.carrier}=-\omega_{\mathrm{transition}}(\text{frame}).
 \]
+An explicit cavity-only logical block-phase layer is represented in the same
+transmon-first tensor convention as
+\[
+I_{\mathrm{q}} \otimes \operatorname{diag}(e^{i\phi_{n_0}}, e^{i\phi_{n_1}}, \ldots),
+\]
+with identity on omitted cavity levels. In the restricted synthesis basis this
+appears as equal phase factors on the paired two-dimensional blocks
+\(|g,n\rangle, |e,n\rangle\). Gauge-fixed logical block-phase diagnostics are
+therefore defined blockwise relative to the first selected logical block rather
+than relative to the absolute full-space phase.
 Unitary targets correspond to closed-system effective propagators, while
 state-mapping targets are the appropriate synthesis-side abstraction when the
 waveform simulation includes dissipation or other open-system effects.

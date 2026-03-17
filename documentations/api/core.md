@@ -342,7 +342,9 @@ All functions return QuTiP `Qobj` unitaries.
 | `qubit_rotation_xy(theta, phi)` | `(float, float) -> qt.Qobj` | $\exp(-i\theta/2 [\cos\phi\,\sigma_x + \sin\phi\,\sigma_y])$. 2×2. |
 | `qubit_rotation_axis(theta, axis)` | `(float, str) -> qt.Qobj` | Rotation around `"x"`, `"y"`, or `"z"` |
 | `displacement_op(n_cav, alpha)` | `(int, complex) -> qt.Qobj` | $D(\alpha) = \exp(\alpha a^\dagger - \alpha^* a)$ |
-| `snap_op(phases)` | `(array) -> qt.Qobj` | $\text{diag}(e^{i\phi_0}, e^{i\phi_1}, \ldots)$ |
+| `cavity_block_phase_op(phases, *, fock_levels=None, cavity_dim=None)` | `(array, ...) -> qt.Qobj` | Cavity-only diagonal phase layer with identity on omitted levels |
+| `logical_block_phase_op(phases, *, fock_levels=None, cavity_dim=None, qubit_dim=2)` | `(array, ...) -> qt.Qobj` | Qubit-first embedding $I_q \otimes \text{cavity\_block\_phase\_op}(...)$ |
+| `snap_op(phases)` | `(array) -> qt.Qobj` | Contiguous cavity block-phase layer $\text{diag}(e^{i\phi_0}, e^{i\phi_1}, \ldots)$ |
 | `sqr_op(thetas, phis)` | `(array, array) -> qt.Qobj` | $\sum_n |n\rangle\langle n| \otimes R(\theta_n, \phi_n)$ |
 | `embed_qubit_op(op_q, n_cav)` | `-> qt.Qobj` | $\text{op}_q \otimes I_{\text{cav}}$ |
 | `embed_cavity_op(op_c, n_tr)` | `-> qt.Qobj` | $I_{\text{qubit}} \otimes \text{op}_c$ |

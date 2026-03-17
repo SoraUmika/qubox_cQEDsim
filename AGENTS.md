@@ -9,6 +9,7 @@
 - Only install missing packages when they are genuinely needed for analysis, simple calculations, optimization, or other common development tasks.
 - Any package installed should be broadly used, general-purpose, and low-risk.
 - Do not install niche, experimental, or project-specific dependencies unless the user explicitly requests them.
+- Do not use VSCODE Jupyter notebook exnensions or other interactive notebook environments unless the user explicitly requests them, and do not treat notebooks as the default development environment when not requested. Try to use the built-in python jupyter notebook for python 3.12.10, in particualr the one avaialble in environment variable `PYTHON_JUPYTER_NOTEBOOK` if it is set, and only install a notebook environment if the user explicitly requests it.
 
 ## Python Environment
 

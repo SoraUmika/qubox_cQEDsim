@@ -6,14 +6,17 @@ import numpy as np
 import qutip as qt
 
 from cqed_sim.core.ideal_gates import (
+    cavity_block_phase_op,
     displacement_op,
     embed_cavity_op,
     embed_qubit_op,
+    logical_block_phase_op,
     qubit_rotation_axis,
     qubit_rotation_xy,
     snap_op,
     sqr_op,
 )
+from cqed_sim.core.conventions import qubit_cavity_block_indices
 from cqed_sim.sim.extractors import (
     bloch_xyz_from_joint,
     bloch_xyz_from_qubit_state,
@@ -147,6 +150,30 @@ def test_snap_global_phase_irrelevance():
     a = qt.destroy(n_cav)
     assert np.isclose(qt.expect(a, o1), qt.expect(a, o2), atol=1e-10)
     assert np.isclose(qt.expect(a.dag() * a, o1), qt.expect(a.dag() * a, o2), atol=1e-10)
+
+
+def test_cavity_block_phase_targets_selected_levels_only():
+    n_cav = 6
+    u = cavity_block_phase_op((0.25, -0.4), fock_levels=(1, 4), cavity_dim=n_cav)
+    diag = np.diag(np.asarray(u.full(), dtype=np.complex128))
+    expected = np.ones(n_cav, dtype=np.complex128)
+    expected[1] = np.exp(1j * 0.25)
+    expected[4] = np.exp(1j * -0.4)
+    assert np.allclose(diag, expected, atol=1e-12)
+
+
+def test_logical_block_phase_embeds_identically_on_each_qubit_block():
+    n_cav = 5
+    phases = (0.1, -0.35)
+    levels = (0, 3)
+    u = logical_block_phase_op(phases, fock_levels=levels, cavity_dim=n_cav)
+    full = np.asarray(u.full(), dtype=np.complex128)
+    for phase, level in zip(phases, levels, strict=True):
+        idx = qubit_cavity_block_indices(n_cav, level)
+        block = full[np.ix_(idx, idx)]
+        assert np.allclose(block, np.exp(1j * phase) * np.eye(2), atol=1e-12)
+    untouched = qubit_cavity_block_indices(n_cav, 2)
+    assert np.allclose(full[np.ix_(untouched, untouched)], np.eye(2), atol=1e-12)
 
 
 def test_sqr_applies_rotation_only_on_target_fock():

@@ -57,6 +57,40 @@ class SQRCalibrationResult:
 
 ---
 
+## Targeted-Subspace Logical Block Phase
+
+**Module path:** `cqed_sim.calibration.targeted_subspace_multitone`
+
+This layer evaluates the full logical qubit-cavity subspace and can append an explicit ideal cavity-only logical block-phase layer after the simulated common multitone waveform.
+
+```python
+@dataclass(frozen=True)
+class LogicalBlockPhaseCorrection:
+    logical_levels: tuple[int, ...] = ()
+    phases_rad: tuple[float, ...] = ()
+
+@dataclass(frozen=True)
+class TargetedSubspaceOptimizationConfig:
+    conditioned: ConditionedOptimizationConfig = ConditionedOptimizationConfig()
+    include_block_phase: bool = False
+    block_phase_levels: tuple[int, ...] = ()
+    block_phase_bounds_rad: tuple[float, float] = (-np.pi, np.pi)
+    regularization_block_phase: float = 0.0
+    block_phase_reference_level: int | None = None
+```
+
+| Function / Type | Description |
+|---|---|
+| `build_block_rotation_target_operator(targets, logical_levels=None)` | Ideal restricted target operator with 2×2 per-level qubit blocks |
+| `build_spanning_state_transfer_set(target_operator, include_pairwise_superpositions=True)` | Logical transfer probes spanning basis states plus pairwise superpositions |
+| `analyze_targeted_subspace_operator(actual_full_operator, model, targets, ..., logical_block_phase=None)` | Restricted fidelity, state-transfer, block-population, and logical block-phase diagnostics |
+| `run_targeted_subspace_multitone_validation(model, targets, run_config, ..., logical_block_phase=None)` | Convenience wrapper for waveform construction plus targeted-subspace evaluation |
+| `optimize_targeted_subspace_multitone(model, targets, run_config, ..., initial_logical_block_phase=None, optimization_config=...)` | Two-stage targeted-subspace optimization over waveform corrections and optional logical block-phase parameters |
+
+`TargetedSubspaceValidationResult` records the applied logical block phase, the best-fit logical block phase inferred from the raw restricted operator, the corrected restricted-process fidelity, and the gauge-fixed logical block-phase residuals.
+
+---
+
 ## Random Target Benchmarking
 
 ### RandomSQRTarget

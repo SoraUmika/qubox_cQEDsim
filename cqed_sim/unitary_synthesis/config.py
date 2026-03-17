@@ -15,10 +15,15 @@ class LeakagePenalty:
     weight: float = 0.0
     allowed_subspace: Subspace | Sequence[int] | None = None
     metric: str = "worst"
+    checkpoint_weight: float = 0.0
+    checkpoints: tuple[int, ...] = ()
 
     def __post_init__(self) -> None:
         if self.metric not in {"worst", "average"}:
             raise ValueError("LeakagePenalty.metric must be 'worst' or 'average'.")
+        if float(self.weight) < 0.0 or float(self.checkpoint_weight) < 0.0:
+            raise ValueError("LeakagePenalty weights must be non-negative.")
+        object.__setattr__(self, "checkpoints", tuple(int(idx) for idx in self.checkpoints))
 
     def resolve_subspace(self, default: Subspace | None) -> Subspace | None:
         if self.allowed_subspace is None:
@@ -48,6 +53,8 @@ class LeakagePenalty:
         return {
             "weight": float(self.weight),
             "metric": str(self.metric),
+            "checkpoint_weight": float(self.checkpoint_weight),
+            "checkpoints": [int(idx) for idx in self.checkpoints],
             "allowed_subspace": subspace_payload,
         }
 
@@ -124,8 +131,10 @@ class SynthesisConstraints:
 @dataclass(frozen=True)
 class MultiObjective:
     fidelity_weight: float = 1.0
+    task_weight: float | None = None
     leakage_weight: float = 0.0
     duration_weight: float = 0.0
+    gate_count_weight: float = 0.0
     pulse_power_weight: float = 0.0
     robustness_weight: float = 0.0
     smoothness_weight: float = 0.0
@@ -137,27 +146,68 @@ class MultiObjective:
             raise ValueError("MultiObjective.mode currently supports only 'weighted_sum'.")
         for name in (
             "fidelity_weight",
+            "task_weight",
             "leakage_weight",
             "duration_weight",
+            "gate_count_weight",
             "pulse_power_weight",
             "robustness_weight",
             "smoothness_weight",
             "hardware_penalty_weight",
         ):
-            value = float(getattr(self, name))
+            raw = getattr(self, name)
+            if raw is None:
+                continue
+            value = float(raw)
             if value < 0.0:
                 raise ValueError(f"{name} must be non-negative.")
 
     def to_record(self) -> dict[str, Any]:
         return {
             "fidelity_weight": float(self.fidelity_weight),
+            "task_weight": None if self.task_weight is None else float(self.task_weight),
             "leakage_weight": float(self.leakage_weight),
             "duration_weight": float(self.duration_weight),
+            "gate_count_weight": float(self.gate_count_weight),
             "pulse_power_weight": float(self.pulse_power_weight),
             "robustness_weight": float(self.robustness_weight),
             "smoothness_weight": float(self.smoothness_weight),
             "hardware_penalty_weight": float(self.hardware_penalty_weight),
             "mode": str(self.mode),
+        }
+
+
+@dataclass(frozen=True)
+class ExecutionOptions:
+    engine: str = "auto"
+    fallback_engine: str = "legacy"
+    device: str = "auto"
+    use_fast_path: bool = True
+    jit: bool = True
+    vectorized_candidates: bool = True
+    candidate_batch_size: int = 0
+    cache_fast_path: bool = True
+
+    def __post_init__(self) -> None:
+        if self.engine not in {"auto", "legacy", "numpy", "jax"}:
+            raise ValueError("ExecutionOptions.engine must be 'auto', 'legacy', 'numpy', or 'jax'.")
+        if self.fallback_engine not in {"legacy", "numpy"}:
+            raise ValueError("ExecutionOptions.fallback_engine must be 'legacy' or 'numpy'.")
+        if self.device not in {"auto", "cpu", "gpu"}:
+            raise ValueError("ExecutionOptions.device must be 'auto', 'cpu', or 'gpu'.")
+        if int(self.candidate_batch_size) < 0:
+            raise ValueError("ExecutionOptions.candidate_batch_size must be non-negative.")
+
+    def to_record(self) -> dict[str, Any]:
+        return {
+            "engine": str(self.engine),
+            "fallback_engine": str(self.fallback_engine),
+            "device": str(self.device),
+            "use_fast_path": bool(self.use_fast_path),
+            "jit": bool(self.jit),
+            "vectorized_candidates": bool(self.vectorized_candidates),
+            "candidate_batch_size": int(self.candidate_batch_size),
+            "cache_fast_path": bool(self.cache_fast_path),
         }
 
 

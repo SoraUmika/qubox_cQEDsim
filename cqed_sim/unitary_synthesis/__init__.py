@@ -1,5 +1,5 @@
 from .backends import SimulationResult, simulate_sequence
-from .config import LeakagePenalty, MultiObjective, Normal, ParameterDistribution, SynthesisConstraints, Uniform
+from .config import ExecutionOptions, LeakagePenalty, MultiObjective, Normal, ParameterDistribution, SynthesisConstraints, Uniform
 from .constraints import (
     TimeGridResult,
     SlewConstraintResult,
@@ -11,7 +11,15 @@ from .constraints import (
     snap_times_to_grid,
 )
 from . import metrics
-from .metrics import leakage_metrics, subspace_unitary_fidelity
+from .metrics import (
+    channel_action_metrics,
+    leakage_metrics,
+    LogicalBlockPhaseDiagnostics,
+    logical_block_phase_diagnostics,
+    operator_truncation_sanity_metrics,
+    subspace_unitary_fidelity,
+    truncation_sanity_metrics,
+)
 from .optim import ParetoFrontResult, SynthesisResult, TimeMapper, UnitarySynthesizer
 from .progress import (
     PROGRESS_SCHEMA_VERSION,
@@ -25,6 +33,7 @@ from .progress import (
 )
 from .reporting import make_run_report
 from .sequence import (
+    CavityBlockPhase,
     ConditionalPhaseSQR,
     Displacement,
     DriftPhaseModel,
@@ -42,7 +51,18 @@ from .sequence import (
 )
 from .subspace import Subspace
 from .systems import CQEDSystemAdapter, QuantumSystem
-from .targets import TargetStateMapping, TargetUnitary, coerce_target, make_target
+from .targets import (
+    ObservableTarget,
+    TargetChannel,
+    TargetIsometry,
+    TargetReducedStateMapping,
+    TargetStateMapping,
+    TargetUnitary,
+    TrajectoryCheckpoint,
+    TrajectoryTarget,
+    coerce_target,
+    make_target,
+)
 from .waveform_bridge import waveform_primitive_from_gate, waveform_sequence_from_gates
 
 __all__ = [
@@ -53,6 +73,12 @@ __all__ = [
     "coerce_target",
     "TargetUnitary",
     "TargetStateMapping",
+    "TargetReducedStateMapping",
+    "TargetIsometry",
+    "TargetChannel",
+    "ObservableTarget",
+    "TrajectoryCheckpoint",
+    "TrajectoryTarget",
     "waveform_primitive_from_gate",
     "waveform_sequence_from_gates",
     "TimeMapper",
@@ -62,6 +88,7 @@ __all__ = [
     "SynthesisConstraints",
     "LeakagePenalty",
     "MultiObjective",
+    "ExecutionOptions",
     "Normal",
     "Uniform",
     "ParameterDistribution",
@@ -78,6 +105,11 @@ __all__ = [
     "metrics",
     "subspace_unitary_fidelity",
     "leakage_metrics",
+    "channel_action_metrics",
+    "LogicalBlockPhaseDiagnostics",
+    "logical_block_phase_diagnostics",
+    "truncation_sanity_metrics",
+    "operator_truncation_sanity_metrics",
     "make_run_report",
     "PROGRESS_SCHEMA_VERSION",
     "ProgressEvent",
@@ -93,6 +125,7 @@ __all__ = [
     "DriftPhaseModel",
     "QubitRotation",
     "SQR",
+    "CavityBlockPhase",
     "SNAP",
     "Displacement",
     "ConditionalPhaseSQR",

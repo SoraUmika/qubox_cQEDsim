@@ -26,7 +26,12 @@ The primary guided learning path no longer lives here. Use the top-level `tutori
 | `open_system_sideband_degradation.py` | Sideband performance under open-system noise | `tutorials/30_advanced_protocols/02_open_system_sideband_degradation.ipynb` |
 | `multimode_crosskerr_demo.py` | Multi-mode cross-Kerr interaction demo | `tutorials/30_advanced_protocols/01_multimode_crosskerr.ipynb` |
 | `run_snap_optimization_demo.py` | SNAP optimization demo using repo-side study helpers | `tutorials/30_advanced_protocols/04_snap_optimization_workflow.ipynb` |
+| `conditioned_multitone_reduced_demo.py` | Reduced conditioned-multitone workflow showing reduced-vs-full agreement and detuning-only correction optimization | none |
+| `logical_block_phase_targeted_subspace_demo.py` | Targeted-subspace multitone demo showing gauge-fixed logical block phases and the ideal cavity-only correction layer | none |
 | `unitary_synthesis_demo.py` | Target-unitary synthesis inside a qubit-cavity subspace | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
+| `unitary_synthesis_relevance_aware_optimizer.py` | Relevance-aware synthesis with observable, state-ensemble, and trajectory objectives plus accelerated ideal evaluation | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
+| `unitary_synthesis_flexible_target_actions.py` | Channel, reduced-state, and isometry target examples with truncation-aware diagnostics | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
+| `rl_hybrid_control_rollout.py` | Hybrid RL environment rollout with measurement-like observations, diagnostics, and domain-randomized evaluation | `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb` |
 | `ringdown_noise.py` | Cavity ringdown with noise | retained as a compact standalone diagnostic script |
 
 ---

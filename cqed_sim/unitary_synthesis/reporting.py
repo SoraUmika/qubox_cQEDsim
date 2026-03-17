@@ -33,4 +33,9 @@ def make_run_report(base_report: dict[str, Any], subspace_operator: np.ndarray) 
     metrics = out.get("metrics", {})
     if float(metrics.get("leakage_worst", 0.0)) > 1e-2:
         out["warnings"].append("High leakage detected; consider increasing cavity truncation or leakage penalty.")
+    truncation = out.get("truncation", {})
+    if float(truncation.get("outside_tail_population_worst", 0.0)) > 1e-2:
+        out["warnings"].append("Population reaches levels outside the retained subspace; consider enlarging the truncation or tightening leakage suppression.")
+    if float(truncation.get("retained_edge_population_worst", 0.0)) > 0.2:
+        out["warnings"].append("Population accumulates near the truncation edge; validate that the chosen Hilbert-space cutoff is sufficient.")
     return out

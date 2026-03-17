@@ -9,6 +9,7 @@ import qutip as qt
 
 from .backends import SimulationResult, simulate_sequence
 from .sequence import (
+    CavityBlockPhase,
     ConditionalPhaseSQR,
     Displacement,
     DriftPhaseModel,
@@ -25,11 +26,20 @@ from .sequence import (
     _waveform_payload,
 )
 from .subspace import Subspace
-from .targets import TargetStateMapping, TargetUnitary
+from .targets import (
+    ObservableTarget,
+    TargetChannel,
+    TargetIsometry,
+    TargetReducedStateMapping,
+    TargetStateMapping,
+    TargetUnitary,
+    TrajectoryTarget,
+)
 
 _CQED_GATE_TYPES = (
     QubitRotation,
     SQR,
+    CavityBlockPhase,
     SNAP,
     Displacement,
     ConditionalPhaseSQR,
@@ -38,6 +48,9 @@ _CQED_GATE_TYPES = (
 _CQED_GATE_NAMES = {
     "QubitRotation",
     "SQR",
+    "CavityBlockPhase",
+    "LogicalBlockPhase",
+    "BlockPhase",
     "SNAP",
     "Displacement",
     "ConditionalPhaseSQR",
@@ -53,6 +66,8 @@ def _normalize_gate_name(name: str) -> str:
         "CondPhaseSQR": "ConditionalPhaseSQR",
         "ConditionalPhase": "ConditionalPhaseSQR",
         "FreeCondPhaseWait": "FreeEvolveCondPhase",
+        "LogicalBlockPhase": "CavityBlockPhase",
+        "BlockPhase": "CavityBlockPhase",
     }
     return aliases.get(str(name), str(name))
 
@@ -133,6 +148,8 @@ def _legacy_cqed_sequence(
                     **kw,
                 )
             )
+        elif name == "CavityBlockPhase":
+            gates.append(CavityBlockPhase(phases=[0.0] * int(n_cav), **kw))
         elif name == "SNAP":
             gates.append(SNAP(phases=[0.0] * int(n_cav), **kw))
         elif name == "Displacement":
@@ -160,7 +177,7 @@ class QuantumSystem:
         sequence: GateSequence | None = None,
         primitive: PrimitiveGate | None = None,
         subspace: Subspace | None = None,
-        target: TargetUnitary | TargetStateMapping | None = None,
+        target: TargetUnitary | TargetStateMapping | TargetReducedStateMapping | TargetIsometry | TargetChannel | None = None,
     ) -> int | None:
         raise NotImplementedError
 
@@ -326,7 +343,7 @@ class GenericQuantumSystem(QuantumSystem):
         sequence: GateSequence | None = None,
         primitive: PrimitiveGate | None = None,
         subspace: Subspace | None = None,
-        target: TargetUnitary | TargetStateMapping | None = None,
+        target: TargetUnitary | TargetStateMapping | TargetReducedStateMapping | TargetIsometry | TargetChannel | None = None,
     ) -> int | None:
         if self.dimension is not None:
             return int(self.dimension)
@@ -336,6 +353,17 @@ class GenericQuantumSystem(QuantumSystem):
             return int(target.dim)
         if isinstance(target, TargetStateMapping):
             return _infer_state_mapping_dim(target)
+        if isinstance(target, TargetReducedStateMapping):
+            return int(target.infer_dimension())
+        if isinstance(target, TargetIsometry):
+            return int(target.infer_dimension())
+        if isinstance(target, TargetChannel):
+            full_dim = target.infer_full_dimension()
+            return None if full_dim is None else int(full_dim)
+        if isinstance(target, ObservableTarget):
+            return int(target.infer_dimension())
+        if isinstance(target, TrajectoryTarget):
+            return int(target.infer_dimension())
         if primitive is not None:
             try:
                 return int(primitive.resolved_dimension(model=None))

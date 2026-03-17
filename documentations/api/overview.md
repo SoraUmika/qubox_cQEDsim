@@ -28,6 +28,8 @@ This section provides a complete reference for the `cqed_sim` public API, organi
 | [`backends`](backends.md) | Dense NumPy/JAX solver backends |
 | [`calibration`](calibration.md) | SQR gate calibration |
 | [`calibration_targets`](calibration_targets.md) | Spectroscopy, Rabi, Ramsey, T₁, T₂ echo, DRAG tuning |
+| [`rl_control`](rl_control.md) | RL environments, task registry, action/observation/reward layers, randomization |
+| [`system_id`](rl_control.md#system-identification-hooks) | Calibration-informed prior hooks for fit-then-randomize workflows |
 | [`tomography`](tomography.md) | Fock-resolved tomography, all-XY, leakage calibration |
 | [`observables`](observables.md) | Bloch, Fock-resolved, phase, trajectory, Wigner diagnostics |
 | [`operators`](operators.md) | Pauli, cavity ladder, embedding helpers |

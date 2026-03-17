@@ -20,9 +20,11 @@ from .frequencies import (
 from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec
 from .ideal_gates import (
     beamsplitter_unitary,
+    cavity_block_phase_op,
     displacement_op,
     embed_cavity_op,
     embed_qubit_op,
+    logical_block_phase_op,
     qubit_rotation_axis,
     qubit_rotation_xy,
     snap_op,
@@ -77,6 +79,8 @@ __all__ = [
     "transition_frequency_from_carrier",
     "qubit_rotation_xy",
     "qubit_rotation_axis",
+    "cavity_block_phase_op",
+    "logical_block_phase_op",
     "displacement_op",
     "beamsplitter_unitary",
     "snap_op",

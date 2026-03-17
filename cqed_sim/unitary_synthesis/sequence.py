@@ -8,7 +8,7 @@ import qutip as qt
 
 from cqed_sim.core.conventions import qubit_cavity_block_indices, qubit_cavity_dims
 from cqed_sim.core.frame import FrameSpec
-from cqed_sim.core.ideal_gates import displacement_op, qubit_rotation_xy, sqr_op
+from cqed_sim.core.ideal_gates import displacement_op, logical_block_phase_op, qubit_rotation_xy, sqr_op
 from cqed_sim.pulses.pulse import Pulse
 from cqed_sim.sequence import SequenceCompiler as RuntimeSequenceCompiler
 from cqed_sim.sim import SimulationConfig as RuntimeSimulationConfig
@@ -602,30 +602,73 @@ class SQR(GateBase):
 
 
 @dataclass
-class SNAP(GateBase):
+class CavityBlockPhase(GateBase):
     phases: list[float] = field(default_factory=list)
+    fock_levels: tuple[int, ...] = ()
+
+    def to_record(self) -> dict[str, Any]:
+        row = super().to_record()
+        row["fock_levels"] = [int(level) for level in self.fock_levels]
+        row["realization"] = "ideal-only"
+        return row
+
+    def _resolved_levels(self, n_cav: int) -> tuple[int, ...]:
+        if self.fock_levels:
+            levels = tuple(int(level) for level in self.fock_levels)
+            if len(set(levels)) != len(levels):
+                raise ValueError("fock_levels must not contain duplicates.")
+            for level in levels:
+                if level < 0 or level >= int(n_cav):
+                    raise ValueError(f"Fock level {level} is outside the truncated cavity dimension {n_cav}.")
+            return levels
+        return tuple(range(int(n_cav)))
 
     def parameter_names(self, n_cav: int) -> list[str]:
-        return [f"phase_{i}" for i in range(n_cav)]
+        return [f"phase_{level}" for level in self._resolved_levels(n_cav)]
 
     def get_parameters(self, n_cav: int) -> np.ndarray:
-        out = np.zeros(n_cav, dtype=float)
-        for i, val in enumerate(self.phases[:n_cav]):
+        levels = self._resolved_levels(n_cav)
+        out = np.zeros(len(levels), dtype=float)
+        for i, val in enumerate(self.phases[: len(levels)]):
             out[i] = float(val)
         return out
 
     def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
-        self.phases = [float(x) for x in params[:n_cav]]
+        levels = self._resolved_levels(n_cav)
+        self.phases = [float(x) for x in params[: len(levels)]]
 
     def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
-        return [(-np.pi, np.pi) for _ in range(n_cav)]
+        return [(-np.pi, np.pi) for _ in self._resolved_levels(n_cav)]
 
     def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
         phases = self.get_parameters(n_cav)
         if scale_by_time:
             phases = phases * float(self.duration / self.duration_ref)
-        op_c = qt.Qobj(np.diag(np.exp(1j * phases)), dims=[[n_cav], [n_cav]])
-        return qt.tensor(qt.qeye(2), op_c)
+        return logical_block_phase_op(
+            phases,
+            fock_levels=self._resolved_levels(n_cav),
+            cavity_dim=n_cav,
+            qubit_dim=2,
+        )
+
+    def phase_decomposition(self, n_cav: int, n_match: int | None = None) -> dict[str, Any] | None:
+        levels = self._resolved_levels(n_cav)
+        phases = self.get_parameters(n_cav)
+        relative = phases - float(phases[0]) if phases.size else phases
+        return {
+            "gate_name": self.name,
+            "gate_type": self.type,
+            "duration": float(self.duration),
+            "fock_levels": [int(level) for level in levels],
+            "phases_rad": phases.tolist(),
+            "relative_phases_rad": np.asarray(relative, dtype=float).tolist(),
+            "realization": "ideal-only",
+        }
+
+
+@dataclass
+class SNAP(CavityBlockPhase):
+    """Number-selective cavity phase gate over the truncated Fock basis."""
 
 
 @dataclass
@@ -1043,7 +1086,16 @@ class PrimitiveGate(GateBase):
         )
 
 
-GatePrimitive = QubitRotation | SQR | SNAP | Displacement | ConditionalPhaseSQR | FreeEvolveCondPhase | PrimitiveGate
+GatePrimitive = (
+    QubitRotation
+    | SQR
+    | CavityBlockPhase
+    | SNAP
+    | Displacement
+    | ConditionalPhaseSQR
+    | FreeEvolveCondPhase
+    | PrimitiveGate
+)
 
 
 @dataclass
@@ -1260,6 +1312,34 @@ class GateSequence:
         for gate in self.gates:
             outputs = gate.propagate_states(outputs, n_cav, backend=backend, **settings)
         return outputs
+
+    def propagate_states_with_checkpoints(
+        self,
+        states: list[qt.Qobj | np.ndarray],
+        checkpoints: Iterable[int],
+        *,
+        backend: str = "ideal",
+        backend_settings: Mapping[str, Any] | None = None,
+    ) -> dict[int, list[qt.Qobj]]:
+        settings = dict(backend_settings or {})
+        system = settings.get("system")
+        model = settings.get("model")
+        full_dim = self.resolve_full_dim(model=model, system=system)
+        if system is not None:
+            dims_raw = list(system.subsystem_dimensions(sequence=self, full_dim=full_dim))
+        else:
+            dims_raw = list(getattr(model, "subsystem_dims", (full_dim,)))
+        n_cav = self.resolve_n_cav(model=model, system=system) if any(not isinstance(gate, PrimitiveGate) for gate in self.gates) else -1
+        outputs = [_coerce_state_qobj(state, subsystem_dims=dims_raw) for state in states]
+        selected = {int(step) for step in checkpoints}
+        history: dict[int, list[qt.Qobj]] = {}
+        if 0 in selected:
+            history[0] = list(outputs)
+        for gate_index, gate in enumerate(self.gates, start=1):
+            outputs = gate.propagate_states(outputs, n_cav, backend=backend, **settings)
+            if gate_index in selected:
+                history[gate_index] = list(outputs)
+        return history
 
     def serialize(self) -> list[dict[str, Any]]:
         self.sync_time_params_from_gates()

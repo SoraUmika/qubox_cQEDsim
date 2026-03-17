@@ -145,7 +145,8 @@ def test_single_tone_multitone_and_gaussian_match_iq_convention():
     def normalized_gaussian_env(t_rel: np.ndarray) -> np.ndarray:
         sigma = 0.18
         base = np.exp(-0.5 * ((np.asarray(t_rel, dtype=float) - 0.5) / sigma) ** 2).astype(np.complex128)
-        area = float(np.trapz(np.real(base), np.asarray(t_rel, dtype=float)))
+        _trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+        area = float(_trapezoid(np.real(base), np.asarray(t_rel, dtype=float)))
         return base / area if abs(area) > 1.0e-15 else base
 
     def envelope(t_rel: np.ndarray) -> np.ndarray:

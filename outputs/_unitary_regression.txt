@@ -1,0 +1,85 @@
+﻿........FF....                                                           [100%]
+================================== FAILURES ===================================
+__________ test_waveform_defined_primitive_returns_unitary_operator ___________
+
+    def test_waveform_defined_primitive_returns_unitary_operator() -> None:
+        model, frame = _two_level_model()
+    
+        def waveform(params, model):
+            duration = float(params["duration"])
+            pulse = Pulse("qubit", 0.0, duration, square_envelope, amp=float(params["amp"]), phase=float(params["phase"]))
+            return [pulse], {"qubit": "qubit"}
+    
+        primitive = PrimitiveGate(
+            name="wf_identity",
+            duration=20.0e-9,
+            waveform=waveform,
+            parameters={"amp": 0.0, "phase": 0.0, "duration": 20.0e-9},
+            parameter_bounds={"amp": (-1.0, 1.0), "phase": (-np.pi, np.pi), "duration": (10.0e-9, 50.0e-9)},
+            hilbert_dim=4,
+        )
+        sequence = GateSequence(gates=[primitive], full_dim=4)
+        result = simulate_sequence(
+            sequence,
+            Subspace.custom(4, range(4)),
+            backend="pulse",
+            model=model,
+            frame=frame,
+            dt=5.0e-9,
+        )
+        ident = np.eye(4, dtype=np.complex128)
+>       assert np.linalg.norm(result.full_operator.conj().T @ result.full_operator - ident) < 1.0e-8
+E       AssertionError: assert np.float64(8.423378705657569e-08) < 1e-08
+E        +  where np.float64(8.423378705657569e-08) = <function norm at 0x000001647F93E4F0>(((array([[1.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.        -0.j        ],\n     ...   ],\n       [0.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.92977643-0.36812458j]]) @ array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.        +0.j        ],\n     ...   ],\n       [0.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.92977643+0.36812458j]])) - array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],\n       [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],\n       [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],\n       [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]])))
+E        +    where <function norm at 0x000001647F93E4F0> = <module 'numpy.linalg' from 'C:\\Users\\dazzl\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\numpy\\linalg\\__init__.py'>.norm
+E        +      where <module 'numpy.linalg' from 'C:\\Users\\dazzl\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\numpy\\linalg\\__init__.py'> = np.linalg
+E        +    and   array([[1.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.        -0.j        ],\n     ...   ],\n       [0.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.92977643-0.36812458j]]) = array([[1.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.        -0.j        ],\n     ...   ],\n       [0.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.92977643-0.36812458j]]).T
+E        +      where array([[1.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.        -0.j        ],\n     ...   ],\n       [0.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.92977643-0.36812458j]]) = <built-in method conj of numpy.ndarray object at 0x000001642F2C7F90>()
+E        +        where <built-in method conj of numpy.ndarray object at 0x000001642F2C7F90> = array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.        +0.j        ],\n     ...   ],\n       [0.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.92977643+0.36812458j]]).conj
+E        +          where array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.        +0.j        ],\n     ...   ],\n       [0.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.92977643+0.36812458j]]) = SimulationResult(full_operator=array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        ,...'frame': FrameSpec(omega_c_frame=31415926535.89793, omega_q_frame=37699111843.077515, omega_r_frame=0.0), 'dt': 5e-09}).full_operator
+E        +    and   array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.        +0.j        ],\n     ...   ],\n       [0.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.92977643+0.36812458j]]) = SimulationResult(full_operator=array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        ,...'frame': FrameSpec(omega_c_frame=31415926535.89793, omega_q_frame=37699111843.077515, omega_r_frame=0.0), 'dt': 5e-09}).full_operator
+
+tests\unitary_synthesis\test_flexible_workflow.py:106: AssertionError
+________ test_waveform_defined_primitive_supports_cqed_system_adapter _________
+
+    def test_waveform_defined_primitive_supports_cqed_system_adapter() -> None:
+        model, frame = _two_level_model()
+    
+        def waveform(params, model):
+            duration = float(params["duration"])
+            pulse = Pulse("qubit", 0.0, duration, square_envelope, amp=float(params["amp"]), phase=float(params["phase"]))
+            return [pulse], {"qubit": "qubit"}
+    
+        primitive = PrimitiveGate(
+            name="wf_identity",
+            duration=20.0e-9,
+            waveform=waveform,
+            parameters={"amp": 0.0, "phase": 0.0, "duration": 20.0e-9},
+            parameter_bounds={"amp": (-1.0, 1.0), "phase": (-np.pi, np.pi), "duration": (10.0e-9, 50.0e-9)},
+            hilbert_dim=4,
+        )
+        sequence = GateSequence(gates=[primitive], full_dim=4)
+        result = simulate_sequence(
+            sequence,
+            Subspace.custom(4, range(4)),
+            backend="pulse",
+            system=CQEDSystemAdapter(model=model),
+            frame=frame,
+            dt=5.0e-9,
+        )
+        ident = np.eye(4, dtype=np.complex128)
+>       assert np.linalg.norm(result.full_operator.conj().T @ result.full_operator - ident) < 1.0e-8
+E       AssertionError: assert np.float64(8.423378705657569e-08) < 1e-08
+E        +  where np.float64(8.423378705657569e-08) = <function norm at 0x000001647F93E4F0>(((array([[1.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.        -0.j        ],\n     ...   ],\n       [0.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.92977643-0.36812458j]]) @ array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.        +0.j        ],\n     ...   ],\n       [0.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.92977643+0.36812458j]])) - array([[1.+0.j, 0.+0.j, 0.+0.j, 0.+0.j],\n       [0.+0.j, 1.+0.j, 0.+0.j, 0.+0.j],\n       [0.+0.j, 0.+0.j, 1.+0.j, 0.+0.j],\n       [0.+0.j, 0.+0.j, 0.+0.j, 1.+0.j]])))
+E        +    where <function norm at 0x000001647F93E4F0> = <module 'numpy.linalg' from 'C:\\Users\\dazzl\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\numpy\\linalg\\__init__.py'>.norm
+E        +      where <module 'numpy.linalg' from 'C:\\Users\\dazzl\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\numpy\\linalg\\__init__.py'> = np.linalg
+E        +    and   array([[1.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.        -0.j        ],\n     ...   ],\n       [0.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.92977643-0.36812458j]]) = array([[1.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.        -0.j        ],\n     ...   ],\n       [0.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.92977643-0.36812458j]]).T
+E        +      where array([[1.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.        -0.j        ],\n     ...   ],\n       [0.        -0.j        , 0.        -0.j        ,\n        0.        -0.j        , 0.92977643-0.36812458j]]) = <built-in method conj of numpy.ndarray object at 0x000001642F2CA8B0>()
+E        +        where <built-in method conj of numpy.ndarray object at 0x000001642F2CA8B0> = array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.        +0.j        ],\n     ...   ],\n       [0.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.92977643+0.36812458j]]).conj
+E        +          where array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.        +0.j        ],\n     ...   ],\n       [0.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.92977643+0.36812458j]]) = SimulationResult(full_operator=array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        ,...'frame': FrameSpec(omega_c_frame=31415926535.89793, omega_q_frame=37699111843.077515, omega_r_frame=0.0), 'dt': 5e-09}).full_operator
+E        +    and   array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.        +0.j        ],\n     ...   ],\n       [0.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        , 0.92977643+0.36812458j]]) = SimulationResult(full_operator=array([[1.        +0.j        , 0.        +0.j        ,\n        0.        +0.j        ,...'frame': FrameSpec(omega_c_frame=31415926535.89793, omega_q_frame=37699111843.077515, omega_r_frame=0.0), 'dt': 5e-09}).full_operator
+
+tests\unitary_synthesis\test_flexible_workflow.py:135: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/unitary_synthesis/test_flexible_workflow.py::test_waveform_defined_primitive_returns_unitary_operator
+FAILED tests/unitary_synthesis/test_flexible_workflow.py::test_waveform_defined_primitive_supports_cqed_system_adapter

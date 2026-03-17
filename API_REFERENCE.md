@@ -47,7 +47,7 @@
 8. [Gate I/O (`cqed_sim.io`)](#8-gate-io)
 9. [Analysis (`cqed_sim.analysis`)](#9-analysis)
 10. [Backends (`cqed_sim.backends`)](#10-backends)
-11. [SQR Calibration (`cqed_sim.calibration`)](#11-sqr-calibration)
+11. [SQR Calibration And Multitone Validation (`cqed_sim.calibration`)](#11-sqr-calibration)
 12. [Calibration Targets (`cqed_sim.calibration_targets`)](#12-calibration-targets)
 13. [Tomography (`cqed_sim.tomo`)](#13-tomography)
 14. [Observables (`cqed_sim.observables`)](#14-observables)
@@ -63,6 +63,7 @@
     - 17.7 [UnitarySynthesizer](#177-unitarysynthesizer)
     - 17.8 [Results and Metrics](#178-results-and-metrics)
 17A. [Holographic Quantum Algorithms (`cqed_sim.quantum_algorithms.holographic_sim`)](#17a-holographic-quantum-algorithms-cqed_simquantum_algorithmsholographic_sim)
+17B. [RL Control And System Identification (`cqed_sim.rl_control`, `cqed_sim.system_id`)](#17b-rl-control-and-system-identification-cqed_simrl_control-cqed_simsystem_id)
 18. [Simulation Workflows / Common Usage Patterns](#18-simulation-workflows)
 19. [Physics-Facing API and Conventions](#19-physics-facing-api-and-conventions)
 20. [Notes on Internal Utilities](#20-notes-on-internal-utilities)
@@ -100,8 +101,10 @@ cqed_sim/
 ├── measurement/     # Qubit measurement and readout-chain modeling
 ├── analysis/        # Parameter translation (bare → dressed)
 ├── backends/        # Dense NumPy/JAX solver backends
-├── calibration/     # SQR gate calibration
+├── calibration/     # SQR gate calibration, reduced multitone checks, full logical-subspace multitone validation
 ├── calibration_targets/  # Spectroscopy, Rabi, Ramsey, T1, T2 echo, DRAG tuning
+├── rl_control/      # RL environments, task registry, action/observation/reward layers, randomization
+├── system_id/       # Calibration-informed priors and fit-then-randomize hooks
 ├── io/              # Gate sequence JSON I/O
 ├── observables/     # Bloch, Fock-resolved, phase, trajectory, Wigner diagnostics
 ├── operators/       # Pauli, cavity ladder, embedding helpers
@@ -110,6 +113,11 @@ cqed_sim/
 ├── unitary_synthesis/  # Subspace targeting, gate sequences, optimization, constraints
 └── quantum_algorithms/  # Generic holographic quantum-algorithm utilities
 ```
+
+The calibration package now contains two complementary multitone validation layers in addition to the guarded SQR helpers:
+
+- `conditioned_multitone`: reduced conditioned-qubit reachability and correction optimization.
+- `targeted_subspace_multitone`: full logical-subspace validation and optimization, including restricted logical-process metrics, state-transfer checks, cavity-block preservation, and leakage accounting.
 
 **Main simulation path for a typical user:**
 
@@ -445,7 +453,9 @@ All functions return QuTiP `Qobj` unitaries.
 | `qubit_rotation_xy(theta, phi)` | `(float, float) -> qt.Qobj` | exp(−iθ/2 [cos φ σ_x + sin φ σ_y]). 2×2 unitary. |
 | `qubit_rotation_axis(theta, axis)` | `(float, str) -> qt.Qobj` | Rotation around `"x"`, `"y"`, or `"z"` axis. |
 | `displacement_op(n_cav, alpha)` | `(int, complex) -> qt.Qobj` | D(α) = exp(α a† − α* a). n_cav × n_cav. |
-| `snap_op(phases)` | `(array) -> qt.Qobj` | diag(e^{iφ_0}, e^{iφ_1}, ...). Dimension = len(phases). |
+| `cavity_block_phase_op(phases, *, fock_levels=None, cavity_dim=None)` | `(array, ...) -> qt.Qobj` | Cavity-only diagonal phase layer. Omitted levels remain identity. |
+| `logical_block_phase_op(phases, *, fock_levels=None, cavity_dim=None, qubit_dim=2)` | `(array, ...) -> qt.Qobj` | Qubit-first embedding `I_q ⊗ cavity_block_phase_op(...)`. |
+| `snap_op(phases)` | `(array) -> qt.Qobj` | Contiguous cavity block-phase gate diag(e^{iφ_0}, e^{iφ_1}, ...). Dimension = len(phases). |
 | `sqr_op(thetas, phis)` | `(array, array) -> qt.Qobj` | Σ_n \|n⟩⟨n\| ⊗ R(θ_n, φ_n). Two-mode unitary. |
 | `embed_qubit_op(op_q, n_cav)` | `(qt.Qobj, int) -> qt.Qobj` | op_q ⊗ I_cav |
 | `embed_cavity_op(op_c, n_tr)` | `(qt.Qobj, int) -> qt.Qobj` | I_qubit ⊗ op_c. Default `n_tr=2`. |
@@ -851,6 +861,12 @@ class SimulationResult:
     solver_result: Any                        # Raw QuTiP solver result
 ```
 
+Also importable directly as `cqed_sim.SimulationResult`.
+
+> **Disambiguation:** The unitary-synthesis package has a separate
+> `cqed_sim.unitary_synthesis.SimulationResult` with different fields;
+> see [§17.8](#178-results-and-metrics).
+
 ---
 
 ### 6.4 SimulationSession and Prepared Simulation
@@ -1197,6 +1213,7 @@ Repository-side workflow entry points:
 - `examples/protocol_style_simulation.py`
 - `examples/kerr_free_evolution.py`
 - `examples/kerr_sign_verification.py`
+- `examples/logical_block_phase_targeted_subspace_demo.py`
 - `examples/sequential_sideband_reset.py`
 
 ---
@@ -1380,6 +1397,28 @@ class SQRCalibrationResult:
 | `improvement_summary()` | Dict with mean/max improvement metrics |
 | `to_dict()` / `from_dict(payload)` | Serialization |
 
+### SQRLevelCalibration
+
+Per-manifold calibration record stored in `SQRCalibrationResult.levels`.
+
+```python
+@dataclass
+class SQRLevelCalibration:
+    n: int                                       # Fock level index
+    theta_target: float                          # Target polar angle
+    phi_target: float                            # Target azimuthal angle
+    skipped: bool                                # Whether this level was skipped
+    initial_params: tuple[float, float, float]   # (d_lambda, d_alpha, d_omega) before optimization
+    optimized_params: tuple[float, float, float] # (d_lambda, d_alpha, d_omega) after optimization
+    initial_loss: float                          # Loss before optimization
+    optimized_loss: float                        # Loss after optimization
+    process_fidelity: float                      # Final conditional process fidelity
+    success_stage1: bool = False                 # Stage-1 (Powell) converged
+    success_stage2: bool = False                 # Stage-2 (L-BFGS-B) converged
+    message_stage1: str = ""                     # Optimizer message, stage 1
+    message_stage2: str = ""                     # Optimizer message, stage 2
+```
+
 ### Core Calibration Functions
 
 | Function | Signature | Description |
@@ -1396,9 +1435,116 @@ class SQRCalibrationResult:
 |---|---|---|
 | `evaluate_sqr_gate_levels(gate, config, corrections)` | `-> list[dict]` | Per-Fock-level fidelity evaluation |
 | `extract_effective_qubit_unitary(n, theta, phi, config, d_lambda, d_alpha, d_omega)` | `-> (ndarray, dict)` | 2×2 qubit unitary from time-dependent Hamiltonian |
+| `extract_multitone_effective_qubit_unitary(manifold_n, target, config, corrections)` | `(int, RandomSQRTarget, Mapping, Mapping\|None) -> (ndarray, dict)` | 2×2 qubit unitary for a multitone drive evaluated at a single manifold |
+| `evaluate_guarded_sqr_target(target, config, corrections, lambda_guard, weight_mode, poisson_alpha)` | `(RandomSQRTarget, Mapping, ...) -> dict` | Evaluate a guarded target with leakage penalty; returns per-manifold metrics |
 | `target_qubit_unitary(theta, phi)` | `-> ndarray` | Ideal SQR target unitary |
 | `conditional_process_fidelity(target, simulated)` | `-> float` | Process fidelity, clipped to [0, 1] |
 | `conditional_loss(params, n, theta, phi, config)` | `-> float` | Optimization objective: 1 − fidelity + regularization |
+
+### Conditioned Multitone Validation
+
+**Module path:** `cqed_sim.calibration.conditioned_multitone`
+
+This reduced-objective API answers a narrower question than full SQR gate calibration:
+whether a single common multitone qubit drive can place the qubit, conditioned on
+each cavity Fock sector, at the requested target Bloch angles \\(\theta_n, \phi_n\\)
+under the dispersive Hamiltonian. It deliberately does **not** enforce full joint-unitary
+or cavity-branch correctness.
+
+```python
+@dataclass(frozen=True)
+class ConditionedQubitTargets:
+    theta: tuple[float, ...]
+    phi: tuple[float, ...]
+    weights: tuple[float, ...] = ()
+
+@dataclass(frozen=True)
+class ConditionedMultitoneCorrections:
+    d_lambda: tuple[float, ...] = ()
+    d_alpha: tuple[float, ...] = ()
+    d_omega_rad_s: tuple[float, ...] = ()
+
+@dataclass(frozen=True)
+class ConditionedMultitoneRunConfig:
+    frame: FrameSpec = FrameSpec()
+    duration_s: float = 1.0e-6
+    dt_s: float = 4.0e-9
+    sigma_fraction: float = 1.0 / 6.0
+    tone_cutoff: float = 1.0e-10
+    include_all_levels: bool = False
+    max_step_s: float | None = None
+    fock_fqs_hz: tuple[float, ...] | None = None
+
+@dataclass(frozen=True)
+class ConditionedOptimizationConfig:
+    active_levels: tuple[int, ...] = ()
+    parameters: tuple[str, ...] = ("d_lambda", "d_alpha", "d_omega")
+    method_stage1: str = "Powell"
+    method_stage2: str | None = "L-BFGS-B"
+    maxiter_stage1: int = 40
+    maxiter_stage2: int = 60
+```
+
+| Function / Type | Description |
+|---|---|
+| `ConditionedQubitTargets.from_spec(targets, n_levels=None, weights=None)` | Accepts list/array/dict target specifications and normalizes sector weights |
+| `qubit_state_from_angles(theta, phi)` / `qubit_density_matrix_from_angles(theta, phi)` | Pure-state target helpers for a single conditioned qubit sector |
+| `build_conditioned_multitone_tones(model, targets, run_config, corrections)` | Builds per-tone amplitudes, phases, and carriers using the library’s additive-amplitude and carrier-sign conventions |
+| `build_conditioned_multitone_waveform(tone_specs, run_config, ...)` | Converts tone specs into a reusable common multitone `Pulse` |
+| `sample_conditioned_multitone_waveform(waveform, run_config, ...)` | Returns sampled complex envelope plus IQ traces for plotting |
+| `evaluate_conditioned_multitone(model, targets, waveform, run_config, ...)` | Computes per-sector conditioned qubit fidelities, Bloch vectors, angle errors, and weighted aggregate cost |
+| `run_conditioned_multitone_validation(model, targets, run_config, ...)` | Convenience wrapper that builds tones, builds the waveform, and evaluates the result |
+| `optimize_conditioned_multitone(model, targets, run_config, ...)` | Tunes `d_lambda`, `d_alpha`, and/or `d_omega` against the reduced conditioned-qubit cost |
+
+The validation path supports two simulation modes:
+
+- `simulation_mode="reduced"`: exact sector-by-sector two-level evolution under the dispersive Hamiltonian decomposition.
+- `simulation_mode="full"`: full qubit-cavity simulation followed by conditioned qubit-state extraction as a consistency check.
+
+Use the reduced layer when the question is, "Can one common waveform place the qubit at the requested conditioned Bloch targets?" Move to the targeted-subspace layer when the question is, "Does that same waveform implement the intended coherent operator across a chosen logical qubit-cavity block structure?"
+
+Practical entry points:
+
+- `examples/conditioned_multitone_reduced_demo.py` shows the reduced workflow, including reduced-vs-full agreement and a small detuning-only optimization.
+- `examples/logical_block_phase_targeted_subspace_demo.py` shows the full targeted-subspace workflow, including best-fit logical block phases and the ideal cavity-only correction layer.
+
+### Targeted-Subspace Logical Block Phase
+
+**Module path:** `cqed_sim.calibration.targeted_subspace_multitone`
+
+This layer extends conditioned multitone validation to the full logical qubit-cavity subspace and can append an explicit ideal cavity-only logical block-phase layer after the simulated waveform operator.
+
+```python
+@dataclass(frozen=True)
+class LogicalBlockPhaseCorrection:
+    logical_levels: tuple[int, ...] = ()
+    phases_rad: tuple[float, ...] = ()
+
+@dataclass(frozen=True)
+class TargetedSubspaceOptimizationConfig:
+    conditioned: ConditionedOptimizationConfig = ConditionedOptimizationConfig()
+    include_block_phase: bool = False
+    block_phase_levels: tuple[int, ...] = ()
+    block_phase_bounds_rad: tuple[float, float] = (-np.pi, np.pi)
+    regularization_block_phase: float = 0.0
+    block_phase_reference_level: int | None = None
+```
+
+| Function / Type | Description |
+|---|---|
+| `build_block_rotation_target_operator(targets, logical_levels=None)` | Ideal restricted target operator with 2×2 qubit blocks ordered as `|g,0>, |e,0>, |g,1>, |e,1>, ...` |
+| `build_spanning_state_transfer_set(target_operator, include_pairwise_superpositions=True)` | Basis-plus-superposition transfer probes for restricted-state diagnostics |
+| `analyze_targeted_subspace_operator(actual_full_operator, model, targets, ..., logical_block_phase=None)` | Evaluates restricted fidelity, state-transfer metrics, block populations, and logical block-phase diagnostics |
+| `run_targeted_subspace_multitone_validation(model, targets, run_config, ..., logical_block_phase=None)` | Builds the common multitone waveform and evaluates the full targeted subspace |
+| `optimize_targeted_subspace_multitone(model, targets, run_config, ..., initial_logical_block_phase=None, optimization_config=...)` | Two-stage targeted-subspace optimization over waveform corrections and, optionally, logical block-phase parameters |
+
+`TargetedSubspaceValidationResult` records the applied logical block phase, the best-fit logical block phase extracted from the raw restricted operator, the corrected restricted-process fidelity, and a `LogicalBlockPhaseDiagnostics` payload.
+
+Typical workflow order:
+
+1. Start with `run_conditioned_multitone_validation(...)` to separate basic conditioned-qubit reachability from stronger logical-subspace failures.
+2. If the reduced layer succeeds but the full logical action is still poor, switch to `run_targeted_subspace_multitone_validation(...)` and inspect restricted-process fidelity, block-preservation metrics, leakage, and block-phase diagnostics.
+3. If the dominant defect is coherent logical block phase, either supply `logical_block_phase=` directly or enable `TargetedSubspaceOptimizationConfig(include_block_phase=True)` when you want the optimizer to fit that ideal post-layer.
 
 ### Random Target Benchmarking
 
@@ -1947,6 +2093,76 @@ class TargetStateMapping:
     ): ...
 ```
 
+```python
+class TargetReducedStateMapping:
+    def __init__(
+        self,
+        *,
+        initial_states,
+        target_states,
+        retained_subsystems,
+        subsystem_dims=None,
+        weights=None,
+    ): ...
+```
+
+```python
+@dataclass(frozen=True)
+class TargetIsometry:
+    matrix: np.ndarray
+    input_states: tuple[qt.Qobj | np.ndarray, ...] = ()
+    weights: tuple[float, ...] = ()
+```
+
+```python
+class TargetChannel:
+    def __init__(
+        self,
+        *,
+        choi=None,
+        superoperator=None,
+        kraus_operators=None,
+        unitary=None,
+        retained_subsystems=None,
+        subsystem_dims=None,
+        environment_state=None,
+        enforce_cptp=False,
+    ): ...
+```
+
+```python
+class ObservableTarget:
+    def __init__(
+        self,
+        *,
+        initial_states=None,
+        observables=None,
+        target_expectations=None,
+        initial_state=None,
+        observable=None,
+        target_expectation=None,
+        state_weights=None,
+        observable_weights=None,
+    ): ...
+```
+
+```python
+@dataclass(frozen=True)
+class TrajectoryCheckpoint:
+    step: int
+    target_states: tuple[qt.Qobj | np.ndarray, ...] = ()
+    observables: tuple[qt.Qobj | np.ndarray, ...] = ()
+    target_expectations: np.ndarray | Sequence = ()
+    weight: float = 1.0
+    state_weights: tuple[float, ...] = ()
+    observable_weights: tuple[float, ...] = ()
+    label: str | None = None
+
+
+class TrajectoryTarget:
+    def __init__(self, *, initial_states, checkpoints, state_weights=None): ...
+```
+
 **`TargetUnitary` notes:**
 
 - Validates unitarity on construction; raises `ValueError` if the matrix is not unitary within `atol=1e-8`.
@@ -1966,6 +2182,14 @@ class TargetStateMapping:
 
 - Accepts plural (`initial_states`, `target_states`) or singular (`initial_state`, `target_state`) arguments; not both.
 - Optional `weights` per state pair; uniform if omitted.
+- `TargetReducedStateMapping` compares only retained subsystems after partial trace, allowing spectator or environment dynamics to be ignored deliberately.
+- `TargetIsometry` matches only the relevant logical columns of a larger operation, which is useful for encoding and injection workflows.
+- `TargetChannel` supports process-style matching from a unitary, Kraus list, superoperator, or Choi matrix and can reconstruct reduced subsystem channels from a fixed environment state.
+
+**Additional task targets:**
+
+- `ObservableTarget` matches weighted observable expectations on a relevant state ensemble.
+- `TrajectoryTarget` compares intermediate protocol checkpoints using state targets, observable targets, or both.
 
 **`TargetStateMapping` methods:**
 
@@ -2027,6 +2251,7 @@ All gate types share the common timing fields (`name`, `duration`, `optimize_tim
 | `QubitRotation` | `theta: float`, `phi: float` | Qubit rotation R(theta, phi) |
 | `Displacement` | `alpha: complex` | Cavity displacement D(alpha) |
 | `SQR` | `theta_n`, `phi_n`, `tones`, `tone_freqs`, `include_conditional_phase`, `drift_model` | Selective qubit rotation (multi-tone Gaussian) |
+| `CavityBlockPhase` | `phases: list[float]`, `fock_levels: tuple[int, ...]` | Ideal cavity-only logical block-phase gate acting identically on both qubit states |
 | `SNAP` | `phases: list[float]` | Number-selective phase gate |
 | `ConditionalPhaseSQR` | `phases_n: list[float]`, `drift_model: DriftPhaseModel` | Conditional phase via free-evolution SQR block |
 | `FreeEvolveCondPhase` | `drift_model: DriftPhaseModel` | Free-evolution conditional phase with no explicit drive pulse |
@@ -2188,19 +2413,36 @@ class LeakagePenalty:
     weight: float = 0.0
     allowed_subspace: Subspace | Sequence[int] | None = None
     metric: str = "worst"
+    checkpoint_weight: float = 0.0
+    checkpoints: tuple[int, ...] = ()
 ```
 
 ```python
 @dataclass(frozen=True)
 class MultiObjective:
     fidelity_weight: float = 1.0
+    task_weight: float | None = None
     leakage_weight: float = 0.0
     duration_weight: float = 0.0
+    gate_count_weight: float = 0.0
     pulse_power_weight: float = 0.0
     robustness_weight: float = 0.0
     smoothness_weight: float = 0.0
     hardware_penalty_weight: float = 1.0
     mode: str = "weighted_sum"   # currently only "weighted_sum" is supported
+```
+
+```python
+@dataclass(frozen=True)
+class ExecutionOptions:
+    engine: str = "auto"
+    fallback_engine: str = "legacy"
+    device: str = "auto"
+    use_fast_path: bool = True
+    jit: bool = True
+    vectorized_candidates: bool = True
+    candidate_batch_size: int = 0
+    cache_fast_path: bool = True
 ```
 
 ```python
@@ -2225,6 +2467,7 @@ class UnitarySynthesizer:
         leakage_penalty: LeakagePenalty | Mapping | None = None,
         objectives: MultiObjective | Mapping | None = None,
         parameter_distribution: ParameterDistribution | None = None,
+        execution: ExecutionOptions | Mapping | None = None,
         warm_start: str | Path | Mapping | SynthesisResult | None = None,
         ...,
     )
@@ -2242,13 +2485,73 @@ Important behavior:
 
 - Closed-system unitary targets still use direct subspace-unitary fidelity.
 - Open-system unitary targets automatically switch to probe-state fidelity.
+- `ObservableTarget`, `TrajectoryTarget`, `TargetReducedStateMapping`, `TargetIsometry`, and `TargetChannel` let the task be defined directly on relevant outputs, reduced states, logical columns, checkpointed trajectories, or full process actions.
 - `system=...` is the preferred future-facing entry point for backend integration.
 - `model=...` remains supported for cQED workflows and is auto-wrapped.
 - `parameter_distribution` samples model variants and folds them into the synthesis objective.
+- `execution=ExecutionOptions(...)` selects the legacy evaluator or the accelerated ideal closed-system evaluator. The fast path currently covers closed-system `backend="ideal"` unitary, state-mapping, isometry, observable, and trajectory objectives. Reduced-state and channel objectives fall back automatically with a recorded reason.
 - `warm_start` accepts a saved payload, mapping, or previous `SynthesisResult`.
 - `optimizer` supports `auto`, `nelder_mead`, `powell`, `bfgs`, `l_bfgs_b`, `differential_evolution`, and `cma_es`.
 
 ### 17.8 Results and Metrics
+
+#### Synthesis SimulationResult
+
+**Module path:** `cqed_sim.unitary_synthesis.backends`
+
+> **Not the same class** as `cqed_sim.sim.runner.SimulationResult` documented
+> in [§6.3](#63-simulationresult). This dataclass holds the propagated operator
+> and subspace projection from a synthesis simulation backend.
+
+```python
+@dataclass
+class SimulationResult:
+    full_operator: np.ndarray | None           # Full-Hilbert-space unitary
+    subspace_operator: np.ndarray | None       # Projected subspace unitary
+    state_outputs: list[qt.Qobj] | None = None # Propagated output states
+    metrics: dict[str, float] = field(default_factory=dict)
+    backend: str = "ideal"                     # Backend that produced the result
+    settings: dict[str, Any] = field(default_factory=dict)
+```
+
+#### simulate_sequence (synthesis)
+
+**Module path:** `cqed_sim.unitary_synthesis.backends`
+
+```python
+def simulate_sequence(
+    sequence: GateSequence,
+    subspace: Subspace | None,
+    backend: str = "ideal",
+    target_subspace: np.ndarray | None = None,
+    leakage_weight: float = 0.0,
+    gauge: str = "global",
+    block_slices: Sequence[slice | Sequence[int] | np.ndarray] | None = None,
+    state_inputs: Sequence[qt.Qobj | np.ndarray] | None = None,
+    need_operator: bool = True,
+    system: Any | None = None,
+    **backend_settings: Any,
+) -> SimulationResult
+```
+
+Runs a gate sequence through the specified backend and returns the propagated
+operator and metrics. The `"ideal"` backend multiplies out the ideal gate matrices;
+the `"cqed"` backend delegates to the full cQED pulse simulator via a
+`CQEDSystemAdapter`.
+
+#### make_run_report
+
+**Module path:** `cqed_sim.unitary_synthesis.reporting`
+
+```python
+def make_run_report(
+    base_report: dict[str, Any],
+    subspace_operator: np.ndarray,
+) -> dict[str, Any]
+```
+
+Augments a base report dict with unitarity error, norm, and dimension fields
+derived from the subspace operator.
 
 #### SynthesisResult
 
@@ -2295,20 +2598,46 @@ class LeakageMetrics:
     average: float
     worst: float
     per_probe: tuple[float, ...]
+
+@dataclass(frozen=True)
+class LogicalBlockPhaseDiagnostics:
+    block_phases_rad: tuple[float, ...]
+    relative_block_phases_rad: tuple[float, ...]
+    applied_correction_phases_rad: tuple[float, ...]
+    best_fit_correction_phases_rad: tuple[float, ...]
+    corrected_block_phases_rad: tuple[float, ...]
+    corrected_relative_block_phases_rad: tuple[float, ...]
+    residual_block_phases_rad: tuple[float, ...]
+    rms_block_phase_error_rad: float
+    block_gauge_fidelity: float
+    corrected_block_gauge_fidelity: float
+    best_fit_block_gauge_fidelity: float
 ```
 
 | Function | Signature | Description |
 |---|---|---|
 | `subspace_unitary_fidelity(actual, target, gauge="global", block_slices=None)` | `(ndarray, ndarray, str, ...) -> float` | Subspace fidelity with gauge `"none"`, `"global"`, `"diagonal"`, or `"block"` |
 | `leakage_metrics(full_operator, subspace, probes=None, n_jobs=1)` | `(ndarray, Subspace, ...) -> LeakageMetrics` | Compute average/worst leakage from subspace basis vectors |
+| `logical_block_phase_diagnostics(actual, target, *, block_slices, applied_correction_phases=None)` | `(ndarray, ndarray, ...) -> LogicalBlockPhaseDiagnostics` | Gauge-fixed block-overlap phases, best-fit block-phase correction, and residual RMS after an optional applied correction |
 | `state_leakage_metrics(states, subspace)` | `(Sequence, Subspace) -> LeakageMetrics` | Leakage from already-propagated output states |
 | `state_mapping_metrics(outputs, targets, *, weights=None)` | `(Sequence, Sequence, ...) -> dict` | Weighted state fidelity and error metrics |
+| `channel_action_metrics(actual_superoperator, actual_choi, *, target_choi, target_superoperator=None, trace_values=None)` | `-> dict` | Channel/process error, overlap, trace-preservation, and CP diagnostics |
 | `objective_breakdown(actual_sub, target_sub, full_op, subspace, ...)` | `-> dict` | Full breakdown: fidelity, leakage, objective |
+| `truncation_sanity_metrics(states, subspace)` | `(Sequence, Subspace) -> dict` | Retained-edge and outside-tail population diagnostics from propagated states |
+| `operator_truncation_sanity_metrics(full_operator, subspace)` | `(ndarray, Subspace) -> dict` | Truncation diagnostics derived from logical basis columns of a full operator |
 | `unitarity_error(op)` | `(ndarray) -> float` | Frobenius norm of U†U − I; 0 for exact unitaries |
 
 `state_mapping_metrics` returns: `state_error_mean`, `state_error_max`,
 `state_fidelity_mean`, `state_fidelity_min`, `weighted_state_error`,
 `weighted_state_infidelity`, `objective`.
+
+Channel-style targets additionally report `channel_overlap`, `channel_choi_error`,
+`channel_superoperator_error`, `trace_preservation_error_mean`,
+`trace_preservation_error_max`, `trace_loss_mean`, `trace_loss_worst`,
+`choi_hermiticity_error`, `choi_min_eig`, and
+`complete_positivity_violation`. All synthesis reports now also include
+`truncation.retained_edge_population_*` and `truncation.outside_tail_population_*`
+for cutoff sanity checks.
 
 #### Progress Reporting
 
@@ -2384,6 +2713,114 @@ HoloQUADSProgram([...])
 - `HoloVQEObjective` provides a minimal energy-objective wrapper built from correlator schedules.
 - `HoloQUADSProgram` and `TimeSlice` provide a lightweight time-sliced interface for future holographic dynamics workflows.
 - Example constructors in `cqed_sim.quantum_algorithms.holographic_sim.models` provide spin-inspired and partial-swap channels without making them mandatory.
+
+---
+
+## 17B. RL Control And System Identification (`cqed_sim.rl_control`, `cqed_sim.system_id`)
+
+The RL-facing package adds a measurement-aware control layer on top of the existing cQED runtime rather than introducing a second simulator stack.
+
+### Core Environment Objects
+
+```python
+HybridCQEDEnv(config)
+
+HybridEnvConfig(
+    system=HybridSystemConfig(...),
+    task=coherent_state_preparation_task(),
+    action_space=PrimitiveActionSpace(...),
+    observation_model=build_observation_model("measurement_iq"),
+    reward_model=build_reward_model("state"),
+)
+```
+
+```python
+@dataclass
+class HybridSystemConfig:
+    regime: Literal["reduced_dispersive", "full_pulse"]
+    reduced_model: ReducedDispersiveModelConfig | None = None
+    full_model: FullPulseModelConfig | None = None
+    frame: FrameSpec = FrameSpec()
+    use_model_rotating_frame: bool = True
+    noise: NoiseSpec | None = None
+    hardware: dict[str, HardwareConfig] = field(default_factory=dict)
+    crosstalk_matrix: dict[str, dict[str, float]] = field(default_factory=dict)
+    dt: float = 4.0e-9
+    max_step: float | None = None
+```
+
+Highlights:
+
+- `HybridCQEDEnv.reset(...)` supports deterministic seeding, task selection, and episode-level parameter randomization.
+- `HybridCQEDEnv.step(action)` parses the configured action space, generates pulses, compiles distortions, propagates the system, optionally measures, and returns the next observation plus reward.
+- `render_diagnostics()` exposes simulator-side debugging state such as reduced states, ancilla populations, Wigner diagnostics, compiled channels, segment metadata, pulse summaries, and the resolved frame/regime metadata.
+- `estimate_metrics(...)` evaluates a baseline sequence or user-supplied policy/actions over multiple seeded rollouts and reports distribution summaries.
+
+### Action, Observation, and Reward Layers
+
+```python
+ParametricPulseActionSpace(family="hybrid_block")
+PrimitiveActionSpace(primitives=("qubit_gaussian", "cavity_displacement", "sideband", "wait", "measure", "reset"))
+WaveformActionSpace(segments=16, channels=("qubit", "storage"))
+```
+
+```python
+build_observation_model("ideal_summary")
+build_observation_model("measurement_iq", mode="iq_mean")
+build_observation_model("measurement_classifier_logits")
+build_observation_model("measurement_outcome")
+build_observation_model("gate_metrics")
+```
+
+```python
+build_reward_model("state")
+build_reward_model("gate")
+build_reward_model("cat")
+build_reward_model("measurement_proxy")
+```
+
+Highlights:
+
+- Parametric actions are the default low-dimensional interface for RL studies.
+- Primitive actions provide a more hierarchical interface aligned with validated bosonic/ancilla control blocks.
+- Waveform actions are included as an explicit scaffold for future higher-bandwidth control studies.
+- Observation builders support ideal simulator summaries, reduced-density views, measurement-like IQ summaries, counts, classifier logits, confusion-noisy outcome labels, and history stacking.
+- Reward builders combine fidelity-like objectives with leakage, ancilla-return, control-cost penalties, and an explicit measurement-assignment reward for partially observed proxy objectives.
+
+### Benchmark Tasks, Randomization, and Calibration Hooks
+
+```python
+benchmark_task_suite()
+vacuum_preservation_task()
+coherent_state_preparation_task()
+fock_state_preparation_task()
+storage_superposition_task()
+even_cat_preparation_task()
+odd_cat_preparation_task()
+ancilla_storage_bell_task()
+conditional_phase_gate_task()
+```
+
+```python
+DomainRandomizer(
+    model_priors_train={"chi": NormalPrior(...)}
+)
+
+CalibrationEvidence(...)
+randomizer_from_calibration(evidence)
+```
+
+Highlights:
+
+- The benchmark ladder currently covers vacuum preservation, coherent-state preparation, Fock-state preparation, storage-basis superpositions, even/odd cat preparation, ancilla-storage entanglement, and a reduced conditional-phase gate task.
+- `DomainRandomizer` separates train and eval priors and records the sampled per-episode metadata.
+- `cqed_sim.system_id` intentionally provides lightweight fit-then-randomize scaffolding rather than a full inference engine.
+
+Approximation boundary:
+
+- The reduced regime is intended for faster RL iteration with dispersive/Kerr structure.
+- The full regime uses the generalized model stack for a richer multilevel pulse path.
+- Measurement-conditioned stochastic state updates and SME trajectories are not yet implemented in this first pass.
 
 ---
 
@@ -2603,4 +3040,4 @@ should be noted when deploying or sharing the repository.
 
 ---
 
-*Generated from codebase inspection. Last updated: 2026-03-15.*
+*Generated from codebase inspection. Last updated: 2026-06-12.*

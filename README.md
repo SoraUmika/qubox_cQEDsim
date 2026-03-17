@@ -46,7 +46,16 @@ Core library:
 - `cqed_sim/analysis`, `cqed_sim/calibration_targets`, `cqed_sim/backends`
   - Parameter translation, calibration-target surrogates, and optional dense NumPy/JAX backend support.
 - `cqed_sim/calibration`, `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`, `cqed_sim/unitary_synthesis`
-  - Reusable calibration, diagnostics, tomography, gate I/O, plotting, and synthesis helpers that remain part of the library surface.
+  - Reusable calibration, diagnostics, tomography, gate I/O, plotting, and synthesis helpers that remain part of the library surface, including reduced conditioned-qubit multitone reachability checks and full targeted-subspace multitone audits for dispersive SQR-style studies.
+- `cqed_sim/rl_control`, `cqed_sim/system_id`
+  - RL-facing hybrid control environments, action/observation/reward abstractions, benchmark tasks, domain randomization, diagnostics, and calibration-informed prior hooks for future fit-then-randomize workflows.
+
+Calibration-side multitone helpers now cover two complementary validation modes for dispersive SQR-style studies:
+
+- reduced conditioned-qubit validation via `cqed_sim.calibration.conditioned_multitone`
+- full logical-subspace validation and optimization via `cqed_sim.calibration.targeted_subspace_multitone`
+
+The reduced path asks whether each conditioned qubit state can be reached. The targeted-subspace path asks the stronger question of whether the same common waveform implements the intended coherent operator on a chosen joint qubit-cavity logical subspace while preserving cavity-block structure and suppressing leakage.
 
 Example-side code:
 
@@ -390,6 +399,7 @@ For the guided learning path, start in `tutorials/`:
 - `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
 - `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`
 - `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb`
+- `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
 - `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
 
 The earlier flat numbered curriculum under `tutorials/*.ipynb` is still available as a broader API/conventions primer, but the categorized workflow suite above is now the notebook-first entry point for the migrated example programs.
@@ -400,6 +410,7 @@ Standalone repo-side scripts still live in `examples/`:
 - `examples/kerr_free_evolution.py`
 - `examples/kerr_sign_verification.py`
 - `examples/sequential_sideband_reset.py`
+- `examples/rl_hybrid_control_rollout.py`
 
 ## Performance-oriented usage
 
@@ -536,6 +547,15 @@ Reusable calibration entry points:
 - `load_or_calibrate_sqr_gate(...)`
 - `calibrate_guarded_sqr_target(...)`
 - `benchmark_random_sqr_targets_vs_duration(...)`
+- `run_conditioned_multitone_validation(...)`
+- `optimize_conditioned_multitone(...)`
+
+Conditioned multitone reachability helpers:
+
+- `ConditionedQubitTargets.from_spec(...)` accepts list/array/dict target specifications for per-Fock Bloch angles.
+- `build_conditioned_multitone_tones(...)` and `build_conditioned_multitone_waveform(...)` construct the common multitone qubit drive using the same carrier-sign and additive-amplitude conventions as the rest of the library.
+- `evaluate_conditioned_multitone(...)` reports per-sector conditioned qubit fidelities, Bloch vectors, angle errors, and a weighted aggregate cost.
+- `optimize_conditioned_multitone(...)` tunes `d_lambda`, `d_alpha`, and `d_omega` against the reduced conditioned-qubit objective without imposing full joint-unitary correctness.
 
 Reusable tomography entry points:
 
@@ -562,6 +582,32 @@ Unitary-synthesis entry points:
 - `UnitarySynthesizer(...).explore_pareto(...)`
 
 `cqed_sim/unitary_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. Matrix-defined primitives, target-state mappings, and model-backed waveform primitives all route through that same convention set. The synthesizer now talks to a backend `QuantumSystem` interface, with `CQEDSystemAdapter(...)` preserving the existing cQED model workflow while preparing the architecture for future non-cQED systems. Phase 2 adds constraint-aware objectives, leakage-aware/noisy synthesis, robust parameter-distribution sampling, Pareto exploration, warm starts, and result export on top of that same runtime model stack. The remaining sign distinction users need to track is the pulse waveform convention: `Pulse.carrier = -omega_transition(frame)`.
+
+## RL-ready hybrid control
+
+`cqed_sim.rl_control` adds a first-pass simulator-trained control layer on top of the existing physics stack rather than beside it.
+
+The new environment surface centers on:
+
+- `HybridCQEDEnv(...)` with `reset(...)`, `step(...)`, `render_diagnostics()`, and `estimate_metrics(...)`
+- two model regimes through `HybridSystemConfig`: a fast reduced dispersive model and a fuller multilevel pulse model
+- action-space families for low-dimensional parametric pulses, primitive/hierarchical controls, and waveform-level scaffolding
+- ideal and measurement-like observation encoders, including IQ, counts, classifier-logit, and one-hot outcome views, plus domain-randomized hidden-parameter sampling
+- simulator-shaped and measurement-proxy reward builders, including explicit ancilla-assignment rewards for partially observed studies
+- a benchmark task ladder spanning vacuum preservation, coherent-state preparation, Fock-state preparation, storage-basis superpositions, even/odd cat preparation, ancilla-storage entanglement, and a reduced conditional-phase gate task
+- richer rollout diagnostics that expose compiled channels together with segment metadata, pulse summaries, and frame/regime metadata for debugging
+
+The intended public entry points are:
+
+- `HybridCQEDEnv`, `HybridEnvConfig`, `HybridSystemConfig`
+- `ReducedDispersiveModelConfig`, `FullPulseModelConfig`
+- `ParametricPulseActionSpace`, `PrimitiveActionSpace`, `WaveformActionSpace`
+- `build_observation_model(...)`, `build_reward_model(...)`
+- `benchmark_task_suite()` and the individual benchmark task constructors
+- `DomainRandomizer`, `FixedPrior`, `UniformPrior`, `NormalPrior`, `ChoicePrior`
+- `CalibrationEvidence`, `randomizer_from_calibration(...)`
+
+For a repo-side script template, see `examples/rl_hybrid_control_rollout.py`. For an interactive notebook walkthrough that builds the environment, runs scripted and random actions, and plots diagnostics directly, see `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`.
 
 ## What stays in `examples/`
 
@@ -598,6 +644,7 @@ For the migrated workflow-tutorial suite, the main starting points are:
 - `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
 - `tutorials/20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb`
 - `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
+- `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
 - `tutorials/TUTORIAL_MIGRATION_PLAN.md`
 
 ## Tests

@@ -70,7 +70,8 @@ def test_same_area_different_shape_same_rotation_small_signal():
     amp_sq = area / dur
     # normalize Gaussian to same area numerically
     t = np.linspace(0, 1, 2000)
-    g_int = np.trapz(_gauss(t).real, t)
+    _trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+    g_int = _trapezoid(_gauss(t).real, t)
     amp_g = area / g_int
     sq = Pulse("q", 0.0, dur, _square, amp=amp_sq)
     ga = Pulse("q", 0.0, dur, _gauss, amp=amp_g)

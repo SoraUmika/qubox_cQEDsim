@@ -1,5 +1,12 @@
 from .grape import GrapeConfig, GrapeSolver, solve_grape
 from .initial_guesses import random_control_schedule, warm_start_schedule, zero_control_schedule
+from .evaluation import (
+    ControlEvaluationCase,
+    ControlEvaluationResult,
+    ControlMemberEvaluation,
+    ControlObjectiveEvaluation,
+    evaluate_control_with_simulator,
+)
 from .objectives import (
     StateTransferObjective,
     StateTransferPair,
@@ -20,7 +27,7 @@ from .problems import (
     build_control_system_from_model,
     build_control_terms_from_model,
 )
-from .result import GrapeIterationRecord, GrapeResult
+from .result import ControlResult, GrapeIterationRecord, GrapeResult
 
 __all__ = [
     "ControlTerm",
@@ -40,11 +47,17 @@ __all__ = [
     "AmplitudePenalty",
     "SlewRatePenalty",
     "LeakagePenalty",
+    "ControlResult",
     "GrapeConfig",
     "GrapeIterationRecord",
     "GrapeResult",
+    "ControlEvaluationCase",
+    "ControlObjectiveEvaluation",
+    "ControlMemberEvaluation",
+    "ControlEvaluationResult",
     "GrapeSolver",
     "solve_grape",
+    "evaluate_control_with_simulator",
     "zero_control_schedule",
     "random_control_schedule",
     "warm_start_schedule",

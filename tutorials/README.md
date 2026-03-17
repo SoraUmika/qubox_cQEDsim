@@ -60,7 +60,7 @@ If you want the older foundations-first path, start with:
 - `03_unitary_synthesis_workflow.ipynb`
   - Target-unitary synthesis inside a qubit-cavity subspace.
 - `06_grape_optimal_control_workflow.ipynb`
-  - Model-backed GRAPE optimization with direct piecewise-constant controls and pulse-runtime replay.
+  - Model-backed GRAPE optimization with direct piecewise-constant controls, nominal/noisy replay, and the benchmark harness entry point.
 - `04_snap_optimization_workflow.ipynb`
   - Repo-side SNAP optimization study helper with an honest scope note.
 - `05_rl_hybrid_control_environment.ipynb`

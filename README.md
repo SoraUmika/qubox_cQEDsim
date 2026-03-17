@@ -403,6 +403,8 @@ For the guided learning path, start in `tutorials/`:
 - `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
 - `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
 
+The GRAPE tutorial now covers both closed-system optimization and simulator-backed noisy replay, and it shows how to launch the dedicated benchmark harness for larger cases.
+
 The earlier flat numbered curriculum under `tutorials/*.ipynb` is still available as a broader API/conventions primer, but the categorized workflow suite above is now the notebook-first entry point for the migrated example programs.
 
 Standalone repo-side scripts still live in `examples/`:
@@ -413,6 +415,10 @@ Standalone repo-side scripts still live in `examples/`:
 - `examples/sequential_sideband_reset.py`
 - `examples/grape_storage_subspace_gate_demo.py`
 - `examples/rl_hybrid_control_rollout.py`
+
+Optimal-control benchmark artifacts live under `benchmarks/`:
+
+- `benchmarks/run_optimal_control_benchmarks.py`
 
 ## Performance-oriented usage
 
@@ -453,6 +459,7 @@ Practical guidance:
 Performance artifacts:
 
 - `benchmarks/run_performance_benchmarks.py`
+- `benchmarks/run_optimal_control_benchmarks.py`
 - `benchmarks/performance_audit.md`
 
 GPU note:

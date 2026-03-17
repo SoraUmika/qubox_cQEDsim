@@ -1,0 +1,90 @@
+{
+  "two_mode_hamiltonian_diagonal": {
+    "passed": true,
+    "detail": "All basis-state energies match analytic formula within 1e-3 rad/s"
+  },
+  "manifold_transition_frequency": {
+    "passed": true,
+    "detail": "omega_ge(n) = chi*n verified for n=0..4 (chi=-2.84 MHz)"
+  },
+  "chi_sign_negative_lowers_freq": {
+    "passed": true,
+    "detail": "chi=-2.84 MHz: freq(n=0)=0.0000 MHz, freq(n=1)=-2.8400 MHz, freq(n=5)=-14.2000 MHz"
+  },
+  "chi_sign_positive_raises_freq": {
+    "passed": true,
+    "detail": "chi=+2.84 MHz: freq(n=0)=0.0000 MHz, freq(n=1)=2.8400 MHz"
+  },
+  "kerr_sign_negative_decreases_spacing": {
+    "passed": true,
+    "detail": "kerr=-2.00 kHz: spacings (MHz) = 0.000000, -0.002000, -0.004000, -0.006000"
+  },
+  "kerr_sign_positive_raises_spacing": {
+    "passed": true,
+    "detail": "kerr=+2.00 kHz: spacings (MHz) = 0.000000, 0.002000, 0.004000, 0.006000"
+  },
+  "three_mode_qubit_freq_vacuum": {
+    "passed": true,
+    "detail": "qubit transition freq (on-frame, vacuum) = 0.000000 MHz"
+  },
+  "three_mode_chi_s_shift": {
+    "passed": true,
+    "detail": "chi_s shift: expected=-2.8000 MHz, got=-2.8000 MHz"
+  },
+  "three_mode_chi_r_shift": {
+    "passed": true,
+    "detail": "chi_r shift: expected=-1.2000 MHz, got=-1.2000 MHz"
+  },
+  "three_mode_storage_kerr": {
+    "passed": true,
+    "detail": "storage Kerr: expected=-2.00 kHz, got=-2.00 kHz"
+  },
+  "carrier_equals_neg_transition": {
+    "passed": true,
+    "detail": "carrier(3.46e+10) = -3.46e+10, expected -3.46e+10"
+  },
+  "carrier_roundtrip": {
+    "passed": true,
+    "detail": "roundtrip: 3.46e+10 -> -3.46e+10 -> 3.46e+10"
+  },
+  "rabi_pi_pulse_inversion": {
+    "passed": true,
+    "detail": "Overlap with |e,0> after pi pulse: 0.9985"
+  },
+  "t1_decay": {
+    "passed": true,
+    "detail": "Excited-state population matches exp(-t/T1) within 5% for T1=10 us"
+  },
+  "dephasing_t2": {
+    "passed": true,
+    "detail": "Coherence decays as exp(-t/T_phi) within 5% for T_phi=20 us"
+  },
+  "measurement_exact_probs": {
+    "passed": true,
+    "detail": "p_g=0.2500 (expected 0.25), p_e=0.7500 (expected 0.75)"
+  },
+  "measurement_confusion_matrix": {
+    "passed": true,
+    "detail": "p_g_obs=0.2750 (expected 0.2750), p_e_obs=0.7250 (expected 0.7250)"
+  },
+  "tensor_ordering": {
+    "passed": true,
+    "detail": "H.dims = [[3, 8], [3, 8]], expected [[3, 8], [3, 8]]"
+  },
+  "basis_state_ordering": {
+    "passed": true,
+    "detail": "|e,0> has amplitude 1.0000 at index 8 (transmon-first)"
+  },
+  "dephasing_2lev_vs_3lev_consistency": {
+    "passed": false,
+    "detail": "CONVENTION ISSUE: For same T_phi=20 us, 2-level ge dephasing rate = 1/T_phi = 5.00e+04/s, 3-level ge dephasing rate = 1/(4*T_phi) = 1.25e+04/s. Factor of 4x discontinuity when switching from n_tr=2 to n_tr=3."
+  },
+  "readout_pointer_separation": {
+    "passed": true,
+    "detail": "|alpha_g|=1.5000e-01, |alpha_e|=1.4045e-01, separation=5.2669e-02, analytic_g=1.5000e-01, analytic_e=1.4045e-01"
+  },
+  "readout_meas_dephasing": {
+    "passed": true,
+    "detail": "gamma_meas=6.9718e+04, analytic=6.9718e+04"
+  }
+}

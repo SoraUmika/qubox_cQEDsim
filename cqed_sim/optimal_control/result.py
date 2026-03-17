@@ -21,7 +21,7 @@ class GrapeIterationRecord:
 
 
 @dataclass
-class GrapeResult:
+class ControlResult:
     success: bool
     message: str
     schedule: ControlSchedule
@@ -31,12 +31,19 @@ class GrapeResult:
     history: list[GrapeIterationRecord] = field(default_factory=list)
     nominal_final_unitary: np.ndarray | None = None
     optimizer_summary: dict[str, Any] = field(default_factory=dict)
+    backend: str = "unknown"
 
     def to_pulses(self):
         return self.schedule.to_pulses()
 
+    def evaluate_with_simulator(self, problem, **kwargs):
+        from .evaluation import evaluate_control_with_simulator
+
+        return evaluate_control_with_simulator(problem, self.schedule, **kwargs)
+
     def to_payload(self) -> dict[str, Any]:
         payload = {
+            "backend": str(self.backend),
             "success": bool(self.success),
             "message": str(self.message),
             "objective_value": float(self.objective_value),
@@ -67,4 +74,9 @@ class GrapeResult:
         return output_path
 
 
-__all__ = ["GrapeIterationRecord", "GrapeResult"]
+@dataclass
+class GrapeResult(ControlResult):
+    backend: str = "grape"
+
+
+__all__ = ["GrapeIterationRecord", "ControlResult", "GrapeResult"]

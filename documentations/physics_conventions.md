@@ -192,6 +192,8 @@ $$c(t) = I(t) - i Q(t)$$
 
 - That export rule is what makes the optimized real-valued Hermitian `I/Q` control channels replay correctly through standard `Pulse`, `SequenceCompiler`, and `simulate_sequence(...)` workflows.
 - Leakage penalties are defined relative to retained logical subspaces in the same truncated Hilbert space used by the rest of the simulator.
+- Simulator-backed replay through `evaluate_control_with_simulator(...)` or `ControlResult.evaluate_with_simulator(...)` is an evaluation path only. It replays the optimized schedule through the standard runtime with optional `NoiseSpec` Lindblad terms and reports the resulting objective probe-state fidelities.
+- For retained-subspace unitary objectives, that replay path also reports subspace leakage. This is a runtime diagnostic, not a claim that the current GRAPE optimizer itself is doing open-system optimization.
 
 ---
 
@@ -308,11 +310,159 @@ where $p_{\text{latent}} = (p_g, p_e)^T$.
 
 ---
 
+---
+
+## Gate Library (`cqed_sim.gates`)
+
+The `cqed_sim.gates` subpackage provides ideal unitary gates for all
+subsystem types. The conventions below are enforced in the implementation
+and validated by `tests/test_42_gates.py`.
+
+### Single-Qubit Gates
+
+All single-qubit gates act on the basis $\{|g\rangle, |e\rangle\}$ with
+$|g\rangle = \text{basis}(2,0)$, $|e\rangle = \text{basis}(2,1)$.
+
+Rotation convention:
+$$R_{\hat{n}}(\theta) = \exp\!\left(-i\frac{\theta}{2}\,\hat{n}\cdot\vec{\sigma}\right)$$
+
+Equatorial rotation (`rphi`):
+$$R_\phi(\theta) = \exp\!\left[-i\frac{\theta}{2}\left(\cos\phi\,X + \sin\phi\,Y\right)\right]$$
+
+At $\phi=0$ this equals $R_x(\theta)$; at $\phi=\pi/2$ it equals $R_y(\theta)$.
+
+Named gates are *exact ideal matrices*, not Hamiltonian-generated approximations:
+
+| Gate | Matrix |
+|---|---|
+| $X$ | $\begin{pmatrix}0&1\\1&0\end{pmatrix}$ |
+| $Y$ | $\begin{pmatrix}0&-i\\i&0\end{pmatrix}$ |
+| $Z$ | $\begin{pmatrix}1&0\\0&-1\end{pmatrix}$ |
+| $H$ | $\frac{1}{\sqrt{2}}\begin{pmatrix}1&1\\1&-1\end{pmatrix}$ |
+| $S$ | $\text{diag}(1, i)$ |
+| $T$ | $\text{diag}(1, e^{i\pi/4})$ |
+
+### Multilevel Transmon Transition-Selective Gates
+
+General adjacent-level rotation between levels $j$ and $k$ in a `dim`-level
+transmon:
+$$R^{j,k}_\phi(\theta) = \exp\!\left[-i\frac{\theta}{2}\left(e^{-i\phi}|j\rangle\langle k| + e^{i\phi}|k\rangle\langle j|\right)\right]$$
+
+This is an *ideal unitary* (exact matrix exponential). All levels outside
+$\{|j\rangle, |k\rangle\}$ are unaffected (identity on the complement).
+
+Aliases:
+
+- `r_ge(θ, φ, dim=3)` — $R^{0,1}_\phi(\theta)$. At `dim=2` matches the qubit `rphi`.
+- `r_ef(θ, φ, dim=3)` — $R^{1,2}_\phi(\theta)$.
+
+### Bosonic Cavity Gates
+
+All bosonic gates are *exact ideal unitaries* within the Fock-space truncation.
+
+| Gate | Defining equation | Notes |
+| --- | --- | --- |
+| Displacement | $D(\alpha) = \exp(\alpha a^\dagger - \alpha^* a)$ | Ergonomic wrapper of `qt.displace` |
+| Oscillator rotation | $R(\theta) = \exp(-i\theta a^\dagger a)$ | $\lvert n\rangle \to e^{-in\theta}\lvert n\rangle$ |
+| Parity | $\Pi = \exp(i\pi a^\dagger a)$ | $\lvert n\rangle \to (-1)^n\lvert n\rangle$. Equal to $R(-\pi)$. |
+| Squeezing | $S(\zeta) = \exp\!\left(\tfrac{1}{2}\zeta^* a^2 - \tfrac{1}{2}\zeta(a^\dagger)^2\right)$ | Uses `qt.squeeze` |
+| Self-Kerr evolution | $U_K(t) = \exp\!\left[-i\tfrac{K}{2}t\,\hat{n}(\hat{n}-1)\right]$ | Diagonal; see `kerr_evolution` |
+| SNAP | $S(\{\phi_n\}) = \sum_n e^{i\phi_n}\lvert n\rangle\langle n\rvert$ | Accepts `{n: phase}` dict or dense array |
+
+**Sign convention for `kerr_evolution`:** the phase accumulated by Fock state
+$|n\rangle$ is $\exp[-i(K/2)t\,n(n-1)]$. Here $K$ is the same sign as in the
+Hamiltonian $+K/2\,a^{\dagger 2}a^2$ used throughout the simulator (typically
+$K < 0$ for a transmon-like self-Kerr).
+
+### Qubit-Cavity Conditional and Interaction Gates
+
+**Tensor ordering: qubit first, cavity second.**
+Basis order: $|g,0\rangle, |g,1\rangle, \ldots, |e,0\rangle, \ldots$
+
+#### Dispersive-phase gate — two conventions
+
+The `convention` parameter of `dispersive_phase` selects one of:
+
+**`convention="n_e"` (default, matches `UniversalCQEDModel`):**
+
+$$H = \chi\,\hat{n}_\text{cav}\,\lvert e\rangle\langle e\rvert$$
+
+$$U = \lvert g\rangle\langle g\rvert\otimes I + \lvert e\rangle\langle e\rvert\otimes e^{-i\chi t\hat{n}}$$
+
+**`convention="z"` (Pauli-Z style):**
+
+$$H = \tfrac{\chi}{2}\,\hat{n}_\text{cav}\,Z$$
+
+$$U = e^{-i\chi t\hat{n}/2}\otimes\lvert g\rangle\langle g\rvert + e^{+i\chi t\hat{n}/2}\otimes\lvert e\rangle\langle e\rvert$$
+
+The `"n_e"` convention matches the dispersive term used in `UniversalCQEDModel`
+($+\chi n_c n_q$ with $n_q = |e\rangle\langle e|$). The two conventions differ
+by a photon-number-dependent global phase on each qubit branch; the *relative*
+dispersive phase between the two branches is the same.
+
+#### Conditional displacement — two call forms
+
+$$CD(\alpha)
+= |g\rangle\langle g|\otimes D(+\alpha) + |e\rangle\langle e|\otimes D(-\alpha)
+\quad\text{(symmetric form)}$$
+
+$$CD(\alpha_g, \alpha_e)
+= |g\rangle\langle g|\otimes D(\alpha_g) + |e\rangle\langle e|\otimes D(\alpha_e)
+\quad\text{(general form)}$$
+
+#### SQR tensor ordering
+
+`sqr` and `multi_sqr` use **cavity first, qubit second**
+(natural for $|n\rangle\langle n|\otimes R_\phi(\theta)$):
+
+$$U_\text{SQR}(\theta,\phi;n) = |n\rangle\langle n|\otimes R_\phi(\theta) + \sum_{m\neq n}|m\rangle\langle m|\otimes I$$
+
+The legacy `sqr_op(thetas, phis)` in `cqed_sim.core.ideal_gates` uses **qubit
+first, cavity second** with a dense array interface only.
+
+#### Jaynes–Cummings and blue-sideband gates
+
+Qubit first, cavity second.
+$$H_\text{JC} = g\!\left(\sigma_+\otimes a + \sigma_-\otimes a^\dagger\right), \quad
+U_\text{JC}(t) = e^{-itH_\text{JC}}$$
+$$H_\text{blue} = g\!\left(\sigma_+\otimes a^\dagger + \sigma_-\otimes a\right), \quad
+U_\text{blue}(t) = e^{-itH_\text{blue}}$$
+
+These are *Hamiltonian-generated unitaries* (computed via matrix exponential of
+the full operator in the truncated Hilbert space).
+
+#### Beam splitter
+
+Mode a first, mode b second.
+$$H_\text{BS} = g\!\left(a^\dagger b + ab^\dagger\right), \quad
+U_\text{BS}(t) = e^{-itH_\text{BS}}$$
+
+`beam_splitter(g, t, dim_a, dim_b)` is equivalent to
+`beamsplitter_unitary(dim_a, dim_b, g*t)`.
+
+### Two-Qubit Gates
+
+Control first, target second. Basis order: $|gg\rangle, |ge\rangle, |eg\rangle, |ee\rangle$.
+
+All two-qubit gates are *exact ideal matrices* (not Hamiltonian-generated).
+
+| Gate | Type |
+|---|---|
+| CNOT, CZ, CP(φ) | Ideal unitary matrices |
+| SWAP, iSWAP, √iSWAP | Ideal unitary matrices |
+
+Note: iSWAP and √iSWAP can be approximately generated by an exchange
+Hamiltonian $H = J(\sigma_+\sigma_- + \sigma_-\sigma_+)$, but `iswap_gate()`
+and `sqrt_iswap_gate()` return the exact target matrices regardless of
+physical generation pathway.
+
+---
+
 ## Cross-Reference
 
 The canonical, detailed physics reference is:
 
-```
+```text
 physics_and_conventions/physics_conventions_report.tex
 ```
 

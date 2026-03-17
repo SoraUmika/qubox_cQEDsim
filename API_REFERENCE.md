@@ -22,6 +22,7 @@
    - 3.6 [Frequency Helpers](#36-frequency-helpers)
    - 3.7 [Ideal Gate Operators](#37-ideal-gate-operators)
    - 3.8 [Energy Spectrum](#38-energy-spectrum)
+   - 3.9 [Gate Library (`cqed_sim.gates`)](#39-gate-library-cqed_simgates)
 4. [Pulse System (`cqed_sim.pulses`)](#4-pulse-system)
    - 4.1 [Pulse](#41-pulse)
    - 4.2 [Envelopes](#42-envelopes)
@@ -520,6 +521,258 @@ energies can still be negative because only the zero of energy is shifted.
 | `EnergySpectrum.eigenstates` | Tuple of QuTiP eigenkets |
 | `EnergySpectrum.find_level(label)` | Retrieve a level by its dominant bare-basis label |
 | `EnergySpectrum.level_rows(max_levels=None)` | Compact list-of-dicts summary for tables or notebooks |
+
+---
+
+### 3.9 Gate Library (`cqed_sim.gates`)
+
+**Module path:** `cqed_sim.gates`
+
+A structured library of ideal unitary gates organised by subsystem type.
+All functions return QuTiP `qt.Qobj` unitaries. All angles are in **radians**;
+couplings and frequencies are in **rad/s**; times are in **seconds**.
+
+**Subsystem-ordering conventions** follow the package-wide rule:
+**qubit/transmon first, cavity second** for qubit-cavity composite gates.
+Two-qubit gates use **control first, target second**.
+
+**Submodules:**
+
+| Submodule | Content |
+|---|---|
+| `cqed_sim.gates.qubit` | Single-qubit named and parameterised gates |
+| `cqed_sim.gates.transmon` | Multilevel transition-selective rotations |
+| `cqed_sim.gates.bosonic` | Bosonic cavity gates |
+| `cqed_sim.gates.coupled` | Qubit-cavity conditional and interaction gates |
+| `cqed_sim.gates.two_qubit` | Two-qubit gates |
+
+All public names are re-exported at the top level of `cqed_sim`.
+
+---
+
+#### 3.9.1 Single-Qubit Gates (`cqed_sim.gates.qubit`)
+
+Basis: `|g⟩ = basis(2,0)`, `|e⟩ = basis(2,1)`.
+Convention: `R_n(θ) = exp(−iθ/2 n̂·σ)`.
+
+| Function | Signature | Description |
+|---|---|---|
+| `rx(theta)` | `(float) -> qt.Qobj` | `exp(−iθ/2 X)` |
+| `ry(theta)` | `(float) -> qt.Qobj` | `exp(−iθ/2 Y)` |
+| `rz(theta)` | `(float) -> qt.Qobj` | `exp(−iθ/2 Z)` |
+| `rphi(theta, phi)` | `(float, float) -> qt.Qobj` | `exp[−iθ/2 (cos φ X + sin φ Y)]`. At `phi=0` = `rx`; at `phi=π/2` = `ry`. |
+| `identity_gate()` | `() -> qt.Qobj` | 2×2 identity |
+| `x_gate()` | `() -> qt.Qobj` | Pauli X (NOT) |
+| `y_gate()` | `() -> qt.Qobj` | Pauli Y |
+| `z_gate()` | `() -> qt.Qobj` | Pauli Z |
+| `h_gate()` | `() -> qt.Qobj` | Hadamard: `(X+Z)/√2` |
+| `s_gate()` | `() -> qt.Qobj` | Phase gate: `diag(1, i)`. Satisfies `S²=Z`. |
+| `s_dag_gate()` | `() -> qt.Qobj` | `S†`: `diag(1, −i)` |
+| `t_gate()` | `() -> qt.Qobj` | T gate: `diag(1, exp(iπ/4))`. Satisfies `T²=S`. |
+| `t_dag_gate()` | `() -> qt.Qobj` | `T†`: `diag(1, exp(−iπ/4))` |
+
+---
+
+#### 3.9.2 Multilevel Transmon Gates (`cqed_sim.gates.transmon`)
+
+Acts on a `dim`-dimensional transmon Hilbert space. Levels are 0-based:
+`|g⟩=|0⟩`, `|e⟩=|1⟩`, `|f⟩=|2⟩`, …
+
+| Function | Signature | Description |
+|---|---|---|
+| `transition_rotation(dim, level_a, level_b, theta, phi=0.0)` | `(int, int, int, float, float) -> qt.Qobj` | `exp[−iθ/2 (e^{−iφ}\|a⟩⟨b\| + e^{iφ}\|b⟩⟨a\|)]`. Identity on all other levels. |
+| `r_ge(theta, phi=0.0, dim=3)` | `(float, float, int) -> qt.Qobj` | g↔e selective rotation. At `dim=2` matches `rphi`. |
+| `r_ef(theta, phi=0.0, dim=3)` | `(float, float, int) -> qt.Qobj` | e↔f selective rotation. Requires `dim≥3`. |
+
+**Notes:**
+
+- Non-adjacent level pairs `(level_a, level_b)` are supported mathematically.
+- The physical realisation of non-adjacent transitions requires a resonant drive mechanism.
+
+---
+
+#### 3.9.3 Bosonic Cavity Gates (`cqed_sim.gates.bosonic`)
+
+All operate on a single bosonic mode with Fock-space dimension `dim`.
+
+| Function | Signature | Description |
+|---|---|---|
+| `displacement(alpha, dim)` | `(complex, int) -> qt.Qobj` | `D(α) = exp(α a† − α* a)`. |
+| `oscillator_rotation(theta, dim)` | `(float, int) -> qt.Qobj` | `R(θ) = exp(−iθ a†a)`. Acts as `\|n⟩ → e^{−inθ}\|n⟩`. |
+| `parity(dim)` | `(int) -> qt.Qobj` | `Π = exp(iπ a†a)`. Acts as `\|n⟩ → (−1)^n\|n⟩`. Equal to `oscillator_rotation(−π, dim)`. |
+| `squeeze(zeta, dim)` | `(complex, int) -> qt.Qobj` | `S(ζ) = exp(½ ζ* a² − ½ ζ (a†)²)`. |
+| `kerr_evolution(kerr, time, dim)` | `(float, float, int) -> qt.Qobj` | `U_K(t) = exp[−iK/2 t n̂(n̂−1)]`. Diagonal in the Fock basis. **Different from** `self_kerr()` in `sim.couplings`, which returns the Hamiltonian term. |
+| `snap(phases, dim)` | `(dict or array, int) -> qt.Qobj` | `Σ_n e^{iφ_n}\|n⟩⟨n\|`. Accepts sparse `{n: phase}` dict or dense array. Unspecified levels receive zero phase. |
+
+**`snap` input formats:**
+
+```python
+# Sparse dict: only specified Fock levels receive a phase
+U = snap({0: 0.0, 1: np.pi/2, 2: np.pi}, dim=10)
+
+# Dense array: entry k is the phase for Fock level k
+U = snap(np.linspace(0, 2*np.pi, 10), dim=10)
+```
+
+---
+
+#### 3.9.4 Qubit-Cavity Conditional and Interaction Gates (`cqed_sim.gates.coupled`)
+
+Composite Hilbert space with **qubit first, cavity second**.
+Basis state ordering: `|g,0⟩, |g,1⟩, …, |g,N−1⟩, |e,0⟩, …, |e,N−1⟩`.
+
+##### Conditional gates
+
+| Function | Signature | Description |
+|---|---|---|
+| `dispersive_phase(chi, time, cavity_dim, qubit_dim=2, convention="n_e")` | `(float, float, int, int, str) -> qt.Qobj` | Dispersive-shift unitary. See conventions below. |
+| `conditional_rotation(theta, cavity_dim, qubit_dim=2, control_state="e")` | `(float, int, int, str) -> qt.Qobj` | `\|g⟩⟨g\| ⊗ I + \|e⟩⟨e\| ⊗ exp(−iθn̂)` (for `control_state="e"`). |
+| `conditional_displacement(alpha=None, *, alpha_g=None, alpha_e=None, cavity_dim, qubit_dim=2)` | see below | Conditional displacement; see forms below. |
+| `controlled_parity(cavity_dim, qubit_dim=2)` | `(int, int) -> qt.Qobj` | `\|g⟩⟨g\| ⊗ I + \|e⟩⟨e\| ⊗ Π` |
+| `controlled_snap(phases, cavity_dim, qubit_dim=2)` | `(dict or array, int, int) -> qt.Qobj` | `\|g⟩⟨g\| ⊗ I + \|e⟩⟨e\| ⊗ SNAP({φ_n})` |
+
+**`dispersive_phase` conventions:**
+
+```text
+convention="n_e"  (default, matches UniversalCQEDModel):
+    H = χ n̂_cav |e⟩⟨e|
+    U = |g⟩⟨g| ⊗ I  +  |e⟩⟨e| ⊗ exp(−iχt n̂)
+
+convention="z"  (Pauli-Z style):
+    H = (χ/2) n̂_cav Z
+    U = exp(−iχt/2 n̂) ⊗ |g⟩⟨g|  +  exp(+iχt/2 n̂) ⊗ |e⟩⟨e|
+```
+
+**`conditional_displacement` call forms:**
+
+```python
+# Symmetric: |g⟩ branch → D(+α), |e⟩ branch → D(−α)
+U = conditional_displacement(alpha=0.5+0.1j, cavity_dim=20)
+
+# General: independent displacements per branch
+U = conditional_displacement(alpha_g=0.4, alpha_e=-0.3j, cavity_dim=20)
+```
+
+##### Number-selective qubit rotation (SQR)
+
+Tensor ordering for `sqr` and `multi_sqr` is **cavity first, qubit second**
+(the natural mathematical order `|n⟩⟨n| ⊗ R_φ(θ)`).
+
+| Function | Signature | Description |
+|---|---|---|
+| `sqr(theta, phi, n, cavity_dim, qubit_dim=2)` | `(float, float, int, int, int) -> qt.Qobj` | `\|n⟩⟨n\| ⊗ R_φ(θ) + Σ_{m≠n} \|m⟩⟨m\| ⊗ I`. Single-Fock-level SQR. |
+| `multi_sqr(theta_by_n, phi_by_n, cavity_dim, qubit_dim=2)` | `(dict or array, dict or array, int, int) -> qt.Qobj` | `Σ_n \|n⟩⟨n\| ⊗ R_{φ_n}(θ_n)`. Dict `{n: angle}` or dense array. |
+
+Note: the existing `sqr_op(thetas, phis)` in `cqed_sim.core.ideal_gates` uses
+**qubit-first** ordering and a dense array interface. `sqr` and `multi_sqr`
+use **cavity-first** ordering and additionally support sparse dict input.
+
+##### Interaction gates (Jaynes–Cummings, blue sideband, beam splitter)
+
+Composite space with **qubit first, cavity second** (for JC and blue sideband);
+**mode a first, mode b second** (for beam splitter).
+
+| Function | Signature | Description |
+|---|---|---|
+| `jaynes_cummings(g, time, cavity_dim, qubit_dim=2)` | `(float, float, int, int) -> qt.Qobj` | `exp[−it g (σ+ ⊗ a + σ− ⊗ a†)]`. Red-sideband exchange. |
+| `blue_sideband(g, time, cavity_dim, qubit_dim=2)` | `(float, float, int, int) -> qt.Qobj` | `exp[−it g (σ+ ⊗ a† + σ− ⊗ a)]`. Blue-sideband / two-photon exchange. |
+| `beam_splitter(g, time, dim_a, dim_b)` | `(float, float, int, int) -> qt.Qobj` | `exp[−it g (a†b + ab†)]`. Two-mode beamsplitter. Equivalent to `beamsplitter_unitary(dim_a, dim_b, g*time)`. |
+
+---
+
+#### 3.9.5 Two-Qubit Gates (`cqed_sim.gates.two_qubit`)
+
+Standard 4×4 unitaries on a two-qubit Hilbert space. Tensor ordering:
+**control qubit first, target qubit second**.
+Basis order: `|gg⟩, |ge⟩, |eg⟩, |ee⟩`.
+
+| Function | Signature | Description |
+|---|---|---|
+| `cnot_gate()` | `() -> qt.Qobj` | CNOT: `\|g⟩⟨g\| ⊗ I + \|e⟩⟨e\| ⊗ X` |
+| `cz_gate()` | `() -> qt.Qobj` | CZ: `diag(1, 1, 1, −1)` |
+| `controlled_phase(phi)` | `(float) -> qt.Qobj` | CP(φ): `diag(1, 1, 1, e^{iφ})`. At `phi=π` equals `cz_gate()`. |
+| `swap_gate()` | `() -> qt.Qobj` | SWAP: exchanges the two qubit states |
+| `iswap_gate()` | `() -> qt.Qobj` | iSWAP: `diag(1,0,0,1)` on outer states; `i` factors on `\|ge⟩↔\|eg⟩` |
+| `sqrt_iswap_gate()` | `() -> qt.Qobj` | √iSWAP. Satisfies `√iSWAP · √iSWAP = iSWAP`. |
+
+**Matrix forms:**
+
+```text
+CZ  = diag(1, 1, 1, −1)
+CP(φ) = diag(1, 1, 1, e^{iφ})
+
+SWAP = [[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]]
+
+iSWAP = [[1,0,0,0],[0,0,i,0],[0,i,0,0],[0,0,0,1]]
+
+√iSWAP = [[1, 0,      0,      0],
+           [0, 1/√2,  i/√2,   0],
+           [0, i/√2,  1/√2,   0],
+           [0, 0,      0,      1]]
+```
+
+---
+
+#### 3.9.6 Usage Examples
+
+```python
+import numpy as np
+import cqed_sim as cs
+
+# --- single-qubit ---
+Rx_pi = cs.rx(np.pi)                      # π rotation about X
+Rph   = cs.rphi(np.pi/2, phi=np.pi/4)    # equatorial rotation
+
+# --- transmon ---
+U_ge  = cs.r_ge(np.pi, phi=0.0, dim=3)   # π-pulse on g-e transition
+U_ef  = cs.r_ef(np.pi/2, dim=3)          # π/2-pulse on e-f transition
+
+# --- bosonic ---
+D    = cs.displacement(0.5 + 0.1j, dim=20)
+R    = cs.oscillator_rotation(np.pi/4, dim=20)
+P    = cs.parity(dim=20)
+Sq   = cs.squeeze(0.3, dim=20)
+UK   = cs.kerr_evolution(kerr=-2e6, time=5e-6, dim=20)
+
+# sparse dict SNAP
+U_snap = cs.snap({0: 0.0, 1: np.pi/2, 2: np.pi}, dim=10)
+# dense array SNAP
+U_snap = cs.snap(np.linspace(0, 2*np.pi, 10), dim=10)
+
+# --- qubit-cavity conditional ---
+# dispersive phase (default n_e convention)
+U_chi  = cs.dispersive_phase(chi=-2e6, time=np.pi/2e6, cavity_dim=30)
+
+# conditional displacement — symmetric and general forms
+CD_sym = cs.conditional_displacement(alpha=1.0, cavity_dim=30)
+CD_gen = cs.conditional_displacement(alpha_g=0.5, alpha_e=-0.3j, cavity_dim=30)
+
+# controlled parity (for Wigner function readout)
+U_cp   = cs.controlled_parity(cavity_dim=30)
+
+# SQR: rotate qubit only when cavity is in Fock |3⟩
+U_sqr  = cs.sqr(theta=np.pi, phi=0.0, n=3, cavity_dim=12)
+
+# multi-SQR via dict
+U_msqr = cs.multi_sqr(
+    theta_by_n={1: np.pi/2, 3: np.pi},
+    phi_by_n={1: 0.0, 3: np.pi/4},
+    cavity_dim=12,
+)
+
+# Jaynes–Cummings half swap
+g_vac = 20e6   # 20 MHz vacuum Rabi rate (rad/s)
+t_half = np.pi / (2 * g_vac)
+U_jc   = cs.jaynes_cummings(g=g_vac, time=t_half, cavity_dim=10)
+
+# beam splitter between two modes
+U_bs   = cs.beam_splitter(g=10e6, time=np.pi/(2*10e6), dim_a=8, dim_b=8)
+
+# --- two-qubit ---
+CZ    = cs.cz_gate()
+CNOT  = cs.cnot_gate()
+iSWAP = cs.iswap_gate()
+```
 
 ---
 
@@ -2948,11 +3201,18 @@ Implementation note:
 ### Results and Runtime Interoperability
 
 ```python
+ControlResult(...)
 GrapeResult(...)
 GrapeIterationRecord(...)
+
+ControlEvaluationCase(...)
+ControlEvaluationResult(...)
+evaluate_control_with_simulator(...)
 ```
 
-`GrapeResult` stores:
+`ControlResult` is the common result surface for optimized direct-control runs. `GrapeResult` is the current concrete result type returned by the GRAPE backend.
+
+Shared result data includes:
 
 - the optimized `ControlSchedule`,
 - scalar objective / fidelity summaries,
@@ -2961,7 +3221,47 @@ GrapeIterationRecord(...)
 - optimizer status text,
 - the nominal final unitary when available.
 
-`GrapeResult.to_pulses()` exports the schedule into standard `Pulse` objects plus the corresponding `drive_ops` mapping so the optimized control can be replayed through the normal `SequenceCompiler` and `simulate_sequence(...)` path.
+`ControlResult.to_pulses()` exports the schedule into standard `Pulse` objects plus the corresponding `drive_ops` mapping so the optimized control can be replayed through the normal `SequenceCompiler` and `simulate_sequence(...)` path.
+
+### Simulator-Backed Replay and Noisy Evaluation
+
+```python
+evaluation = result.evaluate_with_simulator(
+    problem,
+    cases=(
+        ControlEvaluationCase(
+            model=model,
+            frame=frame,
+            noise=NoiseSpec(t1=2.0e-6, tphi=1.0e-6),
+            label="noisy",
+        ),
+    ),
+)
+```
+
+The replay path is explicitly evaluation-only. It does not change the closed-system GRAPE optimizer. Instead it:
+
+- exports the optimized schedule into standard runtime `Pulse` objects,
+- replays those pulses through `SequenceCompiler` and `simulate_sequence(...)`,
+- evaluates the original objective probe states under nominal or noisy Lindblad dynamics,
+- reports weighted replay fidelities and, for retained-subspace unitary objectives, replay leakage metrics.
+
+Available objects:
+
+- `ControlEvaluationCase` for one model/frame/noise replay case,
+- `ControlEvaluationResult` for aggregated replay metrics,
+- `evaluate_control_with_simulator(...)` as the function form,
+- `ControlResult.evaluate_with_simulator(...)` as the convenience method.
+
+This path is the supported way to answer: "the optimizer says the pulse is good, but how does it behave when replayed through the simulator with noise?"
+
+### Benchmark Harness
+
+The repository now includes a dedicated benchmark and validation harness for larger GRAPE runs:
+
+- `benchmarks/run_optimal_control_benchmarks.py`
+
+The harness supports configurable slice count, duration, target style, model regime, penalty weights, optional robust ensemble shifts, optimizer backend selection, and noisy replay reporting.
 
 ### Minimal model-backed example
 
@@ -3027,6 +3327,7 @@ Primary reference implementations:
 
 - `examples/grape_storage_subspace_gate_demo.py`
 - `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
+- `benchmarks/run_optimal_control_benchmarks.py`
 
 ---
 

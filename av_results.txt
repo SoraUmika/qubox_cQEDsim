@@ -1,0 +1,33 @@
+﻿[PASS] two_mode_hamiltonian_diagonal: All basis-state energies match analytic formula within 1e-3 rad/s
+[PASS] manifold_transition_frequency: omega_ge(n) = chi*n verified for n=0..4 (chi=-2.84 MHz)
+[PASS] chi_sign_negative_lowers_freq: chi=-2.84 MHz: freq(n=0)=0.0000 MHz, freq(n=1)=-2.8400 MHz, freq(n=5)=-14.2000 MHz
+[PASS] chi_sign_positive_raises_freq: chi=+2.84 MHz: freq(n=0)=0.0000 MHz, freq(n=1)=2.8400 MHz
+[PASS] kerr_sign_negative_decreases_spacing: kerr=-2.00 kHz: spacings (MHz) = 0.000000, -0.002000, -0.004000, -0.006000
+[PASS] kerr_sign_positive_raises_spacing: kerr=+2.00 kHz: spacings (MHz) = 0.000000, 0.002000, 0.004000, 0.006000
+[PASS] three_mode_qubit_freq_vacuum: qubit transition freq (on-frame, vacuum) = 0.000000 MHz
+[PASS] three_mode_chi_s_shift: chi_s shift: expected=-2.8000 MHz, got=-2.8000 MHz
+[PASS] three_mode_chi_r_shift: chi_r shift: expected=-1.2000 MHz, got=-1.2000 MHz
+python : Traceback (most recent call last):
+At line:1 char:1
++ python analytic_verification.py 2>&1 | Out-File -FilePath av_results. ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last) 
+   ::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits 
+Group\Users\Users_JianJun\cQED_simulation\analytic_verification.py", line 234, 
+in <module>
+[PASS] three_mode_storage_kerr: storage Kerr: expected=-2.00 kHz, got=-2.00 kHz
+[PASS] carrier_equals_neg_transition: carrier(3.46e+10) = -3.46e+10, expected -3.46e+10
+    record(
+  File "C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits 
+Group\Users\Users_JianJun\cQED_simulation\analytic_verification.py", line 21, 
+in record
+    print(f"[{status}] {name}: {detail}")
+  File "C:\Users\dazzl\AppData\Local\Programs\Python\Python312\Lib\encodings\cp
+1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in 
+position 46: character maps to <undefined>

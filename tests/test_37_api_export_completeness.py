@@ -20,9 +20,13 @@ REQUIRED_TOP_LEVEL_NAMES = [
     "UniversalCQEDModel",
     # optimal control
     "ControlProblem",
+    "ControlResult",
+    "ControlEvaluationCase",
+    "ControlEvaluationResult",
     "PiecewiseConstantTimeGrid",
     "GrapeSolver",
     "solve_grape",
+    "evaluate_control_with_simulator",
     # simulation core
     "SimulationConfig",
     "SimulationSession",

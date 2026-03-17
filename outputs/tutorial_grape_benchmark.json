@@ -1,0 +1,181 @@
+{
+  "suite": "smoke",
+  "results": [
+    {
+      "case": "small_state",
+      "backend": "grape",
+      "seed": 7,
+      "configuration": {
+        "slices": 2,
+        "duration_s": 4e-08,
+        "target_type": "state_transfer",
+        "model_regime": "two_mode",
+        "aggregate_mode": "mean",
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "leakage_weight": 0.0,
+        "robust_frequency_shift_rad_s": null,
+        "compiler_dt_s": null,
+        "max_step_s": null
+      },
+      "model": {
+        "type": "DispersiveTransmonCavityModel",
+        "subsystem_dims": [
+          2,
+          1
+        ],
+        "full_dim": 2
+      },
+      "solve": {
+        "success": true,
+        "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
+        "runtime_s": 0.002888499991968274,
+        "iteration_count": 0,
+        "function_evaluations": 1,
+        "objective_value": 0.0,
+        "nominal_fidelity": 1.0,
+        "control_penalty_total": 0.0,
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "max_abs_amplitude": 39269908.16987241
+      },
+      "nominal_replay": {
+        "aggregate_mode": "mean",
+        "metrics": {
+          "aggregate_mode": "mean",
+          "aggregate_fidelity": 0.9999109898926649,
+          "aggregate_infidelity": 8.901010733508574e-05,
+          "aggregate_leakage": null,
+          "case_weights": [
+            1.0
+          ]
+        },
+        "pulse_metadata": {
+          "mapping": "Piecewise-constant rotating-frame controls exported as square-envelope pulses. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly.",
+          "time_grid_s": [
+            2e-08,
+            2e-08
+          ],
+          "channels": {
+            "qubit": {
+              "max_abs_amp": 39269908.16987241,
+              "nonzero_slices": 2
+            }
+          }
+        },
+        "compiler_dt_s": 1e-09,
+        "duration_s": 4e-08,
+        "member_reports": [
+          {
+            "label": "nominal",
+            "weight": 1.0,
+            "aggregate_fidelity": 0.9999109898926649,
+            "aggregate_infidelity": 8.901010733508574e-05,
+            "aggregate_leakage": null,
+            "compiler_dt_s": 1e-09,
+            "max_step_s": null,
+            "metadata": {
+              "model_type": "DispersiveTransmonCavityModel",
+              "noise": null
+            },
+            "objectives": [
+              {
+                "name": "state_preparation",
+                "kind": "state_transfer",
+                "weight": 1.0,
+                "pair_labels": [
+                  "pair_0"
+                ],
+                "fidelities": [
+                  0.9999109898926649
+                ],
+                "fidelity_weighted": 0.9999109898926649,
+                "fidelity_mean": 0.9999109898926649,
+                "fidelity_min": 0.9999109898926649,
+                "fidelity_max": 0.9999109898926649,
+                "leakage_values": [],
+                "leakage_weighted": null,
+                "leakage_mean": null,
+                "leakage_max": null
+              }
+            ]
+          }
+        ]
+      },
+      "noisy_replay": {
+        "aggregate_mode": "mean",
+        "metrics": {
+          "aggregate_mode": "mean",
+          "aggregate_fidelity": 0.9911425200106859,
+          "aggregate_infidelity": 0.008857479989314077,
+          "aggregate_leakage": null,
+          "case_weights": [
+            1.0
+          ]
+        },
+        "pulse_metadata": {
+          "mapping": "Piecewise-constant rotating-frame controls exported as square-envelope pulses. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly.",
+          "time_grid_s": [
+            2e-08,
+            2e-08
+          ],
+          "channels": {
+            "qubit": {
+              "max_abs_amp": 39269908.16987241,
+              "nonzero_slices": 2
+            }
+          }
+        },
+        "compiler_dt_s": 1e-09,
+        "duration_s": 4e-08,
+        "member_reports": [
+          {
+            "label": "noisy",
+            "weight": 1.0,
+            "aggregate_fidelity": 0.9911425200106859,
+            "aggregate_infidelity": 0.008857479989314077,
+            "aggregate_leakage": null,
+            "compiler_dt_s": 1e-09,
+            "max_step_s": null,
+            "metadata": {
+              "model_type": "DispersiveTransmonCavityModel",
+              "noise": {
+                "t1": 2e-06,
+                "tphi": 1e-06
+              }
+            },
+            "objectives": [
+              {
+                "name": "state_preparation",
+                "kind": "state_transfer",
+                "weight": 1.0,
+                "pair_labels": [
+                  "pair_0"
+                ],
+                "fidelities": [
+                  0.9911425200106859
+                ],
+                "fidelity_weighted": 0.9911425200106859,
+                "fidelity_mean": 0.9911425200106859,
+                "fidelity_min": 0.9911425200106859,
+                "fidelity_max": 0.9911425200106859,
+                "leakage_values": [],
+                "leakage_weighted": null,
+                "leakage_mean": null,
+                "leakage_max": null
+              }
+            ]
+          }
+        ]
+      },
+      "history": [
+        {
+          "evaluation": 1,
+          "objective": 0.0,
+          "gradient_norm": 4.679240163218305e-24,
+          "elapsed_s": 0.0016087000258266926
+        }
+      ]
+    }
+  ]
+}

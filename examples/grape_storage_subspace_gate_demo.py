@@ -4,11 +4,13 @@ import numpy as np
 import qutip as qt
 
 from cqed_sim import (
+    ControlEvaluationCase,
     DispersiveTransmonCavityModel,
     FrameSpec,
     GrapeConfig,
     GrapeSolver,
     ModelControlChannelSpec,
+    NoiseSpec,
     PiecewiseConstantTimeGrid,
     SequenceCompiler,
     SimulationConfig,
@@ -93,6 +95,17 @@ def main() -> None:
         dims=initial_state.dims,
     )
     runtime_fidelity = float(qt.metrics.fidelity(runtime.final_state, target_state))
+    noisy_replay = result.evaluate_with_simulator(
+        problem,
+        cases=(
+            ControlEvaluationCase(
+                model=model,
+                frame=frame,
+                noise=NoiseSpec(kappa=2.0e5),
+                label="kappa_replay",
+            ),
+        ),
+    )
 
     print("GRAPE storage-subspace Y/2 demo")
     print("Success:", result.success)
@@ -103,6 +116,7 @@ def main() -> None:
     print("Exported pulse count:", len(pulses))
     print("Pulse export summary:", pulse_meta["channels"])
     print("Runtime replay fidelity on |g,0>:", f"{runtime_fidelity:.6f}")
+    print("Noisy replay aggregate fidelity:", f"{noisy_replay.metrics['aggregate_fidelity']:.6f}")
 
 
 if __name__ == "__main__":

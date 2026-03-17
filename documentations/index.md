@@ -18,7 +18,7 @@
 - **Calibration targets** (spectroscopy, Rabi, Ramsey, T₁, T₂ echo, DRAG tuning)
 - **Fock-resolved tomography** and all-XY calibration protocols
 - **Unitary synthesis** for gate-sequence optimization in qubit–cavity subspaces
-- **Optimal control** for model-backed GRAPE waveform design with pulse-runtime replay
+- **Optimal control** for model-backed GRAPE waveform design with pulse-runtime replay and simulator-backed noisy evaluation
 - **Kerr free-evolution** workflows with Wigner-function snapshots
 
 ---
@@ -92,7 +92,7 @@ print(result.expectations)
 | **State preparation** | `StatePreparationSpec`, `prepare_state()` |
 | **Measurement** | `QubitMeasurementSpec`, `measure_qubit()` |
 | **Readout model** | `ReadoutChain`, `ReadoutResonator`, `PurcellFilter`, `AmplifierChain` |
-| **Optimal control** | `ControlProblem`, `PiecewiseConstantTimeGrid`, `GrapeSolver`, `GrapeResult` |
+| **Optimal control** | `ControlProblem`, `ControlResult`, `GrapeSolver`, `evaluate_control_with_simulator()` |
 
 ---
 

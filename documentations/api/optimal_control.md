@@ -280,15 +280,62 @@ Convenience wrapper around `GrapeSolver(...).solve(...)`.
 
 ---
 
-## Results and Export
+## Results, Replay, and Export
 
 ```python
+from cqed_sim.optimal_control import (
+    ControlEvaluationCase,
+    ControlEvaluationResult,
+    ControlResult,
+    evaluate_control_with_simulator,
+)
+
 result.schedule.values
 pulses, drive_ops, meta = result.to_pulses()
 result.save("outputs/grape_result.json")
 ```
 
-`GrapeResult.to_pulses()` exports the optimized schedule as standard repository `Pulse` objects plus the corresponding `drive_ops` map. This is the main interoperability path with the existing waveform compiler and simulator.
+`ControlResult` is the common result surface for direct-control optimization runs. The current solver returns `GrapeResult`, which is the GRAPE-specific concrete result type.
+
+`ControlResult.to_pulses()` exports the optimized schedule as standard repository `Pulse` objects plus the corresponding `drive_ops` map. This is the main interoperability path with the existing waveform compiler and simulator.
+
+### Simulator-backed replay
+
+```python
+nominal_replay = result.evaluate_with_simulator(
+    problem,
+    model=model,
+    frame=frame,
+)
+
+noisy_replay = result.evaluate_with_simulator(
+    problem,
+    cases=(
+        ControlEvaluationCase(
+            model=model,
+            frame=frame,
+            noise=NoiseSpec(t1=2.0e-6, tphi=1.0e-6),
+            label="noisy",
+        ),
+    ),
+)
+```
+
+This replay path is evaluation-only. It keeps the optimizer closed-system, exports the optimized schedule into runtime `Pulse` objects, replays those pulses through `simulate_sequence(...)`, and reports replay fidelities under nominal or noisy Lindblad dynamics.
+
+For retained-subspace unitary objectives, replay also reports subspace leakage metrics.
+
+The function form is:
+
+```python
+evaluate_control_with_simulator(problem, result.schedule, model=model, frame=frame)
+```
+
+### Benchmark harness
+
+The repository benchmark script for larger GRAPE cases is:
+
+- `benchmarks/run_optimal_control_benchmarks.py`
 
 ---
 
@@ -363,3 +410,4 @@ See also:
 
 - `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
 - `examples/grape_storage_subspace_gate_demo.py`
+- `benchmarks/run_optimal_control_benchmarks.py`

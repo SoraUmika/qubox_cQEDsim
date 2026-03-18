@@ -1,4 +1,4 @@
-from .grape import GrapeConfig, GrapeSolver, solve_grape
+from .grape import GrapeConfig, GrapeMultistartConfig, GrapeSolver, solve_grape, solve_grape_multistart
 from .initial_guesses import random_control_schedule, warm_start_schedule, zero_control_schedule
 from .evaluation import (
     ControlEvaluationCase,
@@ -55,8 +55,10 @@ __all__ = [
     "ControlObjectiveEvaluation",
     "ControlMemberEvaluation",
     "ControlEvaluationResult",
+    "GrapeMultistartConfig",
     "GrapeSolver",
     "solve_grape",
+    "solve_grape_multistart",
     "evaluate_control_with_simulator",
     "zero_control_schedule",
     "random_control_schedule",

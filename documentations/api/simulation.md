@@ -107,6 +107,24 @@ def simulate_batch(
 ) -> list[SimulationResult]
 ```
 
+Use `simulate_batch` when all sweep points share the same Hamiltonian (only the initial state varies).
+
+```python
+def run_sweep(
+    sessions: Sequence[SimulationSession],
+    initial_states: Sequence[qt.Qobj],
+    *, max_workers: int = 1, mp_context: str = "spawn",
+) -> list[SimulationResult]
+```
+
+Use `run_sweep` for parameter sweeps where each point has a *different* Hamiltonian (e.g., sweeping over detuning, chi, or amplitude). Each `(session, state)` pair is an independent job. Results are returned in the same order as `sessions`.
+
+```python
+# Example: sweep over chi values
+sessions = [prepare_simulation(model_at_chi(chi), compiled, drive_ops) for chi in chi_values]
+results = run_sweep(sessions, [psi0] * len(chi_values))
+```
+
 ### Supporting Functions
 
 | Function | Signature | Description |

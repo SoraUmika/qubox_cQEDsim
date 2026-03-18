@@ -15,6 +15,7 @@ The module is simulator-backed: it uses the same Hamiltonian and physical conven
 ## Main Capabilities
 
 - **`solve_grape(problem, config)`**: The main entry point. Takes a `ControlProblem` and a `GrapeConfig`, runs GRAPE, and returns a `GrapeResult`.
+- **`solve_grape_multistart(problem, config, multistart_config)`**: Runs GRAPE from multiple random starting points and returns all results sorted best-first. Supports optional parallel execution via `GrapeMultistartConfig(max_workers=N)`.
 - **`GrapeSolver`**: Object-oriented variant that exposes `.solve(problem)` and iteration-level hooks.
 - **Control problem construction**: `build_control_problem_from_model(...)` and `build_control_system_from_model(...)` create a `ControlProblem` directly from a `cqed_sim` model, compiled time grid, and drive channel spec.
 - **Objectives**: `UnitaryObjective` (maximize unitary fidelity), `StateTransferObjective` / `multi_state_transfer_objective` (maximize state transfer fidelity), and `state_preparation_objective`. An objective can also be derived from a `unitary_synthesis` target via `objective_from_unitary_synthesis_target(...)`.
@@ -29,8 +30,10 @@ The module is simulator-backed: it uses the same Hamiltonian and physical conven
 | Symbol | Purpose |
 |---|---|
 | `solve_grape(problem, config)` | Main GRAPE entry point |
+| `solve_grape_multistart(problem, config, multistart_config)` | Multi-start GRAPE — returns all restart results sorted best-first |
 | `GrapeSolver` | Object-oriented GRAPE solver |
 | `GrapeConfig` | Solver hyperparameters (iterations, learning rate, tolerance) |
+| `GrapeMultistartConfig` | Multi-start settings (n_restarts, max_workers, return_all) |
 | `ControlProblem` | Full problem specification (system + objective + penalties) |
 | `build_control_problem_from_model(...)` | Build a `ControlProblem` from a `cqed_sim` model |
 | `ControlSystem` | Hamiltonian and drive-term specification |
@@ -44,6 +47,8 @@ The module is simulator-backed: it uses the same Hamiltonian and physical conven
 | `evaluate_control_with_simulator(...)` | Validate result with full simulator |
 
 ## Usage Guidance
+
+### Single-start GRAPE
 
 ```python
 import numpy as np
@@ -70,10 +75,34 @@ problem = build_control_problem_from_model(
     penalties=[AmplitudePenalty(weight=1e-3), LeakagePenalty(weight=0.1)],
 )
 
-# Run GRAPE
-result = solve_grape(problem, GrapeConfig(n_iter=500, learning_rate=0.01))
-print(result.final_fidelity)
+# Run GRAPE (single start)
+result = solve_grape(problem, GrapeConfig(maxiter=500))
+print(result.metrics["nominal_fidelity"])
 ```
+
+### Multi-start GRAPE
+
+```python
+from cqed_sim.optimal_control import GrapeConfig, GrapeMultistartConfig, solve_grape_multistart
+
+# Run 6 independent random restarts, serial execution
+results = solve_grape_multistart(
+    problem,
+    config=GrapeConfig(maxiter=200, seed=0, random_scale=0.2),
+    multistart_config=GrapeMultistartConfig(n_restarts=6, max_workers=1),
+)
+best = results[0]  # sorted best-first
+print(f"Best fidelity: {best.metrics['nominal_fidelity']:.6f}")
+
+# Optional: parallel execution (beneficial only for long-running optimizations)
+results_parallel = solve_grape_multistart(
+    problem,
+    config=GrapeConfig(maxiter=500, seed=0),
+    multistart_config=GrapeMultistartConfig(n_restarts=4, max_workers=4),
+)
+```
+
+**Note on parallelism:** On Windows, `spawn` process startup overhead (~4–5 s per worker) dominates for short optimizations. Use `max_workers > 1` only when each individual GRAPE run takes several seconds or more.
 
 For an interactive walkthrough with pulse export, see:
 `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
@@ -97,10 +126,11 @@ For a benchmarking harness covering larger optimization cases, see:
 
 ## Limitations / Non-Goals
 
-- GRAPE optimization is local; it converges to a local optimum. Robustness to local minima depends on the initial guess and the number of restarts.
-- The current implementation uses a NumPy-based propagator path. It does not exploit JAX JIT or GPU acceleration on the gradient computation.
+- GRAPE optimization is local; it converges to a local optimum. Use `solve_grape_multistart` to run multiple restarts and return the best result.
+- The current implementation uses a NumPy-based propagator path. It does not exploit JAX JIT or GPU acceleration on the gradient computation. GPU support is deferred until a dense-matrix propagator path that bypasses QuTiP is adopted.
 - Ensemble robustness optimization (averaging over parameter uncertainty) is supported through `ModelEnsembleMember` but is not the default mode.
 - GRAPE does not enforce hardware constraints such as AWG sample rate or DAC range beyond the `SlewRatePenalty` and `AmplitudePenalty` soft penalties.
+- Parallel multi-start via `max_workers > 1` carries significant process-startup overhead on Windows (spawn context). For short optimizations (< ~1 s per restart), serial execution is faster.
 
 ## References
 

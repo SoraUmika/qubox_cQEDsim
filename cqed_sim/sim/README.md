@@ -19,7 +19,8 @@ The `sim` module is the simulation runtime for `cqed_sim`. It assembles the time
 - **`simulate_sequence(model, compiled, psi0, drive_ops, config)`**: One-shot simulation. Runs the QuTiP solver for the given model, compiled channel schedule, initial state, and drive operator mapping. Returns a `SimulationResult`.
 - **`prepare_simulation(model, compiled, drive_ops, config, e_ops)`**: Builds a reusable `SimulationSession` that can be called repeatedly with different initial states without re-assembling the Hamiltonian. Use this for parameter sweeps.
 - **`SimulationSession.run(psi0)`**: Runs a single initial state against the prepared session.
-- **`simulate_batch(session, states, max_workers)`**: Runs a batch of initial states through a prepared session.
+- **`simulate_batch(session, states, max_workers)`**: Runs a batch of initial states through a *single* prepared session (same Hamiltonian, many initial states). Supports optional parallel execution.
+- **`run_sweep(sessions, initial_states, max_workers)`**: Runs a list of (session, initial_state) pairs where *each pair has a different session* (e.g., different model parameters). Use this for parameter sweeps over detuning, chi, or any other quantity that changes the Hamiltonian. Supports optional parallel execution.
 
 ### Configuration
 
@@ -58,7 +59,8 @@ Generalized:
 | `simulate_sequence(...)` | One-shot simulation |
 | `prepare_simulation(...)` | Build a reusable simulation session |
 | `SimulationSession` | Reusable session; call `.run(psi0)` or `.run_many(states)` |
-| `simulate_batch(...)` | Batch over many initial states |
+| `simulate_batch(...)` | Batch over many initial states with the same Hamiltonian |
+| `run_sweep(sessions, states, max_workers)` | Sweep over (session, state) pairs with different Hamiltonians |
 | `SimulationConfig` | Solver and frame configuration |
 | `NoiseSpec` | Collapse operators for open-system evolution |
 | `SimulationResult` | Result object: `.final_state`, `.states`, `.expect`, `.times` |
@@ -94,6 +96,27 @@ session = prepare_simulation(
     e_ops={},  # omit expectation values for speed
 )
 results = simulate_batch(session, [psi_a, psi_b, psi_c], max_workers=1)
+```
+
+### Parameter sweep over Hamiltonians
+
+```python
+from cqed_sim.sim import prepare_simulation, run_sweep, SimulationConfig
+from cqed_sim.sequence.scheduler import SequenceCompiler
+
+chi_values = [chi_0 + k * delta_chi for k in range(20)]
+sessions = [
+    prepare_simulation(
+        DispersiveTransmonCavityModel(..., chi=chi),
+        compiled,
+        drive_ops,
+        config=SimulationConfig(frame=frame),
+        e_ops={},
+    )
+    for chi in chi_values
+]
+results = run_sweep(sessions, [psi0] * len(chi_values))
+# results[k] is the SimulationResult for chi_values[k]
 ```
 
 ### Open-system simulation

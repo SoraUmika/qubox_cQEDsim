@@ -33,6 +33,7 @@ from .runner import (
     default_observables,
     hamiltonian_time_slices,
     prepare_simulation,
+    run_sweep,
     simulate_batch,
     simulate_sequence,
 )
@@ -44,6 +45,7 @@ __all__ = [
     "default_observables",
     "hamiltonian_time_slices",
     "prepare_simulation",
+    "run_sweep",
     "simulate_batch",
     "simulate_sequence",
     "reduced_subsystem_state",

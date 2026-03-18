@@ -240,7 +240,10 @@ Structured targets are supported through:
 ## GRAPE Solver
 
 ```python
-from cqed_sim.optimal_control import GrapeConfig, GrapeSolver, solve_grape
+from cqed_sim.optimal_control import (
+    GrapeConfig, GrapeMultistartConfig, GrapeSolver,
+    solve_grape, solve_grape_multistart,
+)
 ```
 
 ### `GrapeConfig`
@@ -277,6 +280,34 @@ The solver returns a `GrapeResult` containing:
 ### `solve_grape(...)`
 
 Convenience wrapper around `GrapeSolver(...).solve(...)`.
+
+### `GrapeMultistartConfig`
+
+Configuration for a multi-start GRAPE run.
+
+Key fields:
+
+- `n_restarts` — number of independent random restarts (default: 4)
+- `max_workers` — parallel worker processes; 1 = serial (default: 1)
+- `mp_context` — multiprocessing start method; `"spawn"` required on Windows
+- `return_all` — if `True`, return all restart results sorted best-first (default: `True`)
+
+### `solve_grape_multistart(...)`
+
+Runs GRAPE from multiple random starting points and returns results sorted by objective value (best first).
+
+```python
+from cqed_sim.optimal_control import GrapeConfig, GrapeMultistartConfig, solve_grape_multistart
+
+results = solve_grape_multistart(
+    problem,
+    config=GrapeConfig(maxiter=200, seed=0),
+    multistart_config=GrapeMultistartConfig(n_restarts=6, max_workers=1),
+)
+best = results[0]  # sorted best-first
+```
+
+**Windows note:** `spawn` process startup overhead (~4–5 s per worker) dominates for short optimizations. Only use `max_workers > 1` when each individual GRAPE run takes several seconds.
 
 ---
 

@@ -110,8 +110,39 @@ Reasoning:
 
 For the current architecture, prepared sessions plus coarse CPU parallelism are the correct optimization direction. GPU work would only become compelling after moving substantial parts of the solver and operator stack away from the current QuTiP execution model.
 
+## Multi-start GRAPE
+
+`solve_grape_multistart(...)` runs N independent GRAPE restarts and returns all results sorted by objective value (best first).  Each restart uses a different seed derived from the base `GrapeConfig.seed`.
+
+```python
+from cqed_sim import GrapeConfig, GrapeMultistartConfig, solve_grape_multistart
+
+results = solve_grape_multistart(
+    problem,
+    config=GrapeConfig(maxiter=200, seed=0),
+    multistart_config=GrapeMultistartConfig(n_restarts=6, max_workers=1),
+)
+best = results[0]
+```
+
+Parallel execution (`max_workers > 1`) uses `ProcessPoolExecutor` with the `spawn` context.  The same Windows `spawn` overhead documented above applies: only profitable when each individual GRAPE run takes several seconds or more.
+
+## Parameter sweep runner
+
+`run_sweep(sessions, initial_states, max_workers)` handles the complementary case to `simulate_batch`: many independent sessions each with a potentially different Hamiltonian.  This is the natural API for parameter sweeps (detuning, chi, amplitude, …) where the model changes per sweep point.
+
+```python
+from cqed_sim import prepare_simulation, run_sweep
+
+sessions = [prepare_simulation(model_at_chi(chi), compiled, drive_ops) for chi in chi_values]
+results = run_sweep(sessions, [psi0] * len(chi_values))
+```
+
+Serial execution is the default.  Parallel execution carries the same `spawn`-overhead caveat as `simulate_batch`.
+
 ## Remaining limitations
 
 - SQR calibration and unitary-synthesis optimization remain dominated by repeated solver/objective evaluations.
-- `simulate_batch(..., max_workers>1)` is correct, but not a win for small tasks on this Windows environment.
+- `simulate_batch(..., max_workers>1)` and `run_sweep(..., max_workers>1)` are correct, but not a win for small tasks on this Windows environment.
+- GRAPE gradient computation is already vectorized over the state dimension; the per-slice `expm_frechet` calls are inherently sequential and are not further vectorizable without a different propagator formulation.
 - The benchmark results are machine-specific and should be treated as regression-reference numbers, not universal performance guarantees.

@@ -289,6 +289,85 @@ def _run_parallel_state(initial_state: qt.Qobj) -> SimulationResult:
     return _PARALLEL_SESSION.run(initial_state)
 
 
+# ---------------------------------------------------------------------------
+# Parameter sweep runner
+# ---------------------------------------------------------------------------
+
+def run_sweep(
+    sessions: Sequence["SimulationSession"],
+    initial_states: Sequence[qt.Qobj],
+    *,
+    max_workers: int = 1,
+    mp_context: str = "spawn",
+) -> list[SimulationResult]:
+    """Run a parameter sweep over a list of (session, initial_state) pairs.
+
+    Each ``(session, state)`` pair is an independent simulation job.  When
+    ``max_workers == 1`` (default), the sweep is executed serially.  Set
+    ``max_workers > 1`` to distribute jobs across worker processes via
+    :class:`~concurrent.futures.ProcessPoolExecutor`.
+
+    This is useful for sweeps over system parameters (frequency, chi, …) where
+    each point requires a *different* :class:`SimulationSession` (because the
+    Hamiltonian changes between points).  For sweeps over initial states where
+    the Hamiltonian is the same, prefer :func:`simulate_batch` instead.
+
+    On Windows the ``spawn`` context adds significant process-startup overhead;
+    parallel execution only pays off when each solve takes several hundred
+    milliseconds or more.
+
+    Args:
+        sessions: Sequence of :class:`SimulationSession` instances, one per
+            sweep point.  Must have the same length as *initial_states*.
+        initial_states: Initial quantum state for each sweep point.
+        max_workers: Number of parallel worker processes.  ``1`` runs serially.
+        mp_context: Multiprocessing start method.  ``"spawn"`` is the only safe
+            choice on Windows.
+
+    Returns:
+        List of :class:`SimulationResult`, one per sweep point, in the same
+        order as *sessions*.
+    """
+    session_list = list(sessions)
+    state_list = list(initial_states)
+    if len(session_list) != len(state_list):
+        raise ValueError(
+            f"run_sweep: sessions length ({len(session_list)}) must equal "
+            f"initial_states length ({len(state_list)})."
+        )
+
+    if max_workers <= 1 or len(session_list) <= 1:
+        return [session.run(state) for session, state in zip(session_list, state_list)]
+
+    ctx = mp.get_context(mp_context)
+    with ProcessPoolExecutor(
+        max_workers=int(max_workers),
+        mp_context=ctx,
+        initializer=_init_parallel_sweep_worker,
+        initargs=(session_list,),
+    ) as executor:
+        indexed_states = list(enumerate(state_list))
+        results_with_index = list(executor.map(_run_parallel_sweep_point_indexed, indexed_states))
+    results_with_index.sort(key=lambda pair: pair[0])
+    return [result for _, result in results_with_index]
+
+
+# Workers for indexed parallel sweep (one pool, sessions broadcast by index).
+_PARALLEL_SWEEP_SESSIONS: list[SimulationSession] = []
+
+
+def _init_parallel_sweep_worker(sessions: list[SimulationSession]) -> None:
+    global _PARALLEL_SWEEP_SESSIONS
+    _PARALLEL_SWEEP_SESSIONS = sessions
+
+
+def _run_parallel_sweep_point_indexed(args: tuple[int, qt.Qobj]) -> tuple[int, SimulationResult]:
+    index, state = args
+    if not _PARALLEL_SWEEP_SESSIONS:
+        raise RuntimeError("Parallel sweep worker sessions were not initialized.")
+    return index, _PARALLEL_SWEEP_SESSIONS[index].run(state)
+
+
 def simulate_sequence(
     model: Any,
     compiled: CompiledSequence,

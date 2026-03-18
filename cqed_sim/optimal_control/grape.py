@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
+import multiprocessing as mp
 import time
 from typing import Any
 
@@ -502,4 +504,141 @@ def solve_grape(problem, *, config: GrapeConfig | None = None, initial_schedule:
     return GrapeSolver(config=config).solve(problem, initial_schedule=initial_schedule)
 
 
-__all__ = ["GrapeConfig", "GrapeSolver", "solve_grape"]
+# ---------------------------------------------------------------------------
+# Multi-start support
+# ---------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class GrapeMultistartConfig:
+    """Configuration for a multi-start GRAPE run.
+
+    Runs *n_restarts* independent GRAPE optimizations, each starting from a
+    different random seed, and returns all results sorted by objective value
+    (best first).  Set *max_workers > 1* to execute restarts in parallel via
+    :class:`concurrent.futures.ProcessPoolExecutor`.
+
+    Args:
+        n_restarts: Number of independent random restarts to run.
+        max_workers: Number of parallel worker processes.  ``1`` means serial
+            execution (the default and the safest choice on Windows because
+            ``spawn`` startup overhead dominates for short optimizations).
+        mp_context: Multiprocessing start method passed to
+            :class:`~multiprocessing.get_context`.  ``"spawn"`` is the only
+            safe choice on Windows.
+        return_all: If ``True``, return all restart results sorted best-first.
+            If ``False`` (default), return only the single best result inside
+            a list of length 1.
+    """
+
+    n_restarts: int = 4
+    max_workers: int = 1
+    mp_context: str = "spawn"
+    return_all: bool = True
+
+    def __post_init__(self) -> None:
+        if int(self.n_restarts) < 1:
+            raise ValueError("GrapeMultistartConfig.n_restarts must be at least 1.")
+        if int(self.max_workers) < 1:
+            raise ValueError("GrapeMultistartConfig.max_workers must be at least 1.")
+
+
+# Global state for parallel workers (must be module-level for pickle).
+_PARALLEL_GRAPE_PROBLEM: Any = None
+_PARALLEL_GRAPE_CONFIG: GrapeConfig | None = None
+
+
+def _init_parallel_grape(problem: Any, config: GrapeConfig) -> None:
+    global _PARALLEL_GRAPE_PROBLEM, _PARALLEL_GRAPE_CONFIG
+    _PARALLEL_GRAPE_PROBLEM = problem
+    _PARALLEL_GRAPE_CONFIG = config
+
+
+def _run_parallel_grape_restart(seed: int) -> GrapeResult:
+    if _PARALLEL_GRAPE_PROBLEM is None or _PARALLEL_GRAPE_CONFIG is None:
+        raise RuntimeError("Parallel GRAPE worker was not initialized.")
+    cfg = GrapeConfig(
+        optimizer_method=_PARALLEL_GRAPE_CONFIG.optimizer_method,
+        maxiter=_PARALLEL_GRAPE_CONFIG.maxiter,
+        ftol=_PARALLEL_GRAPE_CONFIG.ftol,
+        gtol=_PARALLEL_GRAPE_CONFIG.gtol,
+        initial_guess="random",
+        random_scale=_PARALLEL_GRAPE_CONFIG.random_scale,
+        seed=int(seed),
+        history_every=_PARALLEL_GRAPE_CONFIG.history_every,
+        scipy_options=dict(_PARALLEL_GRAPE_CONFIG.scipy_options),
+    )
+    return GrapeSolver(config=cfg).solve(_PARALLEL_GRAPE_PROBLEM)
+
+
+def solve_grape_multistart(
+    problem,
+    *,
+    config: GrapeConfig | None = None,
+    multistart_config: GrapeMultistartConfig | None = None,
+) -> list[GrapeResult]:
+    """Run GRAPE from multiple random starting points.
+
+    Returns all restart results sorted by objective value (lowest first, i.e.
+    best result first) when *multistart_config.return_all* is ``True``, or a
+    single-element list containing only the best result otherwise.
+
+    Using ``max_workers > 1`` runs restarts in parallel via
+    :class:`~concurrent.futures.ProcessPoolExecutor`.  On Windows, the
+    ``spawn`` multiprocessing context adds significant startup overhead, so
+    parallel execution is only beneficial when each individual GRAPE solve
+    takes several seconds or more.  For short optimizations, use the default
+    ``max_workers=1`` (serial).
+
+    Args:
+        problem: A :class:`~cqed_sim.optimal_control.ControlProblem` instance.
+        config: Base :class:`GrapeConfig`.  The ``seed`` field is overridden
+            per restart.  Defaults to :class:`GrapeConfig()`.
+        multistart_config: Multi-start settings.  Defaults to
+            :class:`GrapeMultistartConfig()`.
+
+    Returns:
+        List of :class:`GrapeResult` instances, sorted best-first.
+    """
+    cfg = config or GrapeConfig()
+    ms_cfg = multistart_config or GrapeMultistartConfig()
+    base_seed = int(cfg.seed) if cfg.seed is not None else 0
+    seeds = [base_seed + restart_index for restart_index in range(int(ms_cfg.n_restarts))]
+
+    if int(ms_cfg.max_workers) <= 1 or int(ms_cfg.n_restarts) <= 1:
+        results: list[GrapeResult] = []
+        for seed in seeds:
+            restart_cfg = GrapeConfig(
+                optimizer_method=cfg.optimizer_method,
+                maxiter=cfg.maxiter,
+                ftol=cfg.ftol,
+                gtol=cfg.gtol,
+                initial_guess="random",
+                random_scale=cfg.random_scale,
+                seed=int(seed),
+                history_every=cfg.history_every,
+                scipy_options=dict(cfg.scipy_options),
+            )
+            results.append(GrapeSolver(config=restart_cfg).solve(problem))
+    else:
+        ctx = mp.get_context(str(ms_cfg.mp_context))
+        with ProcessPoolExecutor(
+            max_workers=int(ms_cfg.max_workers),
+            mp_context=ctx,
+            initializer=_init_parallel_grape,
+            initargs=(problem, cfg),
+        ) as executor:
+            results = list(executor.map(_run_parallel_grape_restart, seeds))
+
+    results.sort(key=lambda r: float(r.objective_value))
+    if not bool(ms_cfg.return_all):
+        return results[:1]
+    return results
+
+
+__all__ = [
+    "GrapeConfig",
+    "GrapeMultistartConfig",
+    "GrapeSolver",
+    "solve_grape",
+    "solve_grape_multistart",
+]

@@ -369,8 +369,8 @@ class UniversalCQEDModel:
         if self.transmon is not None and self.bosonic_modes:
             try:
                 couplings["sideband"] = self.sideband_drive_operators(mode=self.bosonic_modes[0].label)
-            except Exception:
-                pass
+            except (ValueError, IndexError):
+                pass  # sideband coupling not available for this model configuration
         return couplings
 
     def sideband_drive_operators(

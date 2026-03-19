@@ -18,12 +18,15 @@ The module is simulator-backed: it uses the same Hamiltonian and physical conven
 - **`solve_grape_multistart(problem, config, multistart_config)`**: Runs GRAPE from multiple random starting points and returns all results sorted best-first. Supports optional parallel execution via `GrapeMultistartConfig(max_workers=N)`.
 - **`GrapeSolver`**: Object-oriented variant that exposes `.solve(problem)` and iteration-level hooks.
 - **Control problem construction**: `build_control_problem_from_model(...)` and `build_control_system_from_model(...)` create a `ControlProblem` directly from a `cqed_sim` model, compiled time grid, and drive channel spec.
+- **Hardware-aware control pipeline**: `resolve_control_schedule(...)` exposes the full parameter -> command -> physical waveform pipeline so users can inspect the exact waveform seen by propagation.
 - **Objectives**: `UnitaryObjective` (maximize unitary fidelity), `StateTransferObjective` / `multi_state_transfer_objective` (maximize state transfer fidelity), and `state_preparation_objective`. An objective can also be derived from a `unitary_synthesis` target via `objective_from_unitary_synthesis_target(...)`.
 - **Penalties**: `AmplitudePenalty`, `SlewRatePenalty`, `LeakagePenalty` — additive regularization terms to enforce hardware and physics constraints.
-- **Parameterization**: `PiecewiseConstantParameterization` wraps a `PiecewiseConstantTimeGrid` and the control schedule as optimizable parameters.
+- **Hardware-aware penalties**: `BoundPenalty`, `BoundaryConditionPenalty`, and `IQRadiusPenalty` extend the additive framework to parameter, command, or physical waveform domains.
+- **Parameterization**: `PiecewiseConstantParameterization` and `HeldSampleParameterization` expose parameter-space values separately from the propagation-grid command waveform.
+- **Hardware maps**: `HardwareModel`, `FirstOrderLowPassHardwareMap`, `BoundaryWindowHardwareMap`, and `SmoothIQRadiusLimitHardwareMap` let the optimizer propagate through differentiable hardware transforms.
 - **Initial guesses**: `zero_control_schedule`, `random_control_schedule`, `warm_start_schedule`.
-- **Evaluation**: `evaluate_control_with_simulator(...)` replays a converged control schedule through the `cqed_sim.sim` runtime to validate the GRAPE result against the full solver.
-- **Result types**: `GrapeResult` (full optimization history and final schedule), `ControlResult` (final schedule and fidelity), `GrapeIterationRecord` (per-iteration diagnostics).
+- **Evaluation**: `evaluate_control_with_simulator(...)` replays either the command waveform or the physical post-hardware waveform through the `cqed_sim.sim` runtime.
+- **Result types**: `GrapeResult` (full optimization history and final schedule), `ControlResult` (final schedule and fidelity), `GrapeIterationRecord` (per-iteration diagnostics). Results now expose command and physical waveforms plus hardware diagnostics.
 
 ## Key Entry Points
 
@@ -37,12 +40,21 @@ The module is simulator-backed: it uses the same Hamiltonian and physical conven
 | `ControlProblem` | Full problem specification (system + objective + penalties) |
 | `build_control_problem_from_model(...)` | Build a `ControlProblem` from a `cqed_sim` model |
 | `ControlSystem` | Hamiltonian and drive-term specification |
+| `resolve_control_schedule(...)` | Inspect parameter, command, and physical waveforms for a schedule |
 | `UnitaryObjective` | Gate fidelity objective |
 | `StateTransferObjective` | State-transfer fidelity objective |
 | `AmplitudePenalty` | Amplitude regularization |
 | `SlewRatePenalty` | Bandwidth regularization |
+| `BoundPenalty` | Soft bound-violation penalty on parameter, command, or physical waveforms |
+| `BoundaryConditionPenalty` | Soft zero-start / zero-end penalty |
+| `IQRadiusPenalty` | Soft radial I/Q envelope penalty |
 | `LeakagePenalty` | Leakage-suppression penalty |
 | `PiecewiseConstantParameterization` | Control schedule parameterization |
+| `HeldSampleParameterization` | Coarse-sample sample-and-hold parameterization |
+| `HardwareModel` | Sequential hardware transform model from command to physical waveform |
+| `FirstOrderLowPassHardwareMap` | Differentiable first-order bandwidth limit |
+| `BoundaryWindowHardwareMap` | Hard zero-start / zero-end boundary window |
+| `SmoothIQRadiusLimitHardwareMap` | Differentiable radial I/Q amplitude limiter |
 | `GrapeResult` | Full optimization result |
 | `evaluate_control_with_simulator(...)` | Validate result with full simulator |
 
@@ -107,15 +119,20 @@ results_parallel = solve_grape_multistart(
 For an interactive walkthrough with pulse export, see:
 `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
 
+For a standalone comparison between unconstrained and hardware-aware GRAPE, see:
+`examples/hardware_constrained_grape_demo.py`
+
 For a benchmarking harness covering larger optimization cases, see:
 `benchmarks/run_optimal_control_benchmarks.py`
 
 ## Important Assumptions / Conventions
 
-- GRAPE propagators are computed using the piecewise-constant (PWC) approximation: the Hamiltonian is held constant within each time step.
+- GRAPE propagators are computed on a piecewise-constant propagation grid: the Hamiltonian is held constant within each time step of `PiecewiseConstantTimeGrid`.
 - Gradients are computed analytically using the co-state / adjoint method; no finite differences are used.
+- When a hardware model is active, gradients flow through the parameterization map and the hardware map before reaching the schedule parameters.
 - The Hamiltonian convention and frame convention match `cqed_sim.sim` exactly. Optimized pulses export directly into the `Pulse`/`SequenceCompiler`/`simulate_sequence` pipeline.
 - Amplitude units are `rad/s`; time units are seconds.
+- The internal control pipeline is explicit: parameter values -> command waveform -> physical waveform -> Hamiltonian coefficients.
 - The unitary fidelity metric is the normalized Hilbert–Schmidt inner product over the full Hilbert space. For leakage-sensitive targets, use `LeakagePenalty` or define a subspace-projected objective.
 
 ## Relationships to Other Modules
@@ -129,7 +146,7 @@ For a benchmarking harness covering larger optimization cases, see:
 - GRAPE optimization is local; it converges to a local optimum. Use `solve_grape_multistart` to run multiple restarts and return the best result.
 - The current implementation uses a NumPy-based propagator path. It does not exploit JAX JIT or GPU acceleration on the gradient computation. GPU support is deferred until a dense-matrix propagator path that bypasses QuTiP is adopted.
 - Ensemble robustness optimization (averaging over parameter uncertainty) is supported through `ModelEnsembleMember` but is not the default mode.
-- GRAPE does not enforce hardware constraints such as AWG sample rate or DAC range beyond the `SlewRatePenalty` and `AmplitudePenalty` soft penalties.
+- The first hardware-aware extension currently targets held-sample parameterization, first-order low-pass filtering, I/Q radial limits, and boundary windows. Quantization-aware gradients, Fourier/spline bases, and projection-based hard constraints are deferred.
 - Parallel multi-start via `max_workers > 1` carries significant process-startup overhead on Windows (spawn context). For short optimizations (< ~1 s per restart), serial execution is faster.
 
 ## References

@@ -14,6 +14,26 @@ jax.config.update("jax_enable_x64", True)
 
 
 class JaxBackend(BaseBackend):
+    """Dense JAX backend for small-system time evolution with optional GPU support.
+
+    Uses ``jax.numpy`` for array operations and ``jax.scipy.linalg.expm`` for
+    the matrix exponential.  When JAX is configured with a GPU device, computations
+    can be offloaded to the GPU by passing ``device="gpu"`` to the constructor.
+
+    Prerequisites
+    -------------
+    JAX must be installed (``pip install jax``).  64-bit precision is enabled
+    automatically via ``jax.config.update("jax_enable_x64", True)``.
+
+    Limitations
+    -----------
+    - Dense storage: same O(dim^2) / O(dim^4) scaling as :class:`NumPyBackend`.
+    - JIT compilation adds overhead for first-call latency; for very short
+      simulations the NumPy backend may be faster.
+    - JAX operations are asynchronous by default; call ``.block_until_ready()``
+      on results if you need synchronization with wall-clock timings.
+    """
+
     name = "jax"
 
     def __init__(self, device: str | None = None):

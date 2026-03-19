@@ -60,7 +60,6 @@ def default_observables(model: Any) -> dict[str, qt.Qobj]:
     has_transmon = bool(getattr(model, "has_transmon", "n_q" in ops and "b" in ops))
     observables: dict[str, qt.Qobj] = {}
     if has_transmon:
-        observables["P_e"] = _projector_onto_first_excited_state(dims)
         for level in range(dims[0]):
             projector = _projector_onto_transmon_level(dims, level)
             observables[f"P_q{level}"] = projector
@@ -230,6 +229,15 @@ class SimulationSession:
         max_workers: int = 1,
         mp_context: str = "spawn",
     ) -> list[SimulationResult]:
+        """Run the session over multiple initial states.
+
+        Note: On Windows, multiprocessing uses the ``spawn`` start method.
+        This carries noticeable per-worker startup overhead. For small jobs
+        (few initial states, short simulations), the overhead may dominate and
+        a sequential approach may be faster. The serial prepared-session path
+        (``SimulationSession.run_many`` with ``max_workers=1``) is generally
+        preferred for most workloads on Windows.
+        """
         states = list(initial_states)
         if max_workers <= 1 or len(states) <= 1:
             return [self.run(state) for state in states]
@@ -272,9 +280,23 @@ def simulate_batch(
     max_workers: int = 1,
     mp_context: str = "spawn",
 ) -> list[SimulationResult]:
+    """Run a prepared session over a batch of initial states.
+
+    Note: On Windows, multiprocessing uses the ``spawn`` start method.
+    This carries noticeable per-worker startup overhead. For small jobs
+    (few initial states, short simulations), the overhead may dominate and
+    a sequential approach may be faster. The serial prepared-session path
+    (``SimulationSession.run_many``) is generally preferred for most workloads
+    on Windows.
+    """
     return session.run_many(initial_states, max_workers=max_workers, mp_context=mp_context)
 
 
+# Module-level parallel worker state.  These globals are set by
+# ProcessPoolExecutor initializers in forked/spawned workers, so each
+# process has its own copy.  They are NOT safe for concurrent use from
+# multiple threads within a single process — always use max_workers=1
+# if calling from threads.
 _PARALLEL_SESSION: SimulationSession | None = None
 
 

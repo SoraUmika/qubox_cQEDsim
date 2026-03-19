@@ -10,6 +10,19 @@ from .base_backend import BaseBackend
 
 
 class NumPyBackend(BaseBackend):
+    """Dense NumPy/SciPy backend for small-system time evolution.
+
+    Uses ``numpy`` for array operations and ``scipy.linalg.expm`` for the matrix
+    exponential.  Suitable for closed-system propagation (via ``expm``) or
+    open-system evolution (via the Liouvillian superoperator).
+
+    Limitations
+    -----------
+    - Dense storage: memory scales as O(dim^2) for states and O(dim^4) for
+      Liouvillians.  For dim > ~50 the JAX or QuTiP backends should be preferred.
+    - ``expm`` calls ``scipy.linalg.expm`` which is CPU-only and single-threaded.
+    """
+
     name = "numpy"
 
     def asarray(self, value):

@@ -11,10 +11,18 @@ from scipy.optimize import minimize
 
 from cqed_sim.unitary_synthesis.metrics import subspace_unitary_fidelity
 
+from .hardware import apply_control_pipeline, selected_control_indices, selected_iq_pairs
 from .initial_guesses import random_control_schedule, zero_control_schedule
 from .objectives import StateTransferObjective, UnitaryObjective
 from .parameterizations import ControlSchedule
-from .penalties import AmplitudePenalty, LeakagePenalty, SlewRatePenalty
+from .penalties import (
+    AmplitudePenalty,
+    BoundPenalty,
+    BoundaryConditionPenalty,
+    IQRadiusPenalty,
+    LeakagePenalty,
+    SlewRatePenalty,
+)
 from .propagators import backward_target_history, build_propagation_data, propagate_state_history
 from .result import GrapeIterationRecord, GrapeResult
 from .utils import dense_projector
@@ -31,6 +39,8 @@ class GrapeConfig:
     random_scale: float = 0.15
     seed: int | None = None
     history_every: int = 1
+    apply_hardware_in_forward_model: bool = True
+    report_command_reference: bool = True
     scipy_options: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -69,6 +79,7 @@ class _ScheduleEvaluation:
     metrics: dict[str, Any]
     system_metrics: tuple[dict[str, Any], ...]
     nominal_final_unitary: np.ndarray | None
+    resolved_waveforms: Any
 
 
 def _prepare_objective(problem, objective: StateTransferObjective | UnitaryObjective) -> _PreparedObjective:
@@ -191,24 +202,52 @@ def _evaluate_leakage_records(
     return leakages, pair_gradients
 
 
-def _evaluate_control_penalties(problem, values: np.ndarray) -> tuple[float, np.ndarray, dict[str, float]]:
+def _penalty_domain_values(schedule: ControlSchedule, applied, penalty) -> tuple[np.ndarray, Any, str]:
+    domain = str(getattr(penalty, "apply_to", "command")).lower()
+    if domain in {"parameter", "parameters", "schedule"}:
+        return np.asarray(schedule.values, dtype=float), (lambda grad: np.asarray(grad, dtype=float)), "parameter"
+    if domain == "command":
+        return np.asarray(applied.resolved.command_values, dtype=float), applied.pullback_command, "command"
+    if domain == "physical":
+        return np.asarray(applied.resolved.physical_values, dtype=float), applied.pullback_physical, "physical"
+    raise ValueError(f"Unsupported penalty domain '{domain}'.")
+
+
+def _embed_selected_gradient(shape: tuple[int, int], selected: tuple[int, ...], local_gradient: np.ndarray) -> np.ndarray:
+    gradient = np.zeros(shape, dtype=float)
+    if selected:
+        gradient[np.asarray(selected, dtype=int), :] = np.asarray(local_gradient, dtype=float)
+    return gradient
+
+
+def _evaluate_control_penalties(problem, schedule: ControlSchedule, applied) -> tuple[float, np.ndarray, dict[str, Any]]:
     total = 0.0
-    gradient = np.zeros_like(values, dtype=float)
-    metrics = {
+    gradient = np.zeros_like(schedule.values, dtype=float)
+    metrics: dict[str, Any] = {
         "amplitude_penalty": 0.0,
         "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
     }
 
     for penalty in problem.penalties:
+        if isinstance(penalty, LeakagePenalty):
+            continue
+
+        values, pullback, _domain = _penalty_domain_values(schedule, applied, penalty)
+
         if isinstance(penalty, AmplitudePenalty):
             centered = np.asarray(values, dtype=float) - float(penalty.reference)
             raw = float(np.mean(np.square(centered))) if centered.size else 0.0
             contribution = float(penalty.weight) * raw
             total += contribution
             if centered.size:
-                gradient += float(penalty.weight) * (2.0 / centered.size) * centered
+                gradient += pullback(float(penalty.weight) * (2.0 / centered.size) * centered)
             metrics["amplitude_penalty"] += contribution
-        elif isinstance(penalty, SlewRatePenalty):
+            continue
+
+        if isinstance(penalty, SlewRatePenalty):
             if values.shape[1] < 2:
                 continue
             diffs = np.diff(values, axis=1)
@@ -217,11 +256,100 @@ def _evaluate_control_penalties(problem, values: np.ndarray) -> tuple[float, np.
             total += contribution
             metrics["slew_penalty"] += contribution
             norm = float(diffs.size)
-            scale = 2.0 * float(penalty.weight) / max(norm, 1.0)
-            gradient[:, 0] += scale * (values[:, 0] - values[:, 1])
-            gradient[:, -1] += scale * (values[:, -1] - values[:, -2])
+            local_gradient = np.zeros_like(values, dtype=float)
+            scale = 2.0 / max(norm, 1.0)
+            local_gradient[:, 0] += scale * (values[:, 0] - values[:, 1])
+            local_gradient[:, -1] += scale * (values[:, -1] - values[:, -2])
             if values.shape[1] > 2:
-                gradient[:, 1:-1] += scale * (2.0 * values[:, 1:-1] - values[:, :-2] - values[:, 2:])
+                local_gradient[:, 1:-1] += scale * (2.0 * values[:, 1:-1] - values[:, :-2] - values[:, 2:])
+            gradient += pullback(float(penalty.weight) * local_gradient)
+            continue
+
+        if isinstance(penalty, BoundPenalty):
+            selected = selected_control_indices(
+                problem.control_terms,
+                control_names=tuple(penalty.control_names),
+                export_channels=tuple(penalty.export_channels),
+            )
+            if not selected:
+                continue
+            subset = np.asarray(values[np.asarray(selected, dtype=int), :], dtype=float)
+            below = np.clip(float(penalty.lower_bound) - subset, 0.0, None)
+            above = np.clip(subset - float(penalty.upper_bound), 0.0, None)
+            raw = float(np.mean(np.square(below) + np.square(above))) if subset.size else 0.0
+            contribution = float(penalty.weight) * raw
+            total += contribution
+            metrics["bound_penalty"] += contribution
+            local_gradient = np.zeros_like(subset, dtype=float)
+            if subset.size:
+                local_gradient += (-2.0 / subset.size) * below
+                local_gradient += (2.0 / subset.size) * above
+                gradient += pullback(
+                    float(penalty.weight)
+                    * _embed_selected_gradient(values.shape, selected, local_gradient)
+                )
+            continue
+
+        if isinstance(penalty, BoundaryConditionPenalty):
+            selected = selected_control_indices(
+                problem.control_terms,
+                control_names=tuple(penalty.control_names),
+                export_channels=tuple(penalty.export_channels),
+            )
+            if not selected:
+                continue
+            subset = np.asarray(values[np.asarray(selected, dtype=int), :], dtype=float)
+            local_gradient = np.zeros_like(subset, dtype=float)
+            raw = 0.0
+            if bool(penalty.apply_start):
+                span = min(int(penalty.ramp_slices), subset.shape[1])
+                start_values = subset[:, :span]
+                raw += float(np.mean(np.square(start_values))) if start_values.size else 0.0
+                if start_values.size:
+                    local_gradient[:, :span] += (2.0 / start_values.size) * start_values
+            if bool(penalty.apply_end):
+                span = min(int(penalty.ramp_slices), subset.shape[1])
+                end_values = subset[:, -span:]
+                raw += float(np.mean(np.square(end_values))) if end_values.size else 0.0
+                if end_values.size:
+                    local_gradient[:, -span:] += (2.0 / end_values.size) * end_values
+            contribution = float(penalty.weight) * float(raw)
+            total += contribution
+            metrics["boundary_penalty"] += contribution
+            gradient += pullback(float(penalty.weight) * _embed_selected_gradient(values.shape, selected, local_gradient))
+            continue
+
+        if isinstance(penalty, IQRadiusPenalty):
+            pairs = selected_iq_pairs(
+                problem.control_terms,
+                control_names=tuple(penalty.control_names),
+                export_channels=tuple(penalty.export_channels),
+            )
+            if not pairs:
+                continue
+            local_gradient = np.zeros_like(values, dtype=float)
+            raw_terms: list[np.ndarray] = []
+            amplitude_max = float(penalty.amplitude_max)
+            for _channel, i_index, q_index in pairs:
+                i_values = np.asarray(values[i_index, :], dtype=float)
+                q_values = np.asarray(values[q_index, :], dtype=float)
+                radius = np.sqrt(np.square(i_values) + np.square(q_values))
+                violation = np.clip(radius - amplitude_max, 0.0, None)
+                raw_terms.append(np.square(violation))
+                active = radius > 1.0e-18
+                scale = np.zeros_like(radius, dtype=float)
+                scale[active] = (2.0 * violation[active]) / radius[active]
+                local_gradient[i_index, :] += scale * i_values
+                local_gradient[q_index, :] += scale * q_values
+            if raw_terms:
+                stacked = np.concatenate([term.reshape(-1) for term in raw_terms])
+                raw = float(np.mean(stacked)) if stacked.size else 0.0
+                contribution = float(penalty.weight) * raw
+                total += contribution
+                metrics["iq_radius_penalty"] += contribution
+                norm = float(sum(term.size for term in raw_terms))
+                gradient += pullback(float(penalty.weight) * (local_gradient / max(norm, 1.0)))
+            continue
 
     metrics["control_penalty_total"] = float(total)
     return float(total), gradient, metrics
@@ -244,8 +372,17 @@ def _aggregate_systems(system_objectives, system_gradients, systems, mode: str) 
     return objective, gradient, {"aggregate_mode": "mean", "system_weights": [float(weight) for weight in weights]}
 
 
-def _evaluate_schedule(problem, schedule: ControlSchedule, prepared_objectives, prepared_leakage_penalties) -> _ScheduleEvaluation:
-    values = np.asarray(schedule.values, dtype=float)
+def _evaluate_schedule(
+    problem,
+    schedule: ControlSchedule,
+    prepared_objectives,
+    prepared_leakage_penalties,
+    *,
+    apply_hardware: bool = True,
+) -> _ScheduleEvaluation:
+    applied = apply_control_pipeline(problem, schedule, apply_hardware=apply_hardware)
+    resolved = applied.resolved
+    physical_values = np.asarray(resolved.physical_values, dtype=float)
     system_objectives: list[float] = []
     system_gradients: list[np.ndarray] = []
     system_metrics: list[dict[str, Any]] = []
@@ -255,22 +392,22 @@ def _evaluate_schedule(problem, schedule: ControlSchedule, prepared_objectives, 
         propagation = build_propagation_data(
             drift_hamiltonian=system.drift_hamiltonian,
             control_operators=system.control_operators,
-            control_values=values,
+            control_values=physical_values,
             step_durations_s=np.asarray(problem.time_grid.step_durations_s, dtype=float),
         )
         if system_index == 0:
             nominal_final_unitary = propagation.final_unitary
 
         objective_total = 0.0
-        gradient_total = np.zeros_like(values, dtype=float)
+        gradient_total = np.zeros_like(schedule.values, dtype=float)
         objective_reports: list[dict[str, Any]] = []
         leakage_records: dict[int, list[tuple[float, float, np.ndarray]]] = {index: [] for index in range(len(prepared_leakage_penalties))}
 
         for prepared in prepared_objectives:
-            cost, gradient, metrics, forward = _evaluate_state_objective(prepared, propagation, system.control_operators)
+            cost, gradient_physical, metrics, forward = _evaluate_state_objective(prepared, propagation, system.control_operators)
             weighted_cost = float(prepared.weight) * float(cost)
             objective_total += weighted_cost
-            gradient_total += float(prepared.weight) * gradient
+            gradient_total += float(prepared.weight) * applied.pullback_physical(gradient_physical)
 
             report = {
                 "name": str(prepared.name),
@@ -317,7 +454,7 @@ def _evaluate_schedule(problem, schedule: ControlSchedule, prepared_objectives, 
             records = leakage_records[penalty_index]
             if not records:
                 raw = 0.0
-                gradient = np.zeros_like(values, dtype=float)
+                gradient = np.zeros_like(schedule.values, dtype=float)
             else:
                 weights = np.asarray([row[0] for row in records], dtype=float)
                 leakages = np.asarray([row[1] for row in records], dtype=float)
@@ -332,7 +469,7 @@ def _evaluate_schedule(problem, schedule: ControlSchedule, prepared_objectives, 
                     gradient = np.sum(weights[:, None, None] * gradients, axis=0) / max(norm, 1.0e-18)
             contribution = float(prepared_penalty.penalty.weight) * float(raw)
             objective_total += contribution
-            gradient_total += float(prepared_penalty.penalty.weight) * gradient
+            gradient_total += float(prepared_penalty.penalty.weight) * applied.pullback_physical(gradient)
             leakage_report[f"leakage_penalty_{penalty_index}"] = float(contribution)
             leakage_report[f"leakage_raw_{penalty_index}"] = float(raw)
 
@@ -354,7 +491,7 @@ def _evaluate_schedule(problem, schedule: ControlSchedule, prepared_objectives, 
         problem.systems,
         problem.ensemble_aggregate,
     )
-    control_penalty, control_penalty_grad, control_penalty_metrics = _evaluate_control_penalties(problem, values)
+    control_penalty, control_penalty_grad, control_penalty_metrics = _evaluate_control_penalties(problem, schedule, applied)
     total_objective = float(aggregate_objective + control_penalty)
     total_gradient = np.asarray(aggregate_gradient + control_penalty_grad, dtype=float)
 
@@ -371,13 +508,20 @@ def _evaluate_schedule(problem, schedule: ControlSchedule, prepared_objectives, 
         "nominal_fidelity": float(nominal_fidelity),
         **aggregate_report,
         **control_penalty_metrics,
+        **resolved.parameterization_metrics,
+        **resolved.hardware_metrics,
     }
+    if apply_hardware:
+        metrics["nominal_physical_fidelity"] = float(nominal_fidelity)
+    else:
+        metrics["nominal_command_fidelity"] = float(nominal_fidelity)
     return _ScheduleEvaluation(
         objective=float(total_objective),
         gradient=total_gradient,
         metrics=metrics,
         system_metrics=tuple(system_metrics),
         nominal_final_unitary=nominal_final_unitary,
+        resolved_waveforms=resolved,
     )
 
 
@@ -430,7 +574,13 @@ class GrapeSolver:
             evaluation_counter += 1
             physical_vector = np.asarray(vector, dtype=float).reshape(-1) * scale_vector
             schedule = ControlSchedule.from_flattened(problem.parameterization, physical_vector).clipped()
-            evaluation = _evaluate_schedule(problem, schedule, prepared_objectives, prepared_leakage_penalties)
+            evaluation = _evaluate_schedule(
+                problem,
+                schedule,
+                prepared_objectives,
+                prepared_leakage_penalties,
+                apply_hardware=bool(self.config.apply_hardware_in_forward_model),
+            )
             last_vector = np.array(vector, copy=True)
             last_evaluation = evaluation
 
@@ -468,7 +618,57 @@ class GrapeSolver:
         )
 
         final_schedule = ControlSchedule.from_flattened(problem.parameterization, optimizer_result.x * scale_vector).clipped()
-        final_evaluation = _evaluate_schedule(problem, final_schedule, prepared_objectives, prepared_leakage_penalties)
+        final_evaluation = _evaluate_schedule(
+            problem,
+            final_schedule,
+            prepared_objectives,
+            prepared_leakage_penalties,
+            apply_hardware=bool(self.config.apply_hardware_in_forward_model),
+        )
+        export_resolution = apply_control_pipeline(problem, final_schedule, apply_hardware=True).resolved
+        final_metrics = dict(final_evaluation.metrics)
+        if problem.hardware_model is None:
+            final_metrics.setdefault("nominal_command_fidelity", float(final_evaluation.metrics.get("nominal_fidelity", np.nan)))
+            final_metrics.setdefault("nominal_physical_fidelity", float(final_evaluation.metrics.get("nominal_fidelity", np.nan)))
+            final_metrics.setdefault("objective_command_reference", float(final_evaluation.objective))
+            final_metrics.setdefault("objective_physical_reference", float(final_evaluation.objective))
+        else:
+            if bool(self.config.apply_hardware_in_forward_model):
+                final_metrics["nominal_physical_fidelity"] = float(final_evaluation.metrics.get("nominal_fidelity", np.nan))
+                final_metrics["objective_physical_reference"] = float(final_evaluation.objective)
+                final_metrics.setdefault("nominal_command_fidelity", float("nan"))
+                final_metrics.setdefault("objective_command_reference", float("nan"))
+            else:
+                final_metrics["nominal_command_fidelity"] = float(final_evaluation.metrics.get("nominal_fidelity", np.nan))
+                final_metrics["objective_command_reference"] = float(final_evaluation.objective)
+                final_metrics["nominal_physical_fidelity"] = float("nan")
+                final_metrics["objective_physical_reference"] = float("nan")
+
+        if problem.hardware_model is not None and bool(self.config.report_command_reference):
+            if bool(self.config.apply_hardware_in_forward_model):
+                command_reference = _evaluate_schedule(
+                    problem,
+                    final_schedule,
+                    prepared_objectives,
+                    prepared_leakage_penalties,
+                    apply_hardware=False,
+                )
+                final_metrics["nominal_command_fidelity"] = float(command_reference.metrics.get("nominal_fidelity", np.nan))
+                final_metrics["objective_command_reference"] = float(command_reference.objective)
+                final_metrics["objective_physical_reference"] = float(final_evaluation.objective)
+            else:
+                physical_reference = _evaluate_schedule(
+                    problem,
+                    final_schedule,
+                    prepared_objectives,
+                    prepared_leakage_penalties,
+                    apply_hardware=True,
+                )
+                final_metrics["nominal_command_fidelity"] = float(final_evaluation.metrics.get("nominal_fidelity", np.nan))
+                final_metrics["objective_command_reference"] = float(final_evaluation.objective)
+                final_metrics["nominal_physical_fidelity"] = float(physical_reference.metrics.get("nominal_fidelity", np.nan))
+                final_metrics["objective_physical_reference"] = float(physical_reference.objective)
+        final_metrics["hardware_forward_model_applied"] = bool(self.config.apply_hardware_in_forward_model and problem.hardware_model is not None)
         if not history or history[-1].evaluation != evaluation_counter:
             history.append(
                 GrapeIterationRecord(
@@ -485,7 +685,7 @@ class GrapeSolver:
             message=str(optimizer_result.message),
             schedule=final_schedule,
             objective_value=float(final_evaluation.objective),
-            metrics=dict(final_evaluation.metrics),
+            metrics=final_metrics,
             system_metrics=tuple(final_evaluation.system_metrics),
             history=history,
             nominal_final_unitary=final_evaluation.nominal_final_unitary,
@@ -497,6 +697,14 @@ class GrapeSolver:
                 "status": int(getattr(optimizer_result, "status", 0)),
                 "variable_scaling": "bound_based",
             },
+            command_values=np.asarray(export_resolution.command_values, dtype=float),
+            physical_values=np.asarray(export_resolution.physical_values, dtype=float),
+            time_boundaries_s=np.asarray(export_resolution.time_boundaries_s, dtype=float),
+            parameterization_metrics=dict(export_resolution.parameterization_metrics),
+            hardware_metrics=dict(export_resolution.hardware_metrics),
+            hardware_reports=tuple(
+                {"name": report.name, "metrics": dict(report.metrics)} for report in export_resolution.hardware_reports
+            ),
         )
 
 
@@ -565,6 +773,8 @@ def _run_parallel_grape_restart(seed: int) -> GrapeResult:
         random_scale=_PARALLEL_GRAPE_CONFIG.random_scale,
         seed=int(seed),
         history_every=_PARALLEL_GRAPE_CONFIG.history_every,
+        apply_hardware_in_forward_model=_PARALLEL_GRAPE_CONFIG.apply_hardware_in_forward_model,
+        report_command_reference=_PARALLEL_GRAPE_CONFIG.report_command_reference,
         scipy_options=dict(_PARALLEL_GRAPE_CONFIG.scipy_options),
     )
     return GrapeSolver(config=cfg).solve(_PARALLEL_GRAPE_PROBLEM)
@@ -616,6 +826,8 @@ def solve_grape_multistart(
                 random_scale=cfg.random_scale,
                 seed=int(seed),
                 history_every=cfg.history_every,
+                apply_hardware_in_forward_model=cfg.apply_hardware_in_forward_model,
+                report_command_reference=cfg.report_command_reference,
                 scipy_options=dict(cfg.scipy_options),
             )
             results.append(GrapeSolver(config=restart_cfg).solve(problem))

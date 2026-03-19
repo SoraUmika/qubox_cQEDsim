@@ -86,9 +86,12 @@ matplotlib ≥ 3.8 and pandas ≥ 2.0 because progress-reporting utilities are p
 the public import surface. The packaged runtime also includes the local
 `physics_and_conventions` module because several public APIs import it directly.
 
-**Internal units:** Hamiltonian coefficients and rotating-frame frequencies are in
-**rad/s**; times are in **seconds**. All user-facing constructors accept these units
-unless suffixed otherwise (e.g., `_hz`, `_ns`).
+**Units:** The library is unit-coherent: it does not enforce specific physical units
+for frequencies or times. Any internally consistent unit system is valid (for example,
+rad/s with times in seconds, or rad/ns with times in nanoseconds). The recommended
+convention used in the main examples and calibration function naming is rad/s and
+seconds. User-facing constructors with suffixes such as `_hz` or `_ns` are explicit
+exceptions that accept those specific units.
 
 ---
 
@@ -1203,6 +1206,13 @@ class NoiseSpec:
 | `gamma_phi` | `float` | 1/(2·tphi) if set, else 0.0 |
 | `gamma_phi_storage` | `float` | 1/tphi_storage if set, else 0.0 |
 | `gamma_phi_readout` | `float` | 1/tphi_readout if set, else 0.0 |
+
+> **Dephasing-rate convention:** The qubit dephasing rate uses γ_φ = 1/(2·T_φ)
+> because the jump operator is σ_z, whose square contributes a factor of 2 in the
+> Lindblad master equation. Bosonic modes (storage, readout) use γ_φ = 1/T_φ
+> because their jump operator is n̂, where the factor of 2 does not arise.
+> Both conventions are physically correct; see the `NoiseSpec` class docstring
+> in `cqed_sim/sim/noise.py` for a detailed derivation.
 
 ```python
 def collapse_operators(model, noise: NoiseSpec | None) -> list[qt.Qobj]
@@ -3081,7 +3091,7 @@ Approximation boundary:
 
 ## 17C. Optimal Control (`cqed_sim.optimal_control`)
 
-The optimal-control package adds a solver-agnostic direct-control layer on top of the existing model, pulse, and simulator stack. The first backend is a dense closed-system GRAPE solver for piecewise-constant controls.
+The optimal-control package adds a solver-agnostic direct-control layer on top of the existing model, pulse, and simulator stack. The current backend is a dense closed-system GRAPE solver on a piecewise-constant propagation grid, with support for both plain piecewise-constant schedules and hardware-aware held-sample command parameterizations.
 
 The intended workflow is:
 
@@ -3109,21 +3119,46 @@ Highlights:
 - `ModelControlChannelSpec` describes how model-level targets such as `"qubit"`, `"storage"`, `"readout"`, `"sideband"`, `TransmonTransitionDriveSpec(...)`, or `SidebandDriveSpec(...)` are converted into control terms.
 - `ModelEnsembleMember` supports robust optimization over multiple parameter-shifted systems.
 
-### Piecewise-Constant Parameterization
+### Parameterization and Hardware Pipeline
 
 ```python
 PiecewiseConstantTimeGrid.uniform(steps=16, dt_s=4.0e-9)
 PiecewiseConstantParameterization(...)
+HeldSampleParameterization(...)
 ControlSchedule(...)
+HardwareModel(...)
 ```
 
 Key behaviors:
 
-- controls are represented as a dense array of shape `(n_controls, n_slices)`
-- each slice is constant over its time interval
+- the propagation grid is always `PiecewiseConstantTimeGrid`
+- parameter-space values can be distinct from the command waveform seen on that propagation grid
+- `PiecewiseConstantParameterization` is the identity map from parameters to command waveform
+- `HeldSampleParameterization` stores coarse AWG-like samples and applies sample-and-hold onto the propagation grid
 - hard control bounds are tracked in the parameterization
 - schedules can be flattened/unflattened for optimizers
-- schedules can be exported into standard repository `Pulse` objects
+- schedules can be exported into standard repository `Pulse` objects using either command or physical waveforms
+
+The explicit control pipeline is:
+
+\[
+	heta \rightarrow u_{\mathrm{cmd}}(\theta) \rightarrow u_{\mathrm{phys}} = \mathcal{H}[u_{\mathrm{cmd}}] \rightarrow H(t; u_{\mathrm{phys}}).
+\]
+
+The helper
+
+```python
+resolve_control_schedule(...)
+```
+
+returns the parameter values, command waveform, physical waveform, and hardware diagnostics for a concrete schedule.
+
+The first hardware-aware building blocks are:
+
+- `HardwareModel(...)`
+- `FirstOrderLowPassHardwareMap(...)`
+- `BoundaryWindowHardwareMap(...)`
+- `SmoothIQRadiusLimitHardwareMap(...)`
 
 For exported rotating-frame pulses, the complex baseband coefficient follows the same runtime convention as the rest of `cqed_sim`:
 
@@ -3160,6 +3195,9 @@ Supported task styles:
 ```python
 AmplitudePenalty(weight=..., reference=...)
 SlewRatePenalty(weight=...)
+BoundPenalty(weight=..., lower_bound=..., upper_bound=...)
+BoundaryConditionPenalty(weight=..., ramp_slices=...)
+IQRadiusPenalty(amplitude_max=..., weight=...)
 LeakagePenalty(subspace=..., weight=..., metric="average")
 ```
 
@@ -3167,7 +3205,16 @@ The current penalty layer supports:
 
 - amplitude regularization,
 - finite-difference slew regularization across adjacent slices,
+- explicit soft bound penalties,
+- zero-start / zero-end boundary penalties,
+- radial I/Q envelope penalties,
 - final-time leakage penalties outside a retained subspace.
+
+For hardware-aware problems, penalties can be applied to one of three domains:
+
+- parameter-space values,
+- command waveforms,
+- physical waveforms after the attached hardware model.
 
 ### Model Builders
 
@@ -3178,6 +3225,11 @@ build_control_problem_from_model(...)
 ```
 
 These helpers reuse the existing model-layer drive operators and tensor-ordering conventions instead of introducing a separate Hamiltonian-construction path.
+
+`build_control_problem_from_model(...)` also accepts:
+
+- `parameterization_cls=...` plus `parameterization_kwargs={...}` for structured command parameterizations such as `HeldSampleParameterization`,
+- `hardware_model=HardwareModel(...)` to attach a command-to-physical waveform transform directly to the problem.
 
 ### GRAPE Solver
 
@@ -3192,6 +3244,7 @@ Solver behavior:
 - dense closed-system propagation with exact matrix exponentials,
 - exact slice derivatives via `scipy.linalg.expm_frechet`,
 - ensemble aggregation with `"mean"` or `"worst"`,
+- optional hardware-aware forward propagation through `GrapeConfig(apply_hardware_in_forward_model=True)`,
 - support for explicit initial schedules or built-in zero/random initialization.
 
 Implementation note:
@@ -3215,11 +3268,14 @@ evaluate_control_with_simulator(...)
 Shared result data includes:
 
 - the optimized `ControlSchedule`,
+- resolved command and physical waveforms on the propagation grid,
 - scalar objective / fidelity summaries,
 - per-system metrics,
 - iteration history,
 - optimizer status text,
 - the nominal final unitary when available.
+
+When a hardware model is present, the result also reports command-vs-physical fidelity summaries so users can see whether a numerically good command waveform remains good after the attached hardware transform.
 
 `ControlResult.to_pulses()` exports the schedule into standard `Pulse` objects plus the corresponding `drive_ops` mapping so the optimized control can be replayed through the normal `SequenceCompiler` and `simulate_sequence(...)` path.
 
@@ -3236,6 +3292,7 @@ evaluation = result.evaluate_with_simulator(
             label="noisy",
         ),
     ),
+    waveform_mode="physical",
 )
 ```
 
@@ -3252,6 +3309,8 @@ Available objects:
 - `ControlEvaluationResult` for aggregated replay metrics,
 - `evaluate_control_with_simulator(...)` as the function form,
 - `ControlResult.evaluate_with_simulator(...)` as the convenience method.
+
+Replay can target either the command waveform or the physical waveform through `waveform_mode="command" | "physical" | "problem_default"`.
 
 This path is the supported way to answer: "the optimizer says the pulse is good, but how does it behave when replayed through the simulator with noise?"
 
@@ -3326,6 +3385,7 @@ pulses, drive_ops, meta = result.to_pulses()
 Primary reference implementations:
 
 - `examples/grape_storage_subspace_gate_demo.py`
+- `examples/hardware_constrained_grape_demo.py`
 - `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
 - `benchmarks/run_optimal_control_benchmarks.py`
 
@@ -3528,6 +3588,9 @@ and should not be treated as such for quantitative readout studies.
 The `NumPyBackend` and `JaxBackend` implement a dense piecewise-constant solver
 intended for small-system checks and backend parity validation. It is not a
 drop-in replacement for QuTiP's adaptive ODE solver on large systems.
+GPU/JAX GRAPE integration has been deferred; the current JAX backend provides
+only forward simulation via `jax.scipy.linalg.expm`.
+See inline documentation in `cqed_sim/backends/base_backend.py`.
 
 ### LOW: Waveform Bridge Gate Type Coverage
 
@@ -3536,6 +3599,9 @@ supports only `QubitRotation`, `Displacement`, and `SQR`. The synthesis sequence
 types `SNAP`, `ConditionalPhaseSQR`, and `FreeEvolveCondPhase` are not currently
 bridged to the waveform path. Passing them raises `TypeError`. Use the ideal or
 symbolic backends for sequences that include these gate types.
+This limitation is fundamental: these gate types have no pulse builders in
+`pulses/builders.py` and no IO gate representations in `io/gates.py`.
+See inline documentation in `cqed_sim/unitary_synthesis/waveform_bridge.py`.
 
 ### LOW: `targets.py` Contains User-Specific Hardcoded Paths
 

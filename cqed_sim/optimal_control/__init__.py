@@ -1,4 +1,16 @@
 from .grape import GrapeConfig, GrapeMultistartConfig, GrapeSolver, solve_grape, solve_grape_multistart
+from .hardware import (
+    BoundaryWindowHardwareMap,
+    FIRHardwareMap,
+    FirstOrderLowPassHardwareMap,
+    HardwareMap,
+    HardwareMapReport,
+    HardwareModel,
+    QuantizationHardwareMap,
+    ResolvedControlWaveforms,
+    SmoothIQRadiusLimitHardwareMap,
+    resolve_control_schedule,
+)
 from .initial_guesses import random_control_schedule, warm_start_schedule, zero_control_schedule
 from .evaluation import (
     ControlEvaluationCase,
@@ -15,8 +27,23 @@ from .objectives import (
     objective_from_unitary_synthesis_target,
     state_preparation_objective,
 )
-from .parameterizations import ControlSchedule, PiecewiseConstantParameterization, PiecewiseConstantTimeGrid
-from .penalties import AmplitudePenalty, LeakagePenalty, SlewRatePenalty
+from .parameterizations import (
+    ControlParameterization,
+    ControlSchedule,
+    FourierParameterization,
+    HeldSampleParameterization,
+    LinearInterpolatedParameterization,
+    PiecewiseConstantParameterization,
+    PiecewiseConstantTimeGrid,
+)
+from .penalties import (
+    AmplitudePenalty,
+    BoundPenalty,
+    BoundaryConditionPenalty,
+    IQRadiusPenalty,
+    LeakagePenalty,
+    SlewRatePenalty,
+)
 from .problems import (
     ControlProblem,
     ControlSystem,
@@ -36,8 +63,22 @@ __all__ = [
     "ModelControlChannelSpec",
     "ModelEnsembleMember",
     "PiecewiseConstantTimeGrid",
+    "ControlParameterization",
     "PiecewiseConstantParameterization",
+    "HeldSampleParameterization",
+    "FourierParameterization",
+    "LinearInterpolatedParameterization",
     "ControlSchedule",
+    "HardwareMapReport",
+    "ResolvedControlWaveforms",
+    "HardwareMap",
+    "HardwareModel",
+    "FirstOrderLowPassHardwareMap",
+    "BoundaryWindowHardwareMap",
+    "SmoothIQRadiusLimitHardwareMap",
+    "QuantizationHardwareMap",
+    "FIRHardwareMap",
+    "resolve_control_schedule",
     "StateTransferPair",
     "StateTransferObjective",
     "UnitaryObjective",
@@ -46,6 +87,9 @@ __all__ = [
     "objective_from_unitary_synthesis_target",
     "AmplitudePenalty",
     "SlewRatePenalty",
+    "BoundPenalty",
+    "BoundaryConditionPenalty",
+    "IQRadiusPenalty",
     "LeakagePenalty",
     "ControlResult",
     "GrapeConfig",

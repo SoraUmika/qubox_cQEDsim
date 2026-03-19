@@ -12,6 +12,7 @@ from cqed_sim.core import FrameSpec
 from cqed_sim.sequence import SequenceCompiler
 from cqed_sim.sim import NoiseSpec, SimulationConfig, prepare_simulation
 
+from .hardware import resolve_control_schedule
 from .objectives import StateTransferObjective, UnitaryObjective
 from .parameterizations import ControlSchedule
 from .utils import dense_projector, json_ready
@@ -78,6 +79,10 @@ class ControlEvaluationResult:
     pulse_metadata: dict[str, Any]
     compiler_dt_s: float
     duration_s: float
+    waveform_mode: str = "command"
+    parameterization_metrics: dict[str, Any] = field(default_factory=dict)
+    hardware_metrics: dict[str, Any] = field(default_factory=dict)
+    hardware_reports: tuple[dict[str, Any], ...] = ()
 
     def to_payload(self) -> dict[str, Any]:
         payload = {
@@ -86,6 +91,10 @@ class ControlEvaluationResult:
             "pulse_metadata": dict(self.pulse_metadata),
             "compiler_dt_s": float(self.compiler_dt_s),
             "duration_s": float(self.duration_s),
+            "waveform_mode": str(self.waveform_mode),
+            "parameterization_metrics": dict(self.parameterization_metrics),
+            "hardware_metrics": dict(self.hardware_metrics),
+            "hardware_reports": list(self.hardware_reports),
             "member_reports": [
                 {
                     "label": report.label,
@@ -280,6 +289,7 @@ def evaluate_control_with_simulator(
     compiler_dt_s: float | None = None,
     max_step_s: float | None = None,
     aggregate_mode: str | None = None,
+    waveform_mode: str = "problem_default",
 ) -> ControlEvaluationResult:
     if cases and model is not None:
         raise ValueError("Pass either explicit cases or a single model/frame/noise specification, not both.")
@@ -302,7 +312,24 @@ def evaluate_control_with_simulator(
             ),
         )
 
-    pulses, drive_ops, pulse_meta = control_schedule.to_pulses()
+    resolved = resolve_control_schedule(problem, control_schedule, apply_hardware=True)
+    resolved_waveform_mode = str(waveform_mode).lower()
+    if resolved_waveform_mode == "problem_default":
+        resolved_waveform_mode = "physical" if problem.hardware_model is not None else "command"
+    if resolved_waveform_mode == "command":
+        waveform_values = np.asarray(resolved.command_values, dtype=float)
+    elif resolved_waveform_mode == "physical":
+        waveform_values = np.asarray(resolved.physical_values, dtype=float)
+    else:
+        raise ValueError("waveform_mode must be 'problem_default', 'command', or 'physical'.")
+
+    pulses, drive_ops, pulse_meta = control_schedule.to_pulses(waveform_values=waveform_values)
+    pulse_meta = {
+        **dict(pulse_meta),
+        "waveform_mode": str(resolved_waveform_mode),
+        "parameterization_metrics": dict(resolved.parameterization_metrics),
+        "hardware_metrics": dict(resolved.hardware_metrics),
+    }
     default_dt = _default_compiler_dt(problem) if compiler_dt_s is None else float(compiler_dt_s)
     compiled_cache: dict[float, Any] = {}
     member_reports: list[ControlMemberEvaluation] = []
@@ -382,6 +409,10 @@ def evaluate_control_with_simulator(
         pulse_metadata=dict(pulse_meta),
         compiler_dt_s=float(default_dt),
         duration_s=float(problem.time_grid.duration_s),
+        waveform_mode=str(resolved_waveform_mode),
+        parameterization_metrics=dict(resolved.parameterization_metrics),
+        hardware_metrics=dict(resolved.hardware_metrics),
+        hardware_reports=tuple({"name": report.name, "metrics": dict(report.metrics)} for report in resolved.hardware_reports),
     )
 
 

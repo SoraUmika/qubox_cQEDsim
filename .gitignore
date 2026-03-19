@@ -40,3 +40,14 @@ Desktop.ini
 
 # Logs
 *.log
+
+# Stale test/analysis artifacts
+analytic_verification*.py
+analytic_verification*.json
+av_results*.txt
+sqr_calibration_result.json
+test_output.txt
+test_results*.txt
+pytest_final.txt
+texput.log
+PHYSICS_CORRECTNESS_EVALUATION.md

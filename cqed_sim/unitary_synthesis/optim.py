@@ -1575,7 +1575,10 @@ def _scipy_minimize_method(name: str, grid_mode: str) -> str:
 
 def _run_single_start(payload: dict[str, Any], reporter: ProgressReporter | None = None) -> dict[str, Any]:
     worker_seed = int(payload["worker_seed"])
-    np.random.seed(worker_seed % (2**32 - 1))
+    rng = np.random.default_rng(worker_seed % (2**63))
+    # Seed the legacy global state as well for any downstream code that still
+    # uses np.random directly (e.g. scipy.optimize internals on older SciPy).
+    np.random.seed(rng.integers(0, 2**32 - 1))
 
     sequence = copy.deepcopy(payload["sequence_template"])
     x_start = np.asarray(payload["x_start"], dtype=float)

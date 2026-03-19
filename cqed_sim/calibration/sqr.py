@@ -721,10 +721,11 @@ def _optimizer_bounds(config: Mapping[str, Any]) -> Bounds:
 
 
 def _calibration_max_n(gate: SQRGate, config: Mapping[str, Any]) -> int:
-    max_n_requested = int(config.get("max_n_cal", int(config["cavity_fock_cutoff"])))
+    cutoff = int(config.get("cavity_fock_cutoff", 0))
+    max_n_requested = int(config.get("max_n_cal", cutoff))
     theta = np.asarray(gate.theta, dtype=float)
     phi = np.asarray(gate.phi, dtype=float)
-    return int(min(max_n_requested, int(config["cavity_fock_cutoff"]), theta.size - 1, phi.size - 1))
+    return int(min(max_n_requested, cutoff, theta.size - 1, phi.size - 1))
 
 
 def evaluate_sqr_gate_levels(

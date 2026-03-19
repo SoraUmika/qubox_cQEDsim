@@ -58,3 +58,35 @@ quantum-algorithm architecture described in
 
 The current design keeps those extensions natural without hardcoding the package
 to any one hardware model or paper benchmark.
+
+## Development Notes
+
+The holographic code in this package was developed from a prototype that hardcoded
+qubit-system assumptions (`SYS_DIM = 2`) and returned low-level tuples/arrays rather
+than structured API objects. The current architecture decomposes into five layers:
+
+1. Physics/model helpers — lightweight spin-style model helpers and example channels
+2. MPS/channel layer — `HolographicChannel` from unitary, Kraus, or right-canonical MPS data; `PurifiedChannelStep`
+3. Schedule/observable layer — explicit observable insertions, burn-in config, optional right-boundary postselection
+4. Execution/inference layer — Monte Carlo sampler, exact branch enumeration, structured result objects
+5. Diagnostics layer — CPTP/completeness/normalization checks, Monte Carlo vs exact comparison helpers
+
+Future extension scaffolding includes `HoloVQEObjective` and `HoloQUADSProgram` for variational
+energy objectives and time-slice/causal-cone work respectively.
+
+### Integration with `cqed_sim`
+
+Reused from the broader library: documentation style, public API export conventions, and
+dataclass/result-object patterns. The holographic channel and MPS abstractions are
+intentionally kept self-contained because the module is conceptually generic and should
+not inherit cQED-only model or pulse abstractions. Integration is at the packaging and
+documentation level; internal math remains backend-agnostic and hardware-agnostic.
+
+### Deferred work
+
+- Hardware-target circuit IR / backend compilation layers
+- Noisy hardware execution models and leakage-aware hardware mitigation
+- Full optimizer stack for holoVQE
+- Full time-evolution engine for holoQUADS
+- Advanced entropy estimation protocols (replica-SWAP workflows)
+- Large-scale benchmark reproduction against the paper

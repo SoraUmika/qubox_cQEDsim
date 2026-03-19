@@ -14,6 +14,14 @@ from .sequence import Displacement, GateSequence, PrimitiveGate, QubitRotation, 
 
 _SUPPORTED_GATE_TYPES = (QubitRotation, Displacement, SQR)
 
+# Gate types that exist in the synthesis layer but cannot be converted to
+# pulse-level waveforms by the bridge:  SNAP, ConditionalPhaseSQR, and
+# FreeEvolveCondPhase.  These gates have no corresponding pulse builder
+# functions and no IO gate representations; they operate as ideal-unitary
+# operations within the synthesis optimizer.  To simulate them at the pulse
+# level, use the model-backed simulation path (simulate_sequence /
+# hamiltonian_time_slices) rather than the waveform bridge.
+
 
 def _default_time_bounds(duration: float) -> tuple[float, float]:
     duration = float(duration)
@@ -53,7 +61,11 @@ def waveform_primitive_from_gate(
 ) -> PrimitiveGate:
     if not isinstance(gate, _SUPPORTED_GATE_TYPES):
         raise TypeError(
-            "waveform_primitive_from_gate supports only QubitRotation, Displacement, and SQR gates."
+            f"waveform_primitive_from_gate received gate of type {type(gate).__name__!r}, "
+            "which is not supported. Supported gate types are: QubitRotation, Displacement, SQR. "
+            "For SNAP, ConditionalPhaseSQR, and FreeEvolveCondPhase gates, use the "
+            "model-backed simulation path (simulate_sequence / hamiltonian_time_slices) "
+            "rather than the waveform bridge."
         )
 
     base_config = _base_waveform_config(config)

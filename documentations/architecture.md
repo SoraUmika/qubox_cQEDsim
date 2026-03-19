@@ -85,7 +85,7 @@ The simulation engine:
 - `tomo` for tomography primitives
 - `observables` and `plotting` for diagnostics and visualization
 - `unitary_synthesis` for gate-sequence optimization
-- `optimal_control` for piecewise-constant direct-control optimization and GRAPE-based waveform design
+- `optimal_control` for direct-control optimization with piecewise-constant or held-sample command parameterizations, optional hardware maps, and GRAPE-based waveform design
 
 ---
 

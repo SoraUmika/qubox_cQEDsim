@@ -11,7 +11,8 @@ from cqed_sim.core.drive_targets import SidebandDriveSpec, TransmonTransitionDri
 from .utils import as_square_matrix, quadrature_operators
 
 if TYPE_CHECKING:
-    from .parameterizations import PiecewiseConstantParameterization
+    from .hardware import HardwareModel
+    from .parameterizations import ControlParameterization
 
 
 @dataclass(frozen=True)
@@ -100,6 +101,7 @@ class ControlProblem:
     objectives: tuple[Any, ...]
     penalties: tuple[Any, ...] = ()
     ensemble_aggregate: str = "mean"
+    hardware_model: "HardwareModel | None" = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -110,8 +112,11 @@ class ControlProblem:
         if self.ensemble_aggregate not in {"mean", "worst"}:
             raise ValueError("ControlProblem.ensemble_aggregate must be 'mean' or 'worst'.")
         parameterization = self.parameterization
-        if not hasattr(parameterization, "control_terms") or not hasattr(parameterization, "time_grid"):
-            raise TypeError("ControlProblem.parameterization must expose control_terms and time_grid.")
+        required = ("control_terms", "time_grid", "n_slices", "command_values", "pullback", "bounds", "clip")
+        if any(not hasattr(parameterization, attribute) for attribute in required):
+            raise TypeError(
+                "ControlProblem.parameterization must expose control_terms, time_grid, n_slices, command_values, pullback, bounds, and clip."
+            )
         n_controls = len(parameterization.control_terms)
         if n_controls <= 0:
             raise ValueError("ControlProblem.parameterization must define at least one control term.")
@@ -141,6 +146,10 @@ class ControlProblem:
     @property
     def n_slices(self) -> int:
         return int(self.parameterization.n_slices)
+
+    @property
+    def n_time_slices(self) -> int:
+        return int(self.time_grid.steps)
 
     def zero_schedule(self):
         return self.parameterization.zero_schedule()
@@ -230,18 +239,44 @@ def build_control_problem_from_model(
     model: Any,
     *,
     frame: FrameSpec | None,
-    time_grid,
+    time_grid=None,
     channel_specs: Sequence[ModelControlChannelSpec],
     objectives: Sequence[Any],
     penalties: Sequence[Any] = (),
     ensemble_members: Sequence[ModelEnsembleMember] = (),
     ensemble_aggregate: str = "mean",
+    parameterization: Any | None = None,
+    parameterization_cls: type | None = None,
+    parameterization_kwargs: Mapping[str, Any] | None = None,
+    hardware_model: "HardwareModel | None" = None,
     metadata: Mapping[str, Any] | None = None,
 ) -> ControlProblem:
     from .parameterizations import PiecewiseConstantParameterization
 
     control_terms = build_control_terms_from_model(model, channel_specs)
-    parameterization = PiecewiseConstantParameterization(time_grid=time_grid, control_terms=control_terms)
+    if parameterization is None:
+        if time_grid is None:
+            raise ValueError("build_control_problem_from_model requires time_grid=... when parameterization is not supplied.")
+        parameterization_type = PiecewiseConstantParameterization if parameterization_cls is None else parameterization_cls
+        parameterization = parameterization_type(
+            time_grid=time_grid,
+            control_terms=control_terms,
+            **({} if parameterization_kwargs is None else dict(parameterization_kwargs)),
+        )
+    else:
+        if time_grid is not None and parameterization.time_grid is not time_grid:
+            raise ValueError("When both time_grid and parameterization are supplied, they must reference the same time grid object.")
+        if len(tuple(parameterization.control_terms)) != len(tuple(control_terms)):
+            raise ValueError("Supplied parameterization.control_terms must match the control terms built from channel_specs.")
+        for built_term, parameter_term in zip(control_terms, tuple(parameterization.control_terms), strict=True):
+            if (
+                built_term.name != parameter_term.name
+                or built_term.quadrature != parameter_term.quadrature
+                or built_term.export_channel != parameter_term.export_channel
+                or built_term.drive_target != parameter_term.drive_target
+                or tuple(built_term.amplitude_bounds) != tuple(parameter_term.amplitude_bounds)
+            ):
+                raise ValueError("Supplied parameterization.control_terms must match the control terms built from channel_specs.")
     systems = [
         build_control_system_from_model(
             model,
@@ -269,6 +304,7 @@ def build_control_problem_from_model(
         objectives=tuple(objectives),
         penalties=tuple(penalties),
         ensemble_aggregate=str(ensemble_aggregate),
+        hardware_model=hardware_model,
         metadata={} if metadata is None else dict(metadata),
     )
 

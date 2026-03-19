@@ -184,15 +184,18 @@ The RL-facing stack in `cqed_sim.rl_control` does not define a second simulator 
 The direct optimal-control layer in `cqed_sim.optimal_control` does not introduce a second Hamiltonian or waveform convention set. It reuses the same model operators, frame semantics, and pulse-runtime sign conventions already documented on this page.
 
 - All drift and control Hamiltonian coefficients remain in `rad/s`, and all slice durations remain in `s`.
-- The current backend is a dense closed-system GRAPE solver for piecewise-constant controls.
+- The current backend is a dense closed-system GRAPE solver on a piecewise-constant propagation grid.
+- Parameter values, command waveforms, and physical waveforms are now distinct layers. The explicit control path is parameter values -> command waveform on the propagation grid -> physical waveform after the attached hardware model -> Hamiltonian coefficients used during propagation.
+- `PiecewiseConstantParameterization` is the identity map from parameters to the propagation-grid command waveform. `HeldSampleParameterization` stores coarser AWG-like samples and applies sample-and-hold onto that same propagation grid.
 - Model-backed control problems are built from the existing static Hamiltonian and drive-operator helpers rather than from a separate tensor-ordering or Hamiltonian-assembly path.
 - Exported rotating-frame controls use the same complex baseband convention as the pulse runtime:
 
 $$c(t) = I(t) - i Q(t)$$
 
 - That export rule is what makes the optimized real-valued Hermitian `I/Q` control channels replay correctly through standard `Pulse`, `SequenceCompiler`, and `simulate_sequence(...)` workflows.
+- Optional hardware maps such as first-order low-pass filters, radial I/Q limits, and boundary windows modify the physical waveform seen by GRAPE without changing the underlying Hamiltonian sign, frame, or tensor-ordering conventions.
 - Leakage penalties are defined relative to retained logical subspaces in the same truncated Hilbert space used by the rest of the simulator.
-- Simulator-backed replay through `evaluate_control_with_simulator(...)` or `ControlResult.evaluate_with_simulator(...)` is an evaluation path only. It replays the optimized schedule through the standard runtime with optional `NoiseSpec` Lindblad terms and reports the resulting objective probe-state fidelities.
+- Simulator-backed replay through `evaluate_control_with_simulator(...)` or `ControlResult.evaluate_with_simulator(...)` is an evaluation path only. It can replay either the command waveform or the physical post-hardware waveform through the standard runtime with optional `NoiseSpec` Lindblad terms and reports the resulting objective probe-state fidelities.
 - For retained-subspace unitary objectives, that replay path also reports subspace leakage. This is a runtime diagnostic, not a claim that the current GRAPE optimizer itself is doing open-system optimization.
 
 ---

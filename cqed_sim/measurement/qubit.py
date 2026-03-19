@@ -11,9 +11,34 @@ from cqed_sim.sim.extractors import reduced_qubit_state
 
 @dataclass(frozen=True)
 class QubitMeasurementSpec:
+    """Specification for a simulated qubit measurement.
+
+    Two I/Q sampling modes are available, selected by which fields are populated:
+
+    1. **Full readout-chain simulation** (``readout_chain`` is set):
+       Integrates the driven-resonator steady-state response traces and adds
+       realistic amplifier noise.  Supports measurement back-action dephasing
+       (``include_measurement_dephasing``) and Purcell relaxation
+       (``include_purcell_relaxation``).  This is the physically accurate path.
+
+    2. **Synthetic I/Q sampling** (``readout_chain`` is ``None`` and ``iq_sigma``
+       is set):
+       Places I/Q centers at ``(-1, 0)`` for the ground state and ``(+1, 0)`` for
+       the excited state, then adds isotropic Gaussian noise with standard deviation
+       ``iq_sigma``.  This is a simplified placeholder that does **not** model
+       resonator ring-up/ring-down, amplifier noise, or measurement back-action.
+       The scale of the I/Q plane is arbitrary (not calibrated in physical units).
+       Use this only for quick sweeps where the exact noise model does not matter.
+
+    When ``shots`` is ``None`` no sampling is performed and ``samples``,
+    ``counts``, and ``iq_samples`` will all be ``None`` in the result.
+    """
+
     shots: int | None = None
     confusion_matrix: np.ndarray | None = None
     iq_sigma: float | None = None
+    """Standard deviation for synthetic I/Q noise (arbitrary units).  Only used
+    when ``readout_chain`` is ``None``.  See class docstring for limitations."""
     seed: int | None = None
     lump_other_into: str = "e"
     readout_chain: ReadoutChain | None = None

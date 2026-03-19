@@ -230,9 +230,16 @@ tensor ordering, and drive-target semantics used elsewhere in the repository.
 \begin{itemize}[leftmargin=1.5em]
   \item All drift and control Hamiltonian coefficients remain in rad/s, and all
   slice durations remain in s.
-  \item The first backend is a dense closed-system GRAPE solver for
-  piecewise-constant controls. This is an implementation scope boundary, not a new
-  physics convention.
+  \item The current backend is a dense closed-system GRAPE solver on a
+  piecewise-constant propagation grid. This is an implementation scope boundary,
+  not a new physics convention.
+  \item Parameter values, command waveforms, and physical waveforms are distinct
+  layers. The explicit control path is
+  \(\theta \rightarrow u_{\mathrm{cmd}} \rightarrow u_{\mathrm{phys}} \rightarrow H(t; u_{\mathrm{phys}})\).
+  \item \texttt{PiecewiseConstantParameterization} is the identity map from
+  parameters to the propagation-grid command waveform, while
+  \texttt{HeldSampleParameterization} stores coarser AWG-like samples and applies
+  sample-and-hold onto that same propagation grid.
   \item Model-backed control problems are built from the existing
   \texttt{static\_hamiltonian(frame)} and drive-operator helpers such as
   \texttt{drive\_coupling\_operators(...)},
@@ -252,6 +259,9 @@ tensor ordering, and drive-target semantics used elsewhere in the repository.
   \item Leakage penalties are defined relative to a retained subspace in the same
   full Hilbert space used by the model and by the existing
   \texttt{unitary\_synthesis} subspace machinery.
+  \item Optional hardware maps such as first-order low-pass filters, radial I/Q
+  limits, and boundary windows modify the physical waveform seen by GRAPE without
+  changing the underlying Hamiltonian sign, frame, or tensor-ordering convention.
   \item The solver may internally rescale optimization variables to dimensionless
   bounded coordinates before calling the numerical optimizer. This is only a
   numerical conditioning step; the public problem definition and all reported
@@ -259,10 +269,11 @@ tensor ordering, and drive-target semantics used elsewhere in the repository.
   \item Simulator-backed replay through
   \texttt{evaluate\_control\_with\_simulator(...)} or
   \texttt{ControlResult.evaluate\_with\_simulator(...)} is an evaluation path,
-  not a noisy-gradient optimizer. It replays the optimized schedule through the
-  existing runtime with optional \texttt{NoiseSpec} Lindblad terms and reports the
-  resulting probe-state fidelities using the same target states that defined the
-  closed-system objective.
+  not a noisy-gradient optimizer. It can replay either the command waveform or
+  the physical post-hardware waveform through the existing runtime with optional
+  \texttt{NoiseSpec} Lindblad terms and reports the resulting probe-state
+  fidelities using the same target states that defined the closed-system
+  objective.
   \item For retained-subspace unitary objectives, the replay path also reports
   subspace leakage relative to the same retained subspace. This leakage report is
   therefore a runtime evaluation diagnostic, not the optimized cost unless an
@@ -272,7 +283,8 @@ tensor ordering, and drive-target semantics used elsewhere in the repository.
 \noindent
 Direct tests:
 \texttt{tests/test\_40\_optimal\_control\_grape.py},
-\texttt{tests/test\_41\_optimal\_control\_followup.py}.
+\texttt{tests/test\_41\_optimal\_control\_followup.py},
+\texttt{tests/test\_42\_optimal\_control\_hardware\_constraints.py}.
 
 \section{Physical Readout Chain}
 The physical readout-chain path models a driven dispersive resonator with optional

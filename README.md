@@ -79,7 +79,7 @@ Example-side code:
 - Two-mode tensor ordering is qubit first, storage second: `|q,n> = |q> tensor |n>`.
 - Three-mode tensor ordering is qubit first, storage second, readout third: `|q,n_s,n_r>`.
 - Computational basis is `|g> = |0>`, `|e> = |1>`.
-- Internal Hamiltonian and frame frequencies are in `rad/s`; times are in `s`.
+- The library is unit-coherent: it does not enforce specific physical units for frequencies or times. Any internally consistent unit system is valid (for example, rad/s with times in seconds, or rad/ns with times in nanoseconds). The recommended convention used in the main examples and calibration function naming is rad/s and seconds.
 - Complex drive envelopes use `exp(+i * (omega * t + phase))`.
 - Because of that waveform sign, `Pulse.carrier` is the negative of the rotating-frame transition frequency it addresses.
 - Runtime dispersive terms use the excitation projector `n_q = b^\dagger b`; for a two-level qubit, `n_q = |e><e| = (I - sigma_z) / 2`.

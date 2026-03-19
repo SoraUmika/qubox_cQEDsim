@@ -5,7 +5,7 @@ The `cqed_sim.optimal_control` package adds a first-class direct-control layer o
 It is designed around a generic control problem abstraction, with GRAPE implemented as the first solver backend.
 
 !!! note "Current scope"
-    The current GRAPE backend is a closed-system dense optimizer for piecewise-constant controls in the chosen rotating frame. Optimized schedules are exported back into standard `Pulse` objects so the results can be replayed through `SequenceCompiler` and `cqed_sim.sim`.
+    The current GRAPE backend is a closed-system dense optimizer on a piecewise-constant propagation grid. Command schedules can be either plain piecewise-constant controls or held-sample controls, and optional hardware maps can transform command waveforms into the physical waveforms used during propagation.
 
 ---
 
@@ -66,13 +66,20 @@ Supported aggregation modes:
 
 ---
 
-## Piecewise-Constant Controls
+## Parameterization and Hardware Pipeline
 
 ```python
 from cqed_sim.optimal_control import (
+    ControlParameterization,
     ControlSchedule,
+    HeldSampleParameterization,
     PiecewiseConstantParameterization,
     PiecewiseConstantTimeGrid,
+    HardwareModel,
+    FirstOrderLowPassHardwareMap,
+    BoundaryWindowHardwareMap,
+    SmoothIQRadiusLimitHardwareMap,
+    resolve_control_schedule,
 )
 ```
 
@@ -109,6 +116,12 @@ Useful methods:
 - `clip(...)`
 - `to_pulses(...)`
 
+### `HeldSampleParameterization`
+
+Stores coarse command samples with period `sample_period_s` and applies sample-and-hold onto the propagation grid.
+
+This is the first structured parameterization for AWG-like update constraints.
+
 ### `ControlSchedule`
 
 Concrete control values with shape `(n_controls, n_slices)`.
@@ -117,9 +130,25 @@ Useful methods:
 
 - `flattened()`
 - `clipped()`
+- `command_values()`
 - `to_pulses()`
 - `max_abs_amplitude()`
 - `rms_amplitude()`
+
+### Hardware-aware resolution
+
+`resolve_control_schedule(...)` exposes the full control pipeline:
+
+- parameter-space values,
+- command waveform values on the propagation grid,
+- physical waveform values after the attached `HardwareModel`,
+- parameterization and hardware diagnostics.
+
+The first hardware maps are:
+
+- `FirstOrderLowPassHardwareMap(...)`
+- `BoundaryWindowHardwareMap(...)`
+- `SmoothIQRadiusLimitHardwareMap(...)`
 
 ---
 
@@ -182,6 +211,9 @@ This makes the same objective usable for:
 ```python
 from cqed_sim.optimal_control import (
     AmplitudePenalty,
+    BoundPenalty,
+    BoundaryConditionPenalty,
+    IQRadiusPenalty,
     LeakagePenalty,
     SlewRatePenalty,
 )
@@ -191,9 +223,14 @@ from cqed_sim.optimal_control import (
 
 - `AmplitudePenalty(weight=..., reference=...)`
 - `SlewRatePenalty(weight=...)`
+- `BoundPenalty(weight=..., lower_bound=..., upper_bound=...)`
+- `BoundaryConditionPenalty(weight=..., ramp_slices=...)`
+- `IQRadiusPenalty(amplitude_max=..., weight=...)`
 - `LeakagePenalty(subspace=..., weight=..., metric="average" | "worst")`
 
 Leakage is evaluated against the propagated objective probe states and penalizes final population outside the retained subspace.
+
+All waveform penalties can target one of three domains through `apply_to="parameter" | "command" | "physical"`.
 
 ---
 
@@ -235,6 +272,11 @@ Structured targets are supported through:
 - `TransmonTransitionDriveSpec(...)`
 - `SidebandDriveSpec(...)`
 
+`build_control_problem_from_model(...)` also accepts:
+
+- `parameterization_cls=...` plus `parameterization_kwargs={...}` for structured command parameterizations such as `HeldSampleParameterization`
+- `hardware_model=HardwareModel(...)` to attach a command-to-physical waveform transform directly to the problem
+
 ---
 
 ## GRAPE Solver
@@ -258,6 +300,8 @@ Key fields:
 - `random_scale`
 - `seed`
 - `history_every`
+- `apply_hardware_in_forward_model`
+- `report_command_reference`
 
 The solver internally rescales physical control amplitudes into a dimensionless optimization vector using the configured control bounds. This avoids premature convergence caused by gradients that are numerically small only because the controls are expressed in `rad/s` and multiplied by very short time slices.
 
@@ -271,6 +315,7 @@ result = solver.solve(problem, initial_schedule=initial_schedule)
 The solver returns a `GrapeResult` containing:
 
 - optimized `ControlSchedule`
+- resolved command and physical waveforms
 - convergence history
 - overall metrics
 - per-system metrics
@@ -323,12 +368,13 @@ from cqed_sim.optimal_control import (
 
 result.schedule.values
 pulses, drive_ops, meta = result.to_pulses()
+pulses_physical, drive_ops_physical, meta_physical = result.to_pulses(waveform="physical")
 result.save("outputs/grape_result.json")
 ```
 
 `ControlResult` is the common result surface for direct-control optimization runs. The current solver returns `GrapeResult`, which is the GRAPE-specific concrete result type.
 
-`ControlResult.to_pulses()` exports the optimized schedule as standard repository `Pulse` objects plus the corresponding `drive_ops` map. This is the main interoperability path with the existing waveform compiler and simulator.
+`ControlResult.to_pulses()` exports the optimized command waveform as standard repository `Pulse` objects plus the corresponding `drive_ops` map. Passing `waveform="physical"` exports the post-hardware waveform instead.
 
 ### Simulator-backed replay
 
@@ -349,12 +395,15 @@ noisy_replay = result.evaluate_with_simulator(
             label="noisy",
         ),
     ),
+    waveform_mode="physical",
 )
 ```
 
-This replay path is evaluation-only. It keeps the optimizer closed-system, exports the optimized schedule into runtime `Pulse` objects, replays those pulses through `simulate_sequence(...)`, and reports replay fidelities under nominal or noisy Lindblad dynamics.
+This replay path is evaluation-only. It keeps the optimizer closed-system, exports either the command or the physical waveform into runtime `Pulse` objects, replays those pulses through `simulate_sequence(...)`, and reports replay fidelities under nominal or noisy Lindblad dynamics.
 
 For retained-subspace unitary objectives, replay also reports subspace leakage metrics.
+
+Replay mode is selected through `waveform_mode="command" | "physical" | "problem_default"`.
 
 The function form is:
 
@@ -441,4 +490,5 @@ See also:
 
 - `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
 - `examples/grape_storage_subspace_gate_demo.py`
+- `examples/hardware_constrained_grape_demo.py`
 - `benchmarks/run_optimal_control_benchmarks.py`

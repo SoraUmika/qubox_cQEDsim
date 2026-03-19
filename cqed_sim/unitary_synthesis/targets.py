@@ -82,20 +82,33 @@ def _cluster_reference_target(n_cav: int, which: str = "u1") -> np.ndarray:
 
 
 def _default_reference_root() -> Path | None:
+    """Return a reference-matrix search root or None if unavailable.
+
+    Resolution order:
+    1. ``CQED_REFERENCE_ROOT`` environment variable, if set.
+    2. Sibling-repo relative path ``<repo_root>/../noah_repo/miscellaneous/sequential_simulation``.
+
+    Returns ``None`` when no candidate path exists, which causes reference-
+    matrix targets to raise an informative error at use time.
+    """
+    import os
+    env_override = os.environ.get("CQED_REFERENCE_ROOT")
+    if env_override is not None:
+        p = Path(env_override)
+        if p.exists():
+            return p
+        # Env var is set but path does not exist — warn rather than silently ignoring
+        import warnings
+        warnings.warn(
+            f"CQED_REFERENCE_ROOT is set to '{env_override}' but that path does not exist. "
+            "Reference-matrix targets will not be available.",
+            UserWarning,
+            stacklevel=2,
+        )
+        return None
     repo_root = Path(__file__).resolve().parents[2]
-    candidates = [
-        repo_root.parent / "noah_repo" / "miscellaneous" / "sequential_simulation",
-        Path(
-            r"C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\noah_repo\miscellaneous\sequential_simulation"
-        ),
-        Path(
-            r"C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\noah_repo\miscellaneous\sequential_simulation"
-        ),
-    ]
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
-    return None
+    candidate = repo_root.parent / "noah_repo" / "miscellaneous" / "sequential_simulation"
+    return candidate if candidate.exists() else None
 
 
 def _validate_unitary_matrix(matrix: np.ndarray, *, atol: float = 1.0e-8) -> np.ndarray:

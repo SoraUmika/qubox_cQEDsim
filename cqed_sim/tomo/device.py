@@ -8,28 +8,97 @@ from cqed_sim.core.model import DispersiveTransmonCavityModel
 
 @dataclass(frozen=True)
 class DeviceParameters:
+    """Experimentally measured device parameters for a transmon-storage system.
+
+    All frequency fields (``*_fq``, ``*_chi*``, ``*_K*``, ``anharmonicity``) are stored
+    in **Hz** (cycles per second).  The ``to_model()`` method converts them to **rad/ns**
+    (radians per nanosecond) before passing them to ``DispersiveTransmonCavityModel``.
+
+    Unit-conversion note
+    --------------------
+    The simulation core uses **nanoseconds** as its internal time unit (pulse durations,
+    ``dt``, and ``t_end`` are all in ns).  Correspondingly, Hamiltonian frequencies must
+    be in **rad/ns** so that the product ``omega * t`` is dimensionless.  The helper
+    ``hz_to_rad_per_ns`` performs the conversion::
+
+        omega_rad_per_ns = 2 * pi * f_hz * 1e-9
+
+    This is intentional and consistent with the rest of ``cqed_sim``.  Do not replace
+    this with a ``rad/s`` conversion when constructing ``DispersiveTransmonCavityModel``
+    from physical device frequencies.
+    """
+
     ro_fq: float = 8596222556.078796
+    """Readout resonator frequency (Hz)."""
     qb_fq: float = 6150369694.524461
+    """Qubit (transmon) frequency (Hz)."""
     st_fq: float = 5240932800.0
+    """Storage cavity frequency (Hz)."""
     ro_kappa: float = 4156000.0
+    """Readout resonator linewidth kappa (Hz)."""
     ro_chi: float = -913148.5
+    """Readout dispersive shift chi (Hz)."""
     anharmonicity: float = -255669694.5244608
+    """Transmon anharmonicity alpha (Hz, typically negative)."""
     st_chi: float = -2840421.354241756
+    """Storage dispersive shift chi_01 (Hz, typically negative)."""
     st_chi2: float = -21912.638362342423
+    """Storage higher-order dispersive shift chi_2 (Hz)."""
     st_chi3: float = -327.37857577643325
+    """Storage higher-order dispersive shift chi_3 (Hz)."""
     st_K: float = -28844.0
+    """Storage self-Kerr coefficient K (Hz, typically negative)."""
     st_K2: float = 1406.0
+    """Storage higher-order Kerr coefficient K_2 (Hz)."""
     ro_therm_clks: float = 1000.0
     qb_therm_clks: float = 19625.0
     st_therm_clks: float = 200000.0
     qb_t1_relax_ns: float = 9812.873848245112
+    """Qubit T1 relaxation time (ns)."""
     qb_t2_ramsey_ns: float = 6324.73112712837
+    """Qubit T2 Ramsey dephasing time (ns)."""
     qb_t2_echo_ns: float = 8381.0
+    """Qubit T2 echo dephasing time (ns)."""
 
     def hz_to_rad_per_ns(self, f_hz: float) -> float:
+        """Convert a frequency from Hz to rad/ns.
+
+        The simulation uses nanoseconds as its time unit, so all Hamiltonian
+        frequencies must be in rad/ns.  This helper implements::
+
+            omega_rad_per_ns = 2 * pi * f_hz * 1e-9
+
+        Parameters
+        ----------
+        f_hz:
+            Frequency in Hz (cycles per second).
+
+        Returns
+        -------
+        float
+            Angular frequency in rad/ns.
+        """
         return 2.0 * np.pi * f_hz * 1e-9
 
     def to_model(self, n_cav: int = 12, n_tr: int = 3) -> DispersiveTransmonCavityModel:
+        """Construct a ``DispersiveTransmonCavityModel`` from the device parameters.
+
+        All frequency fields are converted from Hz to **rad/ns** via
+        :meth:`hz_to_rad_per_ns` before being passed to the model.  The resulting
+        model is consistent with simulation time steps expressed in nanoseconds.
+
+        Parameters
+        ----------
+        n_cav:
+            Cavity (storage) Hilbert-space truncation (number of Fock levels).
+        n_tr:
+            Transmon Hilbert-space truncation (number of levels, typically 2 or 3).
+
+        Returns
+        -------
+        DispersiveTransmonCavityModel
+            Model with all frequencies in rad/ns.
+        """
         return DispersiveTransmonCavityModel(
             omega_c=self.hz_to_rad_per_ns(self.st_fq),
             omega_q=self.hz_to_rad_per_ns(self.qb_fq),

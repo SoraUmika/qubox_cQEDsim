@@ -31,10 +31,28 @@ class ControlResult:
     history: list[GrapeIterationRecord] = field(default_factory=list)
     nominal_final_unitary: np.ndarray | None = None
     optimizer_summary: dict[str, Any] = field(default_factory=dict)
+    command_values: np.ndarray | None = None
+    physical_values: np.ndarray | None = None
+    time_boundaries_s: np.ndarray | None = None
+    parameterization_metrics: dict[str, Any] = field(default_factory=dict)
+    hardware_metrics: dict[str, Any] = field(default_factory=dict)
+    hardware_reports: tuple[dict[str, Any], ...] = ()
     backend: str = "unknown"
 
-    def to_pulses(self):
-        return self.schedule.to_pulses()
+    def to_pulses(self, *, waveform: str = "command"):
+        mode = str(waveform).lower()
+        if mode == "command":
+            waveform_values = self.schedule.command_values() if self.command_values is None else self.command_values
+        elif mode == "physical":
+            if self.physical_values is not None:
+                waveform_values = self.physical_values
+            elif self.command_values is not None:
+                waveform_values = self.command_values
+            else:
+                waveform_values = self.schedule.command_values()
+        else:
+            raise ValueError("ControlResult.to_pulses waveform must be 'command' or 'physical'.")
+        return self.schedule.to_pulses(waveform_values=np.asarray(waveform_values, dtype=float))
 
     def evaluate_with_simulator(self, problem, **kwargs):
         from .evaluation import evaluate_control_with_simulator
@@ -42,16 +60,24 @@ class ControlResult:
         return evaluate_control_with_simulator(problem, self.schedule, **kwargs)
 
     def to_payload(self) -> dict[str, Any]:
+        command_values = self.schedule.command_values() if self.command_values is None else np.asarray(self.command_values, dtype=float)
+        physical_values = command_values if self.physical_values is None else np.asarray(self.physical_values, dtype=float)
         payload = {
             "backend": str(self.backend),
             "success": bool(self.success),
             "message": str(self.message),
             "objective_value": float(self.objective_value),
             "time_grid_s": [float(value) for value in self.schedule.parameterization.time_grid.step_durations_s],
+            "time_boundaries_s": None if self.time_boundaries_s is None else np.asarray(self.time_boundaries_s, dtype=float),
             "control_terms": [term.name for term in self.schedule.parameterization.control_terms],
-            "control_values": np.asarray(self.schedule.values, dtype=float),
+            "parameter_values": np.asarray(self.schedule.values, dtype=float),
+            "command_values": command_values,
+            "physical_values": physical_values,
             "metrics": self.metrics,
             "system_metrics": list(self.system_metrics),
+            "parameterization_metrics": dict(self.parameterization_metrics),
+            "hardware_metrics": dict(self.hardware_metrics),
+            "hardware_reports": list(self.hardware_reports),
             "history": [
                 {
                     "evaluation": int(record.evaluation),

@@ -29,8 +29,38 @@ def pure_dephasing_time_from_t1_t2(*, t1_s: float | None, t2_s: float | None) ->
 class NoiseSpec:
     """Lindblad noise parameters in SI-style units.
 
-    Times are in seconds and rates are in 1/s. Internally these are used with the
-    repository convention H / hbar in rad/s and t in seconds.
+    The library is unit-coherent: it does not enforce specific physical units for
+    frequencies or times. Any internally consistent unit system is valid (for
+    example, rad/s with times in seconds, or rad/ns with times in nanoseconds).
+    The recommended convention used in the main examples and calibration function
+    naming is rad/s and seconds; field names ending in ``_s`` nominally imply
+    seconds in that convention.
+
+    Dephasing-rate convention
+    ------------------------
+    The **transmon** (qubit) pure-dephasing Lindblad operator is ``sigma_z`` for
+    a two-level qubit (or ``n_q`` for multilevel), and the rate is::
+
+        gamma_phi = 1 / (2 * T_phi)
+
+    The factor of 2 arises because ``sigma_z`` has eigenvalues ±1, so the dephasing
+    super-operator strength must be halved to produce ``1/T_phi`` total decay of
+    off-diagonal coherence elements.
+
+    The **bosonic** (storage/readout) pure-dephasing Lindblad operator is the number
+    operator ``n``, and the rate is::
+
+        gamma_phi_bosonic = 1 / T_phi
+
+    There is no factor of 2 because the dephasing super-operator for the bosonic
+    ``n`` operator already maps directly to ``1/T_phi`` per-photon coherence decay.
+
+    These two conventions are *not* interchangeable.  A given ``T_phi`` value has
+    different physical meaning for qubit vs bosonic dephasing.  This matches the
+    standard Lindblad treatment:
+
+    - Qubit: ``Gamma_phi * D[sigma_z](rho)`` with ``Gamma_phi = 1/(2 T_phi)``
+    - Bosonic: ``Gamma_phi * D[n](rho)`` with ``Gamma_phi = 1/T_phi``
     """
 
     t1: float | None = None
@@ -51,14 +81,29 @@ class NoiseSpec:
 
     @property
     def gamma_phi(self) -> float:
+        """Transmon pure-dephasing rate: ``1 / (2 * T_phi)``.
+
+        The factor of 2 is required because the Lindblad operator is ``sigma_z``
+        (eigenvalues ±1) for a two-level qubit, or ``n_q`` (projector) for
+        multilevel.  See the class docstring for the full convention.
+        """
         return 0.0 if self.tphi is None else 1.0 / (2.0 * self.tphi)
 
     @property
     def gamma_phi_storage(self) -> float:
+        """Storage-mode pure-dephasing rate: ``1 / T_phi``.
+
+        No factor of 2: the bosonic Lindblad operator is the number operator
+        ``n_s``, which maps directly to ``1/T_phi`` per-photon coherence decay.
+        """
         return 0.0 if self.tphi_storage is None else 1.0 / float(self.tphi_storage)
 
     @property
     def gamma_phi_readout(self) -> float:
+        """Readout-mode pure-dephasing rate: ``1 / T_phi``.
+
+        Same convention as ``gamma_phi_storage``: no factor of 2 for bosonic modes.
+        """
         return 0.0 if self.tphi_readout is None else 1.0 / float(self.tphi_readout)
 
 

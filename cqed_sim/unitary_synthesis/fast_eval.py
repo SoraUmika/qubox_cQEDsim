@@ -13,11 +13,14 @@ from cqed_sim.core.conventions import qubit_cavity_block_indices
 from .config import ExecutionOptions, LeakagePenalty
 from .metrics import observable_expectation_metrics, state_leakage_metrics, state_mapping_metrics, subspace_unitary_fidelity
 from .sequence import (
+    BlueSidebandExchange,
     CavityBlockPhase,
+    ConditionalDisplacement,
     ConditionalPhaseSQR,
     Displacement,
     FreeEvolveCondPhase,
     GateSequence,
+    JaynesCummingsExchange,
     PrimitiveGate,
     QubitRotation,
     SNAP,
@@ -220,6 +223,12 @@ class FastObjectiveEvaluator:
             return _diag_cavity_block_phase(self.n_cav, gate._resolved_levels(self.n_cav), gate.get_parameters(self.n_cav))
         if isinstance(gate, Displacement):
             return _displacement_matrix(self.n_cav, gate.alpha)
+        if isinstance(gate, ConditionalDisplacement):
+            return np.asarray(gate.ideal_unitary(self.n_cav).full(), dtype=np.complex128)
+        if isinstance(gate, JaynesCummingsExchange):
+            return np.asarray(gate.ideal_unitary(self.n_cav).full(), dtype=np.complex128)
+        if isinstance(gate, BlueSidebandExchange):
+            return np.asarray(gate.ideal_unitary(self.n_cav).full(), dtype=np.complex128)
         if isinstance(gate, ConditionalPhaseSQR):
             drive = _conditional_phase_matrix(gate.get_parameters(self.n_cav))
             if not gate.include_drift:
@@ -264,14 +273,18 @@ class FastObjectiveEvaluator:
 
         vector_batch = None
         vector_meta: list[tuple[int, Any]] = []
+        vector_index_map: dict[int, int] = {}    # original_index -> batch_index
         if vectors:
             vector_meta = [(index, dims) for index, _, dims in vectors]
+            vector_index_map = {index: batch_idx for batch_idx, (index, _) in enumerate(vector_meta)}
             vector_batch = np.stack([array.reshape(-1) for _, array, _ in vectors], axis=1)
 
         density_batch = None
         density_meta: list[tuple[int, Any]] = []
+        density_index_map: dict[int, int] = {}   # original_index -> batch_index
         if densities:
             density_meta = [(index, dims) for index, _, dims in densities]
+            density_index_map = {index: batch_idx for batch_idx, (index, _) in enumerate(density_meta)}
             density_batch = np.stack([array.reshape(self.full_dim, self.full_dim) for _, array, _ in densities], axis=0)
 
         def _snapshot(step: int) -> None:
@@ -299,11 +312,11 @@ class FastObjectiveEvaluator:
         for index, (_, is_operator, dims) in enumerate(raw_states):
             if not is_operator:
                 assert vector_batch is not None
-                batch_index = next(batch_idx for batch_idx, (original_index, _) in enumerate(vector_meta) if original_index == index)
+                batch_index = vector_index_map[index]
                 final_states.append(_array_to_state(vector_batch[:, batch_index], is_operator=False, dims=dims, full_dim=self.full_dim))
             else:
                 assert density_batch is not None
-                batch_index = next(batch_idx for batch_idx, (original_index, _) in enumerate(density_meta) if original_index == index)
+                batch_index = density_index_map[index]
                 final_states.append(_array_to_state(density_batch[batch_index], is_operator=True, dims=dims, full_dim=self.full_dim))
 
         history: dict[int, list[qt.Qobj]] = {}

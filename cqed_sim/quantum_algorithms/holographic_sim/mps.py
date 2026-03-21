@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
 from scipy.linalg import null_space, svd
 
 from .channel import HolographicChannel
-from .utils import as_complex_array
+from .utils import as_complex_array, ensure_square_matrix
 
 
 def check_state_normalized(state: Any, *, atol: float = 1.0e-12) -> np.ndarray:
@@ -61,6 +61,52 @@ def complete_right_isometry(tensor: Any, chi: int) -> np.ndarray:
     if not np.allclose(isometry.conj().T @ isometry, np.eye(chi), atol=1.0e-12):
         raise ValueError("Completed tensor failed the right-isometry check.")
     return isometry.conj().T.reshape((chi, physical_dim, chi))
+
+
+def _resolve_right_canonical_mps_matrices(tensor: Any) -> tuple[tuple[np.ndarray, ...], int, int]:
+    if isinstance(tensor, np.ndarray) or (hasattr(tensor, "full") and callable(tensor.full)):
+        arr = as_complex_array(tensor)
+        if arr.ndim == 3:
+            bond_left, physical_dim, bond_right = arr.shape
+            if bond_left != bond_right:
+                raise ValueError("Right-canonical MPS tensor must be square on the bond legs for direct channel construction.")
+            matrices = tuple(arr[:, idx, :] for idx in range(physical_dim))
+            return matrices, int(physical_dim), int(bond_left)
+        if arr.ndim == 2:
+            raise ValueError(
+                "Right-canonical MPS input expects a rank-3 tensor or a sequence of matrices, not one matrix."
+            )
+        raise ValueError("Right-canonical MPS input must be a rank-3 tensor or a sequence of square matrices.")
+
+    matrices = tuple(ensure_square_matrix(op, name="mps matrix") for op in tensor)
+    if not matrices:
+        raise ValueError("Right-canonical MPS input requires at least one MPS matrix.")
+    physical_dim = len(matrices)
+    bond_left = matrices[0].shape[0]
+    for op in matrices:
+        if op.shape != (bond_left, bond_left):
+            raise ValueError("Right-canonical MPS matrices must have the same square bond-space shape.")
+    return matrices, int(physical_dim), int(bond_left)
+
+
+def right_canonical_tensor_to_stinespring_unitary(tensor: Any, *, atol: float = 1.0e-12) -> np.ndarray:
+    matrices, physical_dim, bond_dim = _resolve_right_canonical_mps_matrices(tensor)
+
+    kraus_ops = [matrix.conj().T for matrix in matrices]
+    isometry = np.vstack(kraus_ops)
+    ident = np.eye(bond_dim, dtype=np.complex128)
+    if not np.allclose(isometry.conj().T @ isometry, ident, atol=atol, rtol=0.0):
+        raise ValueError("Right-canonical tensor did not produce an isometry on the bond space.")
+
+    complement = null_space(isometry.conj().T)
+    expected_cols = int(physical_dim * bond_dim - bond_dim)
+    if complement.shape != (int(physical_dim * bond_dim), expected_cols):
+        raise ValueError("Unexpected null-space dimension while completing the Stinespring unitary.")
+    unitary = isometry if expected_cols == 0 else np.column_stack((isometry, complement))
+    full_ident = np.eye(int(physical_dim * bond_dim), dtype=np.complex128)
+    if not np.allclose(unitary.conj().T @ unitary, full_ident, atol=atol, rtol=0.0):
+        raise ValueError("Completed Stinespring matrix is not unitary.")
+    return np.asarray(unitary, dtype=np.complex128)
 
 
 @dataclass
@@ -206,21 +252,37 @@ class MatrixProductState:
         assert self.tensors is not None
         return self.tensors[int(site)]
 
+    def site_stinespring_unitary(
+        self,
+        site: int,
+        *,
+        complete: bool = True,
+        atol: float = 1.0e-12,
+    ) -> np.ndarray:
+        return right_canonical_tensor_to_stinespring_unitary(
+            self.site_tensor(int(site), complete=complete),
+            atol=atol,
+        )
+
     def to_holographic_channel(
         self,
         *,
         site: int = 0,
         complete: bool = True,
         label: str | None = None,
+        metadata: Mapping[str, Any] | None = None,
     ) -> HolographicChannel:
         tensor = self.site_tensor(int(site), complete=complete)
         if tensor.shape[0] != tensor.shape[2]:
             chi = max(int(tensor.shape[0]), int(tensor.shape[2]))
             tensor = complete_right_isometry(tensor, chi)
+        resolved_metadata = {"source": "MatrixProductState", "site": int(site)}
+        if metadata is not None:
+            resolved_metadata.update(dict(metadata))
         return HolographicChannel.from_right_canonical_mps(
             tensor,
             label=label if label is not None else f"mps_site_{int(site)}",
-            metadata={"source": "MatrixProductState", "site": int(site)},
+            metadata=resolved_metadata,
         )
 
     def fidelity(self, other: "MatrixProductState") -> float:

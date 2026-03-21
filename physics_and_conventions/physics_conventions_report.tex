@@ -543,10 +543,78 @@ notation while remaining consistent with the transfer-matrix orientation used in
 the holographic report.
 
 \noindent
+The public helper
+\texttt{right\_canonical\_tensor\_to\_stinespring\_unitary(...)} completes the
+same right-canonical tensor into a dense unitary whose first \(\chi\) columns
+match the repository's default physical-input convention
+\(|0\rangle_{\mathrm{physical}}\), so it is consistent with
+\texttt{HolographicChannel.from\_unitary(...)} and the legacy
+\texttt{holographicSim.py} execution path.
+
+\noindent
 The package uses \texttt{burn\_in} to mean repeated application of the same
 holographic channel before observable insertions begin. This is the repository's
 convention for approaching bulk or steady-state behavior in the bond register.
 Observable insertions always refer to measurements on the physical register.
+
+\noindent
+The package also supports optional bond-only noise between holographic steps via
+\texttt{BondNoiseChannel}. When the convenience constructor
+\texttt{BondNoiseChannel.dephasing(...)} is used, the repository convention is
+computational-basis bond dephasing,
+\[
+\mathcal{D}_p(\rho)
+=
+(1-p)\rho
++ p \sum_{b=0}^{\chi-1} |b\rangle\langle b|\rho|b\rangle\langle b|,
+\]
+so diagonal bond populations are unchanged while off-diagonal bond coherences
+are multiplied by \(1-p\). If the constructor is parameterized by
+\texttt{duration} and \texttt{tphi}, then the implemented convention is
+\[
+p = 1 - e^{-t / T_\phi}.
+\]
+
+\noindent
+When \texttt{BondNoiseChannel.amplitude\_damping(...)} is used, the repository
+convention is computational-basis relaxation toward a designated target basis
+state \(|b_\mathrm{target}\rangle\),
+\[
+\mathcal{A}_p(\rho)
+=
+K_0\rho K_0^\dagger
++
+\sum_{b \neq b_\mathrm{target}} K_b\rho K_b^\dagger,
+\]
+with
+\[
+K_0
+=
+|b_\mathrm{target}\rangle\langle b_\mathrm{target}|
++
+\sqrt{1-p}
+\sum_{b \neq b_\mathrm{target}}
+|b\rangle\langle b|,
+\qquad
+K_b = \sqrt{p}\,|b_\mathrm{target}\rangle\langle b|.
+\]
+For bond dimension \(\chi=2\) and \(b_\mathrm{target}=0\), this reduces to the
+standard qubit amplitude-damping channel. If the constructor is parameterized
+by \texttt{duration} and \texttt{t1}, then the implemented convention is
+\[
+p = 1 - e^{-t / T_1}.
+\]
+
+\noindent
+When \texttt{BondNoiseChannel.depolarizing(...)} is used, the implemented
+bond-space convention is isotropic depolarization toward the maximally mixed
+state,
+\[
+\mathcal{P}_p(\rho) = (1-p)\rho + p\,\frac{I_\chi}{\chi}.
+\]
+Because this noise acts only on the bond register and is trace preserving,
+applying it after physical conditioning is equivalent to applying it immediately
+before the next holographic step.
 
 \noindent
 Direct tests:

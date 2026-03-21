@@ -168,23 +168,9 @@ class HolographicChannel:
         label: str | None = None,
         metadata: Mapping[str, Any] | None = None,
     ) -> "HolographicChannel":
-        arr = as_complex_array(tensor)
-        if arr.ndim == 3:
-            bond_left, physical_dim, bond_right = arr.shape
-            if bond_left != bond_right:
-                raise ValueError("Right-canonical MPS tensor must be square on the bond legs for direct channel construction.")
-            matrices = tuple(arr[:, idx, :] for idx in range(physical_dim))
-        elif arr.ndim == 2:
-            raise ValueError("from_right_canonical_mps expects a rank-3 tensor or a sequence of matrices, not one matrix.")
-        else:
-            matrices = tuple(ensure_square_matrix(op, name="mps matrix") for op in tensor)
-            if not matrices:
-                raise ValueError("from_right_canonical_mps requires at least one MPS matrix.")
-            physical_dim = len(matrices)
-            bond_left = matrices[0].shape[0]
-            bond_right = matrices[0].shape[1]
-            if bond_left != bond_right:
-                raise ValueError("Right-canonical MPS matrices must be square on the bond Hilbert space.")
+        from .mps import _resolve_right_canonical_mps_matrices
+
+        matrices, physical_dim, bond_left = _resolve_right_canonical_mps_matrices(tensor)
         kraus = tuple(matrix.conj().T for matrix in matrices)
         return cls(
             physical_dim=int(physical_dim),
@@ -193,6 +179,37 @@ class HolographicChannel:
             label=label,
             mps_matrices=matrices,
             metadata=dict(metadata or {}),
+        )
+
+    @classmethod
+    def from_mps_state(
+        cls,
+        state: Any,
+        *,
+        site: int = 0,
+        complete: bool = True,
+        chi_max: int | None = None,
+        label: str | None = None,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> "HolographicChannel":
+        from .mps import MatrixProductState
+
+        mps = state if isinstance(state, MatrixProductState) else MatrixProductState(state)
+        site_index = int(site)
+        if site_index < 0 or site_index >= mps.num_sites:
+            raise ValueError(f"site={site_index} is outside [0, {mps.num_sites - 1}].")
+        needs_right_canonical = mps.tensors is None
+        needs_completion = bool(complete and mps.uniform_tensors is None)
+        if needs_right_canonical or needs_completion:
+            mps.make_right_canonical(cast_complete=complete, chi_max=chi_max)
+        resolved_metadata = dict(metadata or {})
+        if chi_max is not None:
+            resolved_metadata.setdefault("chi_max", int(chi_max))
+        return mps.to_holographic_channel(
+            site=site_index,
+            complete=complete,
+            label=label,
+            metadata=resolved_metadata,
         )
 
     @property

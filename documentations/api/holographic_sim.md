@@ -16,6 +16,11 @@ This package implements the generic holographic channel-estimation viewpoint fro
 channel = HolographicChannel.from_unitary(U, physical_dim=2, bond_dim=4)
 channel = HolographicChannel.from_kraus(kraus_ops)
 channel = HolographicChannel.from_right_canonical_mps(tensor)
+channel = HolographicChannel.from_mps_state(psi, site=0)
+unitary = right_canonical_tensor_to_stinespring_unitary(tensor)
+noise = BondNoiseChannel.dephasing(bond_dim=channel.bond_dim, probability=0.05)
+reset = BondNoiseChannel.amplitude_damping(bond_dim=channel.bond_dim, probability=0.10)
+mixing = BondNoiseChannel.depolarizing(bond_dim=channel.bond_dim, probability=0.02)
 ```
 
 ```python
@@ -29,13 +34,14 @@ schedule = ObservableSchedule(
 ```
 
 ```python
-sampler = HolographicSampler(channel, burn_in=BurnInConfig(steps=50))
+sampler = HolographicSampler(channel, burn_in=BurnInConfig(steps=50), bond_noise=noise)
 result = sampler.sample_correlator(schedule, shots=5000)
 exact = sampler.enumerate_correlator(schedule)
 ```
 
 Key user-facing objects:
 
+- `BondNoiseChannel`
 - `HolographicChannel`
 - `PurifiedChannelStep`
 - `ObservableSchedule`
@@ -56,12 +62,46 @@ rho -> sum_k K_k rho K_k^dagger
 
 while also optionally retaining a dense joint unitary or right-canonical MPS data.
 
+Convenience constructors:
+
+- `HolographicChannel.from_mps_state(...)`
+- `MatrixProductState.site_stinespring_unitary(...)`
+- `right_canonical_tensor_to_stinespring_unitary(...)`
+
 Diagnostics:
 
 - `kraus_completeness_error()`
 - `right_canonical_error()`
 - `channel_diagnostics(channel)`
 - `validate_trace_preservation(channel)`
+
+## Bond Noise
+
+`BondNoiseChannel` is an optional bond-only CPTP map applied after each
+holographic step and after bond-state conditioning for measured branches.
+
+Supported construction paths:
+
+- `BondNoiseChannel.from_kraus(...)`
+- `BondNoiseChannel.from_qutip_super(...)`
+- `BondNoiseChannel.dephasing(...)`
+- `BondNoiseChannel.amplitude_damping(...)`
+- `BondNoiseChannel.depolarizing(...)`
+
+`BondNoiseChannel.dephasing(...)` uses the bond computational basis and leaves
+diagonal populations unchanged while damping off-diagonal coherences.
+
+`BondNoiseChannel.amplitude_damping(...)` relaxes computational-basis weight
+toward a designated target basis state. For `bond_dim=2` and `target_index=0`
+it matches the standard qubit amplitude-damping channel.
+
+`BondNoiseChannel.depolarizing(...)` implements the isotropic channel
+
+```python
+rho -> (1 - p) * rho + p * I / bond_dim
+```
+
+using a wrapped Weyl-operator Kraus representation.
 
 ---
 
@@ -105,6 +145,7 @@ Burn-in:
 - left-canonical conversion
 - expectation-value checks
 - conversion of a selected site tensor into `HolographicChannel`
+- public completion of a selected right-canonical tensor into a dense Stinespring unitary
 
 This is the main bridge between the report's channel/MPS language and the
 sampling API implemented here.

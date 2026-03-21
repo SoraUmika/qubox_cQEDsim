@@ -1,0 +1,25 @@
+{
+  "default_backend_profile": "unconfigured",
+  "backend_profiles": {
+    "unconfigured": {
+      "codex": {
+        "type": "unavailable",
+        "message": "No Codex execution backend is configured. Use the validation_demo profile for the deterministic demo, or replace this profile with a command backend in agent_workflow/config.json."
+      },
+      "opus": {
+        "type": "unavailable",
+        "message": "No Opus review/documentation backend is configured. Use the validation_demo profile for the deterministic demo, or replace this profile with a command backend in agent_workflow/config.json."
+      }
+    },
+    "validation_demo": {
+      "codex": {
+        "type": "scripted",
+        "script": "agent_workflow/demo/validation_script.json"
+      },
+      "opus": {
+        "type": "scripted",
+        "script": "agent_workflow/demo/validation_script.json"
+      }
+    }
+  }
+}

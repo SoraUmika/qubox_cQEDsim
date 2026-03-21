@@ -6,7 +6,7 @@ This page describes the internal architecture of `cqed_sim` for developers and a
 
 ## Package Layout
 
-```
+```text
 cqed_sim/
 |-- core/                 # Models, frames, conventions, ideal gates, state-prep primitives
 |-- measurement/          # Qubit measurement and readout-chain modeling
@@ -28,7 +28,7 @@ cqed_sim/
 `-- optimal_control/      # Direct-control problems, GRAPE, schedule export, and model-backed builders
 ```
 
-Guided notebook tutorials now live under the top-level `tutorials/` directory. Standalone scripts, audits, studies, and specialized workflow helpers live under `examples/`, not inside the import package.
+Guided notebook tutorials now live under the top-level `tutorials/` directory. Standalone scripts, audits, studies, specialized workflow helpers, and repo-side agent orchestration live outside the import package under locations such as `examples/` and `agent_workflow/`.
 
 ---
 
@@ -103,6 +103,9 @@ Representative example entry points:
 
 - `tutorials/README.md`
 - `tutorials/00_tutorial_index.ipynb`
+- `README_AGENT_WORKFLOW.md`
+- `agent_workflow/README.md`
+- `tools/run_agent_workflow.py`
 - `examples/protocol_style_simulation.py`
 - `examples/kerr_free_evolution.py`
 - `examples/kerr_sign_verification.py`
@@ -112,7 +115,7 @@ Representative example entry points:
 
 ## Data Flow
 
-```
+```text
 UniversalCQEDModel / wrapper models
         |
         +--> FrameSpec --> static_hamiltonian(frame)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import lru_cache
+
 import numpy as np
 import qutip as qt
 
@@ -7,14 +9,17 @@ from cqed_sim.core.ideal_gates import embed_cavity_op as _embed_cavity_op
 from cqed_sim.core.ideal_gates import embed_qubit_op as _embed_qubit_op
 
 
+@lru_cache(maxsize=1)
 def sigma_x() -> qt.Qobj:
     return qt.sigmax()
 
 
+@lru_cache(maxsize=1)
 def sigma_y() -> qt.Qobj:
     return qt.sigmay()
 
 
+@lru_cache(maxsize=1)
 def sigma_z() -> qt.Qobj:
     return qt.sigmaz()
 

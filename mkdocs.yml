@@ -72,6 +72,7 @@ nav:
       - Extracting Observables: user_guides/extracting_observables.md
       - State Preparation & Measurement: user_guides/state_prep_measurement.md
       - Open System Dynamics: user_guides/open_system_dynamics.md
+      - Semi-Autonomous Agent Workflow: user_guides/agent_workflow.md
   - Tutorials:
       - Overview: tutorials/index.md
       - Displacement & Qubit Spectroscopy: tutorials/displacement_spectroscopy.md
@@ -102,4 +103,5 @@ nav:
       - RL Control & System ID: api/rl_control.md
       - Holographic Quantum Algorithms: api/holographic_sim.md
   - Examples: examples.md
-  - Architecture: architecture.md
+  - Developer Guide:
+    - Architecture: architecture.md

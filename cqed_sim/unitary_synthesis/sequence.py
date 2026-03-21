@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable, Mapping
 
@@ -9,6 +10,11 @@ import qutip as qt
 from cqed_sim.core.conventions import qubit_cavity_block_indices, qubit_cavity_dims
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.ideal_gates import displacement_op, logical_block_phase_op, qubit_rotation_xy, sqr_op
+from cqed_sim.gates import (
+    blue_sideband as ideal_blue_sideband,
+    conditional_displacement as ideal_conditional_displacement,
+    jaynes_cummings as ideal_jaynes_cummings,
+)
 from cqed_sim.pulses.pulse import Pulse
 from cqed_sim.sequence import SequenceCompiler as RuntimeSequenceCompiler
 from cqed_sim.sim import SimulationConfig as RuntimeSimulationConfig
@@ -111,6 +117,39 @@ def _apply_operator_to_state(operator: np.ndarray, state: qt.Qobj) -> qt.Qobj:
     if state.isoper:
         return op * state * op.dag()
     return op * state
+
+
+def _qubit_two_level_ladders(qubit_dim: int) -> tuple[qt.Qobj, qt.Qobj]:
+    q_dim = int(qubit_dim)
+    sigma_plus = qt.basis(q_dim, 1) * qt.basis(q_dim, 0).dag()
+    sigma_minus = sigma_plus.dag()
+    return sigma_plus, sigma_minus
+
+
+def _exchange_unitary(
+    *,
+    cavity_dim: int,
+    qubit_dim: int,
+    coupling: float,
+    duration: float,
+    phase: float,
+    sideband: str,
+) -> qt.Qobj:
+    q_dim = int(qubit_dim)
+    cav_dim = int(cavity_dim)
+    sigma_plus, sigma_minus = _qubit_two_level_ladders(q_dim)
+    a = qt.destroy(cav_dim)
+    phase_factor = np.exp(-1j * float(phase))
+
+    if sideband == "red":
+        interaction = phase_factor * qt.tensor(sigma_plus, a) + np.conjugate(phase_factor) * qt.tensor(sigma_minus, a.dag())
+    elif sideband == "blue":
+        interaction = phase_factor * qt.tensor(sigma_plus, a.dag()) + np.conjugate(phase_factor) * qt.tensor(sigma_minus, a)
+    else:
+        raise ValueError("sideband must be 'red' or 'blue'.")
+
+    h = float(coupling) * interaction
+    return (-1j * float(duration) * h).expm()
 
 
 def _waveform_payload(result: Any) -> tuple[list[Pulse], dict[str, Any], dict[str, Any]]:
@@ -435,7 +474,7 @@ def drift_phase_report_row(
 
 
 @dataclass
-class GateBase:
+class GateBase(ABC):
     name: str
     duration: float
     optimize_time: bool = True
@@ -478,6 +517,7 @@ class GateBase:
     def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
         return [(-np.inf, np.inf) for _ in self.parameter_names(n_cav)]
 
+    @abstractmethod
     def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
         raise NotImplementedError
 
@@ -692,6 +732,163 @@ class Displacement(GateBase):
         if scale_by_time:
             alpha = alpha * float(self.duration / self.duration_ref)
         return qt.tensor(qt.qeye(2), displacement_op(n_cav, alpha))
+
+
+@dataclass
+class ConditionalDisplacement(GateBase):
+    """First-class synthesis primitive for qubit-state-conditional displacement.
+
+    By default the gate uses the experimentally common symmetric form
+
+    ``|g><g| ⊗ D(+alpha) + |e><e| ⊗ D(-alpha)``.
+
+    Setting both ``alpha_g`` and ``alpha_e`` switches to the fully general
+    asymmetric form. The gate remains ideal-operator based; it does not by
+    itself model echoed pulse compilation or drive-induced nonlinearities.
+    """
+
+    alpha: complex = 0.0 + 0.0j
+    alpha_g: complex | None = None
+    alpha_e: complex | None = None
+
+    def to_record(self) -> dict[str, Any]:
+        row = super().to_record()
+        row["symmetric"] = bool(self.alpha_g is None and self.alpha_e is None)
+        return row
+
+    def _uses_general_form(self) -> bool:
+        return self.alpha_g is not None or self.alpha_e is not None
+
+    def _resolved_amplitudes(self, *, scale_by_time: bool) -> tuple[complex, complex]:
+        scale = float(self.duration / self.duration_ref) if scale_by_time else 1.0
+        if self._uses_general_form():
+            if self.alpha_g is None or self.alpha_e is None:
+                raise ValueError("ConditionalDisplacement requires both alpha_g and alpha_e for the general form.")
+            return complex(self.alpha_g) * scale, complex(self.alpha_e) * scale
+        alpha = complex(self.alpha) * scale
+        return alpha, -alpha
+
+    def parameter_names(self, n_cav: int) -> list[str]:
+        if self._uses_general_form():
+            return ["alpha_g_re", "alpha_g_im", "alpha_e_re", "alpha_e_im"]
+        return ["alpha_re", "alpha_im"]
+
+    def get_parameters(self, n_cav: int) -> np.ndarray:
+        if self._uses_general_form():
+            if self.alpha_g is None or self.alpha_e is None:
+                raise ValueError("ConditionalDisplacement requires both alpha_g and alpha_e for the general form.")
+            return np.asarray(
+                [self.alpha_g.real, self.alpha_g.imag, self.alpha_e.real, self.alpha_e.imag],
+                dtype=float,
+            )
+        return np.asarray([self.alpha.real, self.alpha.imag], dtype=float)
+
+    def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
+        params = np.asarray(params, dtype=float)
+        if self._uses_general_form():
+            self.alpha_g = complex(float(params[0]), float(params[1]))
+            self.alpha_e = complex(float(params[2]), float(params[3]))
+            return
+        self.alpha = complex(float(params[0]), float(params[1]))
+
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        width = 2 if self._uses_general_form() else 1
+        return [(-2.0, 2.0), (-2.0, 2.0)] * width
+
+    def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
+        alpha_g, alpha_e = self._resolved_amplitudes(scale_by_time=scale_by_time)
+        if self._uses_general_form():
+            return ideal_conditional_displacement(alpha_g=alpha_g, alpha_e=alpha_e, cavity_dim=n_cav, qubit_dim=2)
+        return ideal_conditional_displacement(alpha=alpha_g, cavity_dim=n_cav, qubit_dim=2)
+
+
+@dataclass
+class JaynesCummingsExchange(GateBase):
+    """Red-sideband / Jaynes-Cummings exchange primitive.
+
+    This is the native SWAP-like interaction for qubit+cavity control:
+    it swaps amplitude between ``|e,n>`` and ``|g,n+1>`` up to a phase and is
+    therefore the most natural exchange-style hybrid primitive to compare
+    against selective dispersive gates.
+    """
+
+    coupling: float = 0.0
+    phase: float = 0.0
+
+    def to_record(self) -> dict[str, Any]:
+        row = super().to_record()
+        row["interaction"] = "red_sideband_exchange"
+        return row
+
+    def parameter_names(self, n_cav: int) -> list[str]:
+        return ["coupling", "phase"]
+
+    def get_parameters(self, n_cav: int) -> np.ndarray:
+        return np.asarray([self.coupling, self.phase], dtype=float)
+
+    def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
+        self.coupling = float(params[0])
+        self.phase = float(params[1])
+
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        return [(-2.0 * np.pi * 50.0e6, 2.0 * np.pi * 50.0e6), (-np.pi, np.pi)]
+
+    def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
+        time = float(self.duration)
+        if abs(float(self.phase)) < 1.0e-15:
+            return ideal_jaynes_cummings(self.coupling, time, cavity_dim=n_cav, qubit_dim=2)
+        return _exchange_unitary(
+            cavity_dim=n_cav,
+            qubit_dim=2,
+            coupling=self.coupling,
+            duration=time,
+            phase=self.phase,
+            sideband="red",
+        )
+
+
+@dataclass
+class BlueSidebandExchange(GateBase):
+    """Blue-sideband hybrid exchange primitive.
+
+    This couples ``|g,n>`` and ``|e,n+1>`` and is included as a native
+    sideband-family comparator next to Jaynes-Cummings exchange and ECD-style
+    conditional displacement.
+    """
+
+    coupling: float = 0.0
+    phase: float = 0.0
+
+    def to_record(self) -> dict[str, Any]:
+        row = super().to_record()
+        row["interaction"] = "blue_sideband_exchange"
+        return row
+
+    def parameter_names(self, n_cav: int) -> list[str]:
+        return ["coupling", "phase"]
+
+    def get_parameters(self, n_cav: int) -> np.ndarray:
+        return np.asarray([self.coupling, self.phase], dtype=float)
+
+    def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
+        self.coupling = float(params[0])
+        self.phase = float(params[1])
+
+    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
+        return [(-2.0 * np.pi * 50.0e6, 2.0 * np.pi * 50.0e6), (-np.pi, np.pi)]
+
+    def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
+        time = float(self.duration)
+        if abs(float(self.phase)) < 1.0e-15:
+            return ideal_blue_sideband(self.coupling, time, cavity_dim=n_cav, qubit_dim=2)
+        return _exchange_unitary(
+            cavity_dim=n_cav,
+            qubit_dim=2,
+            coupling=self.coupling,
+            duration=time,
+            phase=self.phase,
+            sideband="blue",
+        )
 
 
 @dataclass
@@ -1092,6 +1289,9 @@ GatePrimitive = (
     | CavityBlockPhase
     | SNAP
     | Displacement
+    | ConditionalDisplacement
+    | JaynesCummingsExchange
+    | BlueSidebandExchange
     | ConditionalPhaseSQR
     | FreeEvolveCondPhase
     | PrimitiveGate

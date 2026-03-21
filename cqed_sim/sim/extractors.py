@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import lru_cache
+
 import numpy as np
 import qutip as qt
 
@@ -89,6 +91,18 @@ def bloch_xyz_from_joint(state: qt.Qobj) -> tuple[float, float, float]:
     return bloch_xyz_from_qubit_state(reduced_qubit_state(state))
 
 
+@lru_cache(maxsize=128)
+def _subsystem_projector(dims: tuple[int, ...], subsystem_index: int, level: int) -> qt.Qobj:
+    """Cached tensor-product projector |level><level| on *subsystem_index*."""
+    factors = []
+    for idx, dim in enumerate(dims):
+        if idx == subsystem_index:
+            factors.append(qt.basis(dim, level) * qt.basis(dim, level).dag())
+        else:
+            factors.append(qt.qeye(dim))
+    return qt.tensor(*factors)
+
+
 def subsystem_level_population(state: qt.Qobj, subsystem: int | str, level: int) -> float:
     rho = _as_dm(state)
     dims = _subsystem_dims(rho)
@@ -96,13 +110,7 @@ def subsystem_level_population(state: qt.Qobj, subsystem: int | str, level: int)
     level = int(level)
     if level < 0 or level >= dims[subsystem_index]:
         raise IndexError("level out of range for the selected subsystem.")
-    factors = []
-    for idx, dim in enumerate(dims):
-        if idx == subsystem_index:
-            factors.append(qt.basis(dim, level) * qt.basis(dim, level).dag())
-        else:
-            factors.append(qt.qeye(dim))
-    projector = qt.tensor(*factors)
+    projector = _subsystem_projector(dims, subsystem_index, level)
     return float(np.real((projector * rho).tr()))
 
 
@@ -166,6 +174,7 @@ def conditioned_bloch_xyz(state: qt.Qobj, n: int, fallback: str = "nan") -> tupl
     return (x, y, z, p_n, valid)
 
 
+@lru_cache(maxsize=32)
 def _mode_annihilation_operator(dim: int) -> qt.Qobj:
     dimension = int(dim)
     if dimension < 1:

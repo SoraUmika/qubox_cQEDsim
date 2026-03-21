@@ -17,7 +17,8 @@ from .holo_vqe import EnergyEstimate, EnergyTerm, HoloVQEObjective
 from .holoquads import HoloQUADSProgram, TimeSlice
 from .models.example_channels import hadamard_reference_channel, ising_transfer_channel, partial_swap_channel
 from .models.spin_models import IsingTransferSpec, transverse_field_ising_transfer_unitary
-from .mps import MatrixProductState, complete_right_isometry, contract_mps
+from .mps import MatrixProductState, complete_right_isometry, contract_mps, right_canonical_tensor_to_stinespring_unitary
+from .noise import BondNoiseChannel
 from .observables import PhysicalObservable, as_observable, identity, pauli_x, pauli_y, pauli_z
 from .results import (
     BranchRecord,
@@ -57,6 +58,8 @@ __all__ = [
     "MatrixProductState",
     "complete_right_isometry",
     "contract_mps",
+    "right_canonical_tensor_to_stinespring_unitary",
+    "BondNoiseChannel",
     "channel_diagnostics",
     "compare_estimates",
     "branch_probability_error",

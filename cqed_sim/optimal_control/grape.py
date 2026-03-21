@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from dataclasses import dataclass, field
 import multiprocessing as mp
 import time
@@ -42,6 +42,8 @@ class GrapeConfig:
     apply_hardware_in_forward_model: bool = True
     report_command_reference: bool = True
     scipy_options: dict[str, Any] = field(default_factory=dict)
+    engine: str = "numpy"
+    jax_device: str | None = None
 
     def __post_init__(self) -> None:
         if str(self.initial_guess).lower() not in {"random", "zeros"}:
@@ -52,6 +54,8 @@ class GrapeConfig:
             raise ValueError("GrapeConfig tolerances must be non-negative.")
         if int(self.history_every) <= 0:
             raise ValueError("GrapeConfig.history_every must be positive.")
+        if str(self.engine).lower() not in {"numpy", "jax"}:
+            raise ValueError("GrapeConfig.engine must be 'numpy' or 'jax'.")
 
 
 @dataclass(frozen=True)
@@ -372,6 +376,134 @@ def _aggregate_systems(system_objectives, system_gradients, systems, mode: str) 
     return objective, gradient, {"aggregate_mode": "mean", "system_weights": [float(weight) for weight in weights]}
 
 
+def _evaluate_system_jax(
+    system,
+    physical_values: np.ndarray,
+    step_durations_s: np.ndarray,
+    prepared_objectives,
+    prepared_leakage_penalties,
+    problem,
+    *,
+    jax_evaluator=None,
+    device: str | None = None,
+):
+    """Evaluate one ensemble system using JAX autodiff.
+
+    Returns ``(cost, gradient_physical, system_metrics, U_final, evaluator)``
+    where *gradient_physical* is w.r.t. the physical control values and
+    *evaluator* is the (possibly newly-built) JIT-compiled evaluator to
+    be cached for subsequent calls.
+    """
+    from .propagators_jax import build_jax_evaluator
+
+    if jax_evaluator is None:
+        pair_counts = tuple(int(p.initial_states.shape[0]) for p in prepared_objectives)
+        leak_mets = tuple(str(pp.penalty.metric) for pp in prepared_leakage_penalties)
+        jax_evaluator = build_jax_evaluator(
+            system.drift_hamiltonian,
+            system.control_operators,
+            step_durations_s,
+            int(physical_values.shape[1]),
+            objective_pair_counts=pair_counts,
+            leakage_metrics=leak_mets,
+            device=device,
+        )
+
+    # Concatenate probe-state data across objectives
+    all_init = np.concatenate([p.initial_states for p in prepared_objectives])
+    all_tgt = np.concatenate([p.target_states for p in prepared_objectives])
+    all_sw = np.concatenate([p.state_weights for p in prepared_objectives])
+    obj_wt = np.array([float(p.weight) for p in prepared_objectives], dtype=float)
+
+    # Leakage inputs
+    if prepared_leakage_penalties:
+        projectors = [pp.projector for pp in prepared_leakage_penalties]
+        leak_wt = np.array([float(pp.penalty.weight) for pp in prepared_leakage_penalties], dtype=float)
+        leak_pair_wt = [
+            np.concatenate([p.state_weights * float(p.weight) for p in prepared_objectives])
+            for _ in prepared_leakage_penalties
+        ]
+    else:
+        projectors = None
+        leak_wt = None
+        leak_pair_wt = None
+
+    cost, gradient_physical, U_final, fidelities = jax_evaluator(
+        physical_values, all_init, all_tgt, all_sw, obj_wt,
+        projectors=projectors,
+        leak_penalty_weights=leak_wt,
+        leak_pair_weights=leak_pair_wt,
+    )
+
+    # Build per-objective metric reports
+    objective_reports: list[dict[str, Any]] = []
+    offset = 0
+    for prepared in prepared_objectives:
+        n = int(prepared.initial_states.shape[0])
+        obj_fids = fidelities[offset:offset + n]
+        offset += n
+
+        report: dict[str, Any] = {
+            "name": str(prepared.name),
+            "kind": str(prepared.kind),
+            "weight": float(prepared.weight),
+            "weighted_cost": float(prepared.weight) * float(1.0 - np.sum(prepared.state_weights * obj_fids)),
+            "fidelity_weighted": float(np.sum(prepared.state_weights * obj_fids)),
+            "fidelity_mean": float(np.mean(obj_fids)),
+            "fidelity_min": float(np.min(obj_fids)),
+            "fidelity_max": float(np.max(obj_fids)),
+            "infidelity": float(1.0 - np.sum(prepared.state_weights * obj_fids)),
+        }
+
+        if prepared.kind == "unitary" and isinstance(prepared.raw_objective, UnitaryObjective):
+            uo = prepared.raw_objective
+            target_matrix = _unitary_target_matrix(problem, uo)
+            if uo.subspace is None:
+                actual_matrix = U_final
+            else:
+                actual_matrix = uo.subspace.restrict_operator(U_final)
+            report["exact_unitary_fidelity"] = float(
+                subspace_unitary_fidelity(
+                    actual_matrix,
+                    target_matrix,
+                    gauge=uo.gauge(),
+                    block_slices=_unitary_block_slices(uo),
+                )
+            )
+
+        objective_reports.append(report)
+
+    # Leakage metrics (for reporting only; gradient already in cost)
+    leakage_report: dict[str, float] = {}
+    if prepared_leakage_penalties:
+        all_final = all_init @ U_final.T
+        combined_weights = np.concatenate(
+            [p.state_weights * float(p.weight) for p in prepared_objectives]
+        )
+        for j, pp in enumerate(prepared_leakage_penalties):
+            kept = all_final @ pp.projector.T
+            keep_probs = np.real(np.sum(np.conj(all_final) * kept, axis=1))
+            leakages = np.clip(1.0 - keep_probs, 0.0, 1.0)
+            if pp.penalty.metric == "worst":
+                raw = float(np.max(leakages))
+            else:
+                norm = float(np.sum(combined_weights))
+                raw = float(np.sum(combined_weights * leakages) / max(norm, 1e-18))
+            contribution = float(pp.penalty.weight) * raw
+            leakage_report[f"leakage_penalty_{j}"] = contribution
+            leakage_report[f"leakage_raw_{j}"] = raw
+
+    system_metrics: dict[str, Any] = {
+        "label": str(system.label),
+        "weight": float(system.weight),
+        "objective": float(cost),
+        "objectives": objective_reports,
+        **leakage_report,
+    }
+
+    return float(cost), gradient_physical, system_metrics, U_final, jax_evaluator
+
+
 def _evaluate_schedule(
     problem,
     schedule: ControlSchedule,
@@ -379,6 +511,9 @@ def _evaluate_schedule(
     prepared_leakage_penalties,
     *,
     apply_hardware: bool = True,
+    engine: str = "numpy",
+    jax_device: str | None = None,
+    _jax_cache: dict | None = None,
 ) -> _ScheduleEvaluation:
     applied = apply_control_pipeline(problem, schedule, apply_hardware=apply_hardware)
     resolved = applied.resolved
@@ -389,6 +524,26 @@ def _evaluate_schedule(
     nominal_final_unitary: np.ndarray | None = None
 
     for system_index, system in enumerate(problem.systems):
+        # ----- JAX engine: single autodiff call per system -----
+        if engine == "jax":
+            cached_eval = _jax_cache.get(system_index) if _jax_cache is not None else None
+            step_durations_s = np.asarray(problem.time_grid.step_durations_s, dtype=float)
+            obj_total, grad_phys, sys_metrics, final_U, evaluator = _evaluate_system_jax(
+                system, physical_values, step_durations_s,
+                prepared_objectives, prepared_leakage_penalties, problem,
+                jax_evaluator=cached_eval, device=jax_device,
+            )
+            if _jax_cache is not None:
+                _jax_cache[system_index] = evaluator
+            gradient_total = applied.pullback_physical(grad_phys)
+            system_objectives.append(obj_total)
+            system_gradients.append(gradient_total)
+            system_metrics.append(sys_metrics)
+            if system_index == 0:
+                nominal_final_unitary = final_U
+            continue
+
+        # ----- NumPy engine (existing path) -----
         propagation = build_propagation_data(
             drift_hamiltonian=system.drift_hamiltonian,
             control_operators=system.control_operators,
@@ -564,6 +719,9 @@ class GrapeSolver:
         history: list[GrapeIterationRecord] = []
         start_time = time.perf_counter()
         evaluation_counter = 0
+        _engine = str(self.config.engine).lower()
+        _jax_device = self.config.jax_device
+        _jax_cache: dict[int, Any] = {}
 
         def evaluate(vector: np.ndarray) -> _ScheduleEvaluation:
             nonlocal last_vector, last_evaluation, evaluation_counter
@@ -580,6 +738,9 @@ class GrapeSolver:
                 prepared_objectives,
                 prepared_leakage_penalties,
                 apply_hardware=bool(self.config.apply_hardware_in_forward_model),
+                engine=_engine,
+                jax_device=_jax_device,
+                _jax_cache=_jax_cache,
             )
             last_vector = np.array(vector, copy=True)
             last_evaluation = evaluation
@@ -624,6 +785,9 @@ class GrapeSolver:
             prepared_objectives,
             prepared_leakage_penalties,
             apply_hardware=bool(self.config.apply_hardware_in_forward_model),
+            engine=_engine,
+            jax_device=_jax_device,
+            _jax_cache=_jax_cache,
         )
         export_resolution = apply_control_pipeline(problem, final_schedule, apply_hardware=True).resolved
         final_metrics = dict(final_evaluation.metrics)
@@ -652,6 +816,8 @@ class GrapeSolver:
                     prepared_objectives,
                     prepared_leakage_penalties,
                     apply_hardware=False,
+                    engine=_engine,
+                    jax_device=_jax_device,
                 )
                 final_metrics["nominal_command_fidelity"] = float(command_reference.metrics.get("nominal_fidelity", np.nan))
                 final_metrics["objective_command_reference"] = float(command_reference.objective)
@@ -663,6 +829,8 @@ class GrapeSolver:
                     prepared_objectives,
                     prepared_leakage_penalties,
                     apply_hardware=True,
+                    engine=_engine,
+                    jax_device=_jax_device,
                 )
                 final_metrics["nominal_command_fidelity"] = float(final_evaluation.metrics.get("nominal_fidelity", np.nan))
                 final_metrics["objective_command_reference"] = float(final_evaluation.objective)
@@ -722,17 +890,25 @@ class GrapeMultistartConfig:
 
     Runs *n_restarts* independent GRAPE optimizations, each starting from a
     different random seed, and returns all results sorted by objective value
-    (best first).  Set *max_workers > 1* to execute restarts in parallel via
-    :class:`concurrent.futures.ProcessPoolExecutor`.
+    (best first).  Set *max_workers > 1* to execute restarts in parallel.
 
     Args:
         n_restarts: Number of independent random restarts to run.
-        max_workers: Number of parallel worker processes.  ``1`` means serial
-            execution (the default and the safest choice on Windows because
-            ``spawn`` startup overhead dominates for short optimizations).
-        mp_context: Multiprocessing start method passed to
-            :class:`~multiprocessing.get_context`.  ``"spawn"`` is the only
-            safe choice on Windows.
+        max_workers: Number of parallel workers.  ``1`` means serial execution.
+        mp_context: Parallelism strategy.
+
+            - ``"thread"`` (default): Uses :class:`~concurrent.futures.ThreadPoolExecutor`.
+              Zero startup overhead.  Works well because NumPy/SciPy linear-algebra
+              calls (``expm``, BLAS) release the GIL, and the JAX engine runs entirely
+              in XLA (also GIL-free).  Recommended for most workloads on all platforms.
+            - ``"loky"``: Uses the ``loky`` reusable process pool (from ``joblib``).
+              Full process isolation with persistent workers; near-zero per-task
+              startup overhead.  Requires ``loky`` to be installed.
+            - ``"spawn"`` / ``"fork"``: Standard :mod:`multiprocessing` contexts via
+              :class:`~concurrent.futures.ProcessPoolExecutor`.  ``"spawn"`` is safe
+              on all platforms but carries ~4-5 s per-worker startup overhead on
+              Windows.  ``"fork"`` is faster but only available on Unix.
+
         return_all: If ``True``, return all restart results sorted best-first.
             If ``False`` (default), return only the single best result inside
             a list of length 1.
@@ -740,7 +916,7 @@ class GrapeMultistartConfig:
 
     n_restarts: int = 4
     max_workers: int = 1
-    mp_context: str = "spawn"
+    mp_context: str = "thread"
     return_all: bool = True
 
     def __post_init__(self) -> None:
@@ -748,9 +924,14 @@ class GrapeMultistartConfig:
             raise ValueError("GrapeMultistartConfig.n_restarts must be at least 1.")
         if int(self.max_workers) < 1:
             raise ValueError("GrapeMultistartConfig.max_workers must be at least 1.")
+        allowed_contexts = {"thread", "loky", "spawn", "fork", "forkserver"}
+        if str(self.mp_context).lower() not in allowed_contexts:
+            raise ValueError(
+                f"GrapeMultistartConfig.mp_context must be one of {sorted(allowed_contexts)}."
+            )
 
 
-# Global state for parallel workers (must be module-level for pickle).
+# Global state for process-based parallel workers (module-level for pickle).
 _PARALLEL_GRAPE_PROBLEM: Any = None
 _PARALLEL_GRAPE_CONFIG: GrapeConfig | None = None
 
@@ -761,23 +942,35 @@ def _init_parallel_grape(problem: Any, config: GrapeConfig) -> None:
     _PARALLEL_GRAPE_CONFIG = config
 
 
+def _make_restart_config(base: GrapeConfig, seed: int) -> GrapeConfig:
+    return GrapeConfig(
+        optimizer_method=base.optimizer_method,
+        maxiter=base.maxiter,
+        ftol=base.ftol,
+        gtol=base.gtol,
+        initial_guess="random",
+        random_scale=base.random_scale,
+        seed=int(seed),
+        history_every=base.history_every,
+        apply_hardware_in_forward_model=base.apply_hardware_in_forward_model,
+        report_command_reference=base.report_command_reference,
+        scipy_options=dict(base.scipy_options),
+        engine=base.engine,
+        jax_device=base.jax_device,
+    )
+
+
 def _run_parallel_grape_restart(seed: int) -> GrapeResult:
     if _PARALLEL_GRAPE_PROBLEM is None or _PARALLEL_GRAPE_CONFIG is None:
         raise RuntimeError("Parallel GRAPE worker was not initialized.")
-    cfg = GrapeConfig(
-        optimizer_method=_PARALLEL_GRAPE_CONFIG.optimizer_method,
-        maxiter=_PARALLEL_GRAPE_CONFIG.maxiter,
-        ftol=_PARALLEL_GRAPE_CONFIG.ftol,
-        gtol=_PARALLEL_GRAPE_CONFIG.gtol,
-        initial_guess="random",
-        random_scale=_PARALLEL_GRAPE_CONFIG.random_scale,
-        seed=int(seed),
-        history_every=_PARALLEL_GRAPE_CONFIG.history_every,
-        apply_hardware_in_forward_model=_PARALLEL_GRAPE_CONFIG.apply_hardware_in_forward_model,
-        report_command_reference=_PARALLEL_GRAPE_CONFIG.report_command_reference,
-        scipy_options=dict(_PARALLEL_GRAPE_CONFIG.scipy_options),
-    )
+    cfg = _make_restart_config(_PARALLEL_GRAPE_CONFIG, seed)
     return GrapeSolver(config=cfg).solve(_PARALLEL_GRAPE_PROBLEM)
+
+
+def _run_thread_grape_restart(problem: Any, base_config: GrapeConfig, seed: int) -> GrapeResult:
+    """Worker for thread-based parallelism (no global state needed)."""
+    cfg = _make_restart_config(base_config, seed)
+    return GrapeSolver(config=cfg).solve(problem)
 
 
 def solve_grape_multistart(
@@ -792,12 +985,18 @@ def solve_grape_multistart(
     best result first) when *multistart_config.return_all* is ``True``, or a
     single-element list containing only the best result otherwise.
 
-    Using ``max_workers > 1`` runs restarts in parallel via
-    :class:`~concurrent.futures.ProcessPoolExecutor`.  On Windows, the
-    ``spawn`` multiprocessing context adds significant startup overhead, so
-    parallel execution is only beneficial when each individual GRAPE solve
-    takes several seconds or more.  For short optimizations, use the default
-    ``max_workers=1`` (serial).
+    **Parallelism strategies** (``multistart_config.mp_context``):
+
+    - ``"thread"`` (default): Thread-based parallelism via
+      :class:`~concurrent.futures.ThreadPoolExecutor`.  Zero startup overhead.
+      Works well because NumPy/SciPy linear-algebra calls release the GIL.
+      With the ``"jax"`` engine, XLA computation is fully GIL-free for
+      near-ideal multi-start scaling.
+    - ``"loky"``: Persistent reusable process pool (requires ``loky``).
+      Near-zero per-restart startup overhead while maintaining full process
+      isolation.
+    - ``"spawn"`` / ``"fork"``: Standard :mod:`multiprocessing` contexts.
+      ``"spawn"`` adds ~4-5 s startup per worker on Windows.
 
     Args:
         problem: A :class:`~cqed_sim.optimal_control.ControlProblem` instance.
@@ -813,26 +1012,42 @@ def solve_grape_multistart(
     ms_cfg = multistart_config or GrapeMultistartConfig()
     base_seed = int(cfg.seed) if cfg.seed is not None else 0
     seeds = [base_seed + restart_index for restart_index in range(int(ms_cfg.n_restarts))]
+    context = str(ms_cfg.mp_context).lower()
 
     if int(ms_cfg.max_workers) <= 1 or int(ms_cfg.n_restarts) <= 1:
+        # Serial execution
         results: list[GrapeResult] = []
         for seed in seeds:
-            restart_cfg = GrapeConfig(
-                optimizer_method=cfg.optimizer_method,
-                maxiter=cfg.maxiter,
-                ftol=cfg.ftol,
-                gtol=cfg.gtol,
-                initial_guess="random",
-                random_scale=cfg.random_scale,
-                seed=int(seed),
-                history_every=cfg.history_every,
-                apply_hardware_in_forward_model=cfg.apply_hardware_in_forward_model,
-                report_command_reference=cfg.report_command_reference,
-                scipy_options=dict(cfg.scipy_options),
-            )
+            restart_cfg = _make_restart_config(cfg, seed)
             results.append(GrapeSolver(config=restart_cfg).solve(problem))
+
+    elif context == "thread":
+        # Thread-based: zero startup overhead, GIL released by NumPy/SciPy/XLA
+        with ThreadPoolExecutor(max_workers=int(ms_cfg.max_workers)) as executor:
+            futures = [
+                executor.submit(_run_thread_grape_restart, problem, cfg, seed)
+                for seed in seeds
+            ]
+            results = [f.result() for f in futures]
+
+    elif context == "loky":
+        try:
+            import loky
+        except ImportError as exc:
+            raise ImportError(
+                "The 'loky' package is required for mp_context='loky'. "
+                "Install with: pip install loky"
+            ) from exc
+        executor = loky.get_reusable_executor(max_workers=int(ms_cfg.max_workers))
+        futures = [
+            executor.submit(_run_thread_grape_restart, problem, cfg, seed)
+            for seed in seeds
+        ]
+        results = [f.result() for f in futures]
+
     else:
-        ctx = mp.get_context(str(ms_cfg.mp_context))
+        # Process-based (spawn / fork / forkserver)
+        ctx = mp.get_context(context)
         with ProcessPoolExecutor(
             max_workers=int(ms_cfg.max_workers),
             mp_context=ctx,

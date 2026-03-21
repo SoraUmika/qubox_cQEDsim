@@ -1,0 +1,34 @@
+title: Repo-side agent workflow task template
+goal: Add a small, reviewable improvement using a human-authored plan and the two-agent repair loop.
+human_plan: |
+  1. Inspect the listed context files.
+  2. Implement the requested change with minimal edits.
+  3. Run the requested tests.
+  4. Update the listed documentation files if behavior or usage changed.
+  5. Let the reviewer decide whether more work is required.
+context_files:
+  - README.md
+  - AGENTS.md
+constraints:
+  - Keep changes additive and avoid unrelated refactors.
+  - Prefer existing scripts and utilities over new setup layers.
+deliverables:
+  - requested code change
+  - updated tests
+  - updated docs if needed
+tests_to_run:
+  - "{python_executable} -m pytest -q tests"
+docs_to_update:
+  - README_AGENT_WORKFLOW.md
+acceptance_criteria:
+  - implementation matches the human plan
+  - tests were run or explicitly waived with explanation
+  - review found no remaining blocking issues
+  - documentation and final summary artifacts were written
+max_iterations: 3
+strict_context: true
+allow_repo_edits: true
+review_required: true
+auto_resume: true
+stop_on_blocking_error: true
+backend_profile: unconfigured

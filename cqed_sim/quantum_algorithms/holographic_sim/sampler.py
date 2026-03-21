@@ -9,6 +9,7 @@ from .channel import HolographicChannel
 from .channel_embedding import PurifiedChannelStep
 from .config import BoundaryCondition, BurnInConfig, SamplingConfig
 from .estimators import RunningStats
+from .noise import BondNoiseChannel
 from .results import BranchRecord, BurnInSummary, CorrelatorEstimate, ExactCorrelatorResult
 from .schedules import ObservableSchedule
 from .utils import basis_vector, coerce_density_matrix, progress_wrapper, state_overlap_probability, trace_distance
@@ -64,6 +65,7 @@ class HolographicSampler:
     left_state: Any | None = None
     burn_in: BurnInConfig | int = BurnInConfig()
     boundary: BoundaryCondition | None = None
+    bond_noise: BondNoiseChannel | None = None
 
     def __post_init__(self) -> None:
         self.burn_in = _resolve_burn_in(self.burn_in)
@@ -71,7 +73,36 @@ class HolographicSampler:
         if self.left_state is None:
             self.left_state = basis_vector(self.channel.bond_dim, 0)
         self.left_state = coerce_density_matrix(self.left_state, dim=self.channel.bond_dim)
-        self._step = PurifiedChannelStep(self.channel)
+        self._step = PurifiedChannelStep(self.channel, bond_noise=self.bond_noise)
+
+    @classmethod
+    def from_mps_state(
+        cls,
+        state: Any,
+        *,
+        site: int = 0,
+        complete: bool = True,
+        chi_max: int | None = None,
+        label: str | None = None,
+        left_state: Any | None = None,
+        burn_in: BurnInConfig | int = BurnInConfig(),
+        boundary: BoundaryCondition | None = None,
+        bond_noise: BondNoiseChannel | None = None,
+    ) -> "HolographicSampler":
+        channel = HolographicChannel.from_mps_state(
+            state,
+            site=site,
+            complete=complete,
+            chi_max=chi_max,
+            label=label,
+        )
+        return cls(
+            channel=channel,
+            left_state=left_state,
+            burn_in=burn_in,
+            boundary=boundary,
+            bond_noise=bond_noise,
+        )
 
     def summarize_burn_in(self, steps: int | None = None) -> BurnInSummary:
         num_steps = int(self.burn_in.steps if steps is None else steps)
@@ -156,6 +187,7 @@ class HolographicSampler:
             samples=stats.samples,
             metadata={
                 "channel": self.channel.to_record(),
+                "bond_noise": None if self.bond_noise is None else self.bond_noise.to_record(),
                 "boundary": None if resolved_boundary is None else resolved_boundary.to_record(),
             },
         )
@@ -256,6 +288,7 @@ class HolographicSampler:
             branches=public_branches,
             metadata={
                 "channel": self.channel.to_record(),
+                "bond_noise": None if self.bond_noise is None else self.bond_noise.to_record(),
                 "boundary": None if resolved_boundary is None else resolved_boundary.to_record(),
             },
         )
@@ -267,6 +300,36 @@ class HolographicMPSAlgorithm:
     left_state: Any | None = None
     right_boundary: BoundaryCondition | None = None
     burn_in: BurnInConfig | int = BurnInConfig()
+    bond_noise: BondNoiseChannel | None = None
+
+    @classmethod
+    def from_mps_state(
+        cls,
+        state: Any,
+        *,
+        site: int = 0,
+        complete: bool = True,
+        chi_max: int | None = None,
+        label: str | None = None,
+        left_state: Any | None = None,
+        right_boundary: BoundaryCondition | None = None,
+        burn_in: BurnInConfig | int = BurnInConfig(),
+        bond_noise: BondNoiseChannel | None = None,
+    ) -> "HolographicMPSAlgorithm":
+        channel = HolographicChannel.from_mps_state(
+            state,
+            site=site,
+            complete=complete,
+            chi_max=chi_max,
+            label=label,
+        )
+        return cls(
+            channel=channel,
+            left_state=left_state,
+            right_boundary=right_boundary,
+            burn_in=burn_in,
+            bond_noise=bond_noise,
+        )
 
     def _sampler(self) -> HolographicSampler:
         return HolographicSampler(
@@ -274,6 +337,7 @@ class HolographicMPSAlgorithm:
             left_state=self.left_state,
             boundary=self.right_boundary,
             burn_in=self.burn_in,
+            bond_noise=self.bond_noise,
         )
 
     def estimate_observable(

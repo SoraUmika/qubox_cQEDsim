@@ -1310,6 +1310,10 @@ def cavity_wigner(
 Returns `(xvec, yvec, W)`. The `"quadrature"` coordinate uses natural units;
 `"alpha"` scales by √2.
 
+**Performance note:** Subsystem projectors and mode annihilation operators are
+cached via `@lru_cache`, so repeated calls with the same dimensions/levels
+avoid redundant QuTiP tensor-product construction.
+
 ---
 
 ### 6.8 Diagnostics
@@ -1475,6 +1479,10 @@ Repository-side workflow entry points:
 - `tutorials/00_tutorial_index.ipynb`
 - `tutorials/03_cavity_displacement_basics.ipynb`
 - `tutorials/17_readout_resonator_response.ipynb`
+- `README_AGENT_WORKFLOW.md`
+- `agent_workflow/README.md`
+- `tools/run_agent_workflow.py`
+- `run_agent_workflow.ps1`
 - `examples/protocol_style_simulation.py`
 - `examples/kerr_free_evolution.py`
 - `examples/kerr_sign_verification.py`
@@ -1602,6 +1610,9 @@ class NumPyBackend(BaseBackend):
 
 All operations use `np.complex128`. Matrix exponential via `scipy.linalg.expm`.
 Lindbladian constructs full superoperator for density-matrix propagation.
+For Hilbert-space dimensions ≥ 20, the Liouvillian is assembled using
+`scipy.sparse.kron` to reduce peak memory usage and construction time,
+then converted to dense for `expm`.
 
 ### JaxBackend
 
@@ -2151,6 +2162,10 @@ Returns `{"x", "y", "z", "conditioned": {n: {"x", "y", "z", "probability", "vali
 | `number_operator(n_cav_dim)` | `Qobj` | a†a |
 | `fock_projector(n_cav_dim, n)` | `Qobj` | \|n⟩⟨n\| |
 
+**Performance note:** All Pauli and cavity operator factories use `@lru_cache`,
+so repeated calls with the same dimensions return the same cached `Qobj`
+rather than re-creating the object each time.
+
 ---
 
 ## 16. Plotting
@@ -2174,6 +2189,11 @@ diagnostic visualization.
 | Function | Description |
 |---|---|
 | `plot_sqr_calibration_result(result)` | 4-panel: d_lambda, d_alpha, d_omega_hz, loss vs Fock level |
+
+### Energy Levels (`plotting.energy_levels`)
+
+| Function | Description |
+|---|---|
 | `plot_energy_levels(spectrum, max_levels=None, energy_scale=1.0, energy_unit_label="rad/s", annotate=True, title=None, ax=None)` | Ladder-style plot of vacuum-referenced energy levels |
 
 ### Gate Diagnostics (`plotting.gate_diagnostics`)
@@ -2515,9 +2535,12 @@ All gate types share the common timing fields (`name`, `duration`, `optimize_tim
 |---|---|---|
 | `QubitRotation` | `theta: float`, `phi: float` | Qubit rotation R(theta, phi) |
 | `Displacement` | `alpha: complex` | Cavity displacement D(alpha) |
+| `ConditionalDisplacement` | `alpha: complex` or `alpha_g: complex`, `alpha_e: complex` | ECD-style ideal conditional displacement; symmetric or asymmetric qubit-conditioned cavity translation |
 | `SQR` | `theta_n`, `phi_n`, `tones`, `tone_freqs`, `include_conditional_phase`, `drift_model` | Selective qubit rotation (multi-tone Gaussian) |
 | `CavityBlockPhase` | `phases: list[float]`, `fock_levels: tuple[int, ...]` | Ideal cavity-only logical block-phase gate acting identically on both qubit states |
 | `SNAP` | `phases: list[float]` | Number-selective phase gate |
+| `JaynesCummingsExchange` | `coupling: float`, `phase: float` | Native red-sideband / SWAP-like exchange between `|e,n>` and `|g,n+1>` |
+| `BlueSidebandExchange` | `coupling: float`, `phase: float` | Native blue-sideband exchange between `|g,n>` and `|e,n+1>` |
 | `ConditionalPhaseSQR` | `phases_n: list[float]`, `drift_model: DriftPhaseModel` | Conditional phase via free-evolution SQR block |
 | `FreeEvolveCondPhase` | `drift_model: DriftPhaseModel` | Free-evolution conditional phase with no explicit drive pulse |
 
@@ -2938,6 +2961,11 @@ in `paper_summary/holographic_quantum_algorithms.pdf`.
 HolographicChannel.from_unitary(U, physical_dim=2, bond_dim=4)
 HolographicChannel.from_kraus(kraus_ops)
 HolographicChannel.from_right_canonical_mps(tensor)
+HolographicChannel.from_mps_state(psi, site=0)
+right_canonical_tensor_to_stinespring_unitary(tensor)
+BondNoiseChannel.dephasing(bond_dim=4, probability=0.05)
+BondNoiseChannel.amplitude_damping(bond_dim=4, probability=0.10)
+BondNoiseChannel.depolarizing(bond_dim=4, probability=0.02)
 ```
 
 ```python
@@ -2948,7 +2976,7 @@ ObservableSchedule([
 ```
 
 ```python
-sampler = HolographicSampler(channel, burn_in=BurnInConfig(steps=50))
+sampler = HolographicSampler(channel, burn_in=BurnInConfig(steps=50), bond_noise=noise)
 result = sampler.sample_correlator(schedule, shots=5000)
 exact = sampler.enumerate_correlator(schedule)
 ```
@@ -2956,11 +2984,20 @@ exact = sampler.enumerate_correlator(schedule)
 Highlights:
 
 - `HolographicChannel` is the main transfer-channel abstraction.
+- `BondNoiseChannel` is the optional bond-only CPTP layer for dephasing, amplitude damping, depolarizing noise, or imported QuTiP superoperators.
 - `PurifiedChannelStep` formalizes the prepare-apply-measure-reset primitive.
 - `ObservableSchedule` and `ObservableInsertion` make measurement locations explicit.
 - `HolographicSampler` supports Monte Carlo sampling with uncertainty estimates.
 - `HolographicSampler.enumerate_correlator(...)` performs exact branch enumeration for small problems.
-- `MatrixProductState` plus `HolographicChannel.from_right_canonical_mps(...)` connect the estimator path to right-canonical MPS tensors.
+- `MatrixProductState` plus `HolographicChannel.from_right_canonical_mps(...)` and `HolographicChannel.from_mps_state(...)` connect the estimator path to right-canonical MPS tensors.
+- `right_canonical_tensor_to_stinespring_unitary(...)` exposes the dense Stinespring completion used by the legacy finite-sequence API.
+
+Built-in `BondNoiseChannel` constructors:
+
+- `BondNoiseChannel.dephasing(...)` preserves bond-basis populations and damps off-diagonal coherences.
+- `BondNoiseChannel.amplitude_damping(...)` relaxes computational-basis weight toward a designated target basis state; for `bond_dim=2` and `target_index=0` it matches the standard qubit amplitude-damping channel.
+- `BondNoiseChannel.depolarizing(...)` implements `rho -> (1 - p) rho + p I / bond_dim` using a Weyl-operator Kraus representation.
+- `BondNoiseChannel.from_qutip_super(...)` wraps existing QuTiP superoperators without creating a separate channel stack.
 
 ### Diagnostics and Results
 
@@ -3242,10 +3279,16 @@ solve_grape(...)
 Solver behavior:
 
 - dense closed-system propagation with exact matrix exponentials,
-- exact slice derivatives via `scipy.linalg.expm_frechet`,
+- exact slice derivatives via `scipy.linalg.expm_frechet` (NumPy engine) or JAX automatic differentiation (JAX engine),
 - ensemble aggregation with `"mean"` or `"worst"`,
 - optional hardware-aware forward propagation through `GrapeConfig(apply_hardware_in_forward_model=True)`,
-- support for explicit initial schedules or built-in zero/random initialization.
+- support for explicit initial schedules or built-in zero/random initialization,
+- optional JAX-accelerated engine with JIT compilation and GPU support via `GrapeConfig(engine="jax")`.
+
+**Engine selection:**
+
+- `GrapeConfig(engine="numpy")` (default): NumPy + SciPy propagator with manual `expm_frechet` gradients.
+- `GrapeConfig(engine="jax")`: JAX-accelerated propagator with `jax.value_and_grad` automatic differentiation.  Supports GPU via `GrapeConfig(engine="jax", jax_device="gpu")`.
 
 Implementation note:
 
@@ -3381,6 +3424,28 @@ problem = build_control_problem_from_model(
 result = GrapeSolver(GrapeConfig(maxiter=80, seed=7)).solve(problem)
 pulses, drive_ops, meta = result.to_pulses()
 ```
+
+### Multi-start GRAPE with parallelism
+
+```python
+from cqed_sim import GrapeMultistartConfig, solve_grape_multistart
+
+# Thread-based parallelism (default, zero overhead)
+results = solve_grape_multistart(
+    problem,
+    config=GrapeConfig(maxiter=200, seed=0),
+    multistart_config=GrapeMultistartConfig(
+        n_restarts=8, max_workers=4, mp_context="thread",
+    ),
+)
+best = results[0]  # sorted best-first
+```
+
+**Parallelism strategies** (`GrapeMultistartConfig.mp_context`):
+
+- `"thread"` (default): Thread-based via `ThreadPoolExecutor`.  Zero startup overhead.  Works well because NumPy/SciPy releases the GIL during linear algebra, and the JAX engine runs entirely in XLA (also GIL-free).
+- `"loky"`: Reusable process pool (requires `loky` package).  Near-zero per-restart overhead.
+- `"spawn"` / `"fork"`: Standard `multiprocessing` contexts.  `"spawn"` adds ~4-5 s startup per worker on Windows.
 
 Primary reference implementations:
 
@@ -3570,12 +3635,9 @@ units for all frequencies, which differs from the library's standard rad/s conve
 This is a deliberate choice for the tomography workflow (where nanosecond timescales
 are natural) but requires care when mixing with the standard library path.
 
-### LOW: Higher-Order Coefficients Lack Isolated Tests
+### ~~LOW: Higher-Order Coefficients Lack Isolated Tests~~ (RESOLVED)
 
-The falling-factorial form for `chi_higher` and `kerr_higher` is verified through
-numerical integration tests but lacks dedicated isolated sign-and-factor analytic
-tests. Trust in the implementation relies on agreement with downstream simulations
-rather than purely symbolic verification.
+**Resolved:** Dedicated tests exist in `tests/test_46_higher_order_coefficients.py`.
 
 ### LOW: Synthetic I/Q Is Not Calibrated
 
@@ -3603,13 +3665,9 @@ This limitation is fundamental: these gate types have no pulse builders in
 `pulses/builders.py` and no IO gate representations in `io/gates.py`.
 See inline documentation in `cqed_sim/unitary_synthesis/waveform_bridge.py`.
 
-### LOW: `targets.py` Contains User-Specific Hardcoded Paths
+### ~~LOW: `targets.py` Contains User-Specific Hardcoded Paths~~ (RESOLVED)
 
-`targets._default_reference_root()` contains absolute paths specific to
-`C:\Users\dazzl` and `C:\Users\jl82323`. These are fallback candidates for loading
-MPS reference matrices from a sibling repository and are never reached in normal use
-(the analytic formulas are always the default). They have no effect on correctness but
-should be noted when deploying or sharing the repository.
+**Resolved:** Hardcoded paths were removed in the 2026-03-17 cleanup.
 
 ---
 

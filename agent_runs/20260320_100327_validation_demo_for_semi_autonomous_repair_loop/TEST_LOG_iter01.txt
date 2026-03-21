@@ -1,0 +1,4 @@
+$ C:\Users\dazzl\AppData\Local\Programs\Python\Python312\python.exe check_demo_math.py
+[exit=0]
+validation checks passed
+

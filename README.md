@@ -61,6 +61,8 @@ Example-side code:
 
 - `tutorials`
   - Numbered notebook curriculum for guided learning, API onboarding, and physically annotated walkthroughs.
+- `agent_workflow`
+  - Repo-side semi-autonomous task orchestration, prompt templates, backend profiles, validation fixtures, and resumable run artifacts.
 - `examples/workflows`
   - Standalone workflow helpers and specialized repo-side orchestration that is not part of the numbered tutorial curriculum.
 - `examples/audits`

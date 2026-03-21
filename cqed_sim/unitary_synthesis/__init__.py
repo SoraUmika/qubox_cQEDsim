@@ -33,13 +33,16 @@ from .progress import (
 )
 from .reporting import make_run_report
 from .sequence import (
+    BlueSidebandExchange,
     CavityBlockPhase,
+    ConditionalDisplacement,
     ConditionalPhaseSQR,
     Displacement,
     DriftPhaseModel,
     FreeEvolveCondPhase,
     GateTimeParam,
     GateSequence,
+    JaynesCummingsExchange,
     PrimitiveGate,
     QubitRotation,
     SNAP,
@@ -128,6 +131,9 @@ __all__ = [
     "CavityBlockPhase",
     "SNAP",
     "Displacement",
+    "ConditionalDisplacement",
+    "JaynesCummingsExchange",
+    "BlueSidebandExchange",
     "ConditionalPhaseSQR",
     "FreeEvolveCondPhase",
     "drift_hamiltonian_qobj",

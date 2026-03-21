@@ -20,39 +20,56 @@ quantum-algorithm architecture described in
 
 ## Main public entry points
 
+- `BondNoiseChannel`
 - `HolographicChannel`
 - `ObservableSchedule`
 - `HolographicSampler`
 - `HolographicMPSAlgorithm`
 - `HoloVQEObjective`
 - `HoloQUADSProgram`
+- `right_canonical_tensor_to_stinespring_unitary`
 
 ## Terminology mapping from the report
 
 | Report concept | Implementation |
 |---|---|
 | bond-space transfer channel | `HolographicChannel` |
+| optional bond-only noise | `BondNoiseChannel` |
 | purified / Stinespring embedding | `PurifiedChannelStep` |
 | measurement insertion pattern | `ObservableSchedule` |
 | holographic Monte Carlo estimator | `HolographicSampler.sample_correlator(...)` |
 | exact small-system branch table | `HolographicSampler.enumerate_correlator(...)` |
-| right-canonical MPS tensor / transfer matrix | `MatrixProductState`, `HolographicChannel.from_right_canonical_mps(...)` |
+| right-canonical MPS tensor / transfer matrix | `MatrixProductState`, `HolographicChannel.from_right_canonical_mps(...)`, `HolographicChannel.from_mps_state(...)` |
+| dense Stinespring completion | `right_canonical_tensor_to_stinespring_unitary(...)`, `MatrixProductState.site_stinespring_unitary(...)` |
 | holoVQE energy decomposition | `HoloVQEObjective` + `EnergyTerm` |
 | holoQUADS time slicing | `HoloQUADSProgram` + `TimeSlice` |
 
 ## Scope implemented now
 
 - dense-unitary, Kraus, and right-canonical MPS channel construction
+- direct dense-state to channel / sampler convenience via `from_mps_state(...)`
 - Monte Carlo and exact branch enumeration
 - explicit burn-in and right-boundary postselection
+- optional bond-space noise maps, including computational-basis dephasing,
+  target-state amplitude damping, and depolarizing noise
+- QuTiP-superoperator import for bond-noise channels via `BondNoiseChannel.from_qutip_super(...)`
 - diagnostics for unitarity, completeness, trace preservation, and normalization
 - example channel constructors and spin-inspired helpers
 - backward-compatible wrappers in `holographicSim.py`
 
+Built-in `BondNoiseChannel` constructors now cover three common wrapped cases:
+
+- `BondNoiseChannel.dephasing(...)` for computational-basis coherence damping
+- `BondNoiseChannel.amplitude_damping(...)` for computational-basis relaxation
+  into a designated target basis state; for `bond_dim=2` this reduces to the
+  standard qubit amplitude-damping channel
+- `BondNoiseChannel.depolarizing(...)` for mixing toward the maximally mixed
+  bond state
+
 ## Intentionally deferred
 
 - full holographic variational optimization loops
-- noisy hardware backends beyond the ideal purified channel abstraction
+- hardware-aware holographic backends beyond the current optional bond-noise layer
 - general non-translation-invariant public channel sequences
 - large-scale MPS tooling beyond the included right-canonical helpers
 

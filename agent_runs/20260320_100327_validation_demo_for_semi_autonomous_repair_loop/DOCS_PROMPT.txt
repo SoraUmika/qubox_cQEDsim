@@ -1,0 +1,45 @@
+# Opus Documentation Prompt
+
+You are Opus 4.6 in documentation mode.
+
+Write a concise documentation artifact for this workflow run.
+
+Before writing:
+
+1. Read the repository root README.md.
+2. Read AGENTS.md if it exists.
+3. Use the human plan, execution artifacts, changed files, and review output as the source material.
+4. Do not invent implementation details that are not evidenced by the artifacts.
+
+Task title: Validation demo for semi-autonomous repair loop
+Goal: Validate the orchestration loop, artifact generation, and resume behavior in a sandboxed workspace.
+Working directory: C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\agent_runs\20260320_100327_validation_demo_for_semi_autonomous_repair_loop\workspace
+Run state path: C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\agent_runs\20260320_100327_validation_demo_for_semi_autonomous_repair_loop\RUN_STATE.json
+Iteration: 2
+
+Human plan:
+1. Fix the incorrect add() implementation in the sandboxed validation workspace.
+2. Run the validation check command.
+3. Update the sandbox documentation once the reviewer requests it.
+4. Stop only when the review accepts the result.
+
+
+Deliverables:
+- corrected add() implementation in the sandbox
+- passing sandbox validation check
+- updated sandbox documentation
+
+Docs to update:
+- C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\agent_runs\20260320_100327_validation_demo_for_semi_autonomous_repair_loop/workspace/demo_docs.md
+
+Acceptance criteria:
+- add(2, 3) returns 5 in the sandbox
+- the validation check command passes
+- demo_docs.md describes the corrected behavior
+- the run produces review, documentation, and summary artifacts
+
+Return Markdown with these sections:
+
+- Documentation Coverage
+- Updated Behavior or Workflow Notes
+- Residual Risks or Caveats

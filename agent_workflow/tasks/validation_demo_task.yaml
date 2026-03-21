@@ -1,0 +1,35 @@
+title: Validation demo for semi-autonomous repair loop
+goal: Validate the orchestration loop, artifact generation, and resume behavior in a sandboxed workspace.
+human_plan: |
+  1. Fix the incorrect add() implementation in the sandboxed validation workspace.
+  2. Run the validation check command.
+  3. Update the sandbox documentation once the reviewer requests it.
+  4. Stop only when the review accepts the result.
+context_files:
+  - agent_workflow/validation_fixture/seed_project/README.md
+  - agent_workflow/validation_fixture/seed_project/AGENTS.md
+constraints:
+  - Work only inside the sandboxed run workspace.
+  - Do not modify the main cqed_sim package.
+deliverables:
+  - corrected add() implementation in the sandbox
+  - passing sandbox validation check
+  - updated sandbox documentation
+tests_to_run:
+  - "{python_executable} check_demo_math.py"
+docs_to_update:
+  - "{run_dir}/workspace/demo_docs.md"
+acceptance_criteria:
+  - add(2, 3) returns 5 in the sandbox
+  - the validation check command passes
+  - demo_docs.md describes the corrected behavior
+  - the run produces review, documentation, and summary artifacts
+max_iterations: 2
+strict_context: true
+allow_repo_edits: false
+review_required: true
+auto_resume: true
+stop_on_blocking_error: true
+backend_profile: validation_demo
+bootstrap_workspace_from: agent_workflow/validation_fixture/seed_project
+working_directory: "{run_dir}/workspace"

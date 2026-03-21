@@ -6,6 +6,7 @@ from typing import Any
 import numpy as np
 
 from .channel import HolographicChannel
+from .noise import BondNoiseChannel
 from .observables import PhysicalObservable, as_observable
 from .results import MeasurementOutcome
 from .utils import conditional_bond_state, partial_trace_joint
@@ -16,9 +17,21 @@ class PurifiedChannelStep:
     """The prepare-apply-measure-reset primitive for one holographic step."""
 
     channel: HolographicChannel
+    bond_noise: BondNoiseChannel | None = None
+
+    def __post_init__(self) -> None:
+        if self.bond_noise is not None and self.bond_noise.bond_dim != self.channel.bond_dim:
+            raise ValueError(
+                f"bond_noise.bond_dim={self.bond_noise.bond_dim} does not match channel.bond_dim={self.channel.bond_dim}."
+            )
+
+    def _apply_bond_noise(self, bond_state: np.ndarray) -> np.ndarray:
+        if self.bond_noise is None:
+            return bond_state
+        return self.bond_noise.apply(bond_state)
 
     def propagate(self, bond_state: Any) -> np.ndarray:
-        return self.channel.apply(bond_state)
+        return self._apply_bond_noise(self.channel.apply(bond_state))
 
     def sample_measurement(
         self,
@@ -64,6 +77,7 @@ class PurifiedChannelStep:
             )
             if next_state is None or probability <= atol:
                 continue
+            next_state = self._apply_bond_noise(next_state)
             outcomes.append(
                 MeasurementOutcome(
                     eigenvalue=complex(eigval),
@@ -82,4 +96,5 @@ class PurifiedChannelStep:
             bond_dim=self.channel.bond_dim,
             trace_out="physical",
         )
+        next_state = self._apply_bond_noise(next_state)
         return MeasurementOutcome(eigenvalue=None, probability=1.0, bond_state=next_state, outcome_index=None)

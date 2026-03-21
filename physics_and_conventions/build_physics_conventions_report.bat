@@ -13,7 +13,6 @@ if errorlevel 1 (
     ) else (
         echo Could not find pdflatex on PATH or in the default MiKTeX install location.
         echo Install MiKTeX or add pdflatex to PATH, then try again.
-        pause
         exit /b 1
     )
 )
@@ -22,7 +21,6 @@ pushd "%SCRIPT_DIR%"
 if errorlevel 1 (
     echo Could not enter the report directory:
     echo %SCRIPT_DIR%
-    pause
     exit /b 1
 )
 
@@ -32,7 +30,6 @@ if errorlevel 1 (
     popd
     echo.
     echo Build failed on pass 1. See physics_conventions_report.log for details.
-    pause
     exit /b 1
 )
 
@@ -41,7 +38,6 @@ if errorlevel 1 (
     popd
     echo.
     echo Build failed on pass 2. See physics_conventions_report.log for details.
-    pause
     exit /b 1
 )
 
@@ -50,4 +46,4 @@ popd
 echo.
 echo PDF created successfully:
 echo %SCRIPT_DIR%%PDF_FILE%
-pause
+exit /b 0

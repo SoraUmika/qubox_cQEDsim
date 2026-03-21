@@ -114,7 +114,7 @@ results_parallel = solve_grape_multistart(
 )
 ```
 
-**Note on parallelism:** On Windows, `spawn` process startup overhead (~4–5 s per worker) dominates for short optimizations. Use `max_workers > 1` only when each individual GRAPE run takes several seconds or more.
+**Note on parallelism:** Thread-based parallelism (`mp_context="thread"`) is the default and recommended strategy.  It has zero startup overhead.  Process-based contexts (`"spawn"`, `"loky"`) are available for full isolation if needed.
 
 For an interactive walkthrough with pulse export, see:
 `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
@@ -144,10 +144,63 @@ For a benchmarking harness covering larger optimization cases, see:
 ## Limitations / Non-Goals
 
 - GRAPE optimization is local; it converges to a local optimum. Use `solve_grape_multistart` to run multiple restarts and return the best result.
-- The current implementation uses a NumPy-based propagator path. It does not exploit JAX JIT or GPU acceleration on the gradient computation. GPU support is deferred until a dense-matrix propagator path that bypasses QuTiP is adopted.
+- The default engine (`engine="numpy"`) uses a NumPy-based propagator path with manual `expm_frechet` gradient computation.  The optional JAX engine (`engine="jax"`) provides JIT-compiled propagation and automatic differentiation with optional GPU acceleration.  See [JAX engine](#jax-engine) below.
 - Ensemble robustness optimization (averaging over parameter uncertainty) is supported through `ModelEnsembleMember` but is not the default mode.
 - The first hardware-aware extension currently targets held-sample parameterization, first-order low-pass filtering, I/Q radial limits, and boundary windows. Quantization-aware gradients, Fourier/spline bases, and projection-based hard constraints are deferred.
-- Parallel multi-start via `max_workers > 1` carries significant process-startup overhead on Windows (spawn context). For short optimizations (< ~1 s per restart), serial execution is faster.
+- Parallel multi-start defaults to thread-based execution (`mp_context="thread"`), which has zero startup overhead.  Process-based contexts (`"spawn"`, `"loky"`) are also available.
+
+## JAX Engine
+
+The GRAPE solver supports an optional JAX-accelerated engine that replaces the NumPy propagation + manual adjoint gradient with:
+
+1. **JIT-compiled forward propagation** via `jax.lax.scan` and `jax.scipy.linalg.expm`.
+2. **Automatic reverse-mode differentiation** via `jax.value_and_grad`, eliminating manual `expm_frechet` calls.
+3. **GPU support**: when JAX is configured with a GPU device (e.g. `pip install jax[cuda12]`), all propagation and gradient computation runs on GPU with no code changes.
+
+### Usage
+
+```python
+from cqed_sim.optimal_control import GrapeConfig, solve_grape
+
+# CPU (default)
+result = solve_grape(problem, config=GrapeConfig(engine="jax"))
+
+# GPU (when JAX GPU is installed)
+result = solve_grape(problem, config=GrapeConfig(engine="jax", jax_device="gpu"))
+```
+
+### Requirements
+
+- CPU: `pip install jax` (already an optional dependency).
+- GPU: `pip install jax[cuda12]` (or the appropriate CUDA variant).
+
+### Performance Notes
+
+- **First evaluation** incurs JIT compilation overhead (~1-5 s depending on system size).  Subsequent evaluations are fast.
+- For **small systems** (dim ≤ 10) with few time steps, the NumPy engine may be faster due to JIT overhead.
+- For **larger systems** (dim > 20) or many time steps, the JAX engine is significantly faster, especially on GPU.
+- **Thread-based multi-start** + JAX engine provides near-ideal parallel scaling on CPU, since XLA computation is fully GIL-free.
+
+## Parallelism
+
+Multi-start GRAPE supports three parallelism strategies via `GrapeMultistartConfig(mp_context=...)`:
+
+| Context | Startup Overhead | GIL Behavior | Best For |
+|---------|-----------------|--------------|----------|
+| `"thread"` (default) | Zero | NumPy/SciPy release GIL; JAX/XLA fully GIL-free | Most workloads |
+| `"loky"` | Near-zero (reusable pool) | Full process isolation | Large problems, multi-GPU |
+| `"spawn"` | ~4-5 s per worker (Windows) | Full process isolation | Fallback |
+
+```python
+from cqed_sim.optimal_control import GrapeMultistartConfig, solve_grape_multistart
+
+# Thread-based (default, recommended)
+results = solve_grape_multistart(
+    problem,
+    config=GrapeConfig(maxiter=200, engine="jax"),
+    multistart_config=GrapeMultistartConfig(n_restarts=8, max_workers=4),
+)
+```
 
 ## References
 

@@ -66,3 +66,4 @@ if JaxBackend is not None:
 - Open-system (Lindblad) simulation is not supported by either backend.
 - The JAX backend is not validated for all system sizes or all gate types; treat it as an experimental path.
 - GPU acceleration through JAX requires a JAX-CUDA installation and is not tested in the standard development environment.
+- For GRAPE gradient computation, the `cqed_sim.optimal_control` module provides a dedicated JAX-accelerated engine (`GrapeConfig(engine="jax")`) that uses `jax.value_and_grad` for automatic differentiation.  This is separate from the `JaxBackend` in this module.

@@ -33,14 +33,17 @@ def _coeff_samples(coeff, tlist: np.ndarray) -> np.ndarray:
     return values
 
 
-def _dense_hamiltonian_samples(hamiltonian: list, tlist: np.ndarray) -> list[np.ndarray]:
-    samples = [_operator_to_dense(hamiltonian[0]).copy() for _ in range(tlist.size)]
+def _dense_hamiltonian_samples(hamiltonian: list, tlist: np.ndarray) -> np.ndarray:
+    """Return shape ``(n_t, dim, dim)`` array of instantaneous Hamiltonians."""
+    h0 = _operator_to_dense(hamiltonian[0])
+    n_t = tlist.size
+    # Start from broadcast copy of the static term
+    result = np.tile(h0, (n_t, 1, 1))            # (n_t, dim, dim)
     for operator, coeff in hamiltonian[1:]:
         operator_dense = _operator_to_dense(operator)
-        coeffs = _coeff_samples(coeff, tlist)
-        for idx, value in enumerate(coeffs):
-            samples[idx] = samples[idx] + value * operator_dense
-    return samples
+        coeffs = _coeff_samples(coeff, tlist)     # (n_t,)
+        result += coeffs[:, None, None] * operator_dense   # vectorised
+    return result
 
 
 def _vectorize_density_matrix(backend: BaseBackend, rho):
@@ -83,24 +86,28 @@ def solve_with_backend(
     states: list[qt.Qobj] = []
     expectations = [[] for _ in dense_observables]
 
+    # Pre-convert observables and collapse ops to backend arrays once
+    backend_observables = [backend.asarray(op) for op in dense_observables]
+    backend_collapse_ops = [backend.asarray(op) for op in dense_collapse_ops] if dense_collapse_ops else []
+
     def record(current_state) -> None:
-        state_qobj = _as_qobj(backend.to_numpy(current_state), state_template, is_density_matrix)
         if store_states:
-            states.append(state_qobj)
-        for idx, operator in enumerate(dense_observables):
+            states.append(_as_qobj(backend.to_numpy(current_state), state_template, is_density_matrix))
+        for idx, operator in enumerate(backend_observables):
             expectations[idx].append(complex(backend.expectation(operator, current_state)))
 
     record(state)
+    dim = dense_hamiltonians.shape[1]
     for idx in range(len(tlist) - 1):
         dt = float(tlist[idx + 1] - tlist[idx])
         if dt <= 0.0:
             continue
         h_step = backend.asarray(dense_hamiltonians[idx])
         if is_density_matrix:
-            liouvillian = backend.lindbladian(h_step, [backend.asarray(operator) for operator in dense_collapse_ops])
+            liouvillian = backend.lindbladian(h_step, backend_collapse_ops)
             propagator = backend.expm(liouvillian * dt)
             state_vec = backend.matmul(propagator, _vectorize_density_matrix(backend, state))
-            state = _devectorize_density_matrix(backend, state_vec, h_step.shape[0])
+            state = _devectorize_density_matrix(backend, state_vec, dim)
         else:
             propagator = backend.expm((-1j * h_step) * dt)
             state = backend.matmul(propagator, state)

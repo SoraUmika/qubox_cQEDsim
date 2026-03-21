@@ -10,6 +10,18 @@ The primary guided learning path no longer lives here. Use the top-level `tutori
 
 ---
 
+## Repo Automation
+
+This repository also includes repo-side workflow automation outside the reusable `cqed_sim` package surface:
+
+- `agent_workflow/`
+- `README_AGENT_WORKFLOW.md`
+- `tools/run_agent_workflow.py`
+
+This automation layer is intended for task orchestration, prompt management, persistent run-state tracking, and resumable validation workflows. It is not part of the installed simulation library API.
+
+---
+
 ## Top-Level Standalone Scripts
 
 | Script | Description | Notebook companion |

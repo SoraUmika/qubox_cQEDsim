@@ -25,9 +25,9 @@ class BaseBackend(ABC):
       QuTiP's adaptive ODE solver.  They use piecewise-constant matrix
       exponentials, which is accurate for small step sizes but significantly
       slower than QuTiP for large or stiff systems.
-    - GPU acceleration via JAX for GRAPE gradient computation is not yet
-      implemented.  The current ``JaxBackend`` runs on CPU only.  GPU/JAX
-      GRAPE integration is deferred (see ``docs/performance_design.md``).
+    - GPU acceleration via JAX for GRAPE gradient computation is now available
+      through ``GrapeConfig(engine="jax")`` in ``cqed_sim.optimal_control``.
+      The ``JaxBackend`` here is for the ``cqed_sim.sim`` simulation path.
     """
 
     name: str = "base"

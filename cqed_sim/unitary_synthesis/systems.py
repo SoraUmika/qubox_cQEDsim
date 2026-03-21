@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from math import prod
 from typing import Any, Callable, Mapping, Sequence
@@ -9,12 +10,15 @@ import qutip as qt
 
 from .backends import SimulationResult, simulate_sequence
 from .sequence import (
+    BlueSidebandExchange,
     CavityBlockPhase,
+    ConditionalDisplacement,
     ConditionalPhaseSQR,
     Displacement,
     DriftPhaseModel,
     FreeEvolveCondPhase,
     GateSequence,
+    JaynesCummingsExchange,
     PrimitiveGate,
     QubitRotation,
     SNAP,
@@ -42,6 +46,9 @@ _CQED_GATE_TYPES = (
     CavityBlockPhase,
     SNAP,
     Displacement,
+    ConditionalDisplacement,
+    JaynesCummingsExchange,
+    BlueSidebandExchange,
     ConditionalPhaseSQR,
     FreeEvolveCondPhase,
 )
@@ -53,6 +60,9 @@ _CQED_GATE_NAMES = {
     "BlockPhase",
     "SNAP",
     "Displacement",
+    "ConditionalDisplacement",
+    "JaynesCummingsExchange",
+    "BlueSidebandExchange",
     "ConditionalPhaseSQR",
     "CondPhaseSQR",
     "ConditionalPhase",
@@ -163,7 +173,7 @@ def _legacy_cqed_sequence(
     return GateSequence(gates=gates, n_cav=int(n_cav), full_dim=int(full_dim))
 
 
-class QuantumSystem:
+class QuantumSystem(ABC):
     """Backend interface used by UnitarySynthesizer.
 
     The synthesizer talks to this abstraction rather than to a raw cQED model.
@@ -171,6 +181,7 @@ class QuantumSystem:
     optimizer only depends on Hilbert-space and propagation interfaces.
     """
 
+    @abstractmethod
     def hilbert_dimension(
         self,
         *,

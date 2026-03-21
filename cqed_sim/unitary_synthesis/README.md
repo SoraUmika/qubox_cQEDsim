@@ -27,7 +27,8 @@ The synthesizer uses the same dispersive Hamiltonian and Kerr conventions as `cq
 
 ### Gate primitives
 
-- **`PrimitiveGate`**: Base class for a parametrized elementary gate (e.g. `QubitRotation`, `Displacement`, `SNAP`, `SQR`, `ConditionalPhaseSQR`, `CavityBlockPhase`).
+- **`PrimitiveGate`**: Base class for a parametrized elementary gate.
+- **First-class native hybrid primitives**: `ConditionalDisplacement`, `JaynesCummingsExchange`, and `BlueSidebandExchange` provide direct synthesis-level access to ECD-like conditional displacements and SWAP-/sideband-style qubit-cavity exchange interactions without requiring ad hoc study-local wrappers.
 - **`GateSequence`**: Ordered list of `PrimitiveGate` instances forming a synthesis ansatz.
 - **`GateTimeParam`**: Parametrized gate duration, used when duration is a free variable in the synthesis.
 - **`DriftPhaseModel`**, `FreeEvolveCondPhase`**: Handles drift-phase accumulation between discrete gates.
@@ -144,7 +145,9 @@ For a full notebook walkthrough: `tutorials/30_advanced_protocols/03_unitary_syn
 ## Limitations / Non-Goals
 
 - Synthesis is local optimization; convergence to the global optimum is not guaranteed. Use `explore_pareto(...)` or multiple random restarts for difficult targets.
-- The current primitive gate library covers qubit rotations, displacements, SNAP, SQR, and phase gates. Custom primitives require subclassing `PrimitiveGate`.
+- The current primitive gate library covers qubit rotations, displacements, conditional displacement, SNAP, SQR, conditional phase, dispersive waiting, and red/blue sideband exchange primitives. Custom primitives still require subclassing `PrimitiveGate`.
+- `ConditionalDisplacement` is an ideal operator model; it does not itself compile an echoed pulse schedule or model drive-induced nonlinear corrections. Use the pulse layer or optimal-control layer when those effects matter.
+- `JaynesCummingsExchange` and `BlueSidebandExchange` assume a rotating-wave effective interaction and therefore represent physically motivated native primitives, not a full calibration workflow. They are most useful for gate-set comparison, fast logical-basis studies, and warm-starting more detailed pulse validation.
 - Synthesis does not account for finite-bandwidth pulse shaping unless hard constraint projection (`enforce_slew_limit`) is enabled.
 - Phase-2 features (robust synthesis over parameter distributions, full Pareto exploration, warm starts) are implemented; phase-3 hardware-level AWG integration is not.
 

@@ -268,11 +268,24 @@ def _cached_time_grid(duration_s: float, dt_s: float) -> np.ndarray:
 
 
 def _build_time_grid(duration_s: float, dt_s: float) -> np.ndarray:
-    return _cached_time_grid(float(duration_s), float(dt_s))
+    # Round to 12 significant digits to avoid near-duplicate cache entries
+    return _cached_time_grid(round(float(duration_s), 12), round(float(dt_s), 12))
+
+
+@lru_cache(maxsize=128)
+def _gaussian_area_cached(duration_s: float, sigma_fraction: float) -> float:
+    """Cached version for the common case where tlist is derived from duration."""
+    grid = _build_time_grid(duration_s, duration_s / 4096.0)
+    t_rel = grid / duration_s
+    env = np.asarray(gaussian_envelope(t_rel, sigma=sigma_fraction), dtype=np.complex128)
+    trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+    return float(trapezoid(np.real(env), grid))
 
 
 def _gaussian_area(duration_s: float, sigma_fraction: float, tlist: np.ndarray | None = None) -> float:
-    grid = _build_time_grid(duration_s, duration_s / 4096.0) if tlist is None else np.asarray(tlist, dtype=float)
+    if tlist is None:
+        return _gaussian_area_cached(round(float(duration_s), 12), round(float(sigma_fraction), 12))
+    grid = np.asarray(tlist, dtype=float)
     t_rel = grid / duration_s
     env = np.asarray(gaussian_envelope(t_rel, sigma=sigma_fraction), dtype=np.complex128)
     trapezoid = np.trapezoid if hasattr(np, "trapezoid") else np.trapz

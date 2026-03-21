@@ -302,8 +302,15 @@ Key fields:
 - `history_every`
 - `apply_hardware_in_forward_model`
 - `report_command_reference`
+- `engine` — `"numpy"` (default) or `"jax"` for JAX-accelerated propagation and automatic differentiation
+- `jax_device` — `"cpu"`, `"gpu"`, or `None` (default) for JAX device selection
 
 The solver internally rescales physical control amplitudes into a dimensionless optimization vector using the configured control bounds. This avoids premature convergence caused by gradients that are numerically small only because the controls are expressed in `rad/s` and multiplied by very short time slices.
+
+**Engine selection:**
+
+- `engine="numpy"`: NumPy + SciPy propagator with `expm_frechet` gradients (default).
+- `engine="jax"`: JAX-accelerated propagator with `jax.value_and_grad` automatic differentiation.  Supports GPU via `jax_device="gpu"`.  Requires `pip install jax`.
 
 ### `GrapeSolver`
 
@@ -333,8 +340,11 @@ Configuration for a multi-start GRAPE run.
 Key fields:
 
 - `n_restarts` — number of independent random restarts (default: 4)
-- `max_workers` — parallel worker processes; 1 = serial (default: 1)
-- `mp_context` — multiprocessing start method; `"spawn"` required on Windows
+- `max_workers` — parallel workers; 1 = serial (default: 1)
+- `mp_context` — parallelism strategy (default: `"thread"`):
+    - `"thread"`: Thread-based via `ThreadPoolExecutor`.  Zero startup overhead.  Recommended for most workloads.
+    - `"loky"`: Reusable process pool (requires `loky`).  Near-zero per-restart overhead.
+    - `"spawn"` / `"fork"`: Standard `multiprocessing` contexts.
 - `return_all` — if `True`, return all restart results sorted best-first (default: `True`)
 
 ### `solve_grape_multistart(...)`
@@ -347,12 +357,12 @@ from cqed_sim.optimal_control import GrapeConfig, GrapeMultistartConfig, solve_g
 results = solve_grape_multistart(
     problem,
     config=GrapeConfig(maxiter=200, seed=0),
-    multistart_config=GrapeMultistartConfig(n_restarts=6, max_workers=1),
+    multistart_config=GrapeMultistartConfig(n_restarts=6, max_workers=4, mp_context="thread"),
 )
 best = results[0]  # sorted best-first
 ```
 
-**Windows note:** `spawn` process startup overhead (~4–5 s per worker) dominates for short optimizations. Only use `max_workers > 1` when each individual GRAPE run takes several seconds.
+**Parallelism note:** Thread-based parallelism (`mp_context="thread"`) is the default and has zero startup overhead.  For the JAX engine, XLA computation is fully GIL-free, giving near-ideal multi-start scaling with threads.
 
 ---
 

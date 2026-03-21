@@ -4,9 +4,14 @@ from functools import reduce
 from typing import Iterable
 
 import numpy as np
+import scipy.sparse as sp
 from scipy.linalg import expm
 
 from .base_backend import BaseBackend
+
+# Dimension threshold: use sparse Kronecker products for the Liouvillian
+# when the Hilbert-space dimension exceeds this value.
+_SPARSE_KRON_DIM_THRESHOLD = 20
 
 
 class NumPyBackend(BaseBackend):
@@ -65,6 +70,8 @@ class NumPyBackend(BaseBackend):
     def lindbladian(self, hamiltonian, collapse_ops):
         hamiltonian = np.asarray(hamiltonian, dtype=np.complex128)
         dim = hamiltonian.shape[0]
+        if dim >= _SPARSE_KRON_DIM_THRESHOLD:
+            return self._lindbladian_sparse(hamiltonian, collapse_ops)
         identity = self.eye(dim)
         liouvillian = -1j * (np.kron(identity, hamiltonian) - np.kron(hamiltonian.T, identity))
         for collapse in collapse_ops:
@@ -74,6 +81,20 @@ class NumPyBackend(BaseBackend):
             liouvillian -= 0.5 * np.kron(identity, cd_c)
             liouvillian -= 0.5 * np.kron(cd_c.T, identity)
         return liouvillian
+
+    def _lindbladian_sparse(self, hamiltonian, collapse_ops):
+        """Build Liouvillian using sparse Kronecker products (large dim)."""
+        dim = hamiltonian.shape[0]
+        h_sp = sp.csr_matrix(hamiltonian)
+        identity = sp.eye(dim, dtype=np.complex128, format="csr")
+        liouvillian = -1j * (sp.kron(identity, h_sp, format="csr") - sp.kron(h_sp.T, identity, format="csr"))
+        for collapse in collapse_ops:
+            c = sp.csr_matrix(np.asarray(collapse, dtype=np.complex128))
+            cd_c = c.conj().T @ c
+            liouvillian = liouvillian + sp.kron(c.conj(), c, format="csr")
+            liouvillian = liouvillian - 0.5 * sp.kron(identity, cd_c, format="csr")
+            liouvillian = liouvillian - 0.5 * sp.kron(cd_c.T, identity, format="csr")
+        return liouvillian.toarray()
 
 
 __all__ = ["NumPyBackend"]

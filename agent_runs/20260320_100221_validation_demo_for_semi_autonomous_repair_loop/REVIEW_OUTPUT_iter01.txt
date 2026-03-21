@@ -1,0 +1,17 @@
+{
+  "status": "needs_repair",
+  "summary": "The implementation fix is in place and the sandbox tests can run, but the requested documentation update is still missing.",
+  "blocking_issues": [],
+  "repair_instructions": [
+    "Update demo_docs.md so it states that add(a, b) now returns the arithmetic sum and that the sandbox validation check passes against that behavior."
+  ],
+  "tests_missing": [],
+  "docs_missing": [
+    "demo_docs.md"
+  ],
+  "acceptance_criteria_status": [
+    "add(2, 3) returns 5 -> implementation likely fixed, pending test evidence",
+    "demo_docs.md describes the corrected behavior -> not satisfied yet"
+  ],
+  "suspicious_gaps": []
+}

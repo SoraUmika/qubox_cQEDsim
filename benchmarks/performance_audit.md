@@ -39,6 +39,7 @@ Measured pre-optimization averages from that audit:
 - Added cached default observables in `cqed_sim/sim/runner.py`.
 - Stopped forcing full state-history storage for every run. The solver now requests `store_final_state=True` and only stores the full trajectory when `SimulationConfig(store_states=True)` is requested.
 - Added `SimulationSession`, `prepare_simulation(...)`, and `simulate_batch(...)` so repeated runs can reuse Hamiltonian assembly, collapse operators, observables, and solver options.
+- Prepared QuTiP-backed simulation sessions now also prebuild and reuse a `qt.QobjEvo`, so repeated `session.run(...)` calls do not rebuild QuTiP's coefficient/interpolator objects on every solve.
 
 ### Compile path
 
@@ -82,6 +83,17 @@ Interpretation:
 - The prepared-session API gives a real gain, but the improvement is modest because the underlying QuTiP solve still dominates once setup costs are removed.
 - Tiny unitary-synthesis fits did not materially speed up. Their cost still lives in repeated backend simulation and objective evaluation.
 
+### Prepared-session follow-up
+
+A direct follow-up microbenchmark on the prepared-session path compared the old list-based QuTiP handoff against the new prebuilt `QobjEvo` reuse for the same 20-run `session.run(...)` workload.
+
+| Path | Best runtime | Avg. runtime | Relative speed |
+| --- | ---: | ---: | ---: |
+| Prepared session with raw Hamiltonian list | `0.073404 s` | `0.075338 s` | `1.00x` |
+| Prepared session with reused `QobjEvo` | `0.060390 s` | `0.067438 s` | `1.12x` avg, `1.22x` best |
+
+This is a worthwhile follow-up optimization because it attacks the remaining repeated setup cost inside the main solver-backed simulator path without changing public APIs or the physics model.
+
 ## Parallel execution
 
 The new batch API supports multiprocessing through `SimulationSession.run_many(...)` / `simulate_batch(...)`, but the local benchmark shows that Windows `spawn` overhead dominates small and medium jobs:
@@ -97,6 +109,7 @@ Practical guidance:
 - Use serial prepared sessions for inner calibration and sweep loops unless each task is much heavier than the benchmarks above.
 - Use multiprocessing only for coarse-grained jobs where each worker runs many milliseconds to seconds of solver work.
 - On Windows, benchmark from a real `.py` file. `spawn` cannot be measured correctly from an inline stdin script.
+- On this Windows machine, spawned worker validation is also more reliable from a plain `.py` script than from `pytest`, because the `pytest` launcher itself is not an ideal parent process for spawn-based timing or hang diagnosis.
 
 ## GPU feasibility
 

@@ -9,7 +9,7 @@ import numpy as np
 import qutip as qt
 
 from cqed_sim.backends.base_backend import BaseBackend
-from cqed_sim.core.drive_targets import SidebandDriveSpec, TransmonTransitionDriveSpec
+from cqed_sim.core.drive_targets import SidebandDriveSpec, TransmonTransitionDriveSpec, resolve_drive_target_operators
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.sequence.scheduler import CompiledSequence
 from cqed_sim.sim.noise import NoiseSpec, collapse_operators
@@ -102,24 +102,7 @@ def _resolve_drive_target(
     target: str | TransmonTransitionDriveSpec | SidebandDriveSpec,
     couplings: dict[str, tuple[qt.Qobj, qt.Qobj]],
 ) -> tuple[qt.Qobj, qt.Qobj]:
-    if isinstance(target, str):
-        if target not in couplings:
-            raise ValueError(f"Unsupported target '{target}'.")
-        return couplings[target]
-    if isinstance(target, TransmonTransitionDriveSpec):
-        if not hasattr(model, "transmon_transition_operators"):
-            raise ValueError("Model does not support structured transmon transition targets.")
-        return model.transmon_transition_operators(target.lower_level, target.upper_level)
-    if isinstance(target, SidebandDriveSpec):
-        if not hasattr(model, "sideband_drive_operators"):
-            raise ValueError("Model does not support structured sideband targets.")
-        return model.sideband_drive_operators(
-            mode=target.mode,
-            lower_level=target.lower_level,
-            upper_level=target.upper_level,
-            sideband=target.sideband,
-        )
-    raise TypeError(f"Unsupported drive target type '{type(target).__name__}'.")
+    return resolve_drive_target_operators(model, target, couplings=couplings)
 
 
 def hamiltonian_time_slices(
@@ -138,6 +121,12 @@ def hamiltonian_time_slices(
         h.append([raising, coeff])
         h.append([lowering, np.conj(coeff)])
     return h
+
+
+def _qutip_hamiltonian_from_slices(hamiltonian_slices: list, tlist: Sequence[float]) -> qt.Qobj | qt.QobjEvo:
+    if len(hamiltonian_slices) == 1:
+        return hamiltonian_slices[0]
+    return qt.QobjEvo(hamiltonian_slices, tlist=np.asarray(tlist, dtype=float))
 
 
 def _solver_options(cfg: SimulationConfig) -> dict[str, Any]:
@@ -170,6 +159,7 @@ class SimulationSession:
     e_ops: dict[str, qt.Qobj] | None = None
 
     hamiltonian: list = field(init=False, repr=False)
+    qutip_hamiltonian: qt.Qobj | qt.QobjEvo | None = field(init=False, repr=False, default=None)
     effective_c_ops: tuple[qt.Qobj, ...] = field(init=False, repr=False)
     observables: dict[str, qt.Qobj] = field(init=False)
     observable_names: tuple[str, ...] = field(init=False, repr=False)
@@ -181,10 +171,26 @@ class SimulationSession:
         self.observable_names = tuple(self.observables.keys())
         self.observable_ops = tuple(self.observables.values())
         self.hamiltonian = hamiltonian_time_slices(self.model, self.compiled, self.drive_ops, frame=self.config.frame)
+        self._refresh_qutip_hamiltonian()
         eff_c_ops = list(self.c_ops) if self.c_ops else []
         eff_c_ops.extend(collapse_operators(self.model, self.noise))
         self.effective_c_ops = tuple(eff_c_ops)
         self.solver_options = _solver_options(self.config)
+
+    def _refresh_qutip_hamiltonian(self) -> None:
+        if self.config.backend is None:
+            self.qutip_hamiltonian = _qutip_hamiltonian_from_slices(self.hamiltonian, self.compiled.tlist)
+        else:
+            self.qutip_hamiltonian = None
+
+    def __getstate__(self) -> dict[str, Any]:
+        state = dict(self.__dict__)
+        state["qutip_hamiltonian"] = None
+        return state
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        self.__dict__.update(state)
+        self._refresh_qutip_hamiltonian()
 
     def run(self, initial_state: qt.Qobj) -> SimulationResult:
         if self.config.backend is not None:
@@ -197,23 +203,25 @@ class SimulationSession:
                 backend=self.config.backend,
                 store_states=self.config.store_states,
             )
-        elif self.effective_c_ops or initial_state.isoper:
-            result = qt.mesolve(
-                self.hamiltonian,
-                initial_state,
-                self.compiled.tlist,
-                c_ops=list(self.effective_c_ops),
-                e_ops=list(self.observable_ops),
-                options=self.solver_options,
-            )
         else:
-            result = qt.sesolve(
-                self.hamiltonian,
-                initial_state,
-                self.compiled.tlist,
-                e_ops=list(self.observable_ops),
-                options=self.solver_options,
-            )
+            qutip_hamiltonian = self.qutip_hamiltonian if self.qutip_hamiltonian is not None else self.hamiltonian
+            if self.effective_c_ops or initial_state.isoper:
+                result = qt.mesolve(
+                    qutip_hamiltonian,
+                    initial_state,
+                    self.compiled.tlist,
+                    c_ops=list(self.effective_c_ops),
+                    e_ops=list(self.observable_ops),
+                    options=self.solver_options,
+                )
+            else:
+                result = qt.sesolve(
+                    qutip_hamiltonian,
+                    initial_state,
+                    self.compiled.tlist,
+                    e_ops=list(self.observable_ops),
+                    options=self.solver_options,
+                )
         expectations = {name: np.asarray(result.expect[idx]) for idx, name in enumerate(self.observable_names)}
         return SimulationResult(
             final_state=_final_state_from_result(result),

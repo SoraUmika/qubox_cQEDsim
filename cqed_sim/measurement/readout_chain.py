@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Iterable
+from typing import Callable, Iterable
 
 import numpy as np
 import qutip as qt
@@ -23,6 +23,31 @@ def _qubit_label(qubit_state: str | int) -> str:
 
 def _complex_to_iq(value: complex) -> np.ndarray:
     return np.array([float(np.real(value)), float(np.imag(value))], dtype=float)
+
+
+def _resolved_drive_steps(
+    drive_envelope: np.ndarray | complex | float | Callable[[np.ndarray], np.ndarray],
+    *,
+    dt: float,
+    duration: float | None = None,
+) -> np.ndarray:
+    if np.isscalar(drive_envelope):
+        if duration is None:
+            raise ValueError("duration must be provided when drive_envelope is scalar.")
+        n_steps = max(1, int(np.ceil(float(duration) / float(dt))))
+        return np.full(n_steps, complex(drive_envelope), dtype=np.complex128)
+    if callable(drive_envelope):
+        if duration is None:
+            raise ValueError("duration must be provided when drive_envelope is callable.")
+        n_steps = max(1, int(np.ceil(float(duration) / float(dt))))
+        sample_times = np.arange(n_steps, dtype=float) * float(dt)
+        return np.asarray(drive_envelope(sample_times), dtype=np.complex128)
+    envelope = np.asarray(drive_envelope, dtype=np.complex128)
+    if envelope.ndim != 1:
+        raise ValueError("drive_envelope must be one-dimensional.")
+    if envelope.size == 0:
+        raise ValueError("drive_envelope must contain at least one sample.")
+    return envelope
 
 
 @dataclass(frozen=True)
@@ -169,6 +194,51 @@ class ReadoutResonator:
         )
         trace = alpha_ss + (complex(initial_amplitude) - alpha_ss) * np.exp(-lambda_eff * tlist)
         return tlist, np.asarray(trace, dtype=np.complex128)
+
+    def response_to_envelope(
+        self,
+        qubit_state: str | int,
+        drive_envelope: np.ndarray | complex | float | Callable[[np.ndarray], np.ndarray],
+        *,
+        dt: float,
+        duration: float | None = None,
+        drive_frequency: float | None = None,
+        chi: float | None = None,
+        purcell_filter: PurcellFilter | None = None,
+        include_filter: bool = True,
+        initial_amplitude: complex = 0.0,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Integrate the linear readout response for an arbitrary complex drive envelope.
+
+        The envelope is treated as piecewise constant over each interval of width ``dt``.
+        """
+
+        dt = float(dt)
+        if dt <= 0.0:
+            raise ValueError("dt must be positive.")
+        envelope = _resolved_drive_steps(drive_envelope, dt=dt, duration=duration)
+        n_steps = int(envelope.size)
+        tlist = np.arange(n_steps + 1, dtype=float) * dt
+        omega_drive = self.resolved_drive_frequency(drive_frequency)
+        delta = self.resonant_frequency(qubit_state, chi=chi) - omega_drive
+        linewidth = self.effective_linewidth(
+            omega_drive,
+            purcell_filter=purcell_filter,
+            include_filter=include_filter,
+        )
+        lambda_eff = 0.5 * linewidth + 1j * delta
+        trace = np.empty(n_steps + 1, dtype=np.complex128)
+        trace[0] = complex(initial_amplitude)
+        if abs(lambda_eff) <= 1.0e-15:
+            for idx, epsilon in enumerate(envelope, start=1):
+                trace[idx] = trace[idx - 1] - 1j * complex(epsilon) * dt
+            return tlist, trace
+
+        step_decay = np.exp(-lambda_eff * dt)
+        for idx, epsilon in enumerate(envelope, start=1):
+            alpha_ss = -1j * complex(epsilon) / lambda_eff
+            trace[idx] = alpha_ss + (trace[idx - 1] - alpha_ss) * step_decay
+        return tlist, trace
 
     def purcell_rate(
         self,
@@ -370,6 +440,53 @@ class ReadoutChain:
         return ReadoutTrace(
             tlist=tlist,
             cavity_field=cavity_trace,
+            output_field=np.asarray(output_field, dtype=np.complex128),
+            voltage_trace=np.asarray(voltage_trace, dtype=np.complex128),
+            iq_sample=self.amplifier.iq_sample(voltage_trace),
+        )
+
+    def simulate_waveform(
+        self,
+        qubit_state: str | int,
+        drive_envelope: np.ndarray | complex | float | Callable[[np.ndarray], np.ndarray],
+        *,
+        dt: float | None = None,
+        duration: float | None = None,
+        drive_frequency: float | None = None,
+        chi: float | None = None,
+        include_filter: bool = True,
+        include_noise: bool = True,
+        seed: int | None = None,
+        initial_amplitude: complex = 0.0,
+    ) -> ReadoutTrace:
+        """Simulate a time-domain readout trace for an arbitrary complex drive waveform."""
+
+        dt = float(self.dt if dt is None else dt)
+        tlist, cavity_trace = self.resonator.response_to_envelope(
+            qubit_state,
+            drive_envelope,
+            dt=dt,
+            duration=duration,
+            drive_frequency=drive_frequency,
+            chi=chi,
+            purcell_filter=self.purcell_filter,
+            include_filter=include_filter,
+            initial_amplitude=initial_amplitude,
+        )
+        linewidth = self.resonator.effective_linewidth(
+            self.resonator.resolved_drive_frequency(drive_frequency),
+            purcell_filter=self.purcell_filter,
+            include_filter=include_filter,
+        )
+        output_field = np.sqrt(max(linewidth, 0.0)) * cavity_trace
+        voltage_trace = (
+            self.amplifier.amplify(output_field, dt=dt, seed=seed)
+            if include_noise
+            else float(self.amplifier.gain) * output_field
+        )
+        return ReadoutTrace(
+            tlist=tlist,
+            cavity_field=np.asarray(cavity_trace, dtype=np.complex128),
             output_field=np.asarray(output_field, dtype=np.complex128),
             voltage_trace=np.asarray(voltage_trace, dtype=np.complex128),
             iq_sample=self.amplifier.iq_sample(voltage_trace),

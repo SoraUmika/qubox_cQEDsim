@@ -26,6 +26,7 @@ The `sim` module is the simulation runtime for `cqed_sim`. It assembles the time
 
 - **`SimulationConfig`**: Controls frame (`FrameSpec`), solver tolerances, time step, backend choice, noise model, and whether to store full state trajectories.
 - **`NoiseSpec`**: Specifies collapse operators for open-system evolution. Supports `T1`, `T2`, and multilevel transmon decay via `transmon_t1=(T1_ge, T1_fe, ...)`.
+- **`split_collapse_operators(...)`**: Splits noise channels into unmonitored Lindblad terms and a monitored bosonic-emission path for stochastic readout replay.
 - **`hamiltonian_time_slices(...)`**: Returns the time-sliced Hamiltonian matrices for inspection without running the solver.
 
 ### Optional coupling terms
@@ -147,6 +148,7 @@ result = simulate_sequence(model, compiled, psi0, drive_ops,
 - **`cqed_sim.core`**: provides the model and `FrameSpec`.
 - **`cqed_sim.sequence`**: provides the `CompiledSequence` consumed here.
 - **`cqed_sim.backends`**: optional alternative dense-solver backends selectable via `SimulationConfig`.
+- **`cqed_sim.measurement`**: reuses the Hamiltonian assembly and `split_collapse_operators(...)` for continuous-readout replay.
 - **`cqed_sim.observables`**: higher-level observable wrappers built on top of the extractors here.
 - **`cqed_sim.tomo`**, **`cqed_sim.calibration`**: call `simulate_sequence(...)` internally.
 

@@ -124,6 +124,7 @@ class UniversalCQEDModel:
     subsystem_labels: tuple[str, ...] = field(init=False)
     _operators_cache: dict[str, qt.Qobj] | None = field(default=None, init=False, repr=False, compare=False)
     _structure_signature_cache: tuple | None = field(default=None, init=False, repr=False, compare=False)
+    _drive_couplings_cache: dict[str, tuple[qt.Qobj, qt.Qobj]] | None = field(default=None, init=False, repr=False, compare=False)
     _static_h_cache: dict[tuple[tuple, float, float, float], qt.Qobj] = field(default_factory=dict, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
@@ -181,6 +182,7 @@ class UniversalCQEDModel:
         if self._structure_signature_cache != signature:
             self._structure_signature_cache = signature
             self._operators_cache = None
+            self._drive_couplings_cache = None
             self._static_h_cache.clear()
         return signature
 
@@ -351,6 +353,10 @@ class UniversalCQEDModel:
         return self.mode_number("readout")
 
     def drive_coupling_operators(self) -> dict[str, tuple[qt.Qobj, qt.Qobj]]:
+        self._invalidate_caches_if_needed()
+        if self._drive_couplings_cache is not None:
+            return dict(self._drive_couplings_cache)
+
         ops = self.operators()
         couplings: dict[str, tuple[qt.Qobj, qt.Qobj]] = {}
         if self.transmon is not None:
@@ -371,7 +377,8 @@ class UniversalCQEDModel:
                 couplings["sideband"] = self.sideband_drive_operators(mode=self.bosonic_modes[0].label)
             except (ValueError, IndexError):
                 pass  # sideband coupling not available for this model configuration
-        return couplings
+        self._drive_couplings_cache = couplings
+        return dict(couplings)
 
     def sideband_drive_operators(
         self,

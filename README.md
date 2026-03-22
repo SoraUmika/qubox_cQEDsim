@@ -5,6 +5,7 @@
 - qubit/transmon + storage-cavity systems,
 - storage + transmon + readout-resonator systems,
 - pulse-level schedules compiled onto explicit drive channels,
+- periodically driven closed-system Floquet analysis,
 - deterministic open-system evolution,
 - lightweight state-preparation and measurement wrappers.
 
@@ -41,6 +42,8 @@ Core library:
   - `SequenceCompiler` and compiled-channel timeline assembly.
 - `cqed_sim/sim`
   - Hamiltonian assembly, solver entry points, noise model, extractors, readout-conditioned response helpers.
+- `cqed_sim/floquet`
+  - Periodic-drive Floquet analysis, quasienergies, one-period propagators, harmonic-space Sambe builders, resonance helpers, and branch-tracking utilities for driven cQED models.
 - `cqed_sim/measurement`
   - Reusable qubit measurement primitives and readout-chain modeling.
 - `cqed_sim/analysis`, `cqed_sim/calibration_targets`, `cqed_sim/backends`
@@ -242,6 +245,43 @@ The returned energies are always shifted so the vacuum basis state has energy `0
 For physically interpretable ladder plots, prefer `frame=FrameSpec()` unless you
 explicitly want rotating-frame energies.
 
+### Analyze a periodically driven Hamiltonian
+
+```python
+import numpy as np
+
+from cqed_sim import FloquetConfig, FloquetProblem, PeriodicDriveTerm
+from cqed_sim.core import DispersiveTransmonCavityModel
+from cqed_sim.floquet import solve_floquet
+
+model = DispersiveTransmonCavityModel(
+  omega_c=2.0 * np.pi * 5.0,
+  omega_q=2.0 * np.pi * 6.0,
+  alpha=2.0 * np.pi * (-0.22),
+  chi=2.0 * np.pi * (-0.015),
+  n_cav=4,
+  n_tr=4,
+)
+
+drive = PeriodicDriveTerm(
+  target="qubit",
+  amplitude=2.0 * np.pi * 0.08,
+  frequency=2.0 * np.pi * 6.0,
+  waveform="cos",
+)
+
+problem = FloquetProblem(
+  model=model,
+  periodic_terms=[drive],
+  period=2.0 * np.pi / drive.frequency,
+)
+
+result = solve_floquet(problem, FloquetConfig(n_time_samples=128))
+print(result.quasienergies)
+```
+
+Use the Floquet path when the drive is genuinely periodic and you want quasienergies, dressed-state structure, or resonance analysis instead of a finite-duration trajectory.
+
 ### Build pulses
 
 ```python
@@ -342,6 +382,13 @@ For experiment-style readout, it can now also use a physical readout chain:
 - `PurcellFilter(...)`
 - `AmplifierChain(...)`
 - `ReadoutChain(...)`
+
+For continuous-measurement replay and high-power readout studies, the same measurement layer also exposes:
+
+- `ContinuousReadoutSpec(...)`
+- `simulate_continuous_readout(...)`
+- `StrongReadoutMixingSpec(...)`
+- `build_strong_readout_disturbance(...)`
 
 When a `ReadoutChain` is attached to `QubitMeasurementSpec`, `measure_qubit(...)` can:
 

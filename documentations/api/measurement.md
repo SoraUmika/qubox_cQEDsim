@@ -1,6 +1,6 @@
-# API Reference — State Preparation & Measurement
+# API Reference - State Preparation & Measurement
 
-This page documents the reusable state-preparation and measurement primitives that remain part of the `cqed_sim` library. Guided notebook tutorials now live under `tutorials/`, while standalone protocol recipes live under `examples/`, not under `cqed_sim`.
+This page documents the reusable state-preparation and measurement primitives that remain part of the `cqed_sim` library. Guided notebook tutorials live under `tutorials/`, while standalone protocol recipes live under `examples/`.
 
 ---
 
@@ -95,7 +95,7 @@ class QubitMeasurementResult:
 |---|---|
 | `measure_qubit(state, spec=None)` | Exact probabilities, optional confusion matrix, optional sampling, optional readout-chain backaction/IQ |
 
-The confusion matrix convention remains `p_observed = M @ p_latent` with `(g, e)` ordering.
+Confusion-matrix convention: `p_observed = M @ p_latent` with `(g, e)` ordering.
 
 ---
 
@@ -118,6 +118,7 @@ The confusion matrix convention remains `p_observed = M @ p_latent` with `(g, e)
 | API | Description |
 |---|---|
 | `ReadoutChain.simulate_trace(...)` | Time-domain resonator response and downconverted trace |
+| `ReadoutChain.simulate_waveform(...)` | Time-domain replay for an arbitrary complex drive waveform |
 | `ReadoutChain.iq_centers(...)` | Noiseless I/Q centers for `g` and `e` |
 | `ReadoutChain.sample_iq(...)` | Noisy I/Q sampling from latent labels |
 | `ReadoutChain.classify_iq(...)` | Nearest-center classification |
@@ -128,11 +129,75 @@ The confusion matrix convention remains `p_observed = M @ p_latent` with `(g, e)
 
 ---
 
+## Continuous Readout Replay
+
+**Module path:** `cqed_sim.measurement.stochastic`
+
+### Core Dataclasses
+
+| Dataclass | Description |
+|---|---|
+| `ContinuousReadoutSpec` | SME replay options: frame, monitored subsystem, number of trajectories, storage policy |
+| `ContinuousReadoutTrajectory` | One trajectory's measurement record, final state, optional states, and expectations |
+| `ContinuousReadoutResult` | Aggregate replay result with average expectations and all trajectories |
+
+### Common APIs
+
+| API | Description |
+|---|---|
+| `simulate_continuous_readout(...)` | QuTiP `smesolve(...)` wrapper using `cqed_sim` drive/noise conventions |
+| `integrate_measurement_record(...)` | Integrate a homodyne or heterodyne record over its final time axis |
+
+The monitored path is constructed from `cqed_sim.sim.split_collapse_operators(...)`: one selected bosonic emission channel is promoted to the stochastic measurement path, while relaxation, thermal excitation, and dephasing remain ordinary Lindblad terms.
+
+---
+
+## Strong-Readout Disturbance Helpers
+
+**Module path:** `cqed_sim.measurement.strong_readout`
+
+### Core Dataclasses
+
+| Dataclass | Description |
+|---|---|
+| `StrongReadoutMixingSpec` | Occupancy- and slew-activated phenomenological strong-readout model |
+| `StrongReadoutDisturbance` | Returned envelopes, activation profile, and occupancy estimate |
+
+### Common APIs
+
+| API | Description |
+|---|---|
+| `build_strong_readout_disturbance(...)` | Build auxiliary `g-e` / `e-f` disturbance envelopes from a readout waveform |
+| `strong_readout_drive_targets(...)` | Matching `TransmonTransitionDriveSpec` mapping for those channels |
+| `infer_dispersive_coupling(...)` | Infer `g` from dispersive parameters |
+| `estimate_dispersive_critical_photon_number(...)` | Estimate `n_crit = (Delta / 2g)^2` |
+
+This helper is intentionally operational rather than microscopic: it is designed for calibrated threshold studies where large readout occupancy and waveform slew act as proxies for non-QND disturbance.
+
+For higher-level continuation studies, `StrongReadoutMixingSpec` accepts
+`higher_ladder_scales`, `higher_ladder_start_level`, and `higher_channel_prefix`.
+Those fields let one promote the calibrated `e-f` disturbance envelope onto additional
+adjacent transmon transitions. `strong_readout_drive_targets(...)` can then return
+channels such as `mix_high_2_3`, `mix_high_3_4`, ... up to an optional
+`max_transmon_level`, and `build_strong_readout_disturbance(...)` returns the matching
+envelopes in `StrongReadoutDisturbance.higher_envelopes`.
+
+---
+
 ## Workflow Boundary
 
-Protocol-style orchestration is intentionally repository-side now:
+Protocol-style orchestration is intentionally repository-side:
 
-- guided walkthroughs: `tutorials/00_tutorial_index.ipynb`, `tutorials/03_cavity_displacement_basics.ipynb`, `tutorials/17_readout_resonator_response.ipynb`
-- standalone scripts: `examples/protocol_style_simulation.py`, `examples/kerr_free_evolution.py`, `examples/kerr_sign_verification.py`, `examples/sequential_sideband_reset.py`
+- guided walkthroughs live under `tutorials/`
+- standalone protocol recipes live under `examples/`
+- the library layer provides reusable building blocks, not canned experimental workflows
 
-Use `cqed_sim.core`, `cqed_sim.sequence`, `cqed_sim.sim`, and `cqed_sim.measurement` for reusable library code. Use `tutorials/` for guided learning and `examples/` for standalone repo-side workflows.
+Representative repo-side entry points:
+
+- `tutorials/README.md`
+- `tutorials/00_tutorial_index.ipynb`
+- `tutorials/03_cavity_displacement_basics.ipynb`
+- `tutorials/17_readout_resonator_response.ipynb`
+- `examples/protocol_style_simulation.py`
+- `examples/continuous_readout_replay_demo.py`
+- `examples/sequential_sideband_reset.py`

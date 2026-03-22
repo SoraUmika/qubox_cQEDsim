@@ -246,6 +246,29 @@ Use `carrier_for_transition_frequency(...)` and `transition_frequency_from_carri
 
 ---
 
+## Floquet Analysis And Periodic Drives
+
+The Floquet layer in `cqed_sim.floquet` assumes a strictly periodic Hamiltonian,
+
+$$H(t + T) = H(t), \qquad \Omega = \frac{2\pi}{T}.$$
+
+Its closed-system solver computes the one-period propagator and quasienergies through
+
+$$U(T) \lvert \phi_\alpha(0) \rangle = e^{-i \varepsilon_\alpha T} \lvert \phi_\alpha(0) \rangle.$$
+
+Important conventions:
+
+- Target-based `PeriodicDriveTerm(...)` objects reuse the same model-side drive-target semantics as the pulse runtime.
+- By default, target-based periodic terms use the Hermitian in-phase quadrature built from the target's raising and lowering operators.
+- Explicit operator-based periodic terms are the preferred path for parameter modulation such as transmon-frequency, cavity-frequency, or dispersive modulation.
+- Multi-tone drives are only strictly Floquet when the tones are commensurate with a common period. The Floquet API therefore requires an explicit `period` on `FloquetProblem`.
+- Quasienergies are defined modulo `Omega` and are folded into a configurable Floquet Brillouin zone centered at `zone_center`.
+- The optional Sambe-space builder uses the same fundamental period and harmonic index convention as the propagator route.
+
+The current public Floquet API is closed-system. It does not yet expose Floquet-Markov or Floquet-Lindblad evolution even though QuTiP provides lower-level primitives in that direction.
+
+---
+
 ## Anharmonicity (α)
 
 The transmon anharmonicity is defined as:

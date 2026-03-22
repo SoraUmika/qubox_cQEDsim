@@ -77,6 +77,11 @@ and reuses them across repeated `session.run(psi0)` calls.  This is the correct
 pattern for calibration loops and RL episode batches where the same pulse is
 applied to many initial states.
 
+For QuTiP-backed runs, the session now also prebuilds the time-dependent
+Hamiltonian as a `qt.QobjEvo` and reuses it across repeated solves.  This avoids
+rebuilding QuTiP coefficient/interpolator objects on every `session.run(...)`
+call while preserving the same solver path and physics behavior.
+
 ### 3.3 Coarse-grained CPU parallelism
 
 CPU parallelism is exposed at two complementary levels:
@@ -199,6 +204,12 @@ See `benchmarks/performance_audit.md` for full details.
 The compile-heavy path improved by ~67× due to support-aware sampling.
 The simulation loops improved modestly (~25–30%) because QuTiP `sesolve` still
 dominates once setup costs are eliminated.
+
+A later follow-up on the prepared-session path showed that reusing a prebuilt
+`QobjEvo` within `SimulationSession` still removed a measurable slice of the
+remaining setup overhead: on the local 20-run prepared-session microbenchmark,
+the average runtime dropped from `0.075338 s` to `0.067438 s` (`~11.7%`), with
+best-case runtime improving from `0.073404 s` to `0.060390 s` (`~21.5%`).
 
 ---
 

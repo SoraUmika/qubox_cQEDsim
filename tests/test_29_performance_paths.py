@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import qutip as qt
 
 from cqed_sim.core import DispersiveReadoutTransmonStorageModel, DispersiveTransmonCavityModel, FrameSpec
 from cqed_sim.pulses.hardware import apply_first_order_lowpass
@@ -63,6 +64,22 @@ def test_three_mode_static_hamiltonian_cache_reuses_operator_object() -> None:
     assert h_a is h_b
 
 
+def test_drive_coupling_operator_cache_reuses_operator_pairs() -> None:
+    model = DispersiveTransmonCavityModel(
+        omega_c=2.0,
+        omega_q=3.0,
+        alpha=-0.4,
+        chi=0.2,
+        kerr=-0.03,
+        n_cav=5,
+        n_tr=3,
+    )
+    couplings_a = model.drive_coupling_operators()
+    couplings_b = model.drive_coupling_operators()
+    assert couplings_a["qubit"][0] is couplings_b["qubit"][0]
+    assert couplings_a["cavity"][1] is couplings_b["cavity"][1]
+
+
 def test_support_slice_compilation_matches_full_grid_sampling() -> None:
     pulses = [
         Pulse("q", 0.10, 0.35, _square, amp=0.3, phase=0.2),
@@ -110,6 +127,15 @@ def test_prepare_simulation_matches_simulate_sequence() -> None:
     result = prepared.run(initial)
 
     _assert_result_close(reference, result)
+
+
+def test_prepare_simulation_prebuilds_qobjevo_for_time_dependent_hamiltonians() -> None:
+    model = DispersiveTransmonCavityModel(omega_c=0.0, omega_q=0.0, alpha=0.0, chi=0.0, kerr=0.0, n_cav=3, n_tr=2)
+    compiled = SequenceCompiler(dt=0.01).compile([Pulse("q", 0.0, 1.0, _square, amp=np.pi / 4.0)], t_end=1.1)
+
+    session = prepare_simulation(model, compiled, {"q": "qubit"}, config=SimulationConfig(), e_ops={})
+
+    assert isinstance(session.qutip_hamiltonian, qt.QobjEvo)
 
 
 def test_empty_observables_disable_expectation_collection_without_changing_final_state() -> None:

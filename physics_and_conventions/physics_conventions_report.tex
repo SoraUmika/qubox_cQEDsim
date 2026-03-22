@@ -149,6 +149,11 @@ implemented in:
   \item \texttt{cqed\_sim/measurement/readout\_chain.py}:
   \texttt{ReadoutResonator}, \texttt{PurcellFilter}, \texttt{AmplifierChain}, and
   \texttt{ReadoutChain}.
+  \item \texttt{cqed\_sim/measurement/stochastic.py}:
+  \texttt{ContinuousReadoutSpec}, \texttt{simulate\_continuous\_readout(...)},
+  and measurement-record integration helpers.
+  \item \texttt{cqed\_sim/measurement/strong\_readout.py}:
+  occupancy-activated strong-readout disturbance helpers for non-QND threshold studies.
   \item \texttt{cqed\_sim/sim/noise.py}: reusable noise helpers such as
   \texttt{pure\_dephasing\_time\_from\_t1\_t2(...)} used by library code and example workflows.
 \end{itemize}
@@ -179,12 +184,23 @@ In particular:
   I/Q integration. The same API can also report \(\gamma_{\mathrm{meas}}\) and a
   Purcell-limited \(T_1\), and can optionally apply readout-induced dephasing plus
   Purcell relaxation as a reduced-state backaction model.
+  \item \texttt{simulate\_continuous\_readout(...)} reuses the runtime Hamiltonian
+  assembly and promotes one selected bosonic emission channel into the monitored SME
+  path. Relaxation, thermal excitation, and dephasing remain unmonitored Lindblad
+  terms.
+  \item \texttt{integrate\_measurement\_record(...)} treats the final axis as time
+  and preserves any leading monitored-operator or heterodyne-quadrature axes.
+  \item \texttt{build\_strong\_readout\_disturbance(...)} is an operational
+  approximation: it estimates state-averaged readout occupancy from the linear
+  dispersive response and converts large occupancy plus waveform slew into auxiliary
+  multilevel transmon-drive envelopes. It is not a microscopic ionization model.
 \end{itemize}
 
 \noindent
 Direct tests:
 \texttt{tests/test\_26\_state\_prep\_and\_measurement.py},
-\texttt{tests/experiment/test\_readout\_chain.py}.
+\texttt{tests/experiment/test\_readout\_chain.py},
+\texttt{tests/experiment/test\_stochastic\_readout.py}.
 
 \section{RL Wrapper Conventions}
 The RL-facing stack in \texttt{cqed\_sim/rl\_control} is intentionally a wrapper
@@ -1110,6 +1126,45 @@ Direct tests:
 \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py},
 \texttt{tests/test\_31\_multilevel\_sideband\_extension.py}.
 
+\subsection*{Floquet analysis conventions}
+The public Floquet module in \texttt{cqed\_sim/floquet} assumes a strictly
+periodic closed-system Hamiltonian
+\[
+H(t + T) = H(t),
+\qquad
+\Omega = \frac{2\pi}{T}.
+\]
+Its primary propagator-based route uses the one-period evolution operator
+\[
+U(T) \lvert \phi_\alpha(0) \rangle = e^{-i \varepsilon_\alpha T} \lvert \phi_\alpha(0) \rangle,
+\]
+so the quasienergies \(\varepsilon_\alpha\) are defined only modulo the drive
+angular frequency \(\Omega\). The optional Sambe-space helper uses the truncated
+harmonic-space convention
+\[
+\langle m \vert H_F \vert n \rangle = H^{(m-n)} + n\Omega\,\delta_{mn}.
+\]
+
+\begin{itemize}[leftmargin=1.5em]
+  \item Floquet problems reuse the existing model-layer
+  \texttt{static\_hamiltonian(frame=...)} path and the same structured drive
+  targets used by the pulse runtime.
+  \item A target-based \texttt{PeriodicDriveTerm} defaults to the Hermitian
+  in-phase quadrature built from the target's raising and lowering operators.
+  \item Explicit operator-based Floquet terms are the intended path for
+  periodic modulation of transmon frequency, cavity frequency, or dispersive
+  parameters.
+  \item Multi-tone problems are only strictly Floquet when the tones are
+  commensurate with the declared common period.
+  \item The current public Floquet API is closed-system. QuTiP provides
+  lower-level Floquet-Markov primitives, but they are not yet surfaced through
+  the public \texttt{cqed\_sim} API.
+\end{itemize}
+
+\noindent
+Direct tests:
+\texttt{tests/test\_58\_floquet.py}.
+
 \subsection*{Effective multilevel sideband model}
 The reusable sideband path added in \texttt{cqed\_sim/core/drive\_targets.py}
 and \texttt{cqed\_sim/pulses/builders.py} is an effective rotating-wave
@@ -1301,6 +1356,7 @@ File & Targets, type, and main assertion & Status \\
 \texttt{tests/test\_33\_usage\_examples\_spectroscopy\_sign.py} & fixed-Fock negative-\(\chi\) spectroscopy regression plus guards that Tutorials 06 and 07 plot physical transition detuning instead of raw carrier. & Passed \\
 \texttt{tests/test\_34\_universal\_cqed\_model.py} & universal-model equivalence to the compatibility wrappers, multilevel anharmonicity, and cavity-only runtime support. & Passed \\
 \texttt{tests/test\_35\_tutorial\_api\_conventions.py} & tutorial regression checks for the public Ramsey fit key \texttt{delta\_omega} and explicit bare-frequency spectroscopy labels in the calibration notebooks. & Passed \\
+\texttt{tests/test\_58\_floquet.py} & Floquet static-limit regression, exact cosine harmonic decomposition, propagator/quasienergy consistency, Sambe-route comparison, multiphoton resonance detection, and overlap-based branch tracking. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_subspace.py} & restricted-basis ordering and round-trip embedding. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_metrics.py} & fidelity gauges and leakage metrics. & Passed \\
 \texttt{tests/unitary\_synthesis/test\_primitives\_and\_backends.py} & synthesis primitives and ideal/pulse backends. & Passed \\
@@ -1455,12 +1511,14 @@ section explicitly says otherwise. Vacuum-referenced spectral output is a report
 convention only and does not alter physical transition frequencies.
 
 \noindent
-The experiment-facing layer has two measurement modes: a default lightweight
-exact-probability path and an opt-in physical readout-chain path with resonator
-response, Purcell filtering, amplifier noise, and reduced-state backaction. The
-library also exposes optional nonlinear and exchange Hamiltonian terms, aligned
-runtime/synthesis parameter translation helpers, calibration-target utilities, and
-an opt-in dense NumPy/JAX backend path.
+The experiment-facing layer has three measurement modes: a default lightweight
+exact-probability path, an opt-in physical readout-chain path with resonator
+response, Purcell filtering, amplifier noise, and reduced-state backaction, and an
+opt-in stochastic continuous-readout replay path built on monitored SME
+trajectories. The library also exposes operational strong-readout disturbance
+helpers for threshold studies, plus optional nonlinear and exchange Hamiltonian
+terms, aligned runtime/synthesis parameter translation helpers, calibration-target
+utilities, and an opt-in dense NumPy/JAX backend path.
 
 % ============================================================
 \section{Gate Library (\texttt{cqed\_sim.gates})}

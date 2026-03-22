@@ -33,6 +33,12 @@ REQUIRED_TOP_LEVEL_NAMES = [
     "SimulationResult",
     "simulate_sequence",
     "prepare_simulation",
+    # Floquet
+    "PeriodicDriveTerm",
+    "FloquetProblem",
+    "FloquetConfig",
+    "FloquetResult",
+    "solve_floquet",
     # extractors
     "reduced_subsystem_state",
     "reduced_qubit_state",

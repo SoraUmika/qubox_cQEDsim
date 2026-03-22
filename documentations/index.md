@@ -11,6 +11,7 @@
 - **Pulse-level simulation** of transmon–cavity systems in the dispersive regime
 - **Two-mode** (qubit + storage) and **three-mode** (qubit + storage + readout) models
 - **Multilevel transmon** support via `UniversalCQEDModel` with arbitrary ancilla dimension
+- **Floquet analysis** for periodically driven closed-system cQED Hamiltonians
 - **Sequence compilation** with realistic hardware distortion (IQ skew, DAC quantization, crosstalk, filtering)
 - **Open-system dynamics** with Lindblad collapse operators (T₁, Tφ, cavity decay, thermal photons)
 - **Experiment-style workflows** with state preparation, qubit measurement, and readout chain modeling
@@ -89,6 +90,7 @@ print(result.expectations)
 | **Drive pulses** | `Pulse`, envelope functions, pulse builders |
 | **Sequence compilation** | `SequenceCompiler` → `CompiledSequence` |
 | **Simulation** | `simulate_sequence()`, `SimulationConfig`, `SimulationResult` |
+| **Periodic-drive Floquet analysis** | `PeriodicDriveTerm`, `FloquetProblem`, `solve_floquet()` |
 | **State preparation** | `StatePreparationSpec`, `prepare_state()` |
 | **Measurement** | `QubitMeasurementSpec`, `measure_qubit()` |
 | **Readout model** | `ReadoutChain`, `ReadoutResonator`, `PurcellFilter`, `AmplifierChain` |

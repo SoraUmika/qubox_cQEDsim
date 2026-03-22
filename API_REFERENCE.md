@@ -47,6 +47,7 @@
    - 7.3 [Readout Chain](#73-readout-chain)
 8. [Gate I/O (`cqed_sim.io`)](#8-gate-io)
 9. [Analysis (`cqed_sim.analysis`)](#9-analysis)
+9A. [Floquet Analysis (`cqed_sim.floquet`)](#9a-floquet-analysis-cqed_simfloquet)
 10. [Backends (`cqed_sim.backends`)](#10-backends)
 11. [SQR Calibration And Multitone Validation (`cqed_sim.calibration`)](#11-sqr-calibration)
 12. [Calibration Targets (`cqed_sim.calibration_targets`)](#12-calibration-targets)
@@ -80,6 +81,11 @@ QuTiP. It models qubit–storage and qubit–storage–readout systems in the di
 regime with explicit pulse-level drive schedules, Lindblad open-system dynamics, and
 calibration / tomography helpers.
 
+The library also includes a periodic-drive Floquet layer for closed cQED Hamiltonians,
+including quasienergy extraction, one-period propagators, optional Sambe-space
+harmonic constructions, resonance detection, and overlap-based quasienergy branch
+tracking.
+
 **Dependencies:** NumPy ≥ 1.24, SciPy ≥ 1.10, QuTiP ≥ 5.0. Optional: JAX for the
 dense-matrix backend path. The current top-level package import also relies on
 matplotlib ≥ 3.8 and pandas ≥ 2.0 because progress-reporting utilities are part of
@@ -103,6 +109,7 @@ cqed_sim/
 ├── pulses/          # Pulse dataclass, envelopes, builders, calibration formulas, hardware
 ├── sequence/        # SequenceCompiler, compiled-channel timeline
 ├── sim/             # Hamiltonian assembly, solver, noise, extractors, couplings
+├── floquet/         # Periodic-drive Floquet analysis, Sambe builders, resonance helpers, branch tracking
 ├── measurement/     # Qubit measurement and readout-chain modeling
 ├── analysis/        # Parameter translation (bare → dressed)
 ├── backends/        # Dense NumPy/JAX solver backends
@@ -1458,6 +1465,7 @@ Common methods:
 | API | Description |
 |---|---|
 | `ReadoutChain.simulate_trace(...)` | Time-domain resonator response and downconverted trace |
+| `ReadoutChain.simulate_waveform(...)` | Time-domain replay for an arbitrary complex drive waveform |
 | `ReadoutChain.iq_centers(...)` | Noiseless I/Q centers for `g` and `e` |
 | `ReadoutChain.sample_iq(...)` | Noisy I/Q sampling from latent labels |
 | `ReadoutChain.classify_iq(...)` | Nearest-center classification |
@@ -1466,12 +1474,57 @@ Common methods:
 | `ReadoutChain.purcell_rate(...)` | Purcell decay rate |
 | `ReadoutChain.purcell_limited_t1(...)` | Purcell-limited `T1` |
 
+### 7.4 Continuous Readout Replay
+
+**Module path:** `cqed_sim.measurement.stochastic`
+
+| Dataclass | Description |
+|---|---|
+| `ContinuousReadoutSpec` | SME replay options: frame, monitored subsystem, number of trajectories, storage policy |
+| `ContinuousReadoutTrajectory` | One trajectory's measurement record, final state, optional states, and expectations |
+| `ContinuousReadoutResult` | Aggregate replay result with average expectations and all trajectories |
+
+Common APIs:
+
+| API | Description |
+|---|---|
+| `simulate_continuous_readout(...)` | QuTiP `smesolve(...)` wrapper using `cqed_sim` drive/noise conventions |
+| `integrate_measurement_record(...)` | Integrate a homodyne or heterodyne record over its final time axis |
+
+The monitored path is built from `split_collapse_operators(...)`: one selected bosonic emission channel is promoted to the stochastic measurement path, while relaxation, thermal excitation, and dephasing remain ordinary Lindblad terms.
+
+### 7.5 Strong-Readout Disturbance Helpers
+
+**Module path:** `cqed_sim.measurement.strong_readout`
+
+| Dataclass | Description |
+|---|---|
+| `StrongReadoutMixingSpec` | Occupancy- and slew-activated phenomenological strong-readout model |
+| `StrongReadoutDisturbance` | Returned envelopes, activation profile, and occupancy estimate |
+
+Common APIs:
+
+| API | Description |
+|---|---|
+| `build_strong_readout_disturbance(...)` | Build auxiliary `g-e` / `e-f` disturbance envelopes from a readout waveform |
+| `strong_readout_drive_targets(...)` | Matching `TransmonTransitionDriveSpec` mapping for those channels |
+| `infer_dispersive_coupling(...)` | Infer `g` from dispersive parameters |
+| `estimate_dispersive_critical_photon_number(...)` | Estimate `n_crit = (Delta / 2g)^2` |
+
+`StrongReadoutMixingSpec` also supports a simple higher-ladder continuation through
+`higher_ladder_scales`, `higher_ladder_start_level`, and `higher_channel_prefix`.
+When `higher_ladder_scales` is non-empty, `strong_readout_drive_targets(...)` can emit
+additional channels such as `mix_high_2_3`, `mix_high_3_4`, ... up to the optional
+`max_transmon_level`, while `build_strong_readout_disturbance(...)` returns the matching
+scaled envelopes in `StrongReadoutDisturbance.higher_envelopes`.
+
 Workflow boundary:
 
 - high-level orchestration no longer lives in `cqed_sim`
 - guided notebook tutorials now live under `tutorials/`
 - standalone protocol recipes now live under `examples/`
 - the reusable helper `pure_dephasing_time_from_t1_t2(...)` lives in `cqed_sim.sim.noise`
+- stochastic replay reuses `split_collapse_operators(...)` from `cqed_sim.sim`
 
 Repository-side workflow entry points:
 
@@ -1484,6 +1537,7 @@ Repository-side workflow entry points:
 - `tools/run_agent_workflow.py`
 - `run_agent_workflow.ps1`
 - `examples/protocol_style_simulation.py`
+- `examples/continuous_readout_replay_demo.py`
 - `examples/kerr_free_evolution.py`
 - `examples/kerr_sign_verification.py`
 - `examples/logical_block_phase_targeted_subspace_demo.py`
@@ -1587,6 +1641,124 @@ the dispersive equation to find the detuning, then calls `from_transmon_params`.
 
 **Detuning branch options:** `"positive"`, `"negative"`, `"largest-magnitude"`, or
 auto-select from closest root if `omega_r` is provided.
+
+---
+
+## 9A. Floquet Analysis (`cqed_sim.floquet`)
+
+The Floquet module analyzes strictly periodic closed-system Hamiltonians of the form
+
+$$
+H(t + T) = H(t),
+\qquad
+\Omega = \frac{2\pi}{T}.
+$$
+
+It wraps QuTiP's `FloquetBasis` for the primary propagator-based route and adds cQED-specific helpers for drive-target resolution, bare-state overlap labeling, multiphoton resonance detection, harmonic-space Sambe construction, and overlap-based branch tracking over parameter sweeps.
+
+### Core dataclasses
+
+```python
+@dataclass(frozen=True)
+class PeriodicFourierComponent:
+    harmonic: int
+    amplitude: complex
+
+@dataclass(frozen=True)
+class PeriodicDriveTerm:
+    operator: qt.Qobj | None = None
+    target: str | TransmonTransitionDriveSpec | SidebandDriveSpec | None = None
+    quadrature: str = "x"
+    amplitude: complex = 1.0
+    frequency: float = 0.0
+    phase: float = 0.0
+    waveform: str | Callable[[ndarray], ndarray] = "cos"
+    fourier_components: Sequence[PeriodicFourierComponent] = ()
+    label: str | None = None
+
+@dataclass(frozen=True)
+class FloquetProblem:
+    period: float
+    periodic_terms: Sequence[PeriodicDriveTerm] = ()
+    static_hamiltonian: qt.Qobj | None = None
+    model: Any | None = None
+    frame: FrameSpec = FrameSpec()
+    label: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+@dataclass(frozen=True)
+class FloquetConfig:
+    n_time_samples: int = 401
+    atol: float = 1e-8
+    rtol: float = 1e-7
+    max_step: float | None = None
+    sort: bool = True
+    sparse: bool = False
+    zone_center: float = 0.0
+    precompute_times: Sequence[float] | None = None
+    overlap_reference_time: float = 0.0
+    sambe_harmonic_cutoff: int | None = None
+    sambe_n_time_samples: int | None = None
+```
+
+`PeriodicDriveTerm` supports two complementary styles:
+
+- explicit `operator=...` for parameter modulation or arbitrary periodic perturbations,
+- model-aware `target=...` that reuses the same target semantics as the pulse runtime (`"qubit"`, `"storage"`, `SidebandDriveSpec(...)`, and so on).
+
+Target-based Floquet terms default to the Hermitian in-phase quadrature constructed from the target's raising and lowering operators. This keeps the Floquet drive layer consistent with the repository's operator and frame conventions without forcing users to build those combinations manually.
+
+### Main solver
+
+```python
+def solve_floquet(problem: FloquetProblem, config: FloquetConfig | None = None) -> FloquetResult
+```
+
+`FloquetResult` contains:
+
+- folded quasienergies,
+- one-period propagator,
+- Floquet modes at `t = 0`,
+- the underlying QuTiP `FloquetBasis`,
+- overlaps with the static Hamiltonian eigenbasis,
+- dominant bare-state labels,
+- an effective static Floquet Hamiltonian,
+- optional Sambe Hamiltonian and harmonic norms,
+- truncation warnings when Floquet modes accumulate weight on the Hilbert-space boundary.
+
+### Main helper functions
+
+| Function | Description |
+|---|---|
+| `build_floquet_hamiltonian(problem)` | Build the `QobjEvo` Hamiltonian used by the Floquet solver |
+| `compute_period_propagator(...)` | Return the one-period propagator |
+| `compute_quasienergies(...)` | Return folded quasienergies |
+| `compute_floquet_modes(...)` | Evaluate Floquet modes at arbitrary time |
+| `compute_bare_state_overlaps(...)` | Floquet-mode overlaps with the static eigenbasis |
+| `compute_floquet_transition_strengths(...)` | Harmonic-resolved transition matrix elements for a probe operator |
+| `identify_multiphoton_resonances(...)` | Near-`Delta E ~= n Omega` resonance finder |
+| `build_effective_floquet_hamiltonian(...)` | Effective static Hamiltonian in the Floquet eigenbasis |
+| `build_sambe_hamiltonian(...)` | Truncated harmonic-space Floquet Hamiltonian |
+| `extract_sambe_quasienergies(...)` | Cluster folded Sambe eigenvalues into physical quasienergy branches |
+| `run_floquet_sweep(...)` | Solve a parameter sweep and track quasienergy branches |
+| `track_floquet_branches(...)` | Overlap-based branch matching and zone unwrapping |
+
+### cQED-specific modulation builders
+
+| Function | Description |
+|---|---|
+| `build_target_drive_term(...)` | Build a periodic drive from an existing model target |
+| `build_transmon_frequency_modulation_term(...)` | Modulate `n_q` for transmon-frequency modulation |
+| `build_mode_frequency_modulation_term(...)` | Modulate a bosonic number operator |
+| `build_dispersive_modulation_term(...)` | Modulate `n_mode * n_q` directly |
+
+### Notes and caveats
+
+- Floquet analysis assumes exact periodicity.
+- Multi-tone drives are only strictly Floquet when commensurate with the supplied common period.
+- Quasienergies are defined modulo the drive angular frequency.
+- The current public API is closed-system. Open-system Floquet-Markov support is a future extension.
+- For strongly driven transmons, increasing `n_tr` is often more important than increasing the Floquet time grid.
 
 ---
 

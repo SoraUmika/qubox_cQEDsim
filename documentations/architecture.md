@@ -52,7 +52,9 @@ Contains the reusable measurement layer:
 
 - `QubitMeasurementSpec` and `measure_qubit(...)`
 - `ReadoutResonator`, `PurcellFilter`, `AmplifierChain`, `ReadoutChain`
-- synthetic I/Q generation, nearest-center classification, and readout backaction helpers
+- `simulate_continuous_readout(...)` and `ContinuousReadoutSpec` for monitored SME replay
+- `build_strong_readout_disturbance(...)` and `StrongReadoutMixingSpec` for high-power disturbance envelopes
+- synthetic I/Q generation, nearest-center classification, readout backaction helpers, and operational strong-drive proxies
 
 ### `pulses` — Waveform Construction
 
@@ -133,7 +135,7 @@ UniversalCQEDModel / wrapper models
                                +---------------------------+---------------------------+
                                v                           v                           v
                      reduced_qubit_state()        cavity_wigner()             measure_qubit()
-                     bloch_xyz_from_joint()       mode_moments()              ReadoutChain
+                     bloch_xyz_from_joint()       mode_moments()              ReadoutChain / simulate_continuous_readout()
 ```
 
 ---

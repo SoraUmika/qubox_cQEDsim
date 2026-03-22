@@ -80,3 +80,19 @@ def test_measurement_chain_produces_distinct_iq_clusters_and_matches_steady_stat
     mean_g = np.mean(result_g.iq_samples, axis=0)
     mean_e = np.mean(result_e.iq_samples, axis=0)
     assert np.linalg.norm(mean_e - mean_g) > 5.0 * chain.integrated_noise_sigma()
+
+
+def test_waveform_simulation_matches_constant_drive_trace():
+    chain = _make_chain(chi=2.0 * np.pi * 1.4e6, with_filter=True)
+    trace = chain.simulate_trace("g", include_noise=False)
+    waveform = chain.simulate_waveform(
+        "g",
+        chain.resonator.epsilon,
+        duration=chain.integration_time,
+        dt=chain.dt,
+        include_noise=False,
+    )
+
+    assert np.allclose(trace.tlist, waveform.tlist)
+    assert np.allclose(trace.cavity_field, waveform.cavity_field, rtol=0.0, atol=1.0e-12)
+    assert np.allclose(trace.output_field, waveform.output_field, rtol=0.0, atol=1.0e-12)

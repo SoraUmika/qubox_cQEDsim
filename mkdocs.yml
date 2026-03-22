@@ -69,6 +69,7 @@ nav:
       - Pulse Construction: user_guides/pulse_construction.md
       - Sequence Compilation: user_guides/sequence_compilation.md
       - Running Simulations: user_guides/running_simulations.md
+      - Floquet Analysis: user_guides/floquet_analysis.md
       - Extracting Observables: user_guides/extracting_observables.md
       - State Preparation & Measurement: user_guides/state_prep_measurement.md
       - Open System Dynamics: user_guides/open_system_dynamics.md
@@ -91,6 +92,7 @@ nav:
       - State Prep & Measurement: api/measurement.md
       - Gate I/O: api/gate_io.md
       - Analysis: api/analysis.md
+      - Floquet Analysis: api/floquet.md
       - Calibration: api/calibration.md
       - Calibration Targets: api/calibration_targets.md
       - Tomography: api/tomography.md

@@ -1,51 +1,70 @@
 # `cqed_sim.measurement`
 
-The `measurement` module provides reusable qubit measurement primitives and a physics-based readout chain model for `cqed_sim`. It handles both lightweight exact-probability measurement and richer experiment-style readout modeling including I/Q cluster generation, measurement-induced dephasing, and Purcell-limited T1 estimation.
+The `measurement` module provides the reusable readout-facing layer for `cqed_sim`. It covers three related tasks:
+
+- lightweight qubit measurement from a simulated state,
+- semi-classical readout-chain modeling for experiment-style I/Q data,
+- and stronger readout studies via stochastic continuous-measurement replay plus operational high-power disturbance envelopes.
 
 ## Relevance in `cqed_sim`
 
-After running a simulation with `cqed_sim.sim`, the typical next step is extracting a measurement outcome. This module provides:
+After `cqed_sim.sim` has produced a state or a compiled replay problem, this module is the standard place to:
 
-- a clean interface for computing or sampling qubit measurement results from a simulation state,
-- an optional physical readout chain that models the resonator response, amplifier noise, and classification,
-- and estimates of back-action effects such as measurement-induced dephasing and Purcell decay.
+- convert a state into qubit probabilities or shot samples,
+- model resonator response, amplifier noise, and simple backaction,
+- generate continuous homodyne or heterodyne trajectories from monitored loss,
+- and build occupancy-activated auxiliary transmon drives for strong-readout studies.
 
 ## Main Capabilities
 
 ### Qubit measurement
 
-- **`measure_qubit(state, spec)`**: The main entry point. Computes qubit probabilities from `state`, optionally applies a confusion matrix, and optionally samples shot outcomes. Returns a `QubitMeasurementResult`.
-- **`QubitMeasurementSpec`**: Configuration dataclass. Controls number of shots, random seed, confusion matrix, and optionally attaches a `ReadoutChain` for physical readout modeling.
-- **`QubitMeasurementResult`**: Holds exact probabilities, sampled outcomes (if shots requested), and readout-chain diagnostics (if a chain is attached).
+- **`measure_qubit(state, spec)`**: Computes qubit probabilities from `state`, optionally applies a confusion matrix, and optionally samples shot outcomes.
+- **`QubitMeasurementSpec`**: Configuration dataclass for shots, random seed, confusion matrix, and optional readout-chain replay.
+- **`QubitMeasurementResult`**: Exact probabilities, sampled outcomes, optional I/Q samples, and readout diagnostics.
 
 ### Physical readout chain
 
-- **`ReadoutResonator`**: Models the readout resonator with frequency `omega_r`, linewidth `kappa`, coupling `g`, drive amplitude `epsilon`, and dispersive shift `chi`.
-- **`PurcellFilter`**: Optional Purcell filter with a given bandwidth.
-- **`AmplifierChain`**: Amplifier model parameterized by noise temperature and gain.
-- **`ReadoutChain`**: Composes resonator, Purcell filter, and amplifier into a full readout model. When attached to `QubitMeasurementSpec`, `measure_qubit(...)` can:
-  - generate state-conditioned resonator I/Q trajectories and clusters,
-  - report measurement-induced dephasing rates,
-  - estimate Purcell-limited `T1`,
-  - optionally apply readout-induced dephasing and Purcell relaxation before sampling.
-- **`ReadoutTrace`**: I/Q time trace output from the readout chain.
+- **`ReadoutResonator`**: Single-pole dispersive resonator response model.
+- **`PurcellFilter`**: Frequency-dependent linewidth suppression model.
+- **`AmplifierChain`**: Linear gain plus additive thermal noise.
+- **`ReadoutChain`**: Full semi-classical readout model with I/Q clustering, dephasing, and Purcell estimates.
+- **`ReadoutTrace`**: Time-domain cavity/output/voltage/I/Q record.
+- **`ReadoutChain.simulate_waveform(...)`**: Replay an arbitrary complex readout waveform rather than a fixed steady-state drive.
+
+### Continuous readout replay
+
+- **`ContinuousReadoutSpec`**: SME replay options such as monitored subsystem, number of trajectories, and record storage.
+- **`simulate_continuous_readout(...)`**: QuTiP `smesolve(...)` wrapper using `cqed_sim` drive, frame, and noise conventions.
+- **`ContinuousReadoutResult`**: Average expectations plus per-trajectory measurement records and states.
+- **`integrate_measurement_record(...)`**: Integrates homodyne or heterodyne records along their final time axis.
+
+### Strong-readout disturbance helpers
+
+- **`StrongReadoutMixingSpec`**: Occupancy- and slew-activated phenomenological disturbance model.
+- **`build_strong_readout_disturbance(...)`**: Estimates state-averaged readout occupancy from the linear dispersive response and builds auxiliary `g-e` / `e-f` drive envelopes.
+- **`strong_readout_drive_targets(...)`**: Matching `TransmonTransitionDriveSpec` mapping for those disturbance channels.
+- **`infer_dispersive_coupling(...)`** and **`estimate_dispersive_critical_photon_number(...)`**: Coarse helpers for `g` and `n_crit` when only dispersive parameters are known.
+- **Higher-ladder continuation**: `StrongReadoutMixingSpec(higher_ladder_scales=...)` extends the calibrated disturbance onto additional adjacent transmon transitions, with the extra envelopes exposed through `StrongReadoutDisturbance.higher_envelopes`.
 
 ## Key Entry Points
 
 | Symbol | Purpose |
 |---|---|
-| `measure_qubit(state, spec)` | Main measurement entry point |
+| `measure_qubit(state, spec)` | Main qubit-measurement entry point |
 | `QubitMeasurementSpec` | Measurement configuration |
-| `QubitMeasurementResult` | Measurement result (probabilities, outcomes, diagnostics) |
-| `ReadoutChain` | Physical readout model (resonator + filter + amplifier) |
-| `ReadoutResonator` | Readout resonator parameters and response |
-| `PurcellFilter` | Purcell filter model |
-| `AmplifierChain` | Amplifier noise and gain model |
-| `ReadoutTrace` | I/Q trace from the chain |
+| `QubitMeasurementResult` | Measurement result bundle |
+| `ReadoutChain` | Semi-classical resonator + amplifier readout model |
+| `ReadoutChain.simulate_waveform(...)` | Arbitrary-waveform readout replay |
+| `ContinuousReadoutSpec` | Configuration for stochastic continuous readout |
+| `simulate_continuous_readout(...)` | Monitored SME replay |
+| `integrate_measurement_record(...)` | Integrate homodyne/heterodyne records |
+| `StrongReadoutMixingSpec` | Operational high-power disturbance model |
+| `build_strong_readout_disturbance(...)` | Occupancy-activated disturbance envelopes |
 
 ## Usage Guidance
 
-### Lightweight measurement (exact probabilities)
+### Lightweight measurement
 
 ```python
 from cqed_sim.measurement import QubitMeasurementSpec, measure_qubit
@@ -54,30 +73,20 @@ result = measure_qubit(
     final_state,
     QubitMeasurementSpec(shots=1024, seed=42),
 )
-print(result.p_g, result.p_e)
-print(result.outcomes)  # sampled binary outcomes
-```
-
-### Measurement with confusion matrix
-
-```python
-import numpy as np
-
-spec = QubitMeasurementSpec(
-    shots=1024,
-    seed=42,
-    confusion_matrix=np.array([[0.98, 0.02], [0.05, 0.95]]),
-)
-result = measure_qubit(final_state, spec)
 ```
 
 ### Physical readout chain
 
 ```python
 import numpy as np
+
 from cqed_sim.measurement import (
-    AmplifierChain, PurcellFilter, QubitMeasurementSpec,
-    ReadoutChain, ReadoutResonator, measure_qubit,
+    AmplifierChain,
+    PurcellFilter,
+    QubitMeasurementSpec,
+    ReadoutChain,
+    ReadoutResonator,
+    measure_qubit,
 )
 
 chain = ReadoutChain(
@@ -94,32 +103,95 @@ chain = ReadoutChain(
     dt=5.0e-9,
 )
 
-spec = QubitMeasurementSpec(
-    shots=1024,
-    seed=42,
-    readout_chain=chain,
-    readout_duration=300.0e-9,
-    classify_from_iq=True,
+result = measure_qubit(
+    final_state,
+    QubitMeasurementSpec(
+        shots=1024,
+        seed=42,
+        readout_chain=chain,
+        readout_duration=300.0e-9,
+        classify_from_iq=True,
+    ),
 )
-result = measure_qubit(final_state, spec)
+```
+
+### Continuous readout replay
+
+```python
+from cqed_sim.measurement import ContinuousReadoutSpec, simulate_continuous_readout
+from cqed_sim.sim import NoiseSpec
+
+replay = simulate_continuous_readout(
+    model,
+    compiled,
+    initial_state,
+    {"readout": "readout"},
+    noise=NoiseSpec(kappa_readout=2*np.pi*2.4e6),
+    spec=ContinuousReadoutSpec(
+        frame=frame,
+        monitored_subsystem="readout",
+        ntraj=16,
+        max_step=dt,
+    ),
+)
+record = replay.measurement_records[0]
+```
+
+### Strong-readout disturbance envelopes
+
+```python
+from cqed_sim.measurement import (
+    ReadoutResonator,
+    StrongReadoutMixingSpec,
+    build_strong_readout_disturbance,
+)
+
+resonator = ReadoutResonator(
+    omega_r=model.omega_r,
+    kappa=kappa_r,
+    g=g_ro,
+    epsilon=0.0,
+    chi=chi_ro,
+)
+disturbance = build_strong_readout_disturbance(
+    resonator,
+    compiled.channels["readout"].distorted[:-1],
+    dt=dt,
+    spec=StrongReadoutMixingSpec(n_crit=20.0),
+    drive_frequency=model.omega_r,
+)
+```
+
+To attach the disturbance to more than the `g-e` and `e-f` channels, pass
+`higher_ladder_scales=(...)` in the mixing spec and request the matching drive targets:
+
+```python
+targets = strong_readout_drive_targets(
+    StrongReadoutMixingSpec(n_crit=20.0, higher_ladder_scales=(0.4, 0.2)),
+    max_transmon_level=model.n_tr,
+)
+# -> {"mix_ge": ..., "mix_ef": ..., "mix_high_2_3": ..., "mix_high_3_4": ...}
 ```
 
 ## Important Assumptions / Conventions
 
-- `measure_qubit(...)` operates on the qubit subsystem; it traces out the cavity/storage degrees of freedom before computing probabilities.
-- Probabilities are exact (computed from the reduced qubit density matrix) unless shots are requested.
-- The confusion matrix, when provided, should be a 2×2 matrix with `(g, e)` ordering: `p_observed = M @ p_latent`.
-- The readout chain model is a semi-classical dispersive readout model. It models the homodyne response of the resonator driven at a fixed frequency; it is not a full circuit-QED input-output simulation.
-- Units: all frequencies in `rad/s`, times in `s`, consistent with the rest of `cqed_sim`.
+- `measure_qubit(...)` traces out non-qubit subsystems before computing probabilities.
+- The confusion matrix convention is `p_observed = M @ p_latent` with `(g, e)` ordering.
+- The readout-chain model is semi-classical: it is not a full input-output field simulation.
+- `simulate_continuous_readout(...)` promotes one selected bosonic emission channel into the monitored SME path and leaves relaxation, thermal excitation, and dephasing as unmonitored Lindblad terms.
+- `integrate_measurement_record(...)` always treats the final axis as time and preserves any leading monitored-operator or heterodyne-quadrature axes.
+- `build_strong_readout_disturbance(...)` is deliberately operational rather than microscopic. It is intended for calibrated non-QND threshold studies, not as a literal continuum-ionization model.
+- Units remain consistent with the rest of `cqed_sim`: typically `rad/s` and `s`.
 
 ## Relationships to Other Modules
 
-- **`cqed_sim.sim`**: provides the simulation state passed to `measure_qubit(...)`.
-- **`cqed_sim.core`**: the initial state used in simulation is typically prepared with `prepare_state(...)` from `core`.
-- **`cqed_sim.tomo`**: tomography routines use `measure_qubit(...)` internally for simulated readout.
+- **`cqed_sim.sim`**: provides runtime states, Hamiltonian assembly, and `split_collapse_operators(...)` for stochastic replay.
+- **`cqed_sim.core`**: provides the model, rotating frame, and structured drive targets consumed by these helpers.
+- **`cqed_sim.tomo`**: tomography routines can still build on `measure_qubit(...)`.
 
 ## Limitations / Non-Goals
 
-- Does not model dispersive readout photon number back-action during the pulse sequence itself (that would require including the readout drive in the simulation Hamiltonian).
-- Purcell estimates are analytic first-order approximations, not derived from full simulation of the resonator + qubit + filter system.
-- The readout chain model is not validated against hardware beyond the parameter ranges in the tutorials.
+- The semi-classical readout chain does not insert readout photons into the runtime Hamiltonian by itself.
+- Purcell estimates remain analytic first-order approximations.
+- The stochastic replay wrapper inherits QuTiP SME solver assumptions and option semantics.
+- The strong-readout disturbance layer is a phenomenological approximation whose coefficients should be calibrated against experiment or a more microscopic model.

@@ -50,6 +50,17 @@ This automation layer is intended for task orchestration, prompt management, per
 
 ---
 
+## Floquet Examples
+
+Under `examples/floquet/`:
+
+| Script | Description |
+|---|---|
+| `driven_transmon_quasienergy_sweep.py` | Sweep a strong transmon drive frequency, track Floquet branches, and print multiphoton resonance candidates |
+| `transmon_cavity_sideband_floquet_scan.py` | Scan an effective red-sideband drive in a transmon-cavity model and plot tracked quasienergies plus the minimum branch gap |
+
+---
+
 ## Quantum Algorithms Examples
 
 Under `examples/quantum_algorithms/`:
@@ -95,6 +106,7 @@ Under `examples/workflows/sequential/`:
 - `examples/audits/` contains convention and consistency audits.
 - `examples/studies/` contains optimization and parameter studies.
 - `examples/paper_reproductions/` contains paper-specific reproduction code.
+- `examples/floquet/` contains Floquet-analysis scripts for strongly driven and sideband-style periodic Hamiltonians.
 - `test_against_papers/` contains notebook-style literature checks.
 
 ---

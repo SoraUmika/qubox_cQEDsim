@@ -147,12 +147,45 @@ def _embed_transmon_relaxation(subsystem_dims: tuple[int, ...], upper_level: int
     return qt.tensor(*factors)
 
 
-def collapse_operators(model: Any, noise: NoiseSpec | None) -> list[qt.Qobj]:
+def _normalize_monitored_subsystem(monitored_subsystem: str | None) -> str | None:
+    if monitored_subsystem is None:
+        return None
+    key = str(monitored_subsystem).strip().lower()
+    alias_map = {
+        "a": "cavity",
+        "c": "cavity",
+        "cavity": "cavity",
+        "storage": "storage",
+        "readout": "readout",
+        "r": "readout",
+    }
+    if key not in alias_map:
+        raise ValueError(f"Unsupported monitored_subsystem '{monitored_subsystem}'.")
+    return alias_map[key]
+
+
+def split_collapse_operators(
+    model: Any,
+    noise: NoiseSpec | None,
+    *,
+    monitored_subsystem: str | None = None,
+) -> tuple[list[qt.Qobj], list[qt.Qobj]]:
+    """Return ``(unmonitored_ops, monitored_ops)`` for deterministic or stochastic replay.
+
+    The monitored path is intended for continuous homodyne/heterodyne replay. Only the
+    bosonic emission channel for the selected subsystem is promoted to a monitored
+    operator. Thermal excitation, pure dephasing, and transmon relaxation remain
+    unmonitored Lindblad channels.
+    """
+
     if noise is None:
-        return []
+        return [], []
+
+    monitored_key = _normalize_monitored_subsystem(monitored_subsystem)
     ops = model.operators()
     dims = tuple(int(dim) for dim in getattr(model, "subsystem_dims"))
     c_ops: list[qt.Qobj] = []
+    monitored_ops: list[qt.Qobj] = []
     has_transmon = bool(getattr(model, "has_transmon", "n_q" in ops and "b" in ops))
     seen_bosonic_targets: set[int] = set()
 
@@ -179,31 +212,51 @@ def collapse_operators(model: Any, noise: NoiseSpec | None) -> list[qt.Qobj]:
         else:
             c_ops.append(np.sqrt(noise.gamma_phi) * ops["n_q"])
 
+    def append_loss(
+        lowering: qt.Qobj,
+        raising: qt.Qobj,
+        kappa: float | None,
+        nth: float | None,
+        *,
+        subsystem_key: str,
+    ) -> None:
+        if kappa is None or kappa <= 0.0:
+            return
+        target_key = id(lowering)
+        if target_key in seen_bosonic_targets:
+            return
+        nth_value = max(0.0, 0.0 if nth is None else float(nth))
+        emission = np.sqrt(float(kappa) * (nth_value + 1.0)) * lowering
+        if monitored_key == subsystem_key:
+            monitored_ops.append(emission)
+        else:
+            c_ops.append(emission)
+        if nth_value > 0.0:
+            c_ops.append(np.sqrt(float(kappa) * nth_value) * raising)
+        seen_bosonic_targets.add(target_key)
+
     if "a" in ops:
-        _append_bosonic_loss(c_ops, ops["a"], ops["adag"], noise.kappa, noise.nth, seen_targets=seen_bosonic_targets)
+        append_loss(ops["a"], ops["adag"], noise.kappa, noise.nth, subsystem_key="cavity")
 
     if "a_s" in ops:
         kappa_storage = noise.kappa_storage if noise.kappa_storage is not None else noise.kappa
         nth_storage = noise.nth_storage if noise.nth_storage is not None else noise.nth
-        _append_bosonic_loss(
-            c_ops,
-            ops["a_s"],
-            ops["adag_s"],
-            kappa_storage,
-            nth_storage,
-            seen_targets=seen_bosonic_targets,
-        )
+        append_loss(ops["a_s"], ops["adag_s"], kappa_storage, nth_storage, subsystem_key="storage")
         _append_bosonic_dephasing(c_ops, ops["n_s"], noise.tphi_storage)
 
     if "a_r" in ops:
-        _append_bosonic_loss(
-            c_ops,
+        append_loss(
             ops["a_r"],
             ops["adag_r"],
             noise.kappa_readout,
             noise.nth_readout,
-            seen_targets=seen_bosonic_targets,
+            subsystem_key="readout",
         )
         _append_bosonic_dephasing(c_ops, ops["n_r"], noise.tphi_readout)
 
-    return c_ops
+    return c_ops, monitored_ops
+
+
+def collapse_operators(model: Any, noise: NoiseSpec | None) -> list[qt.Qobj]:
+    unmonitored, monitored = split_collapse_operators(model, noise, monitored_subsystem=None)
+    return [*unmonitored, *monitored]

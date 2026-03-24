@@ -17,11 +17,12 @@ Requires-Dist: jaxlib; extra == "jax"
 
 # `cqed_sim`
 
-`cqed_sim` is the reusable cQED simulator library in this repository. It is intended to cover both clean Hamiltonian-level simulation and experiment-style protocol simulation for:
+`cqed_sim` is the reusable cQED simulator library in this repository. It is intended to cover low-level Hamiltonian and pulse simulation, plus reusable preparation and measurement primitives, for:
 
 - qubit/transmon + storage-cavity systems,
 - storage + transmon + readout-resonator systems,
 - pulse-level schedules compiled onto explicit drive channels,
+- periodically driven closed-system Floquet analysis,
 - deterministic open-system evolution,
 - lightweight state-preparation and measurement wrappers.
 
@@ -44,7 +45,7 @@ The install metadata lives in `pyproject.toml` at the repository root. Do not cr
 
 The wheel also bundles `physics_and_conventions`, which is used by parts of the public `cqed_sim` API at runtime.
 
-Study code, audits, paper reproductions, and workflow-specific helpers are intentionally outside the core package under `examples/`.
+Structured tutorial notebooks live under `tutorials/`. Study code, audits, paper reproductions, and workflow-specific helpers remain outside the core package under `examples/`.
 
 ## Package layout
 
@@ -58,17 +59,32 @@ Core library:
   - `SequenceCompiler` and compiled-channel timeline assembly.
 - `cqed_sim/sim`
   - Hamiltonian assembly, solver entry points, noise model, extractors, readout-conditioned response helpers.
-- `cqed_sim/experiment`
-  - Reusable state preparation, qubit measurement, and lightweight protocol wrappers built on the core simulator path.
+- `cqed_sim/floquet`
+  - Periodic-drive Floquet analysis, quasienergies, one-period propagators, harmonic-space Sambe builders, resonance helpers, and branch-tracking utilities for driven cQED models.
+- `cqed_sim/measurement`
+  - Reusable qubit measurement primitives and readout-chain modeling.
 - `cqed_sim/analysis`, `cqed_sim/calibration_targets`, `cqed_sim/backends`
   - Parameter translation, calibration-target surrogates, and optional dense NumPy/JAX backend support.
-- `cqed_sim/calibration`, `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`, `cqed_sim/unitary_synthesis`
-  - Reusable calibration, diagnostics, tomography, gate I/O, plotting, and synthesis helpers that remain part of the library surface.
+- `cqed_sim/calibration`, `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`, `cqed_sim/unitary_synthesis`, `cqed_sim/optimal_control`
+  - Reusable calibration, diagnostics, tomography, gate I/O, plotting, gate-synthesis, and direct optimal-control helpers that remain part of the library surface, including reduced conditioned-qubit multitone reachability checks, full targeted-subspace multitone audits for dispersive SQR-style studies, and model-backed GRAPE optimization with pulse export back into the standard runtime stack.
+- `cqed_sim/rl_control`, `cqed_sim/system_id`
+  - RL-facing hybrid control environments, action/observation/reward abstractions, benchmark tasks, domain randomization, diagnostics, and calibration-informed prior hooks for future fit-then-randomize workflows.
+
+Calibration-side multitone helpers now cover two complementary validation modes for dispersive SQR-style studies:
+
+- reduced conditioned-qubit validation via `cqed_sim.calibration.conditioned_multitone`
+- full logical-subspace validation and optimization via `cqed_sim.calibration.targeted_subspace_multitone`
+
+The reduced path asks whether each conditioned qubit state can be reached. The targeted-subspace path asks the stronger question of whether the same common waveform implements the intended coherent operator on a chosen joint qubit-cavity logical subspace while preserving cavity-block structure and suppressing leakage.
 
 Example-side code:
 
+- `tutorials`
+  - Numbered notebook curriculum for guided learning, API onboarding, and physically annotated walkthroughs.
+- `agent_workflow`
+  - Repo-side semi-autonomous task orchestration, prompt templates, backend profiles, validation fixtures, and resumable run artifacts.
 - `examples/workflows`
-  - Sequential workflow helpers and SQR transfer artifacts.
+  - Standalone workflow helpers and specialized repo-side orchestration that is not part of the numbered tutorial curriculum.
 - `examples/audits`
   - Convention-audit utilities.
 - `examples/studies`
@@ -85,7 +101,7 @@ Example-side code:
 - Two-mode tensor ordering is qubit first, storage second: `|q,n> = |q> tensor |n>`.
 - Three-mode tensor ordering is qubit first, storage second, readout third: `|q,n_s,n_r>`.
 - Computational basis is `|g> = |0>`, `|e> = |1>`.
-- Internal Hamiltonian and frame frequencies are in `rad/s`; times are in `s`.
+- The library is unit-coherent: it does not enforce specific physical units for frequencies or times. Any internally consistent unit system is valid (for example, rad/s with times in seconds, or rad/ns with times in nanoseconds). The recommended convention used in the main examples and calibration function naming is rad/s and seconds.
 - Complex drive envelopes use `exp(+i * (omega * t + phase))`.
 - Because of that waveform sign, `Pulse.carrier` is the negative of the rotating-frame transition frequency it addresses.
 - Runtime dispersive terms use the excitation projector `n_q = b^\dagger b`; for a two-level qubit, `n_q = |e><e| = (I - sigma_z) / 2`.
@@ -218,11 +234,70 @@ model = UniversalCQEDModel(
 Useful entry points:
 
 - `UniversalCQEDModel.hamiltonian(frame=...)`
+- `UniversalCQEDModel.energy_spectrum(frame=..., levels=...)`
 - `UniversalCQEDModel.basis_state(...)`
 - `UniversalCQEDModel.transmon_lowering()`
 - `UniversalCQEDModel.mode_annihilation("storage")`
 - `UniversalCQEDModel.transmon_transition_frequency(...)`
 - `UniversalCQEDModel.mode_transition_frequency(...)`
+
+### Inspect dressed energy levels
+
+```python
+import numpy as np
+
+from cqed_sim import FrameSpec, compute_energy_spectrum
+from cqed_sim.plotting import plot_energy_levels
+
+lab_spectrum = compute_energy_spectrum(model, frame=FrameSpec(), levels=12)
+fig = plot_energy_levels(
+    lab_spectrum,
+    max_levels=12,
+    energy_scale=1.0 / (2.0 * np.pi * 1.0e6),
+    energy_unit_label="MHz",
+)
+```
+
+The returned energies are always shifted so the vacuum basis state has energy `0`.
+For physically interpretable ladder plots, prefer `frame=FrameSpec()` unless you
+explicitly want rotating-frame energies.
+
+### Analyze a periodically driven Hamiltonian
+
+```python
+import numpy as np
+
+from cqed_sim import FloquetConfig, FloquetProblem, PeriodicDriveTerm
+from cqed_sim.core import DispersiveTransmonCavityModel
+from cqed_sim.floquet import solve_floquet
+
+model = DispersiveTransmonCavityModel(
+  omega_c=2.0 * np.pi * 5.0,
+  omega_q=2.0 * np.pi * 6.0,
+  alpha=2.0 * np.pi * (-0.22),
+  chi=2.0 * np.pi * (-0.015),
+  n_cav=4,
+  n_tr=4,
+)
+
+drive = PeriodicDriveTerm(
+  target="qubit",
+  amplitude=2.0 * np.pi * 0.08,
+  frequency=2.0 * np.pi * 6.0,
+  waveform="cos",
+)
+
+problem = FloquetProblem(
+  model=model,
+  periodic_terms=[drive],
+  period=2.0 * np.pi / drive.frequency,
+)
+
+result = solve_floquet(problem, FloquetConfig(n_time_samples=128))
+print(result.quasienergies)
+```
+
+Use the Floquet path when the drive is genuinely periodic and you want quasienergies, dressed-state structure, or resonance analysis instead of a finite-duration trajectory.
 
 ### Build pulses
 
@@ -286,14 +361,8 @@ For multilevel ancilla decay, `NoiseSpec(transmon_t1=(T1_ge, T1_fe, ...))` build
 ### State preparation and measurement
 
 ```python
-from cqed_sim.experiment import (
-    QubitMeasurementSpec,
-    StatePreparationSpec,
-    fock_state,
-    measure_qubit,
-    prepare_state,
-    qubit_state,
-)
+from cqed_sim.core import StatePreparationSpec, fock_state, prepare_state, qubit_state
+from cqed_sim.measurement import QubitMeasurementSpec, measure_qubit
 
 initial = prepare_state(
     model,
@@ -331,6 +400,13 @@ For experiment-style readout, it can now also use a physical readout chain:
 - `AmplifierChain(...)`
 - `ReadoutChain(...)`
 
+For continuous-measurement replay and high-power readout studies, the same measurement layer also exposes:
+
+- `ContinuousReadoutSpec(...)`
+- `simulate_continuous_readout(...)`
+- `StrongReadoutMixingSpec(...)`
+- `build_strong_readout_disturbance(...)`
+
 When a `ReadoutChain` is attached to `QubitMeasurementSpec`, `measure_qubit(...)` can:
 
 - generate state-conditioned resonator responses and I/Q clusters,
@@ -343,14 +419,7 @@ Example:
 ```python
 import numpy as np
 
-from cqed_sim.experiment import (
-    AmplifierChain,
-    PurcellFilter,
-    QubitMeasurementSpec,
-    ReadoutChain,
-    ReadoutResonator,
-    measure_qubit,
-)
+from cqed_sim.measurement import AmplifierChain, PurcellFilter, QubitMeasurementSpec, ReadoutChain, ReadoutResonator, measure_qubit
 
 readout_chain = ReadoutChain(
     resonator=ReadoutResonator(
@@ -378,65 +447,44 @@ measurement = measure_qubit(
 )
 ```
 
-## Experimental-style workflows
+## Tutorials and example workflows
 
-The recommended experiment-style path is:
+The recommended library path is:
 
 1. Prepare an initial state with `StatePreparationSpec` and `prepare_state(...)`.
 2. Build pulses or gate-derived pulse segments.
 3. Compile onto a global timeline with `SequenceCompiler`.
-4. Simulate with `simulate_sequence(...)` or use `SimulationExperiment` as a wrapper.
+4. Simulate with `simulate_sequence(...)`.
 5. Extract reduced states, photon numbers, conditioned responses, or tomography observables.
 6. Optionally sample qubit measurement outcomes with `measure_qubit(...)`.
 
-The lightest wrapper for this flow is `SimulationExperiment`:
+For the guided learning path, start in `tutorials/`:
 
-```python
-import numpy as np
+- `tutorials/README.md`
+- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
+- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
+- `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`
+- `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb`
+- `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
+- `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
+- `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
 
-from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec
-from cqed_sim.experiment import (
-    QubitMeasurementSpec,
-    SimulationExperiment,
-    StatePreparationSpec,
-    fock_state,
-    qubit_state,
-)
-from cqed_sim.pulses import Pulse
+The GRAPE tutorial now covers both closed-system optimization and simulator-backed noisy replay, and it shows how to launch the dedicated benchmark harness for larger cases.
 
+The earlier flat numbered curriculum under `tutorials/*.ipynb` is still available as a broader API/conventions primer, but the categorized workflow suite above is now the notebook-first entry point for the migrated example programs.
 
-def square(t_rel):
-    return np.ones_like(t_rel, dtype=np.complex128)
+Standalone repo-side scripts still live in `examples/`:
 
+- `examples/protocol_style_simulation.py`
+- `examples/kerr_free_evolution.py`
+- `examples/kerr_sign_verification.py`
+- `examples/sequential_sideband_reset.py`
+- `examples/grape_storage_subspace_gate_demo.py`
+- `examples/rl_hybrid_control_rollout.py`
 
-model = DispersiveTransmonCavityModel(
-    omega_c=0.0,
-    omega_q=0.0,
-    alpha=0.0,
-    chi=0.0,
-    kerr=0.0,
-    n_cav=3,
-    n_tr=2,
-)
+Optimal-control benchmark artifacts live under `benchmarks/`:
 
-experiment = SimulationExperiment(
-    model=model,
-    pulses=[Pulse("q", 0.0, 1.0, square, amp=np.pi / 4.0)],
-    drive_ops={"q": "qubit"},
-    dt=0.01,
-    t_end=1.1,
-    frame=FrameSpec(),
-    state_prep=StatePreparationSpec(
-        qubit=qubit_state("g"),
-        storage=fock_state(0),
-    ),
-    measurement=QubitMeasurementSpec(shots=2048, seed=7),
-)
-
-experiment_result = experiment.run()
-```
-
-`SimulationExperiment` is a reusable wrapper, not a separate solver. It still compiles with `SequenceCompiler` and simulates through `simulate_sequence(...)`.
+- `benchmarks/run_optimal_control_benchmarks.py`
 
 ## Performance-oriented usage
 
@@ -477,6 +525,7 @@ Practical guidance:
 Performance artifacts:
 
 - `benchmarks/run_performance_benchmarks.py`
+- `benchmarks/run_optimal_control_benchmarks.py`
 - `benchmarks/performance_audit.md`
 
 GPU note:
@@ -573,6 +622,15 @@ Reusable calibration entry points:
 - `load_or_calibrate_sqr_gate(...)`
 - `calibrate_guarded_sqr_target(...)`
 - `benchmark_random_sqr_targets_vs_duration(...)`
+- `run_conditioned_multitone_validation(...)`
+- `optimize_conditioned_multitone(...)`
+
+Conditioned multitone reachability helpers:
+
+- `ConditionedQubitTargets.from_spec(...)` accepts list/array/dict target specifications for per-Fock Bloch angles.
+- `build_conditioned_multitone_tones(...)` and `build_conditioned_multitone_waveform(...)` construct the common multitone qubit drive using the same carrier-sign and additive-amplitude conventions as the rest of the library.
+- `evaluate_conditioned_multitone(...)` reports per-sector conditioned qubit fidelities, Bloch vectors, angle errors, and a weighted aggregate cost.
+- `optimize_conditioned_multitone(...)` tunes `d_lambda`, `d_alpha`, and `d_omega` against the reduced conditioned-qubit objective without imposing full joint-unitary correctness.
 
 Reusable tomography entry points:
 
@@ -585,15 +643,52 @@ Reusable tomography entry points:
 Unitary-synthesis entry points:
 
 - `Subspace.qubit_cavity_block(...)`
+- `QuantumSystem`
+- `CQEDSystemAdapter(...)`
+- `PrimitiveGate(...)`
+- `TargetUnitary(...)`
+- `TargetStateMapping(...)`
+- `SynthesisConstraints(...)`
+- `LeakagePenalty(...)`
+- `MultiObjective(...)`
+- `ParameterDistribution(...)`
 - `make_target(...)`
 - `UnitarySynthesizer(...).fit(...)`
+- `UnitarySynthesizer(...).explore_pareto(...)`
 
-`cqed_sim/unitary_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. The remaining sign distinction users need to track is the pulse waveform convention: `Pulse.carrier = -omega_transition(frame)`.
+`cqed_sim/unitary_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. Matrix-defined primitives, target-state mappings, and model-backed waveform primitives all route through that same convention set. The synthesizer now talks to a backend `QuantumSystem` interface, with `CQEDSystemAdapter(...)` preserving the existing cQED model workflow while preparing the architecture for future non-cQED systems. Phase 2 adds constraint-aware objectives, leakage-aware/noisy synthesis, robust parameter-distribution sampling, Pareto exploration, warm starts, and result export on top of that same runtime model stack. The remaining sign distinction users need to track is the pulse waveform convention: `Pulse.carrier = -omega_transition(frame)`.
+
+## RL-ready hybrid control
+
+`cqed_sim.rl_control` adds a first-pass simulator-trained control layer on top of the existing physics stack rather than beside it.
+
+The new environment surface centers on:
+
+- `HybridCQEDEnv(...)` with `reset(...)`, `step(...)`, `render_diagnostics()`, and `estimate_metrics(...)`
+- two model regimes through `HybridSystemConfig`: a fast reduced dispersive model and a fuller multilevel pulse model
+- action-space families for low-dimensional parametric pulses, primitive/hierarchical controls, and waveform-level scaffolding
+- ideal and measurement-like observation encoders, including IQ, counts, classifier-logit, and one-hot outcome views, plus domain-randomized hidden-parameter sampling
+- simulator-shaped and measurement-proxy reward builders, including explicit ancilla-assignment rewards for partially observed studies
+- a benchmark task ladder spanning vacuum preservation, coherent-state preparation, Fock-state preparation, storage-basis superpositions, even/odd cat preparation, ancilla-storage entanglement, and a reduced conditional-phase gate task
+- richer rollout diagnostics that expose compiled channels together with segment metadata, pulse summaries, and frame/regime metadata for debugging
+
+The intended public entry points are:
+
+- `HybridCQEDEnv`, `HybridEnvConfig`, `HybridSystemConfig`
+- `ReducedDispersiveModelConfig`, `FullPulseModelConfig`
+- `ParametricPulseActionSpace`, `PrimitiveActionSpace`, `WaveformActionSpace`
+- `build_observation_model(...)`, `build_reward_model(...)`
+- `benchmark_task_suite()` and the individual benchmark task constructors
+- `DomainRandomizer`, `FixedPrior`, `UniformPrior`, `NormalPrior`, `ChoicePrior`
+- `CalibrationEvidence`, `randomizer_from_calibration(...)`
+
+For a repo-side script template, see `examples/rl_hybrid_control_rollout.py`. For an interactive notebook walkthrough that builds the environment, runs scripted and random actions, and plots diagnostics directly, see `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`.
 
 ## What stays in `examples/`
 
 The core library intentionally does not contain:
 
+- the numbered tutorial curriculum,
 - paper reproductions,
 - one-off optimization studies,
 - experiment-specific reconciliation scripts,
@@ -616,6 +711,17 @@ Use `examples/` for those:
 
 These are example or study APIs, not part of the canonical `cqed_sim` library surface.
 
+Use `tutorials/` when you want the supported user-facing learning path.
+
+For the migrated workflow-tutorial suite, the main starting points are:
+
+- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
+- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
+- `tutorials/20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb`
+- `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
+- `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
+- `tutorials/TUTORIAL_MIGRATION_PLAN.md`
+
 ## Tests
 
 Core reusable-library suite:
@@ -635,3 +741,5 @@ pytest examples/audits/tests \
 ```
 
 The core suite is the canonical validation path for the reusable library. The example-side suites validate the moved workflow, study, audit, and reproduction code separately.
+
+The `tutorials/` notebooks are intentionally not treated as replacements for automated tests.

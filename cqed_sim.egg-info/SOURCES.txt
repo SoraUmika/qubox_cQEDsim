@@ -24,6 +24,8 @@ cqed_sim/calibration_targets/ramsey.py
 cqed_sim/calibration_targets/spectroscopy.py
 cqed_sim/calibration_targets/t1.py
 cqed_sim/calibration_targets/t2_echo.py
+cqed_sim/control/__init__.py
+cqed_sim/control/cqed_device.py
 cqed_sim/core/__init__.py
 cqed_sim/core/conventions.py
 cqed_sim/core/drive_targets.py
@@ -215,4 +217,5 @@ tests/test_55_tutorial_api_conventions.py
 tests/test_56_operators.py
 tests/test_57_phase5_advanced.py
 tests/test_58_floquet.py
+tests/test_59_hardware_context.py
 tests/test_agent_workflow.py

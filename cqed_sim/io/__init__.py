@@ -1,4 +1,5 @@
 from .gates import (
+    ConditionalPhaseSQRGate,
     DisplacementGate,
     Gate,
     RotationGate,
@@ -10,6 +11,7 @@ from .gates import (
 )
 
 __all__ = [
+    "ConditionalPhaseSQRGate",
     "Gate",
     "DisplacementGate",
     "RotationGate",

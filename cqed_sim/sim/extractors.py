@@ -73,9 +73,32 @@ def reduced_readout_state(state: qt.Qobj) -> qt.Qobj:
     return reduced_subsystem_state(state, "readout")
 
 
+def truncate_to_qubit_subspace(rho_q: qt.Qobj) -> tuple[qt.Qobj, float]:
+    """Project a multilevel transmon density matrix onto the {|g>, |e>} subspace.
+
+    Returns the 2×2 renormalized density matrix and the leakage probability
+    (population outside the computational subspace).
+    """
+    dim = int(rho_q.dims[0][0])
+    if dim < 2:
+        raise ValueError("Transmon state must have dimension >= 2.")
+    if dim == 2:
+        return rho_q, 0.0
+    mat = np.asarray(rho_q.full(), dtype=np.complex128)
+    rho_2 = qt.Qobj(mat[:2, :2], dims=[[2], [2]])
+    p_comp = float(np.real(rho_2.tr()))
+    leakage = max(0.0, 1.0 - p_comp)
+    if p_comp > 1.0e-15:
+        rho_2 = rho_2 / p_comp
+    return rho_2, leakage
+
+
 def bloch_xyz_from_qubit_state(rho_q: qt.Qobj) -> tuple[float, float, float]:
-    if int(rho_q.dims[0][0]) != 2:
-        raise ValueError("bloch_xyz_from_qubit_state requires a two-level reduced state.")
+    dim = int(rho_q.dims[0][0])
+    if dim < 2:
+        raise ValueError("bloch_xyz_from_qubit_state requires at least a two-level state.")
+    if dim > 2:
+        rho_q, _ = truncate_to_qubit_subspace(rho_q)
     return (
         float(np.real((rho_q * qt.sigmax()).tr())),
         float(np.real((rho_q * qt.sigmay()).tr())),

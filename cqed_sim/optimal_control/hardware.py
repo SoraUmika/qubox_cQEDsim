@@ -665,6 +665,369 @@ class FIRHardwareMap(HardwareMap):
         )
 
 
+@dataclass(frozen=True)
+class GainHardwareMap(HardwareMap):
+    """Constant multiplicative gain on control waveforms.
+
+    Applies the linear scaling:
+
+        y[n] = gain * x[n]
+
+    with gradient pullback  dx[n] = gain * dy[n].
+
+    This can model any of:
+    - AWG output voltage scaling
+    - Cable insertion loss / amplifier gain
+    - Unit conversion from programmed units to hardware units
+      (e.g. DAC-normalised amplitude → rad/s Rabi frequency)
+
+    For the unit-conversion role (calibration map  c = α · u_dev), set
+    ``gain = α`` and add this map as the final step in a
+    :class:`~cqed_sim.control.ControlLine`'s ``transfer_maps``.
+
+    Args:
+        gain: Multiplicative gain factor.  May be negative (phase flip).
+        control_names: Restrict to these control names (empty = all controls).
+        export_channels: Restrict to these export channels (empty = all channels).
+    """
+
+    gain: float
+    control_names: tuple[str, ...] = ()
+    export_channels: tuple[str, ...] = ()
+
+    def apply(
+        self,
+        values: np.ndarray,
+        *,
+        control_terms: tuple["ControlTerm", ...],
+        time_grid: "PiecewiseConstantTimeGrid",
+    ) -> _AppliedHardwareMap:
+        _ = time_grid
+        data = np.asarray(values, dtype=float)
+        selected = selected_control_indices(
+            control_terms,
+            control_names=tuple(self.control_names),
+            export_channels=tuple(self.export_channels),
+        )
+        g = float(self.gain)
+        output = np.array(data, copy=True)
+        if selected:
+            output[np.asarray(selected, dtype=int), :] *= g
+
+        def pullback(gradient_output: np.ndarray) -> np.ndarray:
+            gradient = np.asarray(gradient_output, dtype=float)
+            result = np.array(gradient, copy=True)
+            if selected:
+                result[np.asarray(selected, dtype=int), :] *= g
+            return result
+
+        return _AppliedHardwareMap(
+            values=output,
+            pullback=pullback,
+            report=HardwareMapReport(
+                name=type(self).__name__,
+                metrics={
+                    "gain": g,
+                    "selected_controls": [str(control_terms[index].name) for index in selected],
+                },
+            ),
+        )
+
+
+@dataclass(frozen=True)
+class DelayHardwareMap(HardwareMap):
+    """Causal integer-sample time delay on control waveforms.
+
+    Applies a shift by ``delay_samples`` time steps:
+
+        y[n] = x[n - delay_samples],   with x[n] = 0 for n < 0.
+
+    The gradient pullback is the transpose operation (an advance with zero
+    padding at the end):
+
+        dx[m] = dy[m + delay_samples],   with dy[n] = 0 for n ≥ N.
+
+    This models propagation delay through cables, microwave components, or
+    digital pipelines.  To convert a physical delay τ to an integer sample
+    count use::
+
+        delay_samples = int(round(tau / dt))
+
+    Args:
+        delay_samples: Number of samples to delay (≥ 0).
+        control_names: Restrict to these control names (empty = all controls).
+        export_channels: Restrict to these export channels (empty = all channels).
+    """
+
+    delay_samples: int
+    control_names: tuple[str, ...] = ()
+    export_channels: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if int(self.delay_samples) < 0:
+            raise ValueError("DelayHardwareMap.delay_samples must be non-negative.")
+
+    def apply(
+        self,
+        values: np.ndarray,
+        *,
+        control_terms: tuple["ControlTerm", ...],
+        time_grid: "PiecewiseConstantTimeGrid",
+    ) -> _AppliedHardwareMap:
+        _ = time_grid
+        data = np.asarray(values, dtype=float)
+        selected = selected_control_indices(
+            control_terms,
+            control_names=tuple(self.control_names),
+            export_channels=tuple(self.export_channels),
+        )
+        d = int(self.delay_samples)
+        n_steps = data.shape[1]
+        output = np.array(data, copy=True)
+        for index in selected:
+            x = np.asarray(data[index], dtype=float)
+            y = np.zeros_like(x)
+            if d < n_steps:
+                y[d:] = x[: n_steps - d]
+            output[index] = y
+
+        def pullback(gradient_output: np.ndarray) -> np.ndarray:
+            gradient = np.asarray(gradient_output, dtype=float)
+            result = np.array(gradient, copy=True)
+            for index in selected:
+                dy = np.asarray(gradient[index], dtype=float)
+                dx = np.zeros_like(dy)
+                if d < n_steps:
+                    dx[: n_steps - d] = dy[d:]
+                result[index] = dx
+            return result
+
+        return _AppliedHardwareMap(
+            values=output,
+            pullback=pullback,
+            report=HardwareMapReport(
+                name=type(self).__name__,
+                metrics={
+                    "delay_samples": d,
+                    "selected_controls": [str(control_terms[index].name) for index in selected],
+                },
+            ),
+        )
+
+
+def _frequency_response_to_fir(
+    frequencies_hz: np.ndarray,
+    response: np.ndarray,
+    n_taps: int,
+    dt_s: float,
+) -> np.ndarray:
+    """Convert a sampled frequency response to causal FIR taps via IFFT.
+
+    The algorithm:
+    1. Interpolate H(f) to a uniform grid of N = 2^ceil(log2(2*n_taps)) points.
+    2. Enforce conjugate symmetry H(-f) = conj(H(f)) for real-valued output.
+    3. IFFT → impulse response (real part).
+    4. Truncate to first *n_taps* samples (causal assumption: h[n]=0 for n<0).
+
+    Parameters
+    ----------
+    frequencies_hz:
+        Sampled frequencies in Hz (sorted ascending, must cover or start at DC).
+    response:
+        Complex H(f) values at each frequency.
+    n_taps:
+        Number of causal FIR taps to return.
+    dt_s:
+        Sample period in seconds; sets the frequency axis of the IFFT.
+
+    Returns
+    -------
+    np.ndarray
+        Real-valued FIR kernel of length *n_taps*.
+    """
+    # IFFT size: next power of 2 >= 2*n_taps, minimum 4
+    N = int(2 ** int(np.ceil(np.log2(max(2 * int(n_taps), 4)))))
+
+    # Uniform one-sided frequency grid: [0, df, 2*df, ..., (N//2)*df]
+    df = 1.0 / (N * float(dt_s))
+    f_uniform = np.arange(N // 2 + 1, dtype=float) * df
+
+    # Interpolate real and imaginary parts onto the uniform grid.
+    # Clamp to the first measured value below the range, zero beyond.
+    freqs = np.asarray(frequencies_hz, dtype=float)
+    H = np.asarray(response, dtype=complex)
+    H_real_u = np.interp(f_uniform, freqs, H.real, left=float(H.real[0]), right=0.0)
+    H_imag_u = np.interp(f_uniform, freqs, H.imag, left=float(H.imag[0]), right=0.0)
+    H_uniform = H_real_u + 1j * H_imag_u
+
+    # Build full two-sided spectrum with conjugate symmetry (yields real IFFT).
+    H_full = np.zeros(N, dtype=complex)
+    H_full[: N // 2 + 1] = H_uniform
+    if N // 2 - 1 > 0:
+        H_full[N // 2 + 1 :] = np.conj(H_uniform[1 : N // 2])[::-1]
+
+    # IFFT → real impulse response (imaginary part should be ~zero)
+    h = np.real(np.fft.ifft(H_full))
+
+    # Truncate to n_taps causal samples
+    kernel = np.zeros(int(n_taps), dtype=float)
+    copy_len = min(int(n_taps), len(h))
+    kernel[:copy_len] = h[:copy_len]
+    return kernel
+
+
+@dataclass(frozen=True)
+class FrequencyResponseHardwareMap(HardwareMap):
+    """Hardware map defined by a measured or computed frequency response H(f).
+
+    Converts a sampled transfer function H(f) to a causal FIR filter and
+    applies it to the selected control waveforms.  This allows hardware effects
+    measured with a vector network analyser (VNA) or from simulation to be
+    incorporated directly without manual FIR design.
+
+    The conversion (see :func:`_frequency_response_to_fir`):
+
+    1. Interpolate H(f) onto a uniform grid of N = 2^ceil(log2(2·n_taps))
+       points.
+    2. Enforce conjugate symmetry H(−f) = conj(H(f)) for real output.
+    3. IFFT → real impulse response h[n].
+    4. Truncate to first ``n_taps`` samples (causal assumption).
+
+    Gradients flow through the transposed convolution (cross-correlation),
+    which is the exact adjoint of the forward FIR operation — identical to
+    :class:`FIRHardwareMap`.
+
+    Parameters
+    ----------
+    frequencies_hz:
+        Sampled frequencies in Hz at which H(f) is measured.  Must be sorted
+        in ascending order and should cover the DC point (0 Hz) or start near
+        zero.
+    response:
+        Complex transfer function values H(f_k) at each frequency.  Same
+        length as *frequencies_hz*.
+    n_taps:
+        Number of FIR taps to retain (≥ 1).  More taps → better frequency
+        resolution but higher computational cost.  Defaults to 32.
+    dt_s:
+        Sample period in seconds.  Must match the ``dt`` used in the
+        simulation.  Controls the frequency axis of the IFFT.  Defaults to
+        ``1e-9`` s (1 ns).
+    control_names:
+        Restrict to these control names (empty = all controls).
+    export_channels:
+        Restrict to these export channels (empty = all channels).
+
+    Examples
+    --------
+    .. code-block:: python
+
+        import numpy as np
+        from cqed_sim.optimal_control.hardware import FrequencyResponseHardwareMap
+
+        # Measured low-pass response: unity gain up to 200 MHz, then roll-off
+        freqs = np.array([0, 50e6, 100e6, 150e6, 200e6, 300e6, 400e6, 500e6])
+        response = np.array([1.0, 1.0, 0.95, 0.85, 0.7, 0.4, 0.2, 0.05])
+
+        hw_map = FrequencyResponseHardwareMap(
+            frequencies_hz=tuple(freqs),
+            response=tuple(response.astype(complex)),
+            n_taps=64,
+            dt_s=1e-9,
+        )
+    """
+
+    frequencies_hz: tuple[float, ...]
+    response: tuple[complex, ...]
+    n_taps: int = 32
+    dt_s: float = 1e-9
+    control_names: tuple[str, ...] = ()
+    export_channels: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        freqs = tuple(float(f) for f in self.frequencies_hz)
+        resp = tuple(complex(r) for r in self.response)
+        if len(freqs) != len(resp):
+            raise ValueError(
+                "FrequencyResponseHardwareMap: frequencies_hz and response must "
+                "have equal length."
+            )
+        if len(freqs) < 2:
+            raise ValueError(
+                "FrequencyResponseHardwareMap: at least 2 frequency points are required."
+            )
+        if int(self.n_taps) < 1:
+            raise ValueError("FrequencyResponseHardwareMap.n_taps must be at least 1.")
+        if float(self.dt_s) <= 0.0:
+            raise ValueError("FrequencyResponseHardwareMap.dt_s must be positive.")
+        object.__setattr__(self, "frequencies_hz", freqs)
+        object.__setattr__(self, "response", resp)
+
+    def fir_kernel(self) -> np.ndarray:
+        """Compute and return the causal FIR taps derived from the frequency response.
+
+        Returns
+        -------
+        np.ndarray
+            Real-valued 1-D array of length :attr:`n_taps`.
+        """
+        return _frequency_response_to_fir(
+            np.asarray(self.frequencies_hz, dtype=float),
+            np.asarray(self.response, dtype=complex),
+            n_taps=int(self.n_taps),
+            dt_s=float(self.dt_s),
+        )
+
+    def apply(
+        self,
+        values: np.ndarray,
+        *,
+        control_terms: tuple["ControlTerm", ...],
+        time_grid: "PiecewiseConstantTimeGrid",
+    ) -> _AppliedHardwareMap:
+        _ = time_grid
+        data = np.asarray(values, dtype=float)
+        selected = selected_control_indices(
+            control_terms,
+            control_names=tuple(self.control_names),
+            export_channels=tuple(self.export_channels),
+        )
+        h = self.fir_kernel()
+        output = np.array(data, copy=True)
+        for index in selected:
+            output[index] = _fir_forward(np.asarray(data[index], dtype=float), h)
+
+        def pullback(gradient_output: np.ndarray) -> np.ndarray:
+            grad = np.asarray(gradient_output, dtype=float)
+            result = np.array(grad, copy=True)
+            for index in selected:
+                result[index] = _fir_pullback(np.asarray(grad[index], dtype=float), h)
+            return result
+
+        delta = output - data
+        return _AppliedHardwareMap(
+            values=output,
+            pullback=pullback,
+            report=HardwareMapReport(
+                name=type(self).__name__,
+                metrics={
+                    "n_taps": int(self.n_taps),
+                    "n_freq_points": len(self.frequencies_hz),
+                    "dt_s": float(self.dt_s),
+                    "dc_gain": abs(complex(self.response[0])) if self.response else 0.0,
+                    "selected_controls": [
+                        str(control_terms[index].name) for index in selected
+                    ],
+                    "max_abs_delta": (
+                        float(np.max(np.abs(delta[np.asarray(selected, dtype=int), :])))
+                        if selected
+                        else 0.0
+                    ),
+                },
+            ),
+        )
+
+
 __all__ = [
     "HardwareMapReport",
     "ResolvedControlWaveforms",
@@ -675,6 +1038,9 @@ __all__ = [
     "SmoothIQRadiusLimitHardwareMap",
     "QuantizationHardwareMap",
     "FIRHardwareMap",
+    "GainHardwareMap",
+    "DelayHardwareMap",
+    "FrequencyResponseHardwareMap",
     "selected_control_indices",
     "selected_iq_pairs",
     "resolve_control_schedule",

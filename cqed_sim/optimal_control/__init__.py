@@ -1,8 +1,11 @@
 from .grape import GrapeConfig, GrapeMultistartConfig, GrapeSolver, solve_grape, solve_grape_multistart
 from .hardware import (
     BoundaryWindowHardwareMap,
+    DelayHardwareMap,
     FIRHardwareMap,
     FirstOrderLowPassHardwareMap,
+    FrequencyResponseHardwareMap,
+    GainHardwareMap,
     HardwareMap,
     HardwareMapReport,
     HardwareModel,
@@ -78,6 +81,9 @@ __all__ = [
     "SmoothIQRadiusLimitHardwareMap",
     "QuantizationHardwareMap",
     "FIRHardwareMap",
+    "GainHardwareMap",
+    "DelayHardwareMap",
+    "FrequencyResponseHardwareMap",
     "resolve_control_schedule",
     "StateTransferPair",
     "StateTransferObjective",

@@ -24,7 +24,7 @@ from cqed_sim.core.conventions import qubit_cavity_block_indices, qubit_cavity_i
 from cqed_sim.core.ideal_gates import logical_block_phase_op, qubit_rotation_xy
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.sequence.scheduler import CompiledSequence
-from cqed_sim.sim.extractors import bloch_xyz_from_qubit_state, conditioned_qubit_state
+from cqed_sim.sim.extractors import bloch_xyz_from_qubit_state, conditioned_qubit_state, truncate_to_qubit_subspace
 from cqed_sim.sim.runner import hamiltonian_time_slices
 from cqed_sim.unitary_synthesis.metrics import LogicalBlockPhaseDiagnostics, logical_block_phase_diagnostics
 
@@ -550,7 +550,12 @@ def _conditioned_metric(
     theta_error = float("nan") if np.isnan(theta_sim) else _wrap_pi(theta_sim - theta_target)
     phi_error = float("nan") if np.isnan(phi_sim) else _wrap_pi(phi_sim - phi_target)
     target_dm = qubit_density_matrix_from_angles(theta_target, phi_target)
-    fidelity = float(np.clip(np.real((target_dm * rho_q).tr()), 0.0, 1.0))
+    # When rho_q comes from an n_tr > 2 model, truncate to {|g>,|e>} for
+    # the fidelity comparison (target_dm is always 2x2).
+    rho_for_fidelity = rho_q
+    if rho_q.shape[0] > 2:
+        rho_for_fidelity, _ = truncate_to_qubit_subspace(rho_q)
+    fidelity = float(np.clip(np.real((target_dm * rho_for_fidelity).tr()), 0.0, 1.0))
     purity = float(np.real((rho_q * rho_q).tr()))
     bloch_distance = float(
         np.sqrt(
@@ -598,7 +603,8 @@ def _conditioned_metrics_from_operator(
         final_state = qt.Qobj(final_vector.reshape((-1, 1)), dims=initial.dims)
         rho_q, population, valid = conditioned_qubit_state(final_state, n=int(level), fallback="zero")
         if not valid:
-            rho_q = qt.Qobj(np.zeros((2, 2), dtype=np.complex128), dims=[[2], [2]])
+            n_q = int(model.n_tr)
+            rho_q = qt.Qobj(np.zeros((n_q, n_q), dtype=np.complex128), dims=[[n_q], [n_q]])
         metrics.append(
             _conditioned_metric(
                 targets,

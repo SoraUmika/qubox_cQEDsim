@@ -6,21 +6,26 @@ from typing import Any
 import numpy as np
 
 from cqed_sim.core import FrameSpec
-from cqed_sim.io.gates import DisplacementGate, RotationGate, SQRGate
+from cqed_sim.io.gates import ConditionalPhaseSQRGate, DisplacementGate, RotationGate, SQRGate
 from cqed_sim.pulses.builders import build_displacement_pulse, build_rotation_pulse, build_sqr_multitone_pulse
 
-from .sequence import Displacement, GateSequence, PrimitiveGate, QubitRotation, SQR
+from .sequence import ConditionalPhaseSQR, Displacement, GateSequence, PrimitiveGate, QubitRotation, SQR
 
 
-_SUPPORTED_GATE_TYPES = (QubitRotation, Displacement, SQR)
+_SUPPORTED_GATE_TYPES = (QubitRotation, Displacement, SQR, ConditionalPhaseSQR)
 
 # Gate types that exist in the synthesis layer but cannot be converted to
-# pulse-level waveforms by the bridge:  SNAP, ConditionalPhaseSQR, and
-# FreeEvolveCondPhase.  These gates have no corresponding pulse builder
-# functions and no IO gate representations; they operate as ideal-unitary
-# operations within the synthesis optimizer.  To simulate them at the pulse
-# level, use the model-backed simulation path (simulate_sequence /
-# hamiltonian_time_slices) rather than the waveform bridge.
+# pulse-level waveforms by the bridge:  SNAP and FreeEvolveCondPhase.
+# These gates have no corresponding pulse builder functions and no IO gate
+# representations; they operate as ideal-unitary operations within the
+# synthesis optimizer.  To simulate them at the pulse level, use the
+# model-backed simulation path (simulate_sequence / hamiltonian_time_slices)
+# rather than the waveform bridge.
+#
+# ConditionalPhaseSQR IS supported: it reuses the SQR multitone drive
+# hardware with zero theta (no drive amplitude).  The number-selective
+# conditional phases arise from the dispersive interaction during the
+# gate time and are captured by the Hamiltonian simulation.
 
 
 def _default_time_bounds(duration: float) -> tuple[float, float]:
@@ -62,8 +67,8 @@ def waveform_primitive_from_gate(
     if not isinstance(gate, _SUPPORTED_GATE_TYPES):
         raise TypeError(
             f"waveform_primitive_from_gate received gate of type {type(gate).__name__!r}, "
-            "which is not supported. Supported gate types are: QubitRotation, Displacement, SQR. "
-            "For SNAP, ConditionalPhaseSQR, and FreeEvolveCondPhase gates, use the "
+            "which is not supported. Supported gate types are: QubitRotation, Displacement, SQR, "
+            "ConditionalPhaseSQR. For SNAP and FreeEvolveCondPhase gates, use the "
             "model-backed simulation path (simulate_sequence / hamiltonian_time_slices) "
             "rather than the waveform bridge."
         )
@@ -121,6 +126,37 @@ def waveform_primitive_from_gate(
             parameters={"alpha": complex(gate.alpha), "duration": duration},
             parameter_bounds={"alpha": (-2.0, 2.0), "duration": time_bounds},
             metadata={"source_gate_type": gate.type, "waveform_family": "displacement_square", "frame": None if frame is None else frame.__dict__},
+            **common,
+        )
+
+    if isinstance(gate, ConditionalPhaseSQR):
+        # ConditionalPhaseSQR applies Fock-number-selective Z rotations.
+        # The physical implementation reuses the SQR multitone hardware with
+        # zero drive amplitude (theta=0); conditional phases arise from the
+        # dispersive interaction during the gate time.  The optimizer can
+        # vary the duration to control the accumulated phase.
+        n_phases = len(gate.phases_n)
+
+        def waveform(params: dict[str, Any], model: Any) -> Any:
+            phases = np.asarray(params["phases"], dtype=float)
+            io_gate = SQRGate(
+                index=int(index),
+                name=str(gate.name),
+                theta=tuple(0.0 for _ in phases),
+                phi=tuple(0.0 for _ in phases),
+            )
+            local_config = dict(base_config)
+            local_config["duration_sqr_s"] = float(params["duration"])
+            return build_sqr_multitone_pulse(io_gate, model, local_config, frame=frame, calibration=calibration)
+
+        return PrimitiveGate(
+            waveform=waveform,
+            parameters={
+                "phases": np.asarray(gate.phases_n, dtype=float),
+                "duration": duration,
+            },
+            parameter_bounds={"phases": (-2.0 * np.pi, 2.0 * np.pi), "duration": time_bounds},
+            metadata={"source_gate_type": gate.type, "waveform_family": "cpsqr_idle_multitone", "frame": None if frame is None else frame.__dict__},
             **common,
         )
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 import numpy as np
 
@@ -14,6 +14,9 @@ from cqed_sim.pulses.hardware import (
     apply_zoh,
 )
 from cqed_sim.pulses.pulse import Pulse
+
+if TYPE_CHECKING:
+    from cqed_sim.control import HardwareContext
 
 
 @dataclass
@@ -31,17 +34,37 @@ class CompiledSequence:
 
 
 class SequenceCompiler:
+    """Compile a list of :class:`~cqed_sim.pulses.pulse.Pulse` objects into a
+    time-gridded :class:`CompiledSequence`.
+
+    Hardware pipeline (applied in order):
+    1. **HardwareConfig** (``hardware`` dict) – per-channel DAC/IQ-mixer
+       effects: ZOH, lowpass filter, amplitude quantisation, IQ distortion.
+       Produces ``CompiledChannel.baseband`` and the first version of
+       ``CompiledChannel.distorted``.
+    2. **HardwareContext** (``hardware_context``) – optional higher-level
+       transfer chain modelling cable/filter/calibration effects via
+       :class:`~cqed_sim.control.ControlLine` objects.  Applied to
+       ``distorted`` after step 1.  Leaves ``baseband`` and ``rf``
+       unchanged.  Default: ``None`` (no additional transform; identity).
+
+    For backward compatibility, when ``hardware_context=None`` the behaviour
+    is identical to the original implementation.
+    """
+
     def __init__(
         self,
         dt: float,
         hardware: dict[str, HardwareConfig] | None = None,
         crosstalk_matrix: dict[str, dict[str, float]] | None = None,
         enable_cache: bool = False,
+        hardware_context: "HardwareContext | None" = None,
     ):
         self.dt = dt
         self.hardware = hardware or {}
         self.crosstalk_matrix = crosstalk_matrix or {}
         self.enable_cache = enable_cache
+        self.hardware_context = hardware_context
         self._cache: dict[tuple, CompiledSequence] = {}
 
     def _pulse_key(self, p: Pulse) -> tuple:
@@ -121,6 +144,11 @@ class SequenceCompiler:
             bb = apply_amplitude_quantization(bb, hw.amplitude_bits)
             distorted, rf = apply_iq_distortion(bb, tlist, hw)
             out[channel] = CompiledChannel(baseband=bb, distorted=distorted, rf=rf)
+
+        # --- Hardware context (step 2): apply per-line transfer chain + calibration ---
+        if self.hardware_context is not None:
+            out = self.hardware_context.apply_to_compiled_channels(out, dt=self.dt)
+
         compiled = CompiledSequence(tlist=tlist, dt=self.dt, channels=out)
         if self.enable_cache:
             self._cache[cache_key] = compiled

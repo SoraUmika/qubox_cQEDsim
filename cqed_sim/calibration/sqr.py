@@ -11,6 +11,17 @@ import re
 import time
 from typing import Any, Mapping, Sequence
 
+
+def _progress(iterable, enabled: bool, **kwargs):
+    """Optionally wrap *iterable* with a tqdm progress bar."""
+    if not enabled:
+        return iterable
+    try:
+        from tqdm.auto import tqdm
+        return tqdm(iterable, **kwargs)
+    except Exception:
+        return iterable
+
 import numpy as np
 import qutip as qt
 from scipy.optimize import Bounds, minimize
@@ -779,7 +790,15 @@ def evaluate_sqr_gate_levels(
     return rows
 
 
-def calibrate_sqr_gate(gate: SQRGate, config: Mapping[str, Any]) -> SQRCalibrationResult:
+def calibrate_sqr_gate(gate: SQRGate, config: Mapping[str, Any], *, show_progress: bool = False) -> SQRCalibrationResult:
+    """Calibrate per-Fock-level drive corrections for an SQR gate.
+
+    Args:
+        gate: The :class:`~cqed_sim.io.gates.SQRGate` to calibrate.
+        config: Calibration configuration mapping.
+        show_progress: If ``True``, display a tqdm progress bar over Fock levels.
+            Works in both terminal and Jupyter notebook environments.
+    """
     theta, phi = pad_sqr_angles(gate.theta, gate.phi, int(config["n_cav_dim"]))
     max_n = _calibration_max_n(gate, config)
     theta_cutoff = float(config.get("sqr_theta_cutoff", 1.0e-10))
@@ -795,7 +814,7 @@ def calibrate_sqr_gate(gate: SQRGate, config: Mapping[str, Any]) -> SQRCalibrati
     optimized_loss = [0.0] * (max_n + 1)
     levels: list[SQRLevelCalibration] = []
 
-    for n in range(max_n + 1):
+    for n in _progress(range(max_n + 1), show_progress, desc=f"SQR calibration ({gate.name})", unit="level", total=max_n + 1, dynamic_ncols=True):
         theta_n = float(theta[n])
         phi_n = float(phi[n])
         x0 = np.zeros(3, dtype=float)
@@ -930,6 +949,8 @@ def load_or_calibrate_sqr_gate(
     gate: SQRGate,
     config: Mapping[str, Any],
     cache_dir: str | Path | None = None,
+    *,
+    show_progress: bool = False,
 ) -> SQRCalibrationResult:
     cache_path = calibration_cache_path(gate, config, cache_dir=cache_dir or config.get("calibration_cache_dir", "calibrations"))
     force_recompute = bool(config.get("calibration_force_recompute", False))
@@ -940,7 +961,7 @@ def load_or_calibrate_sqr_gate(
             cached.metadata["cache_hit"] = True
             cached.metadata["cache_path"] = str(cache_path)
             return cached
-    result = calibrate_sqr_gate(gate, config)
+    result = calibrate_sqr_gate(gate, config, show_progress=show_progress)
     result.metadata = dict(result.metadata)
     result.metadata["cache_hit"] = False
     result.metadata["cache_path"] = str(cache_path)

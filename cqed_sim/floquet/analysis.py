@@ -3,6 +3,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence
 
+
+def _progress(iterable, enabled: bool, **kwargs):
+    """Optionally wrap *iterable* with a tqdm progress bar."""
+    if not enabled:
+        return iterable
+    try:
+        from tqdm.auto import tqdm
+        return tqdm(iterable, **kwargs)
+    except Exception:
+        return iterable
+
 import numpy as np
 import qutip as qt
 from scipy.optimize import linear_sum_assignment
@@ -89,7 +100,19 @@ def compute_floquet_transition_strengths(
     n_time_samples: int | None = None,
     quadrature: str = "x",
     min_strength: float = 0.0,
+    show_progress: bool = False,
 ) -> tuple[FloquetTransitionStrength, ...]:
+    """Compute Floquet transition matrix elements and strengths.
+
+    Args:
+        result: A :class:`~cqed_sim.floquet.core.FloquetResult`.
+        operator: Probe operator (``qt.Qobj``) or drive target string.
+        harmonic_cutoff: Maximum harmonic order to include.
+        n_time_samples: Number of time samples over one period.
+        quadrature: Quadrature for string-specified operators.
+        min_strength: Discard transitions weaker than this threshold.
+        show_progress: If ``True``, display a tqdm progress bar over Floquet modes.
+    """
     sample_count = max(int(n_time_samples or result.config.n_time_samples), 8)
     grid = sample_period_grid(result.problem.period, sample_count, endpoint=False)
     omega = angular_frequency_from_period(result.problem.period)
@@ -98,10 +121,18 @@ def compute_floquet_transition_strengths(
     else:
         probe_operator = resolve_periodic_drive_operator(result.problem, type("_Probe", (), {"operator": None, "target": operator, "quadrature": quadrature})())
 
+    n_modes = len(result.quasienergies)
     mode_samples = [result.modes(float(time)) for time in grid]
     strengths: list[FloquetTransitionStrength] = []
-    for initial_index in range(len(result.quasienergies)):
-        for final_index in range(len(result.quasienergies)):
+    for initial_index in _progress(
+        range(n_modes),
+        show_progress,
+        desc="Floquet transitions",
+        unit="mode",
+        total=n_modes,
+        dynamic_ncols=True,
+    ):
+        for final_index in range(n_modes):
             matrix_elements = np.asarray(
                 [
                     (modes[initial_index].dag() * probe_operator * modes[final_index])[0, 0]
@@ -214,10 +245,35 @@ def track_floquet_branches(results: Sequence, *, parameter_values: Sequence[floa
     )
 
 
-def run_floquet_sweep(problems: Sequence, *, parameter_values: Sequence[float] | None = None, config=None, reference_time: float = 0.0) -> FloquetSweepResult:
+def run_floquet_sweep(
+    problems: Sequence,
+    *,
+    parameter_values: Sequence[float] | None = None,
+    config=None,
+    reference_time: float = 0.0,
+    show_progress: bool = False,
+) -> FloquetSweepResult:
+    """Solve Floquet problems and track quasienergy branches across a sweep.
+
+    Args:
+        problems: Sequence of Floquet problems to solve.
+        parameter_values: Optional parameter values corresponding to each problem
+            (used for labelling the sweep axis in the result).
+        config: Optional Floquet solver config applied to every problem.
+        reference_time: Time at which to evaluate Floquet modes for branch tracking.
+        show_progress: If ``True``, display a tqdm progress bar over sweep points.
+    """
     from .core import solve_floquet
 
-    results = tuple(solve_floquet(problem, config=config) for problem in problems)
+    it = _progress(
+        problems,
+        show_progress,
+        total=len(problems) if hasattr(problems, "__len__") else None,
+        desc="Floquet sweep",
+        unit="point",
+        dynamic_ncols=True,
+    )
+    results = tuple(solve_floquet(problem, config=config) for problem in it)
     return track_floquet_branches(results, parameter_values=parameter_values, reference_time=reference_time)
 
 

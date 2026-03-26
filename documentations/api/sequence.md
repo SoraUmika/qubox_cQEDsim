@@ -48,6 +48,63 @@ def compile(self, pulses: list[Pulse], t_end: float | None = None) -> CompiledSe
 @dataclass
 class CompiledChannel:
     baseband: np.ndarray    # Complex baseband after signal processing
+    distorted: np.ndarray   # After hardware distortion chain
+    rf: np.ndarray          # RF waveform (baseband × carrier)
+
+@dataclass
+class CompiledSequence:
+    tlist: np.ndarray                      # Time grid
+    dt: float                              # Step size
+    channels: dict[str, CompiledChannel]   # Per-channel waveforms
+```
+
+---
+
+## HardwareContext Integration
+
+The compiler supports an optional `HardwareContext` for higher-level transfer chain modeling (cable/filter/calibration effects via `ControlLine` objects). This is applied after the per-channel `HardwareConfig` step.
+
+```python
+compiler = SequenceCompiler(
+    dt=0.2e-9,
+    hardware={"q": hw_config},
+    hardware_context=my_hardware_context,  # optional
+)
+```
+
+See [Hardware Pipeline](hardware.md) for details on `ControlLine` and `HardwareContext`.
+
+---
+
+## Usage
+
+```python
+from cqed_sim.pulses import Pulse, GaussianEnvelope
+from cqed_sim.sequence import SequenceCompiler
+
+# Define a pulse
+pulse = Pulse(
+    channel="q",
+    t0=0.0,
+    duration=100e-9,
+    envelope=GaussianEnvelope(sigma=25e-9),
+    carrier=-6.15e9 * 2 * 3.14159,
+    amp=0.1,
+    label="pi_pulse",
+)
+
+# Compile
+compiler = SequenceCompiler(dt=0.2e-9)
+compiled = compiler.compile([pulse])
+
+# Inspect waveforms
+import matplotlib.pyplot as plt
+ch = compiled.channels["q"]
+plt.plot(compiled.tlist * 1e9, ch.baseband.real, label="I")
+plt.plot(compiled.tlist * 1e9, ch.baseband.imag, label="Q")
+plt.xlabel("Time (ns)")
+plt.legend()
+```
     distorted: np.ndarray   # Complex baseband after IQ distortion
     rf: np.ndarray          # Real RF waveform (upconverted)
 

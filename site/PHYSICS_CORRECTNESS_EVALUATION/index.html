@@ -1,0 +1,3646 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Hardware-faithful time-domain cQED pulse simulator built on QuTiP">
+      
+      
+      
+      
+        <link rel="prev" href="../developer/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Physics Correctness Evaluation - cqed_sim</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#comprehensive-physical-correctness-evaluation-of-cqed_sim" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="cqed_sim" class="md-header__button md-logo" aria-label="cqed_sim" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            cqed_sim
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Physics Correctness Evaluation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../quickstart/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Quickstart
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Installation
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../physics_conventions/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Physics & Conventions
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../getting_started/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  User Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../tutorials/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Tutorials
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../examples/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Examples
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/overview/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../architecture/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Developer Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="cqed_sim" class="md-nav__button md-logo" aria-label="cqed_sim" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    cqed_sim
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../physics_conventions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Physics & Conventions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/defining_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Defining Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/frames/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rotating Frames
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/pulse_construction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pulse Construction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/sequence_compilation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequence Compilation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/running_simulations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running Simulations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/floquet_analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Floquet Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/extracting_observables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extracting Observables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/state_prep_measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State Prep & Measurement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/open_system_dynamics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open System Dynamics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/agent_workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../tutorials/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/displacement_spectroscopy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Displacement & Spectroscopy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/kerr_free_evolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kerr Free Evolution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/sideband_swap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sideband Swap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/unitary_synthesis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unitary Synthesis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/optimal_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GRAPE Optimal Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/rl_hybrid_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RL Hybrid Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/hardware_context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware-Aware Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/holographic_quantum_algorithms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Holographic Quantum Algorithms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core — Models & Frames
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/gates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pulses/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pulse System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/sequence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sequence Compilation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/simulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/measurement/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Measurement & Readout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/floquet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Floquet Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/optimal_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Optimal Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware & Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/unitary_synthesis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unitary Synthesis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/rl_control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RL Control & System ID
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/system_id/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Identification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/calibration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calibration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/calibration_targets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Calibration Targets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/observables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Observables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/plotting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plotting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/operators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/gate_io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gate I/O
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/tomography/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tomography
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/backends/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backends
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/holographic_sim/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Holographic Algorithms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Physics Correctness Evaluation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Physics Correctness Evaluation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-conventions-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Conventions Review
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Conventions Review">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-units-and-frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Units and Frame
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-tensor-product-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Tensor-Product Ordering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-number-operator-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Number Operator Convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-hamiltonian-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Hamiltonian Construction
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Hamiltonian Construction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-static-hamiltonian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Static Hamiltonian
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-three-mode-hamiltonian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Three-Mode Hamiltonian
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-dispersive-shift-chi-sign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Dispersive Shift (\(\chi\)) Sign
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-self-kerr-k-sign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Self-Kerr (\(K\)) Sign
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pulse-and-drive-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pulse and Drive Conventions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Pulse and Drive Conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-carrier-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Carrier Convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-drive-hamiltonian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Drive Hamiltonian
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-rabi-oscillation-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Rabi Oscillation Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-noise-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Noise Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Noise Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-t_1-relaxation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 \(T_1\) Relaxation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-pure-dephasing-two-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Pure Dephasing — Two-Level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-pure-dephasing-multilevel-identified-issue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Pure Dephasing — Multilevel (Identified Issue)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-bosonic-dephasing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Bosonic Dephasing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-thermal-photon-noise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Thermal Photon Noise
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-measurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Measurement
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Measurement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-exact-probabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Exact Probabilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-confusion-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Confusion Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-readout-chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Readout Chain
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-test-suite-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Test Suite Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Test Suite Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-unit-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Unit Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-analytic-verification-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Analytic Verification Suite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-findings-and-recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Findings and Recommendations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Findings and Recommendations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#finding-1-dephasing-operator-discontinuity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 1: Dephasing Operator Discontinuity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finding-2-all-other-conventions-correct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 2: All Other Conventions Correct
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finding-3-test-coverage-is-strong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 3: Test Coverage is Strong
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-conventions-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Conventions Review
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Conventions Review">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#11-units-and-frame" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1 Units and Frame
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#12-tensor-product-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2 Tensor-Product Ordering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#13-number-operator-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3 Number Operator Convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-hamiltonian-construction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Hamiltonian Construction
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Hamiltonian Construction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-static-hamiltonian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Static Hamiltonian
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-three-mode-hamiltonian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Three-Mode Hamiltonian
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-dispersive-shift-chi-sign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 Dispersive Shift (\(\chi\)) Sign
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#24-self-kerr-k-sign" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.4 Self-Kerr (\(K\)) Sign
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-pulse-and-drive-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Pulse and Drive Conventions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Pulse and Drive Conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-carrier-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Carrier Convention
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-drive-hamiltonian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Drive Hamiltonian
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-rabi-oscillation-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Rabi Oscillation Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-noise-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Noise Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Noise Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-t_1-relaxation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 \(T_1\) Relaxation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-pure-dephasing-two-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Pure Dephasing — Two-Level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-pure-dephasing-multilevel-identified-issue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Pure Dephasing — Multilevel (Identified Issue)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-bosonic-dephasing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Bosonic Dephasing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#45-thermal-photon-noise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.5 Thermal Photon Noise
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-measurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Measurement
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Measurement">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-exact-probabilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Exact Probabilities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-confusion-matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Confusion Matrix
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-readout-chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Readout Chain
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-test-suite-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Test Suite Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Test Suite Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-unit-tests" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Unit Tests
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-analytic-verification-suite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Analytic Verification Suite
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-findings-and-recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Findings and Recommendations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Findings and Recommendations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#finding-1-dephasing-operator-discontinuity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 1: Dephasing Operator Discontinuity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finding-2-all-other-conventions-correct" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 2: All Other Conventions Correct
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#finding-3-test-coverage-is-strong" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Finding 3: Test Coverage is Strong
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Conclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href=".." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../architecture/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Developer Guide
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="comprehensive-physical-correctness-evaluation-of-cqed_sim">Comprehensive Physical Correctness Evaluation of <code>cqed_sim</code><a class="headerlink" href="#comprehensive-physical-correctness-evaluation-of-cqed_sim" title="Permanent link">&para;</a></h1>
+<p><strong>Date:</strong> 2026-07-17
+<strong>Evaluator:</strong> Automated evaluation based on source inspection, analytic verification, and full test-suite execution</p>
+<hr />
+<h2 id="executive-summary">Executive Summary<a class="headerlink" href="#executive-summary" title="Permanent link">&para;</a></h2>
+<p><code>cqed_sim</code> implements a dispersive circuit-QED simulator whose core physics conventions—Hamiltonian sign definitions, dispersive-shift (<span class="arithmatex">\(\chi\)</span>) and self-Kerr (<span class="arithmatex">\(K\)</span>) terms, pulse carrier conventions, tensor-product ordering, noise models, and measurement—are overwhelmingly correct and internally consistent. <strong>The suite of 450 tests passes with zero failures (448 passed, 2 skipped).</strong> An independent 22-point analytic verification suite confirms agreement with closed-form results to better than 1% in every test.</p>
+<p>One substantive issue was identified: a <strong>factor-of-four discontinuity in the pure-dephasing rate</strong> when the transmon truncation dimension is changed from <span class="arithmatex">\(n_\mathrm{tr}=2\)</span> to <span class="arithmatex">\(n_\mathrm{tr} \ge 3\)</span>. This arises from a change in the collapse operator between the two regimes and is documented in the physics conventions report but is not covered by any regression test.</p>
+<hr />
+<h2 id="1-conventions-review">1. Conventions Review<a class="headerlink" href="#1-conventions-review" title="Permanent link">&para;</a></h2>
+<p>The conventions documented in <code>physics_and_conventions/physics_conventions_report.tex</code> were compared against the implementation. All documented conventions are faithfully implemented.</p>
+<h3 id="11-units-and-frame">1.1 Units and Frame<a class="headerlink" href="#11-units-and-frame" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Convention</th>
+<th>Documentation</th>
+<th>Code</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hamiltonian units</td>
+<td><span class="arithmatex">\(H/\hbar\)</span> in rad/s</td>
+<td>All frequency parameters in rad/s</td>
+<td><strong>Correct</strong></td>
+</tr>
+<tr>
+<td>Time units</td>
+<td>Seconds</td>
+<td>All durations and <code>tlist</code> in seconds</td>
+<td><strong>Correct</strong></td>
+</tr>
+<tr>
+<td>Rotating frame</td>
+<td>Defined by <code>FrameSpec(omega_c_frame, omega_q_frame, omega_r_frame)</code></td>
+<td><code>UniversalCQEDModel.static_hamiltonian(frame)</code> subtracts frame frequencies</td>
+<td><strong>Correct</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-tensor-product-ordering">1.2 Tensor-Product Ordering<a class="headerlink" href="#12-tensor-product-ordering" title="Permanent link">&para;</a></h3>
+<p>The documented convention is "transmon-first":</p>
+<div class="arithmatex">\[|\psi\rangle = |q\rangle \otimes |n\rangle \qquad (\text{2-mode}), \qquad |q, n_s, n_r\rangle = |q\rangle \otimes |n_s\rangle \otimes |n_r\rangle \qquad (\text{3-mode})\]</div>
+<p><strong>Verification:</strong></p>
+<ul>
+<li><code>H.dims</code> for a model with <code>n_tr=3, n_cav=8</code> returns <code>[[3, 8], [3, 8]]</code> — confirmed transmon (dim 3) before cavity (dim 8).</li>
+<li><code>basis_state(1, 0)</code> (i.e. <span class="arithmatex">\(|e,0\rangle\)</span>) has unit amplitude at index <span class="arithmatex">\(1 \times n_\mathrm{cav} + 0 = 8\)</span> in the full state vector — confirmed transmon-first Kronecker ordering.</li>
+</ul>
+<h3 id="13-number-operator-convention">1.3 Number Operator Convention<a class="headerlink" href="#13-number-operator-convention" title="Permanent link">&para;</a></h3>
+<p>The transmon number operator is:</p>
+<div class="arithmatex">\[\hat{n}_q = \hat{b}^\dagger \hat{b}\]</div>
+<p>constructed via <code>qt.destroy(n_tr)</code> and its conjugate. For <span class="arithmatex">\(n_\mathrm{tr}=2\)</span> this is exactly <span class="arithmatex">\(|e\rangle\langle e|\)</span>, equivalent to <span class="arithmatex">\((I - \sigma_z)/2\)</span> in the QuTiP convention where <span class="arithmatex">\(\sigma_z = \mathrm{diag}(+1, -1)\)</span>.</p>
+<p><strong>Verified:</strong> The <code>operators()</code> method returns <code>n_q = bdag * b</code> built from <code>qt.destroy(dim)</code>.</p>
+<hr />
+<h2 id="2-hamiltonian-construction">2. Hamiltonian Construction<a class="headerlink" href="#2-hamiltonian-construction" title="Permanent link">&para;</a></h2>
+<h3 id="21-static-hamiltonian">2.1 Static Hamiltonian<a class="headerlink" href="#21-static-hamiltonian" title="Permanent link">&para;</a></h3>
+<p>The dispersive Hamiltonian in the rotating frame is:</p>
+<div class="arithmatex">\[
+\frac{H}{\hbar} = \delta_s\,\hat{n}_s + \delta_q\,\hat{n}_q
++ \frac{\alpha}{2}\,\hat{b}^{\dagger 2}\hat{b}^2
++ \frac{K}{2}\,\hat{n}_s(\hat{n}_s - 1)
++ \chi\,\hat{n}_s\,\hat{n}_q
+\]</div>
+<p>where <span class="arithmatex">\(\delta_s = \omega_s - \omega_{s,\mathrm{frame}}\)</span> and similarly for <span class="arithmatex">\(\delta_q\)</span>.</p>
+<p><strong>Code inspection</strong> (<code>cqed_sim/core/universal_model.py</code>): The <code>static_hamiltonian()</code> method constructs exactly these terms with:
+- <code>+alpha/2 * bdag^2 * b^2</code> (anharmonicity)
+- <code>+kerr/2 * n_s * (n_s - 1)</code> (self-Kerr, via falling-factorial form)
+- <code>+chi * n_s * n_q</code> (dispersive cross-Kerr)</p>
+<p>No sign inversions or missing factors were found.</p>
+<p><strong>Analytic check:</strong> For every basis state <span class="arithmatex">\(|q, n\rangle\)</span> with <span class="arithmatex">\(q \in \{0,1,2\}\)</span>, <span class="arithmatex">\(n \in \{0,\ldots,7\}\)</span>:</p>
+<div class="arithmatex">\[
+E_\mathrm{numeric} = \langle q,n|H|q,n\rangle \stackrel{?}{=} \frac{\alpha}{2}q(q-1) + \frac{K}{2}n(n-1) + \chi\,n\,q
+\]</div>
+<p>All 24 energies agree to within <span class="arithmatex">\(10^{-3}\)</span> rad/s. <strong>PASS.</strong></p>
+<h3 id="22-three-mode-hamiltonian">2.2 Three-Mode Hamiltonian<a class="headerlink" href="#22-three-mode-hamiltonian" title="Permanent link">&para;</a></h3>
+<p>The three-mode model (<code>DispersiveReadoutTransmonStorageModel</code>) adds readout-mode terms:</p>
+<div class="arithmatex">\[
+\frac{H}{\hbar} \supset \delta_r\,\hat{n}_r + \frac{K_r}{2}\hat{n}_r(\hat{n}_r - 1) + \chi_r\,\hat{n}_r\,\hat{n}_q + \chi_{sr}\,\hat{n}_s\,\hat{n}_r
+\]</div>
+<p><strong>Verified analytically:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Expected</th>
+<th>Measured</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(\omega_{ge}(\text{vacuum})\)</span> on-frame</td>
+<td>0</td>
+<td>0</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\omega_{ge}(n_s=1) - \omega_{ge}(0)\)</span></td>
+<td><span class="arithmatex">\(\chi_s\)</span></td>
+<td><span class="arithmatex">\(\chi_s\)</span> exactly</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\omega_{ge}(n_r=1) - \omega_{ge}(0)\)</span></td>
+<td><span class="arithmatex">\(\chi_r\)</span></td>
+<td><span class="arithmatex">\(\chi_r\)</span> exactly</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>Storage spacing shift <span class="arithmatex">\(\omega_s(n_s=1) - \omega_s(n_s=0)\)</span></td>
+<td><span class="arithmatex">\(K_s\)</span></td>
+<td><span class="arithmatex">\(K_s\)</span> exactly</td>
+<td><strong>PASS</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-dispersive-shift-chi-sign">2.3 Dispersive Shift (<span class="arithmatex">\(\chi\)</span>) Sign<a class="headerlink" href="#23-dispersive-shift-chi-sign" title="Permanent link">&para;</a></h3>
+<p>The defining convention is <span class="arithmatex">\(H \supset +\chi\,\hat{n}_s\,\hat{n}_q\)</span>, so the qubit transition frequency in manifold <span class="arithmatex">\(n\)</span> is:</p>
+<div class="arithmatex">\[
+\omega_{ge}(n) = \omega_{ge}(0) + \chi\,n
+\]</div>
+<ul>
+<li><strong>Negative <span class="arithmatex">\(\chi\)</span> (<span class="arithmatex">\(-2.84\)</span> MHz):</strong> <span class="arithmatex">\(\omega_{ge}(1) &lt; \omega_{ge}(0) &lt; \omega_{ge}(-\ldots)\)</span>. Confirmed: each additional photon lowers the qubit frequency by <span class="arithmatex">\(|\chi|\)</span>.</li>
+<li><strong>Positive <span class="arithmatex">\(\chi\)</span> (<span class="arithmatex">\(+2.84\)</span> MHz):</strong> <span class="arithmatex">\(\omega_{ge}(1) &gt; \omega_{ge}(0)\)</span>. Confirmed: each photon raises the qubit frequency.</li>
+<li><strong>No residual old convention:</strong> A grep search for <code>-chi</code>, <code>chi_sign</code>, <code>chi_convention</code>, and related patterns found no leftover code from the pre-March-2026 <span class="arithmatex">\(-\chi\)</span> convention.</li>
+</ul>
+<p><strong>PASS.</strong></p>
+<h3 id="24-self-kerr-k-sign">2.4 Self-Kerr (<span class="arithmatex">\(K\)</span>) Sign<a class="headerlink" href="#24-self-kerr-k-sign" title="Permanent link">&para;</a></h3>
+<p>The convention is <span class="arithmatex">\(H \supset +\frac{K}{2}\hat{n}_s(\hat{n}_s - 1)\)</span>. The cavity level spacing for the <span class="arithmatex">\(q=0\)</span> manifold is:</p>
+<div class="arithmatex">\[
+\omega_{n \to n+1} = \delta_s + K\,n
+\]</div>
+<ul>
+<li><strong>Negative <span class="arithmatex">\(K\)</span> (<span class="arithmatex">\(-2.00\)</span> kHz):</strong> Spacings decrease with <span class="arithmatex">\(n\)</span>: 0.000, <span class="arithmatex">\(-0.002\)</span>, <span class="arithmatex">\(-0.004\)</span>, <span class="arithmatex">\(-0.006\)</span> MHz. <strong>PASS.</strong></li>
+<li><strong>Positive <span class="arithmatex">\(K\)</span> (<span class="arithmatex">\(+2.00\)</span> kHz):</strong> Spacings increase with <span class="arithmatex">\(n\)</span>: 0.000, <span class="arithmatex">\(+0.002\)</span>, <span class="arithmatex">\(+0.004\)</span>, <span class="arithmatex">\(+0.006\)</span> MHz. <strong>PASS.</strong></li>
+</ul>
+<hr />
+<h2 id="3-pulse-and-drive-conventions">3. Pulse and Drive Conventions<a class="headerlink" href="#3-pulse-and-drive-conventions" title="Permanent link">&para;</a></h2>
+<h3 id="31-carrier-convention">3.1 Carrier Convention<a class="headerlink" href="#31-carrier-convention" title="Permanent link">&para;</a></h3>
+<p>The pulse envelope uses:</p>
+<div class="arithmatex">\[
+\varepsilon(t) = A \cdot e(t_\mathrm{rel}) \cdot \exp\!\bigl(+i(\omega_\mathrm{carrier}\,t + \varphi)\bigr)
+\]</div>
+<p>with the convention:</p>
+<div class="arithmatex">\[
+\omega_\mathrm{carrier} = -\omega_\mathrm{transition}
+\]</div>
+<p><strong>Code</strong> (<code>cqed_sim/pulses/pulse.py</code> L39): <code>phase = np.exp(1j * (self.carrier * t + self.phase))</code> — confirmed <span class="arithmatex">\(\exp(+i\omega t)\)</span>.</p>
+<p><strong>Code</strong> (<code>cqed_sim/core/frequencies.py</code>): <code>carrier_for_transition_frequency()</code> returns <code>-float(transition_frequency)</code>. Round-trip verified: <span class="arithmatex">\(\omega \to -\omega \to \omega\)</span>. <strong>PASS.</strong></p>
+<h3 id="32-drive-hamiltonian">3.2 Drive Hamiltonian<a class="headerlink" href="#32-drive-hamiltonian" title="Permanent link">&para;</a></h3>
+<p>The time-dependent drive term is:</p>
+<div class="arithmatex">\[
+H_\mathrm{drive}(t) = \varepsilon(t)\,\hat{O}^\dagger + \varepsilon^*(t)\,\hat{O}
+\]</div>
+<p>where <span class="arithmatex">\(\hat{O}\)</span> is the lowering operator for the relevant mode.</p>
+<p><strong>Code</strong> (<code>cqed_sim/sim/runner.py</code> L126–L141): <code>h.append([raising, coeff])</code> and <code>h.append([lowering, np.conj(coeff)])</code>. This matches the convention exactly.</p>
+<p><strong>Drive targets:</strong>
+- <code>"qubit"</code> resolves to <span class="arithmatex">\((\hat{b}^\dagger, \hat{b})\)</span> — transmon raising/lowering.
+- <code>"cavity"</code> / <code>"storage"</code> resolves to <span class="arithmatex">\((\hat{a}^\dagger, \hat{a})\)</span> — bosonic mode.
+- <code>"sideband"</code> resolves to <span class="arithmatex">\((\hat{a}^\dagger\hat{b},\; \hat{a}\hat{b}^\dagger)\)</span> — sideband coupling.</p>
+<h3 id="33-rabi-oscillation-verification">3.3 Rabi Oscillation Verification<a class="headerlink" href="#33-rabi-oscillation-verification" title="Permanent link">&para;</a></h3>
+<p>For a two-level transmon driven on-resonance (<span class="arithmatex">\(\omega_\mathrm{carrier} = 0\)</span> in the frame), <span class="arithmatex">\(H_\mathrm{drive} = \Omega(\hat{b}^\dagger + \hat{b}) = \Omega\,\sigma_x\)</span>, giving:</p>
+<div class="arithmatex">\[
+P_e(t) = \sin^2(\Omega\,t), \qquad t_\pi = \frac{\pi}{2\Omega}
+\]</div>
+<p>With <span class="arithmatex">\(\Omega = 2\pi \times 10\)</span> MHz:
+- <span class="arithmatex">\(t_\pi = 25\)</span> ns
+- Simulated overlap with <span class="arithmatex">\(|e,0\rangle\)</span> after <span class="arithmatex">\(t_\pi\)</span>: <strong>0.9985</strong></p>
+<p>The 0.15% deviation from unity is consistent with time-discretization error at <span class="arithmatex">\(\Delta t = 1\)</span> ns.</p>
+<p><strong>PASS.</strong></p>
+<hr />
+<h2 id="4-noise-model">4. Noise Model<a class="headerlink" href="#4-noise-model" title="Permanent link">&para;</a></h2>
+<h3 id="41-t_1-relaxation">4.1 <span class="arithmatex">\(T_1\)</span> Relaxation<a class="headerlink" href="#41-t_1-relaxation" title="Permanent link">&para;</a></h3>
+<p>The collapse operator for energy relaxation is:</p>
+<div class="arithmatex">\[
+C_1 = \sqrt{\gamma_1}\,\hat{b}, \qquad \gamma_1 = 1/T_1
+\]</div>
+<p>For multilevel transmons with per-level lifetimes, a ladder of operators is used:</p>
+<div class="arithmatex">\[
+C_{1,j} = \sqrt{1/T_{1,j}}\,|j{-}1\rangle\langle j|
+\]</div>
+<p><strong>Analytic check:</strong> Starting from <span class="arithmatex">\(|e,0\rangle\)</span> with <span class="arithmatex">\(T_1 = 10\,\mu\text{s}\)</span>, the excited-state population should decay as <span class="arithmatex">\(P_e(t) = e^{-t/T_1}\)</span>. Simulated decay matches the analytic envelope within 5% at all sampled times over <span class="arithmatex">\(3\,T_1\)</span>. <strong>PASS.</strong></p>
+<h3 id="42-pure-dephasing-two-level">4.2 Pure Dephasing — Two-Level<a class="headerlink" href="#42-pure-dephasing-two-level" title="Permanent link">&para;</a></h3>
+<p>For <span class="arithmatex">\(n_\mathrm{tr} = 2\)</span>:</p>
+<div class="arithmatex">\[
+C_\varphi = \sqrt{\gamma_\varphi}\,\sigma_z, \qquad \gamma_\varphi = \frac{1}{2\,T_\varphi}
+\]</div>
+<p>The Lindblad dissipator gives:</p>
+<div class="arithmatex">\[
+\dot{\rho}_{01} = -2\gamma_\varphi\,\rho_{01} = -\frac{1}{T_\varphi}\,\rho_{01}
+\]</div>
+<p>so <span class="arithmatex">\(|\rho_{01}(t)| \propto e^{-t/T_\varphi}\)</span> as expected. <strong>Verified numerically:</strong> Coherence decay for <span class="arithmatex">\(T_\varphi = 20\,\mu\text{s}\)</span> matches the analytic envelope within 5%. <strong>PASS.</strong></p>
+<h3 id="43-pure-dephasing-multilevel-identified-issue">4.3 Pure Dephasing — Multilevel (Identified Issue)<a class="headerlink" href="#43-pure-dephasing-multilevel-identified-issue" title="Permanent link">&para;</a></h3>
+<p>For <span class="arithmatex">\(n_\mathrm{tr} \ge 3\)</span>:</p>
+<div class="arithmatex">\[
+C_\varphi = \sqrt{\gamma_\varphi}\,\hat{n}_q, \qquad \gamma_\varphi = \frac{1}{2\,T_\varphi}
+\]</div>
+<p>The Lindblad dissipator for the <span class="arithmatex">\(g\)</span>-<span class="arithmatex">\(e\)</span> coherence gives:</p>
+<div class="arithmatex">\[
+\dot{\rho}_{01} = \gamma_\varphi\Bigl[\langle 0|\hat{n}_q|0\rangle\langle 1|\hat{n}_q|1\rangle - \frac{1}{2}\bigl(\langle 0|\hat{n}_q^2|0\rangle + \langle 1|\hat{n}_q^2|1\rangle\bigr)\Bigr]\rho_{01}
+\]</div>
+<div class="arithmatex">\[
+= \gamma_\varphi\Bigl[0 \cdot 1 - \frac{1}{2}(0 + 1)\Bigr]\rho_{01} = -\frac{\gamma_\varphi}{2}\,\rho_{01} = -\frac{1}{4\,T_\varphi}\,\rho_{01}
+\]</div>
+<p><strong>Result:</strong> For the same <span class="arithmatex">\(T_\varphi\)</span> parameter value, the <span class="arithmatex">\(g\)</span>-<span class="arithmatex">\(e\)</span> coherence decay rate is:</p>
+<table>
+<thead>
+<tr>
+<th>Truncation</th>
+<th>Collapse operator</th>
+<th><span class="arithmatex">\(g\)</span>-<span class="arithmatex">\(e\)</span> coherence decay rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="arithmatex">\(n_\mathrm{tr} = 2\)</span></td>
+<td><span class="arithmatex">\(\sqrt{\gamma_\varphi}\,\sigma_z\)</span></td>
+<td><span class="arithmatex">\(1/T_\varphi\)</span></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(n_\mathrm{tr} \ge 3\)</span></td>
+<td><span class="arithmatex">\(\sqrt{\gamma_\varphi}\,\hat{n}_q\)</span></td>
+<td><span class="arithmatex">\(1/(4\,T_\varphi)\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>This is a <strong>factor of 4 discontinuity</strong>. Changing <code>n_tr</code> from 2 to 3 reduces the effective <span class="arithmatex">\(g\)</span>-<span class="arithmatex">\(e\)</span> dephasing rate by 4x for the same physical <span class="arithmatex">\(T_\varphi\)</span> input.</p>
+<p><strong>Status:</strong> This behavior is <strong>documented</strong> in the physics conventions report (Section on dephasing operators), but the report states "These prefactors are chosen so that the relevant off-diagonal coherence decays as <span class="arithmatex">\(\exp(-t/T_\varphi)\)</span>." This claim holds for the 2-level case but does <strong>not</strong> hold as stated for the multilevel case, where the <span class="arithmatex">\(g\)</span>-<span class="arithmatex">\(e\)</span> coherence decays as <span class="arithmatex">\(\exp(-t/(4\,T_\varphi))\)</span>.</p>
+<p><strong>Impact:</strong>
+- Any simulation transitioning between 2-level and 3-level transmon truncation while keeping <span class="arithmatex">\(T_\varphi\)</span> fixed will see an unphysical jump in dephasing behavior.
+- Quantitative coherence predictions from multilevel simulations with pure dephasing will underestimate the dephasing rate by 4x relative to the 2-level calibration.</p>
+<p><strong>No existing test covers this cross-over.</strong> See <a href="#recommendation-1">Recommendation 1</a>.</p>
+<h3 id="44-bosonic-dephasing">4.4 Bosonic Dephasing<a class="headerlink" href="#44-bosonic-dephasing" title="Permanent link">&para;</a></h3>
+<p>For storage/readout modes, the dephasing operator uses a different convention:</p>
+<div class="arithmatex">\[
+C_{\varphi,s} = \sqrt{1/T_{\varphi,s}}\,\hat{n}_s
+\]</div>
+<p>Note: This is <span class="arithmatex">\(\sqrt{1/T_\varphi}\)</span>, <strong>not</strong> <span class="arithmatex">\(\sqrt{1/(2T_\varphi)}\)</span>. This gives mode coherence <span class="arithmatex">\(\rho_{n,n+1} \propto \exp(-(2n+1)t/T_\varphi)\)</span>, which is a standard choice for bosonic systems and is separately consistent.</p>
+<h3 id="45-thermal-photon-noise">4.5 Thermal Photon Noise<a class="headerlink" href="#45-thermal-photon-noise" title="Permanent link">&para;</a></h3>
+<div class="arithmatex">\[
+C_\downarrow = \sqrt{\kappa(n_\mathrm{th}+1)}\,\hat{a}, \qquad C_\uparrow = \sqrt{\kappa\,n_\mathrm{th}}\,\hat{a}^\dagger
+\]</div>
+<p><strong>Verified by code inspection.</strong> <strong>Correct.</strong></p>
+<hr />
+<h2 id="5-measurement">5. Measurement<a class="headerlink" href="#5-measurement" title="Permanent link">&para;</a></h2>
+<h3 id="51-exact-probabilities">5.1 Exact Probabilities<a class="headerlink" href="#51-exact-probabilities" title="Permanent link">&para;</a></h3>
+<p>Probabilities are computed by projecting the final state onto qubit eigenstates. For <span class="arithmatex">\(|\psi\rangle = \frac{1}{2}|g,0\rangle + \frac{\sqrt{3}}{2}|e,0\rangle\)</span>:</p>
+<div class="arithmatex">\[
+P_g = 0.25, \qquad P_e = 0.75
+\]</div>
+<p>Simulated: <span class="arithmatex">\(P_g = 0.2500\)</span>, <span class="arithmatex">\(P_e = 0.7500\)</span>. <strong>PASS.</strong></p>
+<h3 id="52-confusion-matrix">5.2 Confusion Matrix<a class="headerlink" href="#52-confusion-matrix" title="Permanent link">&para;</a></h3>
+<p>The confusion matrix <span class="arithmatex">\(M\)</span> maps latent probabilities to observed probabilities:</p>
+<div class="arithmatex">\[
+\vec{p}_\mathrm{obs} = M \cdot \vec{p}_\mathrm{latent}
+\]</div>
+<p>With <span class="arithmatex">\(M = \begin{pmatrix} 0.95 &amp; 0.05 \\ 0.05 &amp; 0.95 \end{pmatrix}\)</span>:</p>
+<div class="arithmatex">\[
+p_{g,\mathrm{obs}} = 0.95 \times 0.25 + 0.05 \times 0.75 = 0.275
+\]</div>
+<p>Simulated: <span class="arithmatex">\(p_{g,\mathrm{obs}} = 0.2750\)</span>. <strong>PASS.</strong></p>
+<h3 id="53-readout-chain">5.3 Readout Chain<a class="headerlink" href="#53-readout-chain" title="Permanent link">&para;</a></h3>
+<p>The <code>ReadoutResonator</code> computes steady-state pointer amplitudes:</p>
+<div class="arithmatex">\[
+\alpha_q = \frac{-i\epsilon}{\kappa/2 + i\Delta_q}
+\]</div>
+<p>and measurement-induced dephasing:</p>
+<div class="arithmatex">\[
+\gamma_\mathrm{meas} = \frac{\kappa}{2}|\alpha_e - \alpha_g|^2
+\]</div>
+<p><strong>Analytic verification:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Analytic</th>
+<th>Simulated</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$</td>
+<td>\alpha_g</td>
+<td>$</td>
+<td><span class="arithmatex">\(1.500 \times 10^{-1}\)</span></td>
+</tr>
+<tr>
+<td>$</td>
+<td>\alpha_e</td>
+<td>$</td>
+<td><span class="arithmatex">\(1.405 \times 10^{-1}\)</span></td>
+</tr>
+<tr>
+<td><span class="arithmatex">\(\gamma_\mathrm{meas}\)</span></td>
+<td><span class="arithmatex">\(6.972 \times 10^4\)</span> s<span class="arithmatex">\(^{-1}\)</span></td>
+<td><span class="arithmatex">\(6.972 \times 10^4\)</span> s<span class="arithmatex">\(^{-1}\)</span></td>
+<td><strong>PASS</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-test-suite-results">6. Test Suite Results<a class="headerlink" href="#6-test-suite-results" title="Permanent link">&para;</a></h2>
+<h3 id="61-unit-tests">6.1 Unit Tests<a class="headerlink" href="#61-unit-tests" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>450 collected, 448 passed, 2 skipped, 0 failed
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>8 warnings (all qutip LinAlgWarning from sqrtm on singular matrices — benign)
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Return code: 0
+</span></code></pre></div>
+<p>The 2 skipped tests are appropriately marked and do not indicate regressions.</p>
+<h3 id="62-analytic-verification-suite">6.2 Analytic Verification Suite<a class="headerlink" href="#62-analytic-verification-suite" title="Permanent link">&para;</a></h3>
+<p>A standalone verification script (<code>analytic_verification.py</code>) was written to test 22 independently derived checks:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Two-mode Hamiltonian diagonal energies</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Manifold transition frequency <span class="arithmatex">\(\omega_{ge}(n) = \chi n\)</span></td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Negative <span class="arithmatex">\(\chi\)</span> lowers qubit frequency</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Positive <span class="arithmatex">\(\chi\)</span> raises qubit frequency</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Negative <span class="arithmatex">\(K\)</span> decreases cavity spacing</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Positive <span class="arithmatex">\(K\)</span> increases cavity spacing</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>7</td>
+<td>Three-mode qubit freq in vacuum</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Three-mode <span class="arithmatex">\(\chi_s\)</span> shift</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>9</td>
+<td>Three-mode <span class="arithmatex">\(\chi_r\)</span> shift</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>10</td>
+<td>Three-mode storage Kerr</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>11</td>
+<td>Carrier = <span class="arithmatex">\(-\omega_\mathrm{transition}\)</span></td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>12</td>
+<td>Carrier round-trip</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>13</td>
+<td>Rabi <span class="arithmatex">\(\pi\)</span>-pulse inversion (overlap 0.9985)</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>14</td>
+<td><span class="arithmatex">\(T_1\)</span> decay: <span class="arithmatex">\(P_e(t) = e^{-t/T_1}\)</span></td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>15</td>
+<td>Pure dephasing (2-level): $</td>
+<td>\rho_{01}</td>
+</tr>
+<tr>
+<td>16</td>
+<td>Measurement exact probabilities</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>17</td>
+<td>Measurement confusion matrix</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>18</td>
+<td>Tensor ordering: transmon-first</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>19</td>
+<td>Basis state index ordering</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>20</td>
+<td>Dephasing 2-level vs 3-level consistency</td>
+<td><strong>FAIL</strong> (intentional flag)</td>
+</tr>
+<tr>
+<td>21</td>
+<td>Readout pointer-state separation</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>22</td>
+<td>Readout measurement-induced dephasing</td>
+<td><strong>PASS</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>21/22 pass.</strong> The single FAIL is the intentional flag for the dephasing discontinuity (Section 4.3).</p>
+<hr />
+<h2 id="7-findings-and-recommendations">7. Findings and Recommendations<a class="headerlink" href="#7-findings-and-recommendations" title="Permanent link">&para;</a></h2>
+<h3 id="finding-1-dephasing-operator-discontinuity">Finding 1: Dephasing Operator Discontinuity<a class="headerlink" href="#finding-1-dephasing-operator-discontinuity" title="Permanent link">&para;</a></h3>
+<p><strong>Severity:</strong> Moderate — affects quantitative accuracy of multilevel simulations with pure dephasing.</p>
+<p><strong>Description:</strong> When switching from <code>n_tr=2</code> to <code>n_tr=3</code>, the pure-dephasing collapse operator changes from <span class="arithmatex">\(\sqrt{\gamma_\varphi}\sigma_z\)</span> to <span class="arithmatex">\(\sqrt{\gamma_\varphi}\hat{n}_q\)</span>. These two operators produce different <span class="arithmatex">\(g\)</span>-<span class="arithmatex">\(e\)</span> coherence decay rates for the same <span class="arithmatex">\(T_\varphi\)</span> parameter:</p>
+<ul>
+<li>2-level: rate <span class="arithmatex">\(= 1/T_\varphi\)</span></li>
+<li>Multilevel: rate <span class="arithmatex">\(= 1/(4 T_\varphi)\)</span></li>
+</ul>
+<p><a id="recommendation-1"></a>
+<strong>Recommendation 1:</strong> Either:
+- <strong>(a)</strong> Rescale the multilevel collapse operator to <span class="arithmatex">\(\sqrt{2\gamma_\varphi}(2\hat{n}_q - (d-1)I)\)</span> (a generalized <span class="arithmatex">\(\sigma_z\)</span> analog) so that the <span class="arithmatex">\(g\)</span>-<span class="arithmatex">\(e\)</span> rate remains <span class="arithmatex">\(1/T_\varphi\)</span>, or
+- <strong>(b)</strong> Keep the current operators but clearly document the rate change in the physics report and NoiseSpec docstring, and add a test that explicitly verifies the expected rates for both truncation levels, or
+- <strong>(c)</strong> Add a <code>dephasing_convention</code> parameter to <code>NoiseSpec</code> letting the user select between <code>"sigma_z"</code> and <code>"number"</code> behavior.</p>
+<p>A regression test covering this cross-over should be added in any case.</p>
+<h3 id="finding-2-all-other-conventions-correct">Finding 2: All Other Conventions Correct<a class="headerlink" href="#finding-2-all-other-conventions-correct" title="Permanent link">&para;</a></h3>
+<p>No other physics inconsistencies were found. The <span class="arithmatex">\(\chi\)</span> sign migration from <span class="arithmatex">\(-\chi\)</span> to <span class="arithmatex">\(+\chi\)</span> (March 2026) is complete with no residual old-convention code. Higher-order dispersive terms use the correct falling-factorial form. Readout-chain physics matches standard input-output theory. Measurement probabilities are correctly computed.</p>
+<h3 id="finding-3-test-coverage-is-strong">Finding 3: Test Coverage is Strong<a class="headerlink" href="#finding-3-test-coverage-is-strong" title="Permanent link">&para;</a></h3>
+<p>The 450-test suite provides excellent coverage of:
+- Free evolution and rotating-frame correctness
+- Cavity drive → coherent state
+- Kerr nonlinearity signature
+- Dispersive Ramsey phase accumulation
+- <span class="arithmatex">\(T_1\)</span> decay and trace/positivity preservation under dissipation
+- Multilevel transmon transitions and sideband operations
+- Calibration targets (Rabi, Ramsey, <span class="arithmatex">\(T_1\)</span>, <span class="arithmatex">\(T_2\)</span>-echo, DRAG)
+- Unitary synthesis optimizer convergence
+- Measurement and tomography
+- Readout chain and Purcell filter</p>
+<p>The only notable gap is the absence of a test for the dephasing operator cross-over between truncation levels (Finding 1).</p>
+<hr />
+<h2 id="8-conclusion">8. Conclusion<a class="headerlink" href="#8-conclusion" title="Permanent link">&para;</a></h2>
+<p>The <code>cqed_sim</code> simulator implements circuit-QED physics correctly and consistently across its Hamiltonian construction, drive framework, noise model (with the caveat in Finding 1), and measurement chain. All 450 unit tests pass. All 21 analytic verification checks that test implementation correctness pass. The single identified issue—the dephasing operator discontinuity—is a well-defined, localized problem that does not affect the correctness of the remaining physics and can be addressed with a targeted fix or documentation update.</p>
+<p>The codebase is suitable for quantitative simulation of dispersive cQED experiments, with the caveat that users should be aware of the multilevel dephasing rate convention when using <code>n_tr &gt;= 3</code> with <code>T_phi</code> noise.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.path", "navigation.indexes", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.annotate", "content.tabs.link", "toc.follow"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,99 +1,154 @@
 # Getting Started
 
-This page introduces the core mental model for working with `cqed_sim` as a reusable simulation library.
+This page introduces the core mental model for working with `cqed_sim`.
+
+!!! tip "First time here?"
+    If you just want to run a simulation as fast as possible, jump to the [Quickstart](quickstart.md) page.
+    Come back here for a deeper understanding of how the library is organized.
 
 ---
 
 ## What Is `cqed_sim`?
 
-`cqed_sim` is a pulse-level circuit-QED simulator built on [QuTiP](https://qutip.org/). The package focuses on reusable building blocks:
+`cqed_sim` is a pulse-level circuit-QED simulator built on [QuTiP](https://qutip.org/). It provides composable building blocks for:
 
-- model construction and rotating frames
-- pulse construction and sequence compilation
-- solver execution and extractor utilities
-- state preparation primitives
-- qubit-measurement and readout-chain primitives
-- calibration, tomography, and synthesis helpers
-
-Guided notebook tutorials now live under the top-level `tutorials/` directory, while standalone scripts and study code remain under `examples/`.
+- **System modeling** — transmon–cavity models with dispersive coupling, Kerr, anharmonicity
+- **Rotating frames** — explicit frame management for slow-oscillation simulation
+- **Pulse construction** — Gaussian, DRAG, square, and custom envelope pulses
+- **Sequence compilation** — discretize pulse schedules onto a time grid
+- **Time-domain simulation** — QuTiP ODE solver or dense piecewise-constant backends
+- **State preparation and measurement** — tensor-product initial states, synthetic readout
+- **Calibration and tomography** — SQR calibration, Rabi/Ramsey/T₁/T₂ targets, Fock tomography
+- **Optimal control** — GRAPE with hardware-aware signal chain
+- **RL control** — Gym-compatible environment for reinforcement learning experiments
 
 ---
 
-## Core Mental Model
+## Core Simulation Pipeline
 
-The canonical library path is:
+Every simulation in `cqed_sim` follows the same six-step pattern:
 
 ```
-Model -> Frame -> Prepare -> Pulses -> Compile -> Simulate -> Extract / Measure
+Model → Frame → State Prep → Pulses → Compile → Simulate → Extract / Measure
 ```
 
 ### 1. Model
 
-Use `DispersiveTransmonCavityModel`, `DispersiveReadoutTransmonStorageModel`, or `UniversalCQEDModel` from `cqed_sim.core`.
+Define the physical system. `cqed_sim` provides three model classes of increasing generality:
+
+| Model | Modes | Use case |
+|---|---|---|
+| `DispersiveTransmonCavityModel` | qubit + storage | Default for most simulations |
+| `DispersiveReadoutTransmonStorageModel` | qubit + storage + readout | Explicit readout resonator |
+| `UniversalCQEDModel` | N modes | Arbitrary multi-mode Hamiltonians |
+
+See [Defining Models](user_guides/defining_models.md) for details.
 
 ### 2. Frame
 
-`FrameSpec` defines the rotating frame. Matching frame frequencies to bare mode frequencies removes bare rotations.
+`FrameSpec` defines the rotating frame. Setting frame frequencies equal to bare mode frequencies removes fast oscillations:
 
-### 3. Prepare
+```python
+frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
+```
 
-Use `StatePreparationSpec` and `prepare_state(...)` from `cqed_sim.core` to build model-consistent tensor-product initial states.
+See [Rotating Frames](user_guides/frames.md).
 
-### 4. Pulses and Compile
+### 3. State Preparation
 
-Create `Pulse` objects directly or with builders, then compile them with `SequenceCompiler`.
+Build a model-consistent tensor-product initial state:
+
+```python
+from cqed_sim.core import StatePreparationSpec, prepare_state, qubit_state, fock_state
+
+initial = prepare_state(model, StatePreparationSpec(
+    qubit=qubit_state("g"), storage=fock_state(0),
+))
+```
+
+See [State Prep & Measurement](user_guides/state_prep_measurement.md).
+
+### 4. Pulses and Compilation
+
+Create `Pulse` objects and compile them onto a uniform time grid:
+
+```python
+from cqed_sim.pulses import Pulse
+from cqed_sim.pulses.envelopes import gaussian_envelope
+from cqed_sim.sequence import SequenceCompiler
+
+pulse = Pulse("q", 0.0, 80e-9, gaussian_envelope, amp=np.pi/2)
+compiled = SequenceCompiler(dt=2e-9).compile([pulse], t_end=100e-9)
+```
+
+See [Pulse Construction](user_guides/pulse_construction.md) and [Sequence Compilation](user_guides/sequence_compilation.md).
 
 ### 5. Simulate
 
-Run `simulate_sequence(...)` for one-off trajectories or `prepare_simulation(...)` for repeated runs.
+Run the time-domain solver:
+
+```python
+from cqed_sim.sim import SimulationConfig, simulate_sequence
+
+result = simulate_sequence(
+    model, compiled, initial,
+    drive_ops={"q": "qubit"},
+    config=SimulationConfig(frame=frame),
+)
+```
+
+See [Running Simulations](user_guides/running_simulations.md).
 
 ### 6. Extract and Measure
 
-Use `cqed_sim.sim` extractors for reduced states, moments, and Wigner functions. Use `measure_qubit(...)` and `cqed_sim.measurement.ReadoutChain` when you need qubit readout or synthetic I/Q.
-
----
-
-## Direct Workflow Example
+Read out quantum state information or perform synthetic measurement:
 
 ```python
-from cqed_sim.core import FrameSpec, StatePreparationSpec, fock_state, prepare_state, qubit_state
 from cqed_sim.measurement import QubitMeasurementSpec, measure_qubit
-from cqed_sim.sequence import SequenceCompiler
-from cqed_sim.sim import SimulationConfig, simulate_sequence
 
-initial = prepare_state(
-    model,
-    StatePreparationSpec(
-        qubit=qubit_state("g"),
-        storage=fock_state(0),
-    ),
-)
-
-compiled = SequenceCompiler(dt=2e-9).compile(pulses, t_end=t_end)
-result = simulate_sequence(model, compiled, initial, drive_ops, config=SimulationConfig(frame=frame))
-measurement = measure_qubit(result.final_state, QubitMeasurementSpec(shots=2048, seed=42))
+meas = measure_qubit(result.final_state, QubitMeasurementSpec(shots=2048, seed=42))
+print(meas.counts)        # {"g": 24, "e": 2024}
+print(meas.probabilities) # {"g": 0.012, "e": 0.988}
 ```
 
-For the structured notebook path, start with:
-
-- `tutorials/README.md`
-- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
-- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
-- `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb`
-
-The earlier flat numbered curriculum under `tutorials/*.ipynb` remains useful for a foundations-first read, but the categorized workflow suite above is now the recommended practical entry point.
-
-For standalone repo-side scripts, see:
-
-- `examples/protocol_style_simulation.py`
-- `examples/kerr_free_evolution.py`
-- `examples/sequential_sideband_reset.py`
+See [Extracting Observables](user_guides/extracting_observables.md) and [State Prep & Measurement](user_guides/state_prep_measurement.md).
 
 ---
 
-## What's Next
+## Learning Paths
 
-- [Installation](installation.md) — set up the package
-- [Physics & Conventions](physics_conventions.md) — understand the Hamiltonian and sign conventions
-- [Defining Models](user_guides/defining_models.md) — build your first model
-- [Tutorials](tutorials/index.md) — structured notebook curriculum
+<div class="grid cards" markdown>
+
+-   :material-rocket-launch:{ .lg .middle } **Quickstart**
+
+    ---
+
+    Run your first simulation in 5 minutes.
+
+    [:octicons-arrow-right-24: Quickstart](quickstart.md)
+
+-   :material-school:{ .lg .middle } **Tutorial Notebooks**
+
+    ---
+
+    Structured Jupyter curriculum from basics to GRAPE and RL.
+
+    [:octicons-arrow-right-24: Tutorials](tutorials/index.md)
+
+-   :material-book-open-variant:{ .lg .middle } **User Guides**
+
+    ---
+
+    Step-by-step documentation for every part of the pipeline.
+
+    [:octicons-arrow-right-24: Defining Models](user_guides/defining_models.md)
+
+-   :material-atom:{ .lg .middle } **Physics & Conventions**
+
+    ---
+
+    Hamiltonian definitions, carrier sign, dispersive shift, units.
+
+    [:octicons-arrow-right-24: Conventions](physics_conventions.md)
+
+</div>

@@ -15,7 +15,7 @@ One substantive issue was identified: a **factor-of-four discontinuity in the pu
 
 ## 1. Conventions Review
 
-The conventions documented in [`physics_and_conventions/physics_conventions_report.tex`](physics_and_conventions/physics_conventions_report.tex) were compared against the implementation. All documented conventions are faithfully implemented.
+The conventions documented in `physics_and_conventions/physics_conventions_report.tex` were compared against the implementation. All documented conventions are faithfully implemented.
 
 ### 1.1 Units and Frame
 
@@ -63,7 +63,7 @@ $$
 
 where $\delta_s = \omega_s - \omega_{s,\mathrm{frame}}$ and similarly for $\delta_q$.
 
-**Code inspection** ([universal_model.py](cqed_sim/core/universal_model.py)): The `static_hamiltonian()` method constructs exactly these terms with:
+**Code inspection** (`cqed_sim/core/universal_model.py`): The `static_hamiltonian()` method constructs exactly these terms with:
 - `+alpha/2 * bdag^2 * b^2` (anharmonicity)
 - `+kerr/2 * n_s * (n_s - 1)` (self-Kerr, via falling-factorial form)
 - `+chi * n_s * n_q` (dispersive cross-Kerr)
@@ -138,9 +138,9 @@ $$
 \omega_\mathrm{carrier} = -\omega_\mathrm{transition}
 $$
 
-**Code** ([pulse.py](cqed_sim/pulses/pulse.py#L39)): `phase = np.exp(1j * (self.carrier * t + self.phase))` — confirmed $\exp(+i\omega t)$.
+**Code** (`cqed_sim/pulses/pulse.py` L39): `phase = np.exp(1j * (self.carrier * t + self.phase))` — confirmed $\exp(+i\omega t)$.
 
-**Code** ([frequencies.py](cqed_sim/core/frequencies.py)): `carrier_for_transition_frequency()` returns `-float(transition_frequency)`. Round-trip verified: $\omega \to -\omega \to \omega$. **PASS.**
+**Code** (`cqed_sim/core/frequencies.py`): `carrier_for_transition_frequency()` returns `-float(transition_frequency)`. Round-trip verified: $\omega \to -\omega \to \omega$. **PASS.**
 
 ### 3.2 Drive Hamiltonian
 
@@ -152,7 +152,7 @@ $$
 
 where $\hat{O}$ is the lowering operator for the relevant mode.
 
-**Code** ([runner.py](cqed_sim/sim/runner.py#L126-L141)): `h.append([raising, coeff])` and `h.append([lowering, np.conj(coeff)])`. This matches the convention exactly.
+**Code** (`cqed_sim/sim/runner.py` L126–L141): `h.append([raising, coeff])` and `h.append([lowering, np.conj(coeff)])`. This matches the convention exactly.
 
 **Drive targets:**
 - `"qubit"` resolves to $(\hat{b}^\dagger, \hat{b})$ — transmon raising/lowering.

@@ -44,6 +44,7 @@ class GrapeConfig:
     scipy_options: dict[str, Any] = field(default_factory=dict)
     engine: str = "numpy"
     jax_device: str | None = None
+    show_progress: bool = False
 
     def __post_init__(self) -> None:
         if str(self.initial_guess).lower() not in {"random", "zeros"}:
@@ -769,6 +770,30 @@ class GrapeSolver:
             options.setdefault("ftol", float(self.config.ftol))
             options.setdefault("gtol", float(self.config.gtol))
 
+        _pbar = None
+        _callback = None
+        if bool(self.config.show_progress):
+            try:
+                from tqdm.auto import tqdm as _TqdmCls
+                _pbar = _TqdmCls(
+                    total=int(self.config.maxiter),
+                    desc="GRAPE",
+                    unit="iter",
+                    dynamic_ncols=True,
+                    leave=True,
+                )
+
+                def _callback(*_args):
+                    _m = last_evaluation.metrics if last_evaluation is not None else {}
+                    _pbar.set_postfix(
+                        fidelity=f"{float(_m.get('nominal_fidelity', float('nan'))):.4f}",
+                        cost=f"{float(_m.get('objective_total', float('nan'))):.4g}",
+                        refresh=False,
+                    )
+                    _pbar.update(1)
+            except Exception:
+                pass
+
         optimizer_result = minimize(
             objective_function,
             schedule0.flattened() / scale_vector,
@@ -776,7 +801,11 @@ class GrapeSolver:
             jac=gradient_function,
             bounds=scaled_bounds,
             options=options,
+            callback=_callback,
         )
+
+        if _pbar is not None:
+            _pbar.close()
 
         final_schedule = ControlSchedule.from_flattened(problem.parameterization, optimizer_result.x * scale_vector).clipped()
         final_evaluation = _evaluate_schedule(
@@ -918,6 +947,7 @@ class GrapeMultistartConfig:
     max_workers: int = 1
     mp_context: str = "thread"
     return_all: bool = True
+    show_progress: bool = False
 
     def __post_init__(self) -> None:
         if int(self.n_restarts) < 1:
@@ -1014,10 +1044,20 @@ def solve_grape_multistart(
     seeds = [base_seed + restart_index for restart_index in range(int(ms_cfg.n_restarts))]
     context = str(ms_cfg.mp_context).lower()
 
+    def _wrap_progress(iterable, total):
+        """Optionally wrap *iterable* with a tqdm progress bar."""
+        if not bool(ms_cfg.show_progress):
+            return iterable
+        try:
+            from tqdm.auto import tqdm as _tqdm
+            return _tqdm(iterable, total=total, desc="GRAPE restarts", unit="restart", dynamic_ncols=True)
+        except Exception:
+            return iterable
+
     if int(ms_cfg.max_workers) <= 1 or int(ms_cfg.n_restarts) <= 1:
         # Serial execution
         results: list[GrapeResult] = []
-        for seed in seeds:
+        for seed in _wrap_progress(seeds, total=len(seeds)):
             restart_cfg = _make_restart_config(cfg, seed)
             results.append(GrapeSolver(config=restart_cfg).solve(problem))
 
@@ -1028,7 +1068,7 @@ def solve_grape_multistart(
                 executor.submit(_run_thread_grape_restart, problem, cfg, seed)
                 for seed in seeds
             ]
-            results = [f.result() for f in futures]
+            results = [f.result() for f in _wrap_progress(futures, total=len(futures))]
 
     elif context == "loky":
         try:
@@ -1043,7 +1083,7 @@ def solve_grape_multistart(
             executor.submit(_run_thread_grape_restart, problem, cfg, seed)
             for seed in seeds
         ]
-        results = [f.result() for f in futures]
+        results = [f.result() for f in _wrap_progress(futures, total=len(futures))]
 
     else:
         # Process-based (spawn / fork / forkserver)
@@ -1054,7 +1094,7 @@ def solve_grape_multistart(
             initializer=_init_parallel_grape,
             initargs=(problem, cfg),
         ) as executor:
-            results = list(executor.map(_run_parallel_grape_restart, seeds))
+            results = list(_wrap_progress(executor.map(_run_parallel_grape_restart, seeds), total=len(seeds)))
 
     results.sort(key=lambda r: float(r.objective_value))
     if not bool(ms_cfg.return_all):

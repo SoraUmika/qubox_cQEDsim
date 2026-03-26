@@ -1,12 +1,12 @@
 # Examples
 
-This page indexes the repository-side assets that remain in `examples/`.
+Standalone scripts and study helpers demonstrating common `cqed_sim` workflows. These are task-focused and concise — for structured learning, see the [Tutorials](tutorials/index.md).
 
-The primary guided learning path no longer lives here. Use the top-level `tutorials/` curriculum for numbered notebook walkthroughs, starting with:
-
-- `tutorials/README.md`
-- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
-- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
+!!! tip "Running examples"
+    All scripts can be run directly from the repository root:
+    ```bash
+    python examples/protocol_style_simulation.py
+    ```
 
 ---
 
@@ -98,6 +98,20 @@ Under `examples/workflows/sequential/`:
 | `pulse_open.py` | Pulse-level sequential simulation with dissipation |
 | `pulse_unitary.py` | Pulse-level unitary simulation |
 | `trajectories.py` | Trajectory extraction helpers |
+
+---
+
+## Hardware Context Examples
+
+Under `examples/hardware_context/`:
+
+| Script | Description |
+|---|---|
+| `01_ideal_vs_hardware.py` | Side-by-side comparison of ideal and hardware-filtered simulation |
+| `02_three_line_cqed.py` | Standard three-line context: qubit I/Q + cavity |
+| `03_grape_hardware_comparison.py` | GRAPE optimization with and without hardware maps |
+
+See the [Hardware-Aware Control tutorial](tutorials/hardware_context.md) for a guided walkthrough.
 
 ---
 

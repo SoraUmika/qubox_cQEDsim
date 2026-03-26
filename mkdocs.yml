@@ -1,4 +1,4 @@
-site_name: "qubox_cqedsim Documentation"
+site_name: cqed_sim
 site_description: "Hardware-faithful time-domain cQED pulse simulator built on QuTiP"
 site_url: ""
 
@@ -23,13 +23,19 @@ theme:
         name: Switch to light mode
   features:
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.path
+    - navigation.indexes
     - search.suggest
     - search.highlight
+    - search.share
     - content.code.copy
+    - content.code.annotate
     - content.tabs.link
+    - toc.follow
   icon:
     repo: fontawesome/brands/github
 
@@ -45,11 +51,16 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.snippets
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - toc:
       permalink: true
 
@@ -59,51 +70,63 @@ extra_javascript:
 
 nav:
   - Home: index.md
-  - Getting Started:
-      - Overview: getting_started.md
-      - Installation: installation.md
+  - Quickstart: quickstart.md
+  - Installation: installation.md
+
   - Physics & Conventions: physics_conventions.md
+
   - User Guides:
+      - Getting Started: getting_started.md
       - Defining Models: user_guides/defining_models.md
-      - Frames: user_guides/frames.md
+      - Rotating Frames: user_guides/frames.md
       - Pulse Construction: user_guides/pulse_construction.md
       - Sequence Compilation: user_guides/sequence_compilation.md
       - Running Simulations: user_guides/running_simulations.md
       - Floquet Analysis: user_guides/floquet_analysis.md
       - Extracting Observables: user_guides/extracting_observables.md
-      - State Preparation & Measurement: user_guides/state_prep_measurement.md
+      - State Prep & Measurement: user_guides/state_prep_measurement.md
       - Open System Dynamics: user_guides/open_system_dynamics.md
-      - Semi-Autonomous Agent Workflow: user_guides/agent_workflow.md
+      - Agent Workflow: user_guides/agent_workflow.md
+
   - Tutorials:
       - Overview: tutorials/index.md
-      - Displacement & Qubit Spectroscopy: tutorials/displacement_spectroscopy.md
+      - Displacement & Spectroscopy: tutorials/displacement_spectroscopy.md
       - Kerr Free Evolution: tutorials/kerr_free_evolution.md
       - Sideband Swap: tutorials/sideband_swap.md
       - Unitary Synthesis: tutorials/unitary_synthesis.md
       - GRAPE Optimal Control: tutorials/optimal_control.md
       - RL Hybrid Control: tutorials/rl_hybrid_control.md
+      - Hardware-Aware Control: tutorials/hardware_context.md
       - Holographic Quantum Algorithms: tutorials/holographic_quantum_algorithms.md
+
+  - Examples: examples.md
+
   - API Reference:
       - Overview: api/overview.md
-      - Core (Models, Frames, Conventions): api/core.md
+      - Core — Models & Frames: api/core.md
+      - Gates: api/gates.md
       - Pulse System: api/pulses.md
       - Sequence Compilation: api/sequence.md
       - Simulation Engine: api/simulation.md
-      - State Prep & Measurement: api/measurement.md
-      - Gate I/O: api/gate_io.md
-      - Analysis: api/analysis.md
+      - Measurement & Readout: api/measurement.md
       - Floquet Analysis: api/floquet.md
+      - Optimal Control: api/optimal_control.md
+      - Hardware & Control: api/hardware.md
+      - Unitary Synthesis: api/unitary_synthesis.md
+      - RL Control & System ID: api/rl_control.md
+      - System Identification: api/system_id.md
       - Calibration: api/calibration.md
       - Calibration Targets: api/calibration_targets.md
-      - Tomography: api/tomography.md
+      - Analysis: api/analysis.md
       - Observables: api/observables.md
-      - Operators: api/operators.md
       - Plotting: api/plotting.md
+      - Operators: api/operators.md
+      - Gate I/O: api/gate_io.md
+      - Tomography: api/tomography.md
       - Backends: api/backends.md
-      - Unitary Synthesis: api/unitary_synthesis.md
-      - Optimal Control: api/optimal_control.md
-      - RL Control & System ID: api/rl_control.md
-      - Holographic Quantum Algorithms: api/holographic_sim.md
-  - Examples: examples.md
+      - Holographic Algorithms: api/holographic_sim.md
+
   - Developer Guide:
-    - Architecture: architecture.md
+      - Architecture: architecture.md
+      - Contributing: developer.md
+      - Physics Correctness Evaluation: PHYSICS_CORRECTNESS_EVALUATION.md

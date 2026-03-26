@@ -60,6 +60,43 @@ All plotting functions return matplotlib `Figure` objects and are designed for d
 
 ---
 
+## Energy Level Plots (`plotting.energy_levels`)
+
+| Function | Description |
+|---|---|
+| `plot_energy_levels(spectrum, max_levels, energy_scale, energy_unit_label, annotate, title, ax)` | Ladder-style plot of vacuum-referenced energy levels |
+
+---
+
+## Wigner Functions (`plotting.wigner_grids`)
+
+| Function | Description |
+|---|---|
+| `plot_wigner_grid(states, labels, xvec, colorbar, figsize)` | Grid of Wigner function plots for a list of cavity states |
+
+---
+
+## Usage
+
+```python
+from cqed_sim.plotting import plot_bloch_track, plot_wigner_grid, save_figure
+
+# Bloch track from a simulation track object
+fig = plot_bloch_track(track, title="pi-pulse evolution")
+save_figure(fig, "outputs/", "bloch_track.png")
+
+# Wigner function grid
+fig = plot_wigner_grid(
+    [result.final_state for result in results],
+    labels=["vacuum", "coherent", "cat"],
+)
+```
+
+!!! tip "All functions return `matplotlib.Figure`"
+    Every plotting function returns a `Figure` object for customization, embedding in notebooks, or saving to disk with `save_figure`.
+
+---
+
 ## Wigner Grids (`plotting.wigner_grids`)
 
 | Function | Description |

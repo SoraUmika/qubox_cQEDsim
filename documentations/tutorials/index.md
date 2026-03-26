@@ -1,52 +1,142 @@
 # Tutorial Curriculum
 
-The primary guided-learning material for `cqed_sim` lives in the repository's top-level `tutorials/` directory. There are now two complementary tutorial tracks:
+The `cqed_sim` tutorial library contains **41 Jupyter notebooks** organized into two complementary tracks:
 
-- a categorized workflow suite that rewrites the representative example scripts as notebook tutorials
-- the earlier flat numbered curriculum, which remains useful as a broader API and conventions primer
+1. **Workflow tutorials** — categorized by topic, starting from a first simulation and building toward optimal control and RL
+2. **Foundational curriculum** — numbered 01–26, covering individual API features and physics concepts in depth
 
-Start with:
+Both tracks can be used independently. Start with the workflow tutorials for a guided learning path, and dip into the foundational curriculum for deeper treatments of specific topics.
 
-- `tutorials/README.md` for the current workflow-first reading order
-- `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`
-- `tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
-- `tutorials/20_bosonic_and_sideband/01_sideband_swap.ipynb`
-- `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
-- `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
+!!! tip "Recommended starting point"
+    If you are new to `cqed_sim`, begin with the [Quickstart](../quickstart.md) page, then open
+    `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`.
 
-## Workflow Tutorial Taxonomy
+---
 
-- `tutorials/00_getting_started/`
-  - first end-to-end protocol notebook
-- `tutorials/10_core_workflows/`
-  - displacement spectroscopy and Kerr free evolution
-- `tutorials/20_bosonic_and_sideband/`
-  - sideband swap, detuned synchronization, sequential reset, and shelving
-- `tutorials/30_advanced_protocols/`
-  - cross-Kerr, open-system degradation, unitary synthesis, GRAPE optimal control, RL-ready hybrid control, and SNAP optimization
-- `tutorials/40_validation_and_conventions/`
-  - convention-validation notebooks such as the Kerr sign check
+## Learning Path
 
-## Foundational Curriculum Still Available
+```
+Getting Started → Core Workflows → Bosonic & Sideband → Advanced Protocols → Validation
+```
 
-- `tutorials/00_tutorial_index.ipynb`
-- `tutorials/01_getting_started_minimal_dispersive_model.ipynb`
-- `tutorials/02_units_frames_and_conventions.ipynb`
-- `tutorials/06_qubit_spectroscopy.ipynb`
-- `tutorials/24_sideband_like_interactions.ipynb`
-- `tutorials/26_frame_sanity_checks_and_common_failure_modes.ipynb`
+Each stage builds on the previous one. Within each stage, notebooks are intended to be read in order.
+
+---
+
+## Workflow Tutorials
+
+### 00 — Getting Started
+
+| Notebook | Description |
+|---|---|
+| `00_getting_started/01_protocol_style_simulation.ipynb` | End-to-end simulation: model → pulses → compile → simulate → measure |
+
+### 10 — Core Workflows
+
+| Notebook | Description |
+|---|---|
+| `10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb` | Displace the cavity, sweep qubit drive frequency, resolve photon-number peaks |
+| `10_core_workflows/02_kerr_free_evolution.ipynb` | Coherent-state evolution under self-Kerr: phase-space distortion and collapse/revival |
+
+### 20 — Bosonic & Sideband
+
+| Notebook | Description |
+|---|---|
+| `20_bosonic_and_sideband/01_sideband_swap.ipynb` | Red-sideband swap between transmon and storage cavity |
+| `20_bosonic_and_sideband/02_detuned_sideband_synchronization.ipynb` | Off-resonance sideband dynamics and synchronization conditions |
+| `20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb` | Multi-step reset protocol using sequential sideband pulses |
+| `20_bosonic_and_sideband/04_shelving_isolation.ipynb` | Shelving isolation with multilevel sideband transitions |
+
+### 30 — Advanced Protocols
+
+| Notebook | Description |
+|---|---|
+| `30_advanced_protocols/01_multimode_crosskerr.ipynb` | Multi-mode cross-Kerr interaction and conditional phase accumulation |
+| `30_advanced_protocols/02_open_system_sideband_degradation.ipynb` | Open-system degradation of sideband swap under T₁, T₂, and cavity loss |
+| `30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` | Subspace-targeted unitary synthesis with gate sequence optimization |
+| `30_advanced_protocols/04_snap_optimization_workflow.ipynb` | SNAP gate optimization for bosonic state preparation |
+| `30_advanced_protocols/05_rl_hybrid_control_environment.ipynb` | Gym-compatible RL environment for cQED control with measurement-like observations |
+| `30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` | GRAPE optimal control: problem setup, hardware maps, solve, replay, and benchmark |
+
+### 40 — Validation & Conventions
+
+| Notebook | Description |
+|---|---|
+| `40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb` | Verify Kerr sign convention and rotating-frame consistency |
+
+---
+
+## Foundational Curriculum
+
+These numbered notebooks cover individual physics topics and API features in detail.
+
+| # | Notebook | Topic |
+|---|---|---|
+| 00 | `00_tutorial_index.ipynb` | Index and roadmap for the foundational series |
+| 01 | `01_getting_started_minimal_dispersive_model.ipynb` | Minimal dispersive model construction |
+| 02 | `02_units_frames_and_conventions.ipynb` | Units (rad/s, seconds), rotating frames, carrier sign convention |
+| 03 | `03_cavity_displacement_basics.ipynb` | Cavity displacement: coherent states, Wigner functions |
+| 04 | `04_qubit_drive_and_basic_population_dynamics.ipynb` | Qubit Rabi oscillation under a single drive pulse |
+| 05 | `05_observables_states_and_visualization.ipynb` | Bloch vectors, photon number, purity, reduced states |
+| 06 | `06_qubit_spectroscopy.ipynb` | Frequency-swept qubit spectroscopy |
+| 07 | `07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb` | Number-splitting spectroscopy in dispersive regime |
+| 08 | `08_dispersive_shift_and_dressed_frequencies.ipynb` | Computing χ, dressed levels, and photon-number-dependent shifts |
+| 09 | `09_power_rabi.ipynb` | Power Rabi: amplitude vs excitation probability |
+| 10 | `10_time_rabi.ipynb` | Time Rabi: duration vs excitation probability |
+| 11 | `11_qubit_T1_relaxation.ipynb` | T₁ energy relaxation under Lindblad dynamics |
+| 12 | `12_qubit_ramsey_T2star.ipynb` | Ramsey experiment, T₂* extraction |
+| 13 | `13_spin_echo_and_dephasing_mitigation.ipynb` | Hahn echo, T₂ echo measurement |
+| 14 | `14_kerr_free_evolution.ipynb` | Self-Kerr dynamics in cavity Fock space |
+| 15 | `15_cross_kerr_and_conditional_phase_accumulation.ipynb` | Cross-Kerr-mediated conditional phases |
+| 16 | `16_storage_cavity_coherent_state_dynamics.ipynb` | Long-time coherent state evolution in storage |
+| 17 | `17_readout_resonator_response.ipynb` | Readout resonator dynamics and dispersive readout |
+| 18 | `18_multilevel_transmon_effects.ipynb` | Higher transmon levels: leakage, frequency shifts |
+| 19 | `19_anharmonicity_and_leakage_under_strong_drive.ipynb` | Strong-drive leakage and DRAG correction |
+| 20 | `20_truncation_convergence_checks.ipynb` | Convergence with Fock truncation |
+| 21 | `21_building_sequences_from_gates_and_pulses.ipynb` | Gate → pulse → sequence compilation workflow |
+| 22 | `22_parameter_sweeps_and_batch_simulation.ipynb` | Parameter sweeps and batched simulation |
+| 23 | `23_analysis_fitting_and_result_extraction.ipynb` | Fitting, signal extraction, calibration analysis |
+| 24 | `24_sideband_like_interactions.ipynb` | Sideband-like interactions and coupling mechanisms |
+| 25 | `25_small_calibration_workflow_end_to_end.ipynb` | End-to-end calibration workflow |
+| 26 | `26_frame_sanity_checks_and_common_failure_modes.ipynb` | Common frame mistakes and how to diagnose them |
+
+---
+
+## Topical Guide Pages
+
+These documentation pages provide concise summaries of key tutorial topics:
+
+- [Displacement & Spectroscopy](displacement_spectroscopy.md) — cavity displacement and number-splitting spectroscopy
+- [Kerr Free Evolution](kerr_free_evolution.md) — self-Kerr dynamics and phase-space collapse/revival
+- [Sideband Swap](sideband_swap.md) — red-sideband swap protocol
+- [Unitary Synthesis](unitary_synthesis.md) — gate sequence optimization in logical subspaces
+- [GRAPE Optimal Control](optimal_control.md) — model-backed GRAPE with hardware maps
+- [RL Hybrid Control](rl_hybrid_control.md) — reinforcement learning environment for cQED control
+- [Holographic Quantum Algorithms](holographic_quantum_algorithms.md) — holographic channel estimation and MPS-inspired sampling
+
+---
 
 ## Conventions
 
-The tutorials follow the runtime conventions documented in:
+All tutorials follow the runtime conventions documented in:
 
-- `physics_and_conventions/physics_conventions_report.tex`
-- `tutorials/conventions_quick_reference.md`
+- [Physics & Conventions](../physics_conventions.md) — full reference
+- `tutorials/conventions_quick_reference.md` — quick lookup card
 
-In particular, frame choice, carrier sign, dispersive `chi`, Kerr terms, and truncation meaning are treated consistently with the current public API.
+Key conventions used throughout:
+
+| Convention | Value |
+|---|---|
+| Hamiltonian frequencies | rad/s |
+| Times | seconds |
+| Tensor order | qubit ⊗ cavity |
+| Dispersive term | $+\chi \hat{n}_c \hat{n}_q$ ($\chi < 0$ typical) |
+| Carrier sign | $\text{carrier} = -\omega_{\text{transition}}$ in rotating frame |
+
+---
 
 ## Tutorials vs Examples
 
-`tutorials/` is for structured, user-facing, step-by-step learning material.
+**Tutorials** (`tutorials/`) are structured, step-by-step learning material meant to be read in order.
 
-`examples/` is for standalone scripts, audits, studies, paper reproductions, and specialized workflow helpers that are useful in the repository but are not the primary onboarding curriculum.
+**Examples** (`examples/`) are standalone scripts, studies, and workflow helpers. They are task-focused and concise, not pedagogical. See the [Examples](../examples.md) page for the full index.

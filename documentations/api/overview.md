@@ -21,24 +21,25 @@ The package also includes a periodic-drive Floquet layer for closed-system quasi
 | Module | Purpose |
 |---|---|
 | [`core`](core.md) | Hilbert-space conventions, models, frames, ideal gates |
+| [`gates`](gates.md) | Ideal gate operators: qubit, bosonic, entangling, two-qubit |
 | [`pulses`](pulses.md) | Pulse dataclass, envelopes, builders, calibration formulas, hardware |
 | [`sequence`](sequence.md) | SequenceCompiler, compiled-channel timeline |
 | [`simulation`](simulation.md) | Hamiltonian assembly, solver, noise, extractors, couplings |
 | [`floquet`](floquet.md) | Periodic-drive Floquet analysis, quasienergies, Sambe builders, and branch tracking |
 | [`measurement`](measurement.md) | State preparation, qubit measurement, readout-chain modeling |
-| [`gate_io`](gate_io.md) | Gate sequence JSON I/O |
-| [`analysis`](analysis.md) | Parameter translation (bare → dressed) |
-| [`backends`](backends.md) | Dense NumPy/JAX solver backends |
+| [`optimal_control`](optimal_control.md) | Direct-control problems, held-sample and piecewise-constant schedules, GRAPE, hardware maps, penalties, and waveform export |
+| [`control` / hardware](hardware.md) | ControlLine, HardwareContext, CalibrationMap, hardware transfer pipeline |
+| [`unitary_synthesis`](unitary_synthesis.md) | Subspace targeting, gate sequences, optimization, constraints |
+| [`rl_control`](rl_control.md) | RL environments, task registry, action/observation/reward layers, randomization |
 | [`calibration`](calibration.md) | SQR gate calibration |
 | [`calibration_targets`](calibration_targets.md) | Spectroscopy, Rabi, Ramsey, T₁, T₂ echo, DRAG tuning |
-| [`rl_control`](rl_control.md) | RL environments, task registry, action/observation/reward layers, randomization |
-| [`system_id`](rl_control.md#system-identification-hooks) | Calibration-informed prior hooks for fit-then-randomize workflows |
-| [`tomography`](tomography.md) | Fock-resolved tomography, all-XY, leakage calibration |
+| [`analysis`](analysis.md) | Parameter translation (bare → dressed) |
 | [`observables`](observables.md) | Bloch, Fock-resolved, phase, trajectory, Wigner diagnostics |
-| [`operators`](operators.md) | Pauli, cavity ladder, embedding helpers |
 | [`plotting`](plotting.md) | Bloch tracks, calibration, gate diagnostics, Wigner grids |
-| [`unitary_synthesis`](unitary_synthesis.md) | Subspace targeting, gate sequences, optimization, constraints |
-| [`optimal_control`](optimal_control.md) | Direct-control problems, held-sample and piecewise-constant schedules, GRAPE, hardware maps, penalties, and waveform export |
+| [`operators`](operators.md) | Pauli, cavity ladder, embedding helpers |
+| [`gate_io`](gate_io.md) | Gate sequence JSON I/O |
+| [`tomography`](tomography.md) | Fock-resolved tomography, all-XY, leakage calibration |
+| [`backends`](backends.md) | Dense NumPy/JAX solver backends |
 | [`quantum_algorithms.holographic_sim`](holographic_sim.md) | Generic holographic channel sampling, exact branch estimation, and MPS-inspired abstractions |
 
 ---
@@ -68,4 +69,4 @@ For strictly periodic closed-system problems, replace steps 3-6 with `PeriodicDr
 
 ## Canonical Reference
 
-This API reference is synchronized with [`API_REFERENCE.md`](https://github.com/) in the repository root, which serves as the single source of truth. For physics conventions, sign definitions, and Hamiltonian algebra see the [Physics & Conventions](../physics_conventions.md) page.
+This API reference is synchronized with `API_REFERENCE.md` in the repository root, which serves as the single source of truth. For physics conventions, sign definitions, and Hamiltonian algebra see the [Physics & Conventions](../physics_conventions.md) page.

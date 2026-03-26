@@ -51,6 +51,32 @@ Returns `{"x", "y", "z", "conditioned": {n: {"x", "y", "z", "probability", "vali
 
 ---
 
+## Usage
+
+```python
+from cqed_sim.observables import (
+    reduced_qubit_state,
+    bloch_xyz_from_joint,
+    fock_resolved_bloch_diagnostics,
+    bloch_trajectory_from_states,
+)
+
+# Extract qubit Bloch vector from a joint qubit ⊗ cavity state
+rho_q = reduced_qubit_state(result.final_state)
+x, y, z = bloch_xyz_from_joint(result.final_state)
+
+# Fock-resolved diagnostics over a gate track
+diag = fock_resolved_bloch_diagnostics(track, max_n=5, probability_threshold=1e-6)
+
+# Full trajectory from stored states
+traj = bloch_trajectory_from_states(result.states, conditioned_n_levels=4)
+```
+```
+
+Returns `{"x", "y", "z", "conditioned": {n: {"x", "y", "z", "probability", "valid"}}}`.
+
+---
+
 ## Weakness Metrics (`observables.weakness`)
 
 | Function | Description |

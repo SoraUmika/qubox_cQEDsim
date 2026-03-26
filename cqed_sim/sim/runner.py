@@ -5,6 +5,17 @@ from dataclasses import dataclass, field
 import multiprocessing as mp
 from typing import Any, Iterable, Sequence
 
+
+def _progress(iterable, enabled: bool, **kwargs):
+    """Optionally wrap *iterable* with a tqdm progress bar."""
+    if not enabled:
+        return iterable
+    try:
+        from tqdm.auto import tqdm
+        return tqdm(iterable, **kwargs)
+    except Exception:
+        return iterable
+
 import numpy as np
 import qutip as qt
 
@@ -236,8 +247,16 @@ class SimulationSession:
         *,
         max_workers: int = 1,
         mp_context: str = "spawn",
+        show_progress: bool = False,
     ) -> list[SimulationResult]:
         """Run the session over multiple initial states.
+
+        Args:
+            initial_states: Initial quantum states to simulate.
+            max_workers: Number of parallel worker processes.  ``1`` runs serially.
+            mp_context: Multiprocessing start method.
+            show_progress: If ``True``, display a tqdm progress bar.  Works in
+                both terminal and Jupyter notebook environments.
 
         Note: On Windows, multiprocessing uses the ``spawn`` start method.
         This carries noticeable per-worker startup overhead. For small jobs
@@ -248,7 +267,8 @@ class SimulationSession:
         """
         states = list(initial_states)
         if max_workers <= 1 or len(states) <= 1:
-            return [self.run(state) for state in states]
+            it = _progress(states, show_progress, desc="Simulating states", unit="state", dynamic_ncols=True)
+            return [self.run(state) for state in it]
 
         ctx = mp.get_context(mp_context)
         with ProcessPoolExecutor(
@@ -257,7 +277,8 @@ class SimulationSession:
             initializer=_init_parallel_session,
             initargs=(self,),
         ) as executor:
-            return list(executor.map(_run_parallel_state, states))
+            mapped = executor.map(_run_parallel_state, states)
+            return list(_progress(mapped, show_progress, total=len(states), desc="Simulating states", unit="state", dynamic_ncols=True))
 
 
 def prepare_simulation(
@@ -287,8 +308,16 @@ def simulate_batch(
     *,
     max_workers: int = 1,
     mp_context: str = "spawn",
+    show_progress: bool = False,
 ) -> list[SimulationResult]:
     """Run a prepared session over a batch of initial states.
+
+    Args:
+        session: Prepared :class:`SimulationSession`.
+        initial_states: Initial quantum states to simulate.
+        max_workers: Number of parallel worker processes.
+        mp_context: Multiprocessing start method.
+        show_progress: If ``True``, display a tqdm progress bar.
 
     Note: On Windows, multiprocessing uses the ``spawn`` start method.
     This carries noticeable per-worker startup overhead. For small jobs
@@ -297,7 +326,7 @@ def simulate_batch(
     (``SimulationSession.run_many``) is generally preferred for most workloads
     on Windows.
     """
-    return session.run_many(initial_states, max_workers=max_workers, mp_context=mp_context)
+    return session.run_many(initial_states, max_workers=max_workers, mp_context=mp_context, show_progress=show_progress)
 
 
 # Module-level parallel worker state.  These globals are set by
@@ -329,6 +358,7 @@ def run_sweep(
     *,
     max_workers: int = 1,
     mp_context: str = "spawn",
+    show_progress: bool = False,
 ) -> list[SimulationResult]:
     """Run a parameter sweep over a list of (session, initial_state) pairs.
 
@@ -353,6 +383,8 @@ def run_sweep(
         max_workers: Number of parallel worker processes.  ``1`` runs serially.
         mp_context: Multiprocessing start method.  ``"spawn"`` is the only safe
             choice on Windows.
+        show_progress: If ``True``, display a tqdm progress bar over sweep points.
+            Works in both terminal and Jupyter notebook environments.
 
     Returns:
         List of :class:`SimulationResult`, one per sweep point, in the same
@@ -367,7 +399,15 @@ def run_sweep(
         )
 
     if max_workers <= 1 or len(session_list) <= 1:
-        return [session.run(state) for session, state in zip(session_list, state_list)]
+        it = _progress(
+            zip(session_list, state_list),
+            show_progress,
+            total=len(session_list),
+            desc="Sweep",
+            unit="point",
+            dynamic_ncols=True,
+        )
+        return [session.run(state) for session, state in it]
 
     ctx = mp.get_context(mp_context)
     with ProcessPoolExecutor(
@@ -377,7 +417,8 @@ def run_sweep(
         initargs=(session_list,),
     ) as executor:
         indexed_states = list(enumerate(state_list))
-        results_with_index = list(executor.map(_run_parallel_sweep_point_indexed, indexed_states))
+        mapped = executor.map(_run_parallel_sweep_point_indexed, indexed_states)
+        results_with_index = list(_progress(mapped, show_progress, total=len(indexed_states), desc="Sweep", unit="point", dynamic_ncols=True))
     results_with_index.sort(key=lambda pair: pair[0])
     return [result for _, result in results_with_index]
 

@@ -72,32 +72,7 @@ class SQRGate:
         return {"theta": list(self.theta), "phi": list(self.phi)}
 
 
-@dataclass(frozen=True)
-class ConditionalPhaseSQRGate:
-    """IO representation of a ConditionalPhaseSQR gate.
-
-    Stores the Fock-number-selective conditional phases. The physical
-    implementation reuses the SQR multitone drive hardware; conditional
-    phases arise from the dispersive interaction during the gate time.
-    """
-    index: int
-    name: str
-    phases: tuple[float, ...]
-
-    @property
-    def type(self) -> str:
-        return "ConditionalPhaseSQR"
-
-    @property
-    def target(self) -> str:
-        return "qubit"
-
-    @property
-    def params(self) -> dict[str, list[float]]:
-        return {"phases": list(self.phases)}
-
-
-Gate = DisplacementGate | RotationGate | SQRGate | ConditionalPhaseSQRGate
+Gate = DisplacementGate | RotationGate | SQRGate
 
 
 def gate_to_record(gate: Gate) -> dict[str, Any]:

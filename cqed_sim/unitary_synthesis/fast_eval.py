@@ -16,7 +16,6 @@ from .sequence import (
     BlueSidebandExchange,
     CavityBlockPhase,
     ConditionalDisplacement,
-    ConditionalPhaseSQR,
     Displacement,
     FreeEvolveCondPhase,
     GateSequence,
@@ -96,18 +95,7 @@ def _displacement_matrix(n_cav: int, alpha: complex) -> np.ndarray:
     return np.kron(np.eye(2, dtype=np.complex128), displacement)
 
 
-def _conditional_phase_matrix(phases: Sequence[float]) -> np.ndarray:
-    phase_array = np.asarray(phases, dtype=float)
-    n_cav = phase_array.size
-    out = np.zeros((2 * n_cav, 2 * n_cav), dtype=np.complex128)
-    for level, phase in enumerate(phase_array):
-        idx = qubit_cavity_block_indices(n_cav, level)
-        out[idx[0], idx[0]] = np.exp(-0.5j * phase)
-        out[idx[1], idx[1]] = np.exp(0.5j * phase)
-    return out
-
-
-def _drift_phase_matrix(n_cav: int, duration: float, gate: ConditionalPhaseSQR | FreeEvolveCondPhase | SQR) -> np.ndarray:
+def _drift_phase_matrix(n_cav: int, duration: float, gate: FreeEvolveCondPhase | SQR) -> np.ndarray:
     table = drift_phase_table(n_cav=n_cav, duration=duration, model=gate.drift_model)
     diag = np.zeros(2 * n_cav, dtype=np.complex128)
     for level in range(n_cav):
@@ -229,11 +217,6 @@ class FastObjectiveEvaluator:
             return np.asarray(gate.ideal_unitary(self.n_cav).full(), dtype=np.complex128)
         if isinstance(gate, BlueSidebandExchange):
             return np.asarray(gate.ideal_unitary(self.n_cav).full(), dtype=np.complex128)
-        if isinstance(gate, ConditionalPhaseSQR):
-            drive = _conditional_phase_matrix(gate.get_parameters(self.n_cav))
-            if not gate.include_drift:
-                return drive
-            return _drift_phase_matrix(self.n_cav, gate.duration, gate) @ drive
         if isinstance(gate, FreeEvolveCondPhase):
             return _drift_phase_matrix(self.n_cav, gate.wait_time, gate)
         if isinstance(gate, PrimitiveGate):

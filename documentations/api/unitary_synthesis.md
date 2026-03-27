@@ -179,7 +179,6 @@ Common cQED gate dataclasses exposed by `cqed_sim.unitary_synthesis.sequence`:
 | `SQR` | `theta_n`, `phi_n`, `tones`, `tone_freqs`, `include_conditional_phase`, `drift_model` | Selective qubit rotation |
 | `CavityBlockPhase` | `phases: list[float]`, `fock_levels: tuple[int, ...]` | Ideal cavity-only logical block-phase gate acting identically on both qubit states |
 | `SNAP` | `phases: list[float]` | Number-selective contiguous cavity phase gate |
-| `ConditionalPhaseSQR` | `phases_n: list[float]`, `drift_model: DriftPhaseModel` | Conditional phase via free-evolution SQR block |
 | `FreeEvolveCondPhase` | `drift_model: DriftPhaseModel` | Free-evolution conditional phase with no explicit drive pulse |
 
 ---
@@ -335,3 +334,112 @@ Key metrics in `cqed_sim.unitary_synthesis.metrics`:
 `logical_block_phase_diagnostics(...)` extracts gauge-fixed block-overlap phases from a restricted operator, reports the best-fit ideal cavity-only block-phase correction, and returns the residual RMS after an optional applied correction.
 
 Phase handling now supports `none`, `global`, `diagonal`, and `block` gauges.
+
+---
+
+## User-Defined Gate Factories
+
+Three factory helpers create `PrimitiveGate` instances from user-supplied
+objects, making it easy to inject custom gates into the synthesis optimizer.
+
+```python
+def make_gate_from_matrix(
+    name, matrix, *, duration=100e-9, optimize_time=False,
+    time_bounds=None, metadata=None,
+) -> PrimitiveGate
+```
+
+Create a gate from a fixed unitary matrix.  No parameters are exposed for
+optimization.  Set `optimize_time=True` to let the optimizer vary the duration.
+
+```python
+def make_gate_from_callable(
+    name, unitary_fn, *, parameters=None, parameter_bounds=None,
+    duration=100e-9, optimize_time=True, time_bounds=None, metadata=None,
+) -> PrimitiveGate
+```
+
+Create a gate whose unitary is computed by `fn(parameters, model) -> array`.
+Parameters are automatically included in the optimizer search space.
+
+```python
+def make_gate_from_waveform(
+    name, waveform_fn, *, parameters=None, parameter_bounds=None,
+    duration=100e-9, optimize_time=True, time_bounds=None, metadata=None,
+) -> PrimitiveGate
+```
+
+Create a gate backed by a pulse waveform generator.  Returns `list[Pulse]`,
+`(pulses, drive_ops)`, or `{"pulses": ..., "drive_ops": ...}`.  Waveform
+primitives go through the full runtime stack.
+
+---
+
+## Gate Registry
+
+The gate registry maps custom gate names to factory callables so they can be
+referenced by name in `UnitarySynthesizer(gateset=[...])`.
+
+```python
+class GateRegistry:
+    def register(name, factory): ...
+    def build(name, *, duration=100e-9, **kwargs): ...
+    def is_registered(name) -> bool: ...
+    def registered_names() -> list[str]: ...
+```
+
+A pre-constructed singleton `gate_registry` is exported from
+`cqed_sim.unitary_synthesis`:
+
+```python
+from cqed_sim.unitary_synthesis import gate_registry, make_gate_from_callable
+
+gate_registry.register(
+    "MyCZ",
+    lambda name, duration, **kw: make_gate_from_callable(
+        name, my_cz_fn, parameters={}, duration=duration, **kw
+    ),
+)
+synth = UnitarySynthesizer(gateset=["QubitRotation", "MyCZ"], ...)
+```
+
+---
+
+## Gate-Order Search
+
+`GateOrderOptimizer` wraps `UnitarySynthesizer` and searches over gate
+orderings drawn from a pool.
+
+```python
+@dataclass(frozen=True)
+class GateOrderConfig:
+    max_sequence_length: int = 6
+    min_sequence_length: int = 1
+    allow_repetitions: bool = True
+    search_strategy: str = "random"   # "random" | "exhaustive" | "greedy"
+    n_random_trials: int = 20
+    seed: int = 0
+    early_stop_infidelity: float = 1e-6
+```
+
+```python
+class GateOrderOptimizer:
+    def __init__(self, gate_pool, *, order_config=None, synthesizer_kwargs=None): ...
+    def search(self, target=None) -> GateOrderSearchResult: ...
+```
+
+```python
+@dataclass
+class GateOrderSearchResult:
+    best_result: SynthesisResult
+    best_ordering: list[GateBase]
+    all_results: list[tuple[list[GateBase], SynthesisResult]]
+    n_orderings_tried: int
+    order_config: GateOrderConfig
+```
+
+| Strategy | Behavior |
+|---|---|
+| `"random"` | Sample *n_random_trials* random orderings (default, scalable) |
+| `"exhaustive"` | Enumerate all permutations up to *max_sequence_length* |
+| `"greedy"` | Iteratively append the gate that most improves the objective |

@@ -6,7 +6,6 @@ from cqed_sim.unitary_synthesis import Subspace, UnitarySynthesizer
 from cqed_sim.unitary_synthesis.backends import simulate_sequence
 from cqed_sim.unitary_synthesis.metrics import subspace_unitary_fidelity
 from cqed_sim.unitary_synthesis.sequence import (
-    ConditionalPhaseSQR,
     DriftPhaseModel,
     FreeEvolveCondPhase,
     GateSequence,
@@ -91,35 +90,6 @@ def test_fec3_relative_phase_scaling() -> None:
         ratio2 = u2[n_cav + n, n_cav + n] / u2[n, n]
         pulse_diff = ratio2 / ratio1
         assert np.isclose(pulse_diff, np.exp(-1j * expected), atol=1e-10)
-
-
-def test_fec4_equivalence_to_zero_drive_condphase_sqr() -> None:
-    n_cav = 5
-    sub = Subspace.qubit_cavity_block(n_match=3, n_cav=n_cav)
-    model = DriftPhaseModel(chi=2.5e6, chi2=-1.5e5, kerr=0.8e5, kerr2=-6.0e3)
-    t_wait = 370e-9
-
-    free_gate = FreeEvolveCondPhase(name="wait", duration=t_wait, drift_model=model)
-    cond_gate = ConditionalPhaseSQR(
-        name="cond",
-        phases_n=[0.0] * n_cav,
-        duration=t_wait,
-        drift_model=model,
-        include_drift=True,
-    )
-
-    free_seq = GateSequence(gates=[free_gate], n_cav=n_cav)
-    cond_seq = GateSequence(gates=[cond_gate], n_cav=n_cav)
-
-    free_ideal = simulate_sequence(free_seq, sub, backend="ideal")
-    cond_ideal = simulate_sequence(cond_seq, sub, backend="ideal")
-    free_pulse = simulate_sequence(free_seq, sub, backend="pulse")
-    cond_pulse = simulate_sequence(cond_seq, sub, backend="pulse")
-
-    assert np.allclose(free_ideal.full_operator, cond_ideal.full_operator, atol=1e-12)
-    assert np.allclose(free_pulse.full_operator, cond_pulse.full_operator, atol=1e-12)
-    assert np.allclose(free_ideal.subspace_operator, cond_ideal.subspace_operator, atol=1e-12)
-    assert np.allclose(free_pulse.subspace_operator, cond_pulse.subspace_operator, atol=1e-12)
 
 
 def test_fec5_synthesis_benefits_from_free_evolution_gate() -> None:

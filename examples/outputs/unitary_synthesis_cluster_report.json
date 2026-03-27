@@ -112,8 +112,8 @@
         ]
       },
       {
-        "type": "ConditionalPhaseSQR",
-        "name": "ConditionalPhaseSQR_4",
+        "type": "RemovedLegacyGateArtifact",
+        "name": "removed_legacy_gate_4",
         "duration": 1.0099999999999999e-06,
         "optimize_time": true,
         "time_bounds": [

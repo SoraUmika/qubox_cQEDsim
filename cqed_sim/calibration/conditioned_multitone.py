@@ -54,22 +54,26 @@ def _as_serializable(value: Any) -> Any:
 
 
 def bloch_vector_from_angles(theta: float, phi: float) -> tuple[float, float, float]:
+    # phi is the rotation-axis angle (same convention as qubit_rotation_xy / SQR).
+    # R_phi(theta)|g> = cos(t/2)|g> - i*sin(t/2)*exp(i*phi)|e>
+    # Bloch components: <X> = sin(t)*sin(phi), <Y> = -sin(t)*cos(phi), <Z> = cos(t)
     theta_val = float(theta)
     phi_val = float(phi)
     return (
-        float(np.sin(theta_val) * np.cos(phi_val)),
         float(np.sin(theta_val) * np.sin(phi_val)),
+        float(-np.sin(theta_val) * np.cos(phi_val)),
         float(np.cos(theta_val)),
     )
 
 
 def qubit_state_from_angles(theta: float, phi: float) -> qt.Qobj:
+    # phi is the rotation-axis angle: R_phi(theta)|g> = cos(t/2)|g> - i*sin(t/2)*exp(i*phi)|e>
     theta_val = float(theta)
     phi_val = float(phi)
     data = np.asarray(
         [
             np.cos(theta_val / 2.0),
-            np.exp(1j * phi_val) * np.sin(theta_val / 2.0),
+            -1j * np.exp(1j * phi_val) * np.sin(theta_val / 2.0),
         ],
         dtype=np.complex128,
     )
@@ -95,7 +99,9 @@ def bloch_angles_from_density_matrix(
     xy = float(np.sqrt(x * x + y * y))
     if xy <= float(xy_threshold):
         return theta, float("nan"), radius
-    phi = float(np.mod(np.arctan2(y, x), 2.0 * np.pi))
+    # Recover rotation-axis angle from Bloch components of R_phi(theta)|g>:
+    # <X> = sin(t)*sin(phi), <Y> = -sin(t)*cos(phi)  =>  phi = arctan2(x, -y)
+    phi = float(np.mod(np.arctan2(x, -y), 2.0 * np.pi))
     return theta, phi, radius
 
 

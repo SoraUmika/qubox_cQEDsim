@@ -14,6 +14,7 @@ from cqed_sim.calibration.conditioned_multitone import (
     ConditionedOptimizationConfig,
     ConditionedQubitTargets,
     ConditionedSectorMetrics,
+    bloch_vector_from_angles,
     bloch_angles_from_density_matrix,
     build_conditioned_multitone_tones,
     build_conditioned_multitone_waveform,
@@ -540,9 +541,10 @@ def _conditioned_metric(
     rho_q: qt.Qobj,
     sector_population: float,
 ) -> ConditionedSectorMetrics:
-    target_bloch_x = float(np.sin(float(targets.theta[level])) * np.cos(float(targets.phi[level])))
-    target_bloch_y = float(np.sin(float(targets.theta[level])) * np.sin(float(targets.phi[level])))
-    target_bloch_z = float(np.cos(float(targets.theta[level])))
+    target_bloch_x, target_bloch_y, target_bloch_z = bloch_vector_from_angles(
+        float(targets.theta[level]),
+        float(targets.phi[level]),
+    )
     x, y, z = bloch_xyz_from_qubit_state(rho_q)
     theta_sim, phi_sim, bloch_radius = bloch_angles_from_density_matrix(rho_q)
     theta_target = float(targets.theta[level])

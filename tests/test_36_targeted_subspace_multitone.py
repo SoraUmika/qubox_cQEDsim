@@ -10,6 +10,7 @@ from cqed_sim.calibration import (
     TargetedSubspaceObjectiveWeights,
     TargetedSubspaceOptimizationConfig,
     analyze_targeted_subspace_operator,
+    bloch_vector_from_angles,
     build_block_rotation_target_operator,
     build_spanning_state_transfer_set,
     optimize_targeted_subspace_multitone,
@@ -110,6 +111,35 @@ def test_exact_logical_operator_scores_perfectly() -> None:
     assert result.weighted_loss < 1.0e-12
     for row in result.conditioned_sector_metrics:
         assert np.isclose(row.sector_population, 1.0, atol=1.0e-12)
+
+
+def test_targeted_sector_metrics_use_rotation_axis_bloch_convention() -> None:
+    model = _test_model(n_cav=4)
+    targets = ConditionedQubitTargets(
+        theta=(0.22 * np.pi, 0.47 * np.pi, 0.61 * np.pi),
+        phi=(0.05 * np.pi, 0.35 * np.pi, 1.10 * np.pi),
+    )
+    logical_levels = (0, 1, 2)
+    target_operator = build_block_rotation_target_operator(targets, logical_levels=logical_levels)
+    transfer_set = build_spanning_state_transfer_set(target_operator)
+    full_operator = _embed_logical_operator(model, logical_levels, target_operator)
+
+    result = analyze_targeted_subspace_operator(
+        full_operator,
+        model,
+        targets,
+        logical_levels=logical_levels,
+        target_operator=target_operator,
+        transfer_set=transfer_set,
+    )
+
+    for row in result.conditioned_sector_metrics:
+        expected = bloch_vector_from_angles(targets.theta[row.n], targets.phi[row.n])
+        assert np.allclose(
+            [row.target_bloch_x, row.target_bloch_y, row.target_bloch_z],
+            expected,
+            atol=1.0e-12,
+        )
 
 
 def test_cross_talk_and_leakage_metrics_detect_bad_operator() -> None:

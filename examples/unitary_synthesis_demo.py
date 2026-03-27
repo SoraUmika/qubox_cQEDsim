@@ -13,7 +13,7 @@ if __name__ == "__main__":
     synth = UnitarySynthesizer(
         subspace=subspace,
         backend="pulse",
-        gateset=["QubitRotation", "SQR", "SNAP", "Displacement", "ConditionalPhaseSQR"],
+        gateset=["QubitRotation", "SQR", "SNAP", "Displacement"],
         optimize_times=True,
         time_bounds={"default": (20e-9, 2000e-9)},
         leakage_weight=10.0,

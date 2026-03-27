@@ -103,7 +103,7 @@ read-only alias. In three-mode contexts, the "c" in `omega_c_frame` is ambiguous
 ### 4.3 Waveform Bridge — Limited Gate Type Coverage (Documented)
 
 `waveform_bridge` supports only `QubitRotation`, `Displacement`, and `SQR`. The
-gate types `SNAP`, `ConditionalPhaseSQR`, and `FreeEvolveCondPhase` raise `TypeError`.
+gate types `SNAP` and `FreeEvolveCondPhase` raise `TypeError`.
 This is a fundamental design limitation (no pulse builders for these types).
 
 **Severity:** Documented — No change needed unless pulse builders are added.

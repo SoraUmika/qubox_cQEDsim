@@ -1177,6 +1177,26 @@ def simulate_batch(
 ) -> list[SimulationResult]
 ```
 
+```python
+def run_sweep(
+    sessions: Sequence[SimulationSession],
+    initial_states: Sequence[qt.Qobj],
+    *,
+    max_workers: int = 1,
+    mp_context: str = "spawn",
+    show_progress: bool = False,
+) -> list[SimulationResult]
+```
+
+Run a parameter sweep over a list of `(session, initial_state)` pairs.  Each
+pair is an independent simulation job.  Use `run_sweep` when each sweep point
+has a *different* Hamiltonian (e.g. sweeping over chi, detuning, or amplitude).
+For sweeps where only the initial state varies, prefer `simulate_batch` instead.
+
+When `max_workers == 1` (default), the sweep is executed serially.  Set
+`max_workers > 1` to distribute jobs across worker processes.  Results are
+returned in the same order as *sessions*.
+
 **Supporting functions:**
 
 | Function | Signature | Description |
@@ -2712,7 +2732,6 @@ All gate types share the common timing fields (`name`, `duration`, `optimize_tim
 | `SNAP` | `phases: list[float]` | Number-selective phase gate |
 | `JaynesCummingsExchange` | `coupling: float`, `phase: float` | Native red-sideband / SWAP-like exchange between `|e,n>` and `|g,n+1>` |
 | `BlueSidebandExchange` | `coupling: float`, `phase: float` | Native blue-sideband exchange between `|g,n>` and `|e,n+1>` |
-| `ConditionalPhaseSQR` | `phases_n: list[float]`, `drift_model: DriftPhaseModel` | Conditional phase via free-evolution SQR block |
 | `FreeEvolveCondPhase` | `drift_model: DriftPhaseModel` | Free-evolution conditional phase with no explicit drive pulse |
 
 #### GateSequence
@@ -3113,6 +3132,159 @@ for cutoff sanity checks.
 | `plot_history(history_or_dict, what, ax, title)` | Line plot of a named history field |
 
 `PROGRESS_SCHEMA_VERSION = 1` (current event schema version).
+
+---
+
+### 17.9 User-Defined Gate Factories
+
+**Module path:** `cqed_sim.unitary_synthesis.sequence`
+
+Three factory helpers create `PrimitiveGate` instances from user-supplied
+objects, making it easy to inject custom gates into the synthesis optimizer.
+
+```python
+def make_gate_from_matrix(
+    name: str,
+    matrix: np.ndarray | qt.Qobj,
+    *,
+    duration: float = 100.0e-9,
+    optimize_time: bool = False,
+    time_bounds: tuple[float, float] | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> PrimitiveGate
+```
+
+Create a gate from a fixed unitary matrix.  No parameters are exposed for
+optimization — the gate acts as a fixed block in the sequence.  Set
+`optimize_time=True` to let the optimizer vary the gate duration.
+
+```python
+def make_gate_from_callable(
+    name: str,
+    unitary_fn: Callable[[dict[str, Any], Any | None], np.ndarray | qt.Qobj],
+    *,
+    parameters: dict[str, Any] | None = None,
+    parameter_bounds: dict[str, tuple[float, float]] | None = None,
+    duration: float = 100.0e-9,
+    optimize_time: bool = True,
+    time_bounds: tuple[float, float] | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> PrimitiveGate
+```
+
+Create a gate whose unitary is computed by a callable
+`fn(parameters, model) -> array`.  Parameters declared in *parameters* are
+automatically included in the optimizer search space.
+
+```python
+def make_gate_from_waveform(
+    name: str,
+    waveform_fn: Callable[[dict[str, Any], Any | None], Any],
+    *,
+    parameters: dict[str, Any] | None = None,
+    parameter_bounds: dict[str, tuple[float, float]] | None = None,
+    duration: float = 100.0e-9,
+    optimize_time: bool = True,
+    time_bounds: tuple[float, float] | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> PrimitiveGate
+```
+
+Create a gate backed by a pulse waveform generator.  The callable must return
+`list[Pulse]`, `(pulses, drive_ops)`, or `{"pulses": ..., "drive_ops": ...}`.
+Waveform primitives are evaluated through the full `Pulse`/`SequenceCompiler`/
+`cqed_sim.sim` runtime stack.
+
+---
+
+### 17.10 Gate Registry
+
+**Module path:** `cqed_sim.unitary_synthesis.systems`
+
+The gate registry maps custom gate names to factory callables so they can be
+referenced by name in the `gateset` argument of `UnitarySynthesizer`.
+
+```python
+class GateRegistry:
+    def register(self, name: str, factory: Callable[..., Any]) -> None: ...
+    def build(self, name: str, *, duration: float = 100.0e-9, **kwargs) -> Any: ...
+    def is_registered(self, name: str) -> bool: ...
+    def registered_names(self) -> list[str]: ...
+```
+
+A pre-constructed singleton `gate_registry` is exported from
+`cqed_sim.unitary_synthesis`.  Register a factory, then use the name in
+`UnitarySynthesizer(gateset=[...])`:
+
+```python
+from cqed_sim.unitary_synthesis import gate_registry, make_gate_from_callable
+
+gate_registry.register(
+    "MyCZ",
+    lambda name, duration, **kw: make_gate_from_callable(
+        name, my_cz_fn, parameters={}, duration=duration, **kw
+    ),
+)
+synth = UnitarySynthesizer(gateset=["QubitRotation", "MyCZ"], ...)
+```
+
+---
+
+### 17.11 Gate-Order Search
+
+**Module path:** `cqed_sim.unitary_synthesis.order_search`
+
+`GateOrderOptimizer` wraps `UnitarySynthesizer` and searches over gate
+orderings drawn from a pool.  For each candidate ordering, a fresh synthesizer
+is instantiated and run to convergence; the ordering that achieves the lowest
+objective is returned.
+
+#### GateOrderConfig
+
+```python
+@dataclass(frozen=True)
+class GateOrderConfig:
+    max_sequence_length: int = 6
+    min_sequence_length: int = 1
+    allow_repetitions: bool = True
+    search_strategy: str = "random"   # "random" | "exhaustive" | "greedy"
+    n_random_trials: int = 20
+    seed: int = 0
+    early_stop_infidelity: float = 1e-6
+```
+
+| Strategy | Behavior |
+|---|---|
+| `"random"` | Sample *n_random_trials* random orderings (default, scalable) |
+| `"exhaustive"` | Enumerate all permutations up to *max_sequence_length* |
+| `"greedy"` | Iteratively append the gate that most improves the objective |
+
+#### GateOrderOptimizer
+
+```python
+class GateOrderOptimizer:
+    def __init__(
+        self,
+        gate_pool: list[GateBase],
+        *,
+        order_config: GateOrderConfig | None = None,
+        synthesizer_kwargs: dict[str, Any] | None = None,
+    ) -> None: ...
+
+    def search(self, target: Any | None = None) -> GateOrderSearchResult: ...
+```
+
+#### GateOrderSearchResult
+
+```python
+@dataclass
+class GateOrderSearchResult:
+    best_result: SynthesisResult
+    best_ordering: list[GateBase]
+    all_results: list[tuple[list[GateBase], SynthesisResult]]
+    n_orderings_tried: int
+    order_config: GateOrderConfig
+```
 
 ---
 
@@ -3828,12 +4000,10 @@ See inline documentation in `cqed_sim/backends/base_backend.py`.
 ### LOW: Waveform Bridge Gate Type Coverage
 
 `waveform_bridge` (`waveform_primitive_from_gate` / `waveform_sequence_from_gates`)
-supports only `QubitRotation`, `Displacement`, and `SQR`. The synthesis sequence gate
-types `SNAP`, `ConditionalPhaseSQR`, and `FreeEvolveCondPhase` are not currently
-bridged to the waveform path. Passing them raises `TypeError`. Use the ideal or
-symbolic backends for sequences that include these gate types.
-This limitation is fundamental: these gate types have no pulse builders in
-`pulses/builders.py` and no IO gate representations in `io/gates.py`.
+supports only `QubitRotation`, `Displacement`, and `SQR`.
+`SNAP` and `FreeEvolveCondPhase` are not bridged to the waveform path.
+For custom pulse-backed primitives, use `make_gate_from_waveform(...)` instead
+of relying on a built-in synthesis gate class.
 See inline documentation in `cqed_sim/unitary_synthesis/waveform_bridge.py`.
 
 ### ~~LOW: `targets.py` Contains User-Specific Hardcoded Paths~~ (RESOLVED)

@@ -13,7 +13,7 @@ to the upstream `cqed_sim` stack so that targeted-subspace multitone workflows c
 ## Existing Insertion Points
 
 1. `cqed_sim.core.ideal_gates` already contains the ideal cavity-diagonal helper `snap_op(phases)` and the joint qubit-cavity selective rotation helper `sqr_op(...)`.
-2. `cqed_sim.unitary_synthesis.sequence` already models reusable ideal primitives such as `SQR`, `SNAP`, `ConditionalPhaseSQR`, and `FreeEvolveCondPhase`.
+2. `cqed_sim.unitary_synthesis.sequence` already models reusable ideal primitives such as `SQR`, `SNAP`, and `FreeEvolveCondPhase`.
 3. `cqed_sim.unitary_synthesis.systems`, `fast_eval`, and `optim` already know how to optimize parameterized ideal primitives inside `GateSequence` objects.
 4. `cqed_sim.calibration.targeted_subspace_multitone` already provides the physically relevant targeted-subspace evaluation path, but it currently optimizes only waveform-side multitone correction knobs.
 5. The study scripts `examples/studies/sqr_block_phase_study.py` and `examples/studies/sqr_block_phase_followup.py` already contain the block-phase diagnostics and ideal post-correction logic that should be upstreamed.

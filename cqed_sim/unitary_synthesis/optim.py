@@ -45,7 +45,6 @@ from .progress import (
 )
 from .reporting import make_run_report
 from .sequence import (
-    ConditionalPhaseSQR,
     Displacement,
     DriftPhaseModel,
     FreeEvolveCondPhase,
@@ -281,7 +280,7 @@ def _deep_update(base: dict[str, Any], update: Mapping[str, Any]) -> dict[str, A
 
 def _gate_channel_name(gate: Any) -> str | None:
     gate_type = gate.type
-    if gate_type in {"QubitRotation", "SQR", "ConditionalPhaseSQR"}:
+    if gate_type in {"QubitRotation", "SQR"}:
         return "qubit_drive"
     if gate_type in {"Displacement"}:
         return "cavity_drive"
@@ -297,9 +296,6 @@ def _gate_amplitude_proxy(gate: Any, n_cav: int) -> float:
         return float(np.max(np.abs(vals[:n_cav]))) if vals.size else 0.0
     if gate_type == "Displacement":
         return float(abs(getattr(gate, "alpha", 0.0 + 0.0j)))
-    if gate_type == "ConditionalPhaseSQR":
-        vals = np.asarray(getattr(gate, "phases_n", []), dtype=float)
-        return float(np.max(np.abs(vals[:n_cav]))) if vals.size else 0.0
     return 0.0
 
 
@@ -326,11 +322,6 @@ def _clip_gate_amplitude(gate: Any, a_max: float, n_cav: int) -> None:
         mag = abs(alpha)
         if mag > a_max and mag > 0.0:
             gate.alpha = alpha * (a_max / mag)
-    elif gate.type == "ConditionalPhaseSQR":
-        vals = np.asarray(getattr(gate, "phases_n", []), dtype=float)
-        if vals.size:
-            vals[:n_cav] = np.clip(vals[:n_cav], -a_max, a_max)
-            gate.phases_n = [float(x) for x in vals]
 
 
 def _clip_gate_detuning(gate: Any, delta_max: float) -> None:
@@ -1853,8 +1844,6 @@ class UnitarySynthesizer:
     @staticmethod
     def _normalize_gate_name(name: str) -> str:
         aliases = {
-            "CondPhaseSQR": "ConditionalPhaseSQR",
-            "ConditionalPhase": "ConditionalPhaseSQR",
             "FreeCondPhaseWait": "FreeEvolveCondPhase",
         }
         return aliases.get(name, name)

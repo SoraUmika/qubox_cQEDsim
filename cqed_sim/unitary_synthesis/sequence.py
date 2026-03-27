@@ -892,68 +892,6 @@ class BlueSidebandExchange(GateBase):
 
 
 @dataclass
-class ConditionalPhaseSQR(GateBase):
-    phases_n: list[float] = field(default_factory=list)
-    drift_model: DriftPhaseModel = field(default_factory=DriftPhaseModel)
-    include_drift: bool = True
-
-    def parameter_names(self, n_cav: int) -> list[str]:
-        return [f"cp_phase_{i}" for i in range(n_cav)]
-
-    def get_parameters(self, n_cav: int) -> np.ndarray:
-        out = np.zeros(n_cav, dtype=float)
-        for i, val in enumerate(self.phases_n[:n_cav]):
-            out[i] = float(val)
-        return out
-
-    def set_parameters(self, params: np.ndarray, n_cav: int) -> None:
-        self.phases_n = [float(x) for x in params[:n_cav]]
-
-    def parameter_bounds_vector(self, n_cav: int) -> list[tuple[float, float]]:
-        return [(-2.0 * np.pi, 2.0 * np.pi) for _ in range(n_cav)]
-
-    def _drive_unitary(self, n_cav: int, scale_by_time: bool) -> qt.Qobj:
-        phases = self.get_parameters(n_cav)
-        if scale_by_time:
-            phases = phases * float(self.duration / self.duration_ref)
-        full = np.zeros((2 * n_cav, 2 * n_cav), dtype=np.complex128)
-        for n in range(n_cav):
-            p = phases[n]
-            block = np.diag([np.exp(-0.5j * p), np.exp(0.5j * p)])
-            idx = qubit_cavity_block_indices(n_cav, n)
-            full[np.ix_(idx, idx)] = block
-        return qt.Qobj(full, dims=qubit_cavity_dims(2, n_cav))
-
-    def ideal_unitary(self, n_cav: int, scale_by_time: bool = False, **_: Any) -> qt.Qobj:
-        drive = self._drive_unitary(n_cav=n_cav, scale_by_time=scale_by_time)
-        if not self.include_drift:
-            return drive
-        drift = drift_phase_unitary(n_cav=n_cav, duration=self.duration, model=self.drift_model)
-        return drift * drive
-
-    def pulse_unitary(self, n_cav: int, **kwargs: Any) -> qt.Qobj:
-        drive = self._drive_unitary(n_cav=n_cav, scale_by_time=True)
-        if not self.include_drift:
-            return drive
-        drift = drift_phase_from_hamiltonian(n_cav=n_cav, duration=self.duration, model=self.drift_model)
-        return drift * drive
-
-    def phase_decomposition(self, n_cav: int, n_match: int | None = None) -> dict[str, Any] | None:
-        max_n = n_cav - 1 if n_match is None else min(int(n_match), n_cav - 1)
-        table = drift_phase_table(n_cav=max_n + 1, duration=self.duration, model=self.drift_model)
-        phases = self.get_parameters(max_n + 1)
-        return drift_phase_report_row(
-            gate_name=self.name,
-            gate_type=self.type,
-            enabled=self.include_drift,
-            duration=self.duration,
-            model=self.drift_model,
-            table=table,
-            drive_relative_phase=phases.tolist(),
-        )
-
-
-@dataclass
 class FreeEvolveCondPhase(GateBase):
     """Wait-only free evolution under the shared drift Hamiltonian."""
 
@@ -1292,7 +1230,6 @@ GatePrimitive = (
     | ConditionalDisplacement
     | JaynesCummingsExchange
     | BlueSidebandExchange
-    | ConditionalPhaseSQR
     | FreeEvolveCondPhase
     | PrimitiveGate
 )
@@ -1315,13 +1252,7 @@ class GateSequence:
         default = time_policy.get("default", {})
         out.update(default)
 
-        aliases = [gate_type]
-        if gate_type == "ConditionalPhaseSQR":
-            aliases.append("CondPhaseSQR")
-        if gate_type == "CondPhaseSQR":
-            aliases.append("ConditionalPhaseSQR")
-
-        for key in aliases:
+        for key in [gate_type]:
             if key in time_policy:
                 out.update(time_policy[key])
         return out

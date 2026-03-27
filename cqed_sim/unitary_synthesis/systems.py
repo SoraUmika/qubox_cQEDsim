@@ -13,7 +13,6 @@ from .sequence import (
     BlueSidebandExchange,
     CavityBlockPhase,
     ConditionalDisplacement,
-    ConditionalPhaseSQR,
     Displacement,
     DriftPhaseModel,
     FreeEvolveCondPhase,
@@ -49,7 +48,6 @@ _CQED_GATE_TYPES = (
     ConditionalDisplacement,
     JaynesCummingsExchange,
     BlueSidebandExchange,
-    ConditionalPhaseSQR,
     FreeEvolveCondPhase,
 )
 _CQED_GATE_NAMES = {
@@ -63,9 +61,6 @@ _CQED_GATE_NAMES = {
     "ConditionalDisplacement",
     "JaynesCummingsExchange",
     "BlueSidebandExchange",
-    "ConditionalPhaseSQR",
-    "CondPhaseSQR",
-    "ConditionalPhase",
     "FreeEvolveCondPhase",
     "FreeCondPhaseWait",
 }
@@ -151,8 +146,6 @@ gate_registry: GateRegistry = GateRegistry()
 
 def _normalize_gate_name(name: str) -> str:
     aliases = {
-        "CondPhaseSQR": "ConditionalPhaseSQR",
-        "ConditionalPhase": "ConditionalPhaseSQR",
         "FreeCondPhaseWait": "FreeEvolveCondPhase",
         "LogicalBlockPhase": "CavityBlockPhase",
         "BlockPhase": "CavityBlockPhase",
@@ -242,8 +235,6 @@ def _legacy_cqed_sequence(
             gates.append(SNAP(phases=[0.0] * int(n_cav), **kw))
         elif name == "Displacement":
             gates.append(Displacement(alpha=0.0 + 0.0j, **kw))
-        elif name == "ConditionalPhaseSQR":
-            gates.append(ConditionalPhaseSQR(phases_n=[0.0] * int(n_cav), drift_model=drift_model, **kw))
         elif name == "FreeEvolveCondPhase":
             gates.append(FreeEvolveCondPhase(drift_model=drift_model, **kw))
         elif gate_registry.is_registered(raw_name):

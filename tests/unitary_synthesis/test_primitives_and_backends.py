@@ -6,7 +6,6 @@ import qutip as qt
 from cqed_sim.unitary_synthesis.backends import simulate_sequence
 from cqed_sim.unitary_synthesis.sequence import (
     CavityBlockPhase,
-    ConditionalPhaseSQR,
     Displacement,
     DriftPhaseModel,
     FreeEvolveCondPhase,
@@ -149,12 +148,6 @@ def test_d4_truncation_stability() -> None:
     r1 = simulate_sequence(seq_small, sub_small, backend="pulse")
     r2 = simulate_sequence(seq_big, sub_big, backend="pulse")
     assert np.linalg.norm(r1.subspace_operator - r2.subspace_operator) < 5e-2
-
-
-def test_conditional_phase_gate_exists_and_is_unitary() -> None:
-    gate = ConditionalPhaseSQR(name="cp", phases_n=[0.1, -0.2, 0.3], duration=100e-9)
-    u = np.asarray(gate.ideal_unitary(3).full())
-    assert _is_unitary(u)
 
 
 def test_free_evolve_condphase_gate_exists_and_is_unitary() -> None:

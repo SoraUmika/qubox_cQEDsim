@@ -1707,20 +1707,19 @@ set to \texttt{"g"}.
 \]
 
 \paragraph{Number-selective qubit rotation (SQR).}
-\texttt{sqr} and \texttt{multi\_sqr} use \textbf{cavity-first, qubit-second}
-tensor ordering (the natural mathematical order for
-\(|n\rangle\langle n|\otimes R_\phi(\theta)\)):
+\texttt{sqr} and \texttt{multi\_sqr} use \textbf{qubit-first, cavity-second}
+tensor ordering, consistent with every other qubit-cavity gate in the package:
 \[
   U_\text{SQR}(\theta,\phi;n)
-  = |n\rangle\langle n|\otimes R_\phi(\theta)
-  + \sum_{m\neq n}|m\rangle\langle m|\otimes I.
+  = R_\phi(\theta)\otimes|n\rangle\langle n|
+  + I\otimes\sum_{m\neq n}|m\rangle\langle m|.
 \]
 The generalised form:
 \[
-  U = \sum_n |n\rangle\langle n|\otimes R_{\phi_n}(\theta_n).
+  U = \sum_n R_{\phi_n}(\theta_n)\otimes|n\rangle\langle n|.
 \]
-The legacy \texttt{sqr\_op(thetas, phis)} in \texttt{cqed\_sim.core.ideal\_gates}
-uses qubit-first, cavity-second ordering and a dense array interface only.
+The dense helper \texttt{sqr\_op(thetas, phis)} in \texttt{cqed\_sim.core.ideal\_gates}
+also uses qubit-first, cavity-second ordering with a dense array interface.
 
 \paragraph{Jaynes--Cummings and blue-sideband gates.}
 Qubit first, cavity second. These are \emph{Hamiltonian-generated} unitaries,

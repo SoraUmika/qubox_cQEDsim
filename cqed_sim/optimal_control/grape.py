@@ -12,7 +12,12 @@ from scipy.optimize import minimize
 from cqed_sim.unitary_synthesis.metrics import subspace_unitary_fidelity
 
 from .hardware import apply_control_pipeline, selected_control_indices, selected_iq_pairs
-from .initial_guesses import random_control_schedule, zero_control_schedule
+from .initial_guesses import (
+    PulseAnsatz,
+    ansatz_control_schedule,
+    random_control_schedule,
+    zero_control_schedule,
+)
 from .objectives import StateTransferObjective, UnitaryObjective
 from .parameterizations import ControlSchedule
 from .penalties import (
@@ -35,7 +40,7 @@ class GrapeConfig:
     maxiter: int = 200
     ftol: float = 1.0e-9
     gtol: float = 1.0e-6
-    initial_guess: str = "random"
+    initial_guess: Any = "random"
     random_scale: float = 0.15
     seed: int | None = None
     history_every: int = 1
@@ -47,8 +52,12 @@ class GrapeConfig:
     show_progress: bool = False
 
     def __post_init__(self) -> None:
-        if str(self.initial_guess).lower() not in {"random", "zeros"}:
-            raise ValueError("GrapeConfig.initial_guess must be 'random' or 'zeros'.")
+        if isinstance(self.initial_guess, str):
+            if self.initial_guess.lower() not in {"random", "zeros"}:
+                raise ValueError(
+                    "GrapeConfig.initial_guess string must be 'random' or 'zeros'; "
+                    "pass a ControlSchedule or PulseAnsatz object for custom initialization."
+                )
         if int(self.maxiter) <= 0:
             raise ValueError("GrapeConfig.maxiter must be positive.")
         if float(self.ftol) < 0.0 or float(self.gtol) < 0.0:
@@ -687,7 +696,12 @@ class GrapeSolver:
 
     def _initial_schedule(self, problem, initial_schedule: ControlSchedule | np.ndarray | None) -> ControlSchedule:
         if initial_schedule is None:
-            if str(self.config.initial_guess).lower() == "zeros":
+            ig = self.config.initial_guess
+            if isinstance(ig, PulseAnsatz):
+                return ansatz_control_schedule(problem, ig)
+            if isinstance(ig, ControlSchedule):
+                return ig.clipped()
+            if str(ig).lower() == "zeros":
                 return zero_control_schedule(problem)
             return random_control_schedule(problem, seed=self.config.seed, scale=float(self.config.random_scale))
         if isinstance(initial_schedule, ControlSchedule):

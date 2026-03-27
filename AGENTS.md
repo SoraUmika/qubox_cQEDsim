@@ -253,4 +253,89 @@
   - and physics/conventions documentation,
   rather than modifying code in isolation.
 - Major reusable features should be discoverable, documented, and understandable without requiring a reader to infer intent solely from source code.
+
+## Generalized Optimizer Interfaces (User-Defined Gates and Pulse Ansatzes)
+
+The following extensions were added to enable user-supplied primitives and
+pulse templates across all optimizer workflows.  Agents working on synthesis,
+GRAPE, or pulse-calibration tasks should prefer these interfaces over
+bypassing the framework.
+
+### User-Defined Gates in Unitary Synthesis
+
+Three factory helpers in `cqed_sim.unitary_synthesis` create `PrimitiveGate`
+instances from user-supplied objects:
+
+| Helper | Usage |
+|--------|-------|
+| `make_gate_from_matrix(name, matrix)` | Fixed unitary matrix (NumPy or QuTiP). No optimizer parameters unless `optimize_time=True`. |
+| `make_gate_from_callable(name, fn, *, parameters, parameter_bounds)` | Callable `fn(params, model) -> array`. Parameters are exposed to the optimizer. |
+| `make_gate_from_waveform(name, fn, *, parameters, parameter_bounds)` | Callable returning `Pulse` objects. Evaluated through the pulse-level backend. |
+
+Pass any list of these gates as `primitives=` to `UnitarySynthesizer`.
+Built-in workflows (`gateset=["QubitRotation", ...]`) are fully preserved.
+
+### Gate Registry
+
+`gate_registry` (a `GateRegistry` singleton) maps custom gate names to
+factory callables, making them usable in `gateset` string lists:
+
+```python
+from cqed_sim.unitary_synthesis import gate_registry, make_gate_from_callable
+
+gate_registry.register(
+    "MyCZ",
+    lambda name, duration, **kw: make_gate_from_callable(
+        name, my_cz_fn, parameters={}, duration=duration, **kw
+    ),
+)
+synth = UnitarySynthesizer(gateset=["QubitRotation", "MyCZ"], ...)
+```
+
+### Gate-Order Optimization
+
+`GateOrderOptimizer` wraps `UnitarySynthesizer` and searches over gate
+orderings drawn from a pool.  It supports three strategies:
+
+- `"random"` — sample N random orderings (default, scalable)
+- `"exhaustive"` — enumerate all permutations up to `max_sequence_length`
+- `"greedy"` — iteratively append the gate that most improves the objective
+
+```python
+from cqed_sim.unitary_synthesis import GateOrderConfig, GateOrderOptimizer
+
+result = GateOrderOptimizer(
+    gate_pool=pool,
+    order_config=GateOrderConfig(search_strategy="random", n_random_trials=20),
+    synthesizer_kwargs=dict(subspace=my_subspace),
+).search(target=my_target)
+```
+
+### GRAPE Ansatz Initialization
+
+`GrapeConfig.initial_guess` now accepts, in addition to `"random"` and
+`"zeros"`, any of:
+
+| Type | Description |
+|------|-------------|
+| `GaussianAnsatz(sigma_fraction, amplitude_fraction)` | Gaussian envelope centered at mid-sequence |
+| `DRAGAnsatz(sigma_fraction, drag_alpha)` | Gaussian + DRAG derivative on quadrature |
+| `MultitoneAnsatz(n_tones)` | Sum of random-phase sinusoids |
+| `CustomAnsatz(fn)` | Callable `fn(problem) -> ControlSchedule` |
+| `ControlSchedule` object | Directly seed from a prior run (warm start) |
+
+All types are in `cqed_sim.optimal_control`.  Existing code using
+`GrapeConfig(initial_guess="random")` is unaffected.
+
+```python
+from cqed_sim.optimal_control import GrapeConfig, GaussianAnsatz
+
+config = GrapeConfig(
+    initial_guess=GaussianAnsatz(sigma_fraction=0.25, seed=0),
+    maxiter=300,
+)
+```
+
+See `examples/user_defined_gates_and_ansatz_demo.py` for end-to-end
+demonstrations of all these interfaces.
 - Documentation should explain not only how a feature works, but also why it exists and when it should be used.

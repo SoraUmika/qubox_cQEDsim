@@ -14,7 +14,17 @@ from .hardware import (
     SmoothIQRadiusLimitHardwareMap,
     resolve_control_schedule,
 )
-from .initial_guesses import random_control_schedule, warm_start_schedule, zero_control_schedule
+from .initial_guesses import (
+    ansatz_control_schedule,
+    CustomAnsatz,
+    DRAGAnsatz,
+    GaussianAnsatz,
+    MultitoneAnsatz,
+    PulseAnsatz,
+    random_control_schedule,
+    warm_start_schedule,
+    zero_control_schedule,
+)
 from .evaluation import (
     ControlEvaluationCase,
     ControlEvaluationResult,
@@ -113,6 +123,12 @@ __all__ = [
     "zero_control_schedule",
     "random_control_schedule",
     "warm_start_schedule",
+    "PulseAnsatz",
+    "GaussianAnsatz",
+    "DRAGAnsatz",
+    "MultitoneAnsatz",
+    "CustomAnsatz",
+    "ansatz_control_schedule",
     "build_control_terms_from_model",
     "build_control_system_from_model",
     "build_control_problem_from_model",

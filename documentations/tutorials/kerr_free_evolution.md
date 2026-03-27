@@ -60,4 +60,16 @@ rho_c = reduced_cavity_state(initial_state)
 xvec, yvec, wigner = cavity_wigner(rho_c)
 ```
 
+---
+
+## Wigner Function Snapshots
+
+Evolving a coherent state $|\alpha=2\rangle$ under the Kerr Hamiltonian $H_K = \frac{K}{2} a^{\dagger 2} a^2$ produces characteristic phase-space deformations at fractions of the Kerr revival period $T_K = 2\pi / |K|$:
+
+![Kerr Free Evolution — Wigner Snapshots](../assets/images/tutorials/kerr_free_evolution_wigner.png)
+
+At $t = 0$ the state is a coherent blob; by $T_K/4$ it has stretched into a crescent; at $T_K/2$ it forms a Schrödinger-cat-like superposition; and at $3T_K/4$ the crescent appears on the opposite side.
+
+---
+
 For the full guided walkthrough, use `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`. For the sign-check companion, use `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`. For a compact executable script, use the example workflow module or standalone script.

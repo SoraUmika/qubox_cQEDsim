@@ -126,6 +126,10 @@ plt.grid(True, alpha=0.3)
 plt.show()
 ```
 
+Running this sweep produces the following spectrum:
+
+![Displacement + Qubit Spectroscopy](../assets/images/tutorials/displacement_spectroscopy.png)
+
 For a coherent state $|\alpha=2\rangle$, you should see peaks at:
 
 - $\delta = 0$ (n=0 manifold)

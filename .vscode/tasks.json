@@ -1,0 +1,104 @@
+{
+	"version": "2.0.0",
+	"inputs": [
+		{
+			"id": "agentWorkflowTask",
+			"type": "promptString",
+			"description": "Path to the task spec, relative to the workspace root",
+			"default": "agent_workflow/tasks/example_task.yaml"
+		}
+	],
+	"tasks": [
+		{
+			"label": "Build physics conventions PDF",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/d",
+				"/c",
+				"\"${workspaceFolder}\\physics_and_conventions\\build_physics_conventions_report.bat\""
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Build physics conventions PDF with pdflatex",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/d",
+				"/c",
+				"\"${workspaceFolder}\\physics_and_conventions\\build_physics_conventions_report.bat\""
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Build physics conventions PDF absolute path",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/d",
+				"/c",
+				"\"${workspaceFolder}\\physics_and_conventions\\build_physics_conventions_report.bat\""
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Rebuild physics conventions PDF absolute path",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/d",
+				"/c",
+				"\"${workspaceFolder}\\physics_and_conventions\\build_physics_conventions_report.bat\""
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Agent Workflow: Run Task",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"${workspaceFolder}/run_agent_workflow.ps1",
+				"-Task",
+				"${input:agentWorkflowTask}"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Agent Workflow: Resume Last Run",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"${workspaceFolder}/run_agent_workflow.ps1",
+				"-ResumeLast"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		}
+	]
+}

@@ -1642,3 +1642,170 @@ class GateSequence:
     def gate_durations(self) -> np.ndarray:
         self.sync_time_params_from_gates()
         return np.asarray([gate.duration for gate in self.gates], dtype=float)
+
+
+# ---------------------------------------------------------------------------
+# Factory helpers for user-defined gates
+# ---------------------------------------------------------------------------
+
+
+def make_gate_from_matrix(
+    name: str,
+    matrix: np.ndarray | qt.Qobj,
+    *,
+    duration: float = 100.0e-9,
+    optimize_time: bool = False,
+    time_bounds: tuple[float, float] | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> PrimitiveGate:
+    """Create a user-defined gate from a fixed unitary matrix.
+
+    The matrix is validated as unitary and stored verbatim.  No parameters
+    are exposed for optimization — the gate acts as a fixed block in the
+    sequence.  To optimize over the unitary, use :func:`make_gate_from_callable`
+    instead.
+
+    Args:
+        name: Symbolic name used in synthesis reports.
+        matrix: Square unitary matrix as a NumPy array or QuTiP ``Qobj``.
+        duration: Gate duration in seconds (default 100 ns).
+        optimize_time: Whether to include the duration in the optimizer
+            parameter vector (default ``False`` for fixed matrices).
+        time_bounds: ``(t_min, t_max)`` bounds in seconds.  ``None`` inherits
+            the synthesizer default.
+        metadata: Arbitrary user metadata stored alongside the gate.
+
+    Returns:
+        A :class:`PrimitiveGate` ready to pass as an element of ``primitives``.
+
+    Example::
+
+        import numpy as np
+        from cqed_sim.unitary_synthesis import make_gate_from_matrix
+
+        cz = make_gate_from_matrix("CZ", np.diag([1, 1, 1, -1]).astype(complex))
+    """
+    if isinstance(matrix, qt.Qobj):
+        arr = np.asarray(matrix.full(), dtype=np.complex128)
+    else:
+        arr = np.asarray(matrix, dtype=np.complex128)
+    arr = _validate_unitary_matrix(arr)
+    return PrimitiveGate(
+        name=str(name),
+        duration=float(duration),
+        optimize_time=bool(optimize_time),
+        time_bounds=time_bounds,
+        matrix=arr,
+        metadata=dict(metadata) if metadata is not None else {},
+    )
+
+
+def make_gate_from_callable(
+    name: str,
+    unitary_fn: Callable[[dict[str, Any], Any | None], np.ndarray | qt.Qobj],
+    *,
+    parameters: dict[str, Any] | None = None,
+    parameter_bounds: dict[str, tuple[float, float]] | None = None,
+    duration: float = 100.0e-9,
+    optimize_time: bool = True,
+    time_bounds: tuple[float, float] | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> PrimitiveGate:
+    """Create a user-defined gate backed by a callable unitary.
+
+    The callable receives the current parameter dictionary and an optional
+    runtime model, and must return a square unitary as a NumPy array or QuTiP
+    ``Qobj``.  Parameters declared in *parameters* are automatically included
+    in the optimizer search space.
+
+    Args:
+        name: Symbolic name used in synthesis reports.
+        unitary_fn: Callable with signature
+            ``fn(parameters: dict[str, Any], model: Any | None) -> array``.
+        parameters: Initial parameter values as ``{name: value}`` mapping.
+            Scalar floats, complex numbers, and 1-D NumPy arrays are supported.
+        parameter_bounds: Per-parameter bounds as ``{name: (lower, upper)}``.
+            Missing entries default to ``(-inf, inf)``.
+        duration: Initial gate duration in seconds.
+        optimize_time: Whether to include the duration in the optimizer.
+        time_bounds: ``(t_min, t_max)`` duration bounds in seconds.
+        metadata: Arbitrary user metadata.
+
+    Returns:
+        A :class:`PrimitiveGate` ready to pass as an element of ``primitives``.
+
+    Example::
+
+        import numpy as np
+        from cqed_sim.unitary_synthesis import make_gate_from_callable
+
+        def rzz(params, model):
+            theta = params["theta"]
+            return np.array([[np.exp(-1j*theta/2), 0, 0, 0],
+                             [0, np.exp(1j*theta/2), 0, 0],
+                             [0, 0, np.exp(1j*theta/2), 0],
+                             [0, 0, 0, np.exp(-1j*theta/2)]])
+
+        gate = make_gate_from_callable(
+            "Rzz",
+            rzz,
+            parameters={"theta": 0.5},
+            parameter_bounds={"theta": (-np.pi, np.pi)},
+        )
+    """
+    return PrimitiveGate(
+        name=str(name),
+        duration=float(duration),
+        optimize_time=bool(optimize_time),
+        time_bounds=time_bounds,
+        matrix=unitary_fn,
+        parameters=dict(parameters) if parameters is not None else {},
+        parameter_bounds=dict(parameter_bounds) if parameter_bounds is not None else {},
+        metadata=dict(metadata) if metadata is not None else {},
+    )
+
+
+def make_gate_from_waveform(
+    name: str,
+    waveform_fn: Callable[[dict[str, Any], Any | None], Any],
+    *,
+    parameters: dict[str, Any] | None = None,
+    parameter_bounds: dict[str, tuple[float, float]] | None = None,
+    duration: float = 100.0e-9,
+    optimize_time: bool = True,
+    time_bounds: tuple[float, float] | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> PrimitiveGate:
+    """Create a user-defined gate backed by a pulse waveform generator.
+
+    The callable must return pulses compatible with the runtime simulator.
+    The return value may be:
+
+    * a list of :class:`~cqed_sim.pulses.Pulse` objects,
+    * a ``(pulses, drive_ops)`` tuple, or
+    * a ``{"pulses": ..., "drive_ops": ..., "meta": ...}`` dict.
+
+    Args:
+        name: Symbolic name.
+        waveform_fn: Callable with signature
+            ``fn(parameters: dict[str, Any], model: Any | None) -> pulses``.
+        parameters: Initial parameter values.
+        parameter_bounds: Per-parameter bounds.
+        duration: Initial gate duration in seconds.
+        optimize_time: Whether to include the duration in the optimizer.
+        time_bounds: Duration bounds in seconds.
+        metadata: Arbitrary user metadata.
+
+    Returns:
+        A :class:`PrimitiveGate` ready to pass as an element of ``primitives``.
+    """
+    return PrimitiveGate(
+        name=str(name),
+        duration=float(duration),
+        optimize_time=bool(optimize_time),
+        time_bounds=time_bounds,
+        waveform=waveform_fn,
+        parameters=dict(parameters) if parameters is not None else {},
+        parameter_bounds=dict(parameter_bounds) if parameter_bounds is not None else {},
+        metadata=dict(metadata) if metadata is not None else {},
+    )

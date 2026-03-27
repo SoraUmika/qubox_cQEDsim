@@ -665,17 +665,16 @@ U = conditional_displacement(alpha_g=0.4, alpha_e=-0.3j, cavity_dim=20)
 
 ##### Number-selective qubit rotation (SQR)
 
-Tensor ordering for `sqr` and `multi_sqr` is **cavity first, qubit second**
-(the natural mathematical order `|n⟩⟨n| ⊗ R_φ(θ)`).
+Tensor ordering for `sqr` and `multi_sqr` is **qubit first, cavity second**,
+consistent with all other qubit-cavity gates in the package.
 
 | Function | Signature | Description |
 |---|---|---|
-| `sqr(theta, phi, n, cavity_dim, qubit_dim=2)` | `(float, float, int, int, int) -> qt.Qobj` | `\|n⟩⟨n\| ⊗ R_φ(θ) + Σ_{m≠n} \|m⟩⟨m\| ⊗ I`. Single-Fock-level SQR. |
-| `multi_sqr(theta_by_n, phi_by_n, cavity_dim, qubit_dim=2)` | `(dict or array, dict or array, int, int) -> qt.Qobj` | `Σ_n \|n⟩⟨n\| ⊗ R_{φ_n}(θ_n)`. Dict `{n: angle}` or dense array. |
+| `sqr(theta, phi, n, cavity_dim, qubit_dim=2)` | `(float, float, int, int, int) -> qt.Qobj` | `R_φ(θ) ⊗ \|n⟩⟨n\| + I ⊗ Σ_{m≠n} \|m⟩⟨m\|`. Single-Fock-level SQR. |
+| `multi_sqr(theta_by_n, phi_by_n, cavity_dim, qubit_dim=2)` | `(dict or array, dict or array, int, int) -> qt.Qobj` | `Σ_n R_{φ_n}(θ_n) ⊗ \|n⟩⟨n\|`. Dict `{n: angle}` or dense array. |
 
-Note: the existing `sqr_op(thetas, phis)` in `cqed_sim.core.ideal_gates` uses
-**qubit-first** ordering and a dense array interface. `sqr` and `multi_sqr`
-use **cavity-first** ordering and additionally support sparse dict input.
+Note: the existing `sqr_op(thetas, phis)` in `cqed_sim.core.ideal_gates` also uses
+**qubit-first** ordering and provides a dense array interface.
 
 ##### Interaction gates (Jaynes–Cummings, blue sideband, beam splitter)
 

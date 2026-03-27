@@ -438,13 +438,13 @@ $$CD(\alpha_g, \alpha_e)
 
 #### SQR tensor ordering
 
-`sqr` and `multi_sqr` use **cavity first, qubit second**
-(natural for $|n\rangle\langle n|\otimes R_\phi(\theta)$):
+`sqr` and `multi_sqr` use **qubit first, cavity second**, consistent with all
+other qubit-cavity gates in the package:
 
-$$U_\text{SQR}(\theta,\phi;n) = |n\rangle\langle n|\otimes R_\phi(\theta) + \sum_{m\neq n}|m\rangle\langle m|\otimes I$$
+$$U_\text{SQR}(\theta,\phi;n) = R_\phi(\theta)\otimes|n\rangle\langle n| + I\otimes\sum_{m\neq n}|m\rangle\langle m|$$
 
-The legacy `sqr_op(thetas, phis)` in `cqed_sim.core.ideal_gates` uses **qubit
-first, cavity second** with a dense array interface only.
+The legacy `sqr_op(thetas, phis)` in `cqed_sim.core.ideal_gates` also uses **qubit
+first, cavity second** with a dense array interface.
 
 #### Jaynes–Cummings and blue-sideband gates
 

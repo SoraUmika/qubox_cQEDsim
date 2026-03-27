@@ -67,6 +67,14 @@ print(f"Objective: {result.objective_value:.6e}")
 
 ---
 
+## Example Output
+
+Running the example above produces a converged solution (left: infidelity vs. iteration; right: optimized I/Q control amplitudes):
+
+![GRAPE Optimal Control](../assets/images/tutorials/grape_optimal_control.png)
+
+---
+
 ## Key Concepts
 
 ### Time Grid and Parameterization

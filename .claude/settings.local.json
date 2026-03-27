@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(python -m pytest tests/ -x -q --tb=short --ignore=tests/quantum_algorithms)",
-      "Bash(python -m pytest tests/ -q --tb=short --ignore=tests/quantum_algorithms --deselect=tests/test_12_pulse_semantics.py::test_same_area_different_shape_same_rotation_small_signal -m \"not slow\")"
+      "Bash(python -m pytest tests/ -q --tb=short --ignore=tests/quantum_algorithms --deselect=tests/test_12_pulse_semantics.py::test_same_area_different_shape_same_rotation_small_signal -m \"not slow\")",
+      "Bash(python -m python examples/user_defined_gates_and_ansatz_demo.py)",
+      "Bash(python -m cqed_sim)",
+      "Bash(pip show:*)",
+      "Bash(python -c \"import cqed_sim; print\\(''ok''\\)\")",
+      "Bash(python -c \"import sys; sys.path.insert\\(0, ''.''\\); import cqed_sim; print\\(''ok''\\)\")",
+      "Bash(python examples/user_defined_gates_and_ansatz_demo.py)",
+      "Bash(python -c \":*)",
+      "Bash(python -c \"import site; print\\(site.getsitepackages\\(\\)\\)\")",
+      "Bash(python -m examples.user_defined_gates_and_ansatz_demo)",
+      "Bash(python -m pytest tests/test_40_optimal_control_grape.py tests/test_41_optimal_control_followup.py -q --tb=short)",
+      "Bash(python -m pytest tests/test_40_optimal_control_grape.py tests/test_41_optimal_control_followup.py -v)",
+      "Bash(python -m pytest tests/test_22_support_aware_objective.py tests/test_34_universal_cqed_model.py tests/test_35_tutorial_api_conventions.py -q)"
     ]
   }
 }

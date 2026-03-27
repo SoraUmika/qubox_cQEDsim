@@ -51,9 +51,12 @@ from .sequence import (
     drift_phase_table,
     drift_phase_from_hamiltonian,
     drift_phase_unitary,
+    make_gate_from_matrix,
+    make_gate_from_callable,
+    make_gate_from_waveform,
 )
 from .subspace import Subspace
-from .systems import CQEDSystemAdapter, QuantumSystem
+from .systems import CQEDSystemAdapter, GateRegistry, QuantumSystem, gate_registry
 from .targets import (
     ObservableTarget,
     TargetChannel,
@@ -67,6 +70,7 @@ from .targets import (
     make_target,
 )
 from .waveform_bridge import waveform_primitive_from_gate, waveform_sequence_from_gates
+from .order_search import GateOrderConfig, GateOrderOptimizer, GateOrderSearchResult
 
 __all__ = [
     "Subspace",
@@ -136,6 +140,14 @@ __all__ = [
     "BlueSidebandExchange",
     "ConditionalPhaseSQR",
     "FreeEvolveCondPhase",
+    "make_gate_from_matrix",
+    "make_gate_from_callable",
+    "make_gate_from_waveform",
+    "GateRegistry",
+    "gate_registry",
+    "GateOrderConfig",
+    "GateOrderOptimizer",
+    "GateOrderSearchResult",
     "drift_hamiltonian_qobj",
     "drift_phase_table",
     "drift_phase_from_hamiltonian",

@@ -581,8 +581,8 @@ class TestCoupledGates:
 
     def test_sqr_shape(self):
         U = cs.sqr(np.pi, 0.0, n=2, cavity_dim=self.CDIM)
-        # cavity first, qubit second
-        assert U.shape == (self.CDIM * self.QDIM, self.CDIM * self.QDIM)
+        # qubit first, cavity second (repository convention)
+        assert U.shape == (self.QDIM * self.CDIM, self.QDIM * self.CDIM)
 
     def test_sqr_unitarity(self):
         for n in [0, 1, 3]:
@@ -596,16 +596,16 @@ class TestCoupledGates:
 
         # Non-target levels: qubit in |g⟩ should stay in |g⟩
         for m in [0, 1, 3, 4]:
-            state = qt.tensor(ket(self.CDIM, m), ket(self.QDIM, 0))
+            state = qt.tensor(ket(self.QDIM, 0), ket(self.CDIM, m))
             result = U * state
             # Qubit should still be in |g⟩ (up to global phase)
-            expected = qt.tensor(ket(self.CDIM, m), ket(self.QDIM, 0))
+            expected = qt.tensor(ket(self.QDIM, 0), ket(self.CDIM, m))
             assert_close(result, expected)
 
         # Target level n=2: qubit |g⟩ should become -i|e⟩ (Rx(π) action)
-        state = qt.tensor(ket(self.CDIM, target_n), ket(self.QDIM, 0))
+        state = qt.tensor(ket(self.QDIM, 0), ket(self.CDIM, target_n))
         result = U * state
-        expected = qt.tensor(ket(self.CDIM, target_n), -1j * ket(self.QDIM, 1))
+        expected = qt.tensor(-1j * ket(self.QDIM, 1), ket(self.CDIM, target_n))
         assert_close(result, expected)
 
     # --- multi_sqr --------------------------------------------------------
@@ -625,7 +625,7 @@ class TestCoupledGates:
         U = cs.multi_sqr(
             np.zeros(self.CDIM), np.zeros(self.CDIM), self.CDIM
         )
-        assert_close(U, qt.tensor(qt.qeye(self.CDIM), qt.qeye(self.QDIM)))
+        assert_close(U, qt.tensor(qt.qeye(self.QDIM), qt.qeye(self.CDIM)))
 
     # --- jaynes_cummings --------------------------------------------------
 

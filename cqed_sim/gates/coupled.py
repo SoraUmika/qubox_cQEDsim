@@ -412,19 +412,13 @@ def sqr(
     Returns
     -------
     qt.Qobj
-        A ``(cavity_dim * qubit_dim) × (cavity_dim * qubit_dim)`` unitary.
+        A ``(qubit_dim * cavity_dim) × (qubit_dim * cavity_dim)`` unitary.
 
     Notes
     -----
-    Tensor ordering here is **cavity first, qubit second** to match the
-    natural SQR interpretation ``|n⟩⟨n| ⊗ R_φ(θ)``.  This is the *transpose*
-    of the qubit-first ordering used in the other coupled gates.  When
-    embedding SQR into a larger system, use
-    ``qt.tensor(sqr_result, ...)`` consistently.
-
-    Alternatively, use the dense wrapper :func:`multi_sqr` which uses the same
-    cavity-first ordering, or :func:`~cqed_sim.core.ideal_gates.sqr_op` for
-    the qubit-first dense form.
+    Tensor ordering is **qubit first, cavity second**, consistent with all
+    other gates in this module and with the repository-wide convention
+    ``qt.tensor(qubit, cavity)``.
     """
     cav_dim = int(cavity_dim)
     q_dim = int(qubit_dim)
@@ -434,13 +428,14 @@ def sqr(
 
     rot = qubit_rotation_xy(float(theta), float(phi))
     identity_q = qt.qeye(q_dim)
+    pn = qt.basis(cav_dim, n) * qt.basis(cav_dim, n).dag()
 
-    result = qt.tensor(qt.basis(cav_dim, n) * qt.basis(cav_dim, n).dag(), rot)
+    result = qt.tensor(rot, pn)
     for m in range(cav_dim):
         if m != n:
             result = result + qt.tensor(
-                qt.basis(cav_dim, m) * qt.basis(cav_dim, m).dag(),
                 identity_q,
+                qt.basis(cav_dim, m) * qt.basis(cav_dim, m).dag(),
             )
     return result
 
@@ -479,11 +474,13 @@ def multi_sqr(
     Returns
     -------
     qt.Qobj
-        A ``(cavity_dim * qubit_dim) × (cavity_dim * qubit_dim)`` unitary.
+        A ``(qubit_dim * cavity_dim) × (qubit_dim * cavity_dim)`` unitary.
 
     Notes
     -----
-    Tensor ordering is **cavity first, qubit second** (same as :func:`sqr`).
+    Tensor ordering is **qubit first, cavity second**, consistent with all
+    other gates in this module and with the repository-wide convention
+    ``qt.tensor(qubit, cavity)``.
     """
     cav_dim = int(cavity_dim)
     q_dim = int(qubit_dim)
@@ -514,11 +511,11 @@ def multi_sqr(
             )
         phis[:] = arr
 
-    result = 0 * qt.tensor(qt.qeye(cav_dim), qt.qeye(q_dim))
+    result = 0 * qt.tensor(qt.qeye(q_dim), qt.qeye(cav_dim))
     for n in range(cav_dim):
         pn = qt.basis(cav_dim, n) * qt.basis(cav_dim, n).dag()
         rot = qubit_rotation_xy(thetas[n], phis[n])
-        result = result + qt.tensor(pn, rot)
+        result = result + qt.tensor(rot, pn)
     return result
 
 

@@ -3,6 +3,7 @@ site_description: "Hardware-faithful time-domain cQED pulse simulator built on Q
 site_url: ""
 
 docs_dir: documentations
+use_directory_urls: false
 
 theme:
   name: material

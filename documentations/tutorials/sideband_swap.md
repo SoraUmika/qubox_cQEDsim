@@ -133,6 +133,14 @@ print(f"Storage ⟨n⟩: {n_s:.3f}")
 
 A successful red sideband swap transfers $|e, 0\rangle \to |g, 1\rangle$, with the transmon relaxing and the cavity gaining a photon.
 
+### Population Dynamics vs. Pulse Duration
+
+Sweeping the sideband pulse duration reveals the Rabi oscillation between transmon and cavity:
+
+![Sideband Swap Dynamics](../assets/images/tutorials/sideband_swap_dynamics.png)
+
+The qubit excited-state probability $P(e)$ drops as the cavity photon number $\langle n \rangle$ rises, completing a full swap cycle.
+
 ---
 
 ## Existing Examples

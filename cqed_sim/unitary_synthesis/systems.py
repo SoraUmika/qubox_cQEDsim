@@ -71,6 +71,84 @@ _CQED_GATE_NAMES = {
 }
 
 
+class GateRegistry:
+    """Global registry mapping user-defined gate names to factory callables.
+
+    Use :meth:`register` to make a custom gate type available by name in the
+    ``gateset`` argument of :class:`~cqed_sim.unitary_synthesis.UnitarySynthesizer`.
+    Use :meth:`build` to instantiate a registered gate.
+
+    The registry is a singleton — a pre-constructed instance ``gate_registry``
+    is exported from :mod:`cqed_sim.unitary_synthesis`.
+
+    Example::
+
+        from cqed_sim.unitary_synthesis import gate_registry, make_gate_from_callable
+        import numpy as np
+
+        def my_cz(params, model):
+            return np.diag([1, 1, 1, -1]).astype(complex)
+
+        gate_registry.register(
+            "MyCZ",
+            lambda name, duration, **kw: make_gate_from_callable(
+                name, my_cz, parameters={}, duration=duration, **kw
+            ),
+        )
+
+        # Now usable by name in UnitarySynthesizer:
+        # synth = UnitarySynthesizer(gateset=["QubitRotation", "MyCZ"], ...)
+    """
+
+    def __init__(self) -> None:
+        self._registry: dict[str, Callable[..., Any]] = {}
+
+    def register(self, name: str, factory: Callable[..., Any]) -> None:
+        """Register a gate factory under *name*.
+
+        Args:
+            name: Gate name string used in ``gateset`` lists.
+            factory: Callable with signature
+                ``factory(name: str, duration: float, **kw) -> GateBase``.
+                The ``**kw`` may include ``optimize_time``, ``time_bounds``,
+                ``duration_ref``, and ``time_group``.
+        """
+        self._registry[str(name)] = factory
+
+    def build(self, name: str, *, duration: float = 100.0e-9, **kwargs: Any) -> Any:
+        """Build a gate instance from a registered factory.
+
+        Args:
+            name: Registered gate name.
+            duration: Initial duration in seconds.
+            **kwargs: Forwarded to the factory.
+
+        Raises:
+            KeyError: If *name* is not registered.
+        """
+        if name not in self._registry:
+            raise KeyError(
+                f"Gate '{name}' is not in the GateRegistry. "
+                f"Registered names: {sorted(self._registry)}"
+            )
+        return self._registry[name](name, duration=duration, **kwargs)
+
+    def is_registered(self, name: str) -> bool:
+        """Return ``True`` if *name* has been registered."""
+        return str(name) in self._registry
+
+    def registered_names(self) -> list[str]:
+        """Return the sorted list of registered gate names."""
+        return sorted(self._registry)
+
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"GateRegistry({self.registered_names()})"
+
+
+#: Module-level singleton; import and call ``.register()`` to add custom gates.
+gate_registry: GateRegistry = GateRegistry()
+
+
 def _normalize_gate_name(name: str) -> str:
     aliases = {
         "CondPhaseSQR": "ConditionalPhaseSQR",
@@ -168,8 +246,23 @@ def _legacy_cqed_sequence(
             gates.append(ConditionalPhaseSQR(phases_n=[0.0] * int(n_cav), drift_model=drift_model, **kw))
         elif name == "FreeEvolveCondPhase":
             gates.append(FreeEvolveCondPhase(drift_model=drift_model, **kw))
+        elif gate_registry.is_registered(raw_name):
+            gates.append(
+                gate_registry.build(
+                    raw_name,
+                    duration=float(default_duration),
+                    optimize_time=bool(optimize_times),
+                    time_bounds=bounds,
+                    duration_ref=float(default_duration),
+                )
+            )
         else:
-            raise ValueError(f"Unsupported gate in gateset: {raw_name}")
+            raise ValueError(
+                f"Unsupported gate in gateset: '{raw_name}'. "
+                f"Built-in names: {sorted(_CQED_GATE_NAMES)}. "
+                f"Custom names: {gate_registry.registered_names()} "
+                f"(use gate_registry.register() to add custom gates)."
+            )
     return GateSequence(gates=gates, n_cav=int(n_cav), full_dim=int(full_dim))
 
 

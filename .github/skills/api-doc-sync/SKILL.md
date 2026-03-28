@@ -37,6 +37,7 @@ Core surfaces in this repo:
 - Updating `documentations/` but leaving the checked-in `site/` output stale.
 - Renaming parameters in code but not in examples or tutorials.
 - Leaving deleted file paths or notebook references in docs.
+- Updating a tutorial without showing the code path and generated artifacts that demonstrate the simulation result.
 - Treating a physics-meaning change as if it were documentation-only.
 
 ## Procedure
@@ -50,6 +51,8 @@ Core surfaces in this repo:
 3. Update examples and references.
    - Fix stale keys, paths, imports, and usage snippets.
    - If the intended user workflow changed, update `examples/` or tutorial assets accordingly.
+   - For simulation tutorials, make sure the tutorial points to the concrete code path and includes generated evidence such as plots, tables, or reported values from an actual run.
+   - For holographic simulation tutorials, require concrete benchmark-style outputs rather than prose-only descriptions.
 4. Check whether physics meaning changed.
    - If yes, update `physics_and_conventions/physics_conventions_report.tex` as part of the same task.
 5. Verify navigation and discoverability.
@@ -66,5 +69,6 @@ Core surfaces in this repo:
 - Relevant `documentations/` pages were updated in the same task.
 - `site/` was regenerated when public docs changed and matches the current MkDocs source.
 - Examples, tutorials, and module READMEs use the current names and paths.
+- Tutorials that claim simulation results include the code path and generated artifacts that demonstrate those results.
 - Physics documentation was updated if semantics changed.
 - A final search confirmed that stale names or references were removed.

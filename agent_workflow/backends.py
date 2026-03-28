@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 from typing import Any, Protocol
 
 
@@ -321,6 +322,7 @@ def _placeholder_mapping(request: AgentRequest) -> dict[str, str]:
         "phase": request.phase,
         "role": request.role,
         "task_title": str(request.context.get("task_title", "")),
+        "python_executable": sys.executable,
     }
 
 

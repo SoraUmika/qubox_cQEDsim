@@ -12,6 +12,86 @@ if TYPE_CHECKING:
     from .problems import ControlTerm
 
 
+def waveform_values_to_pulses(
+    *,
+    control_terms: tuple["ControlTerm", ...],
+    time_grid: "PiecewiseConstantTimeGrid",
+    waveform_values: np.ndarray,
+    parameterization_name: str,
+    extra_metadata: dict[str, Any] | None = None,
+) -> tuple[list[Pulse], dict[str, Any], dict[str, Any]]:
+    data = np.asarray(waveform_values, dtype=float)
+    expected_shape = (len(control_terms), time_grid.steps)
+    if data.shape != expected_shape:
+        raise ValueError(f"Waveform values must have shape {expected_shape}, received {data.shape}.")
+
+    boundaries = np.asarray(time_grid.boundaries_s(), dtype=float)
+    durations = np.asarray(time_grid.step_durations_s, dtype=float)
+    channels: dict[str, Any] = {}
+    for term in control_terms:
+        if term.export_channel is None:
+            continue
+        channel_state = channels.setdefault(
+            str(term.export_channel),
+            {
+                "target": term.drive_target,
+                "coefficients": np.zeros(time_grid.steps, dtype=np.complex128),
+            },
+        )
+        if channel_state["target"] != term.drive_target:
+            raise ValueError(
+                f"Export channel '{term.export_channel}' is associated with multiple incompatible drive targets."
+            )
+
+    for term_index, term in enumerate(control_terms):
+        if term.export_channel is None:
+            continue
+        contribution = np.asarray(data[term_index, :], dtype=np.complex128)
+        if term.quadrature.upper() == "Q":
+            contribution = -1j * contribution
+        channels[str(term.export_channel)]["coefficients"] += contribution
+
+    pulses: list[Pulse] = []
+    drive_ops: dict[str, Any] = {}
+    channel_summary: dict[str, Any] = {}
+    for channel_name, payload in channels.items():
+        drive_ops[channel_name] = payload["target"]
+        coefficients = np.asarray(payload["coefficients"], dtype=np.complex128)
+        channel_summary[channel_name] = {
+            "max_abs_amp": float(np.max(np.abs(coefficients))) if coefficients.size else 0.0,
+            "nonzero_slices": int(np.count_nonzero(np.abs(coefficients) > 1.0e-14)),
+        }
+        for step_index, coefficient in enumerate(coefficients):
+            if abs(coefficient) <= 1.0e-14:
+                continue
+            pulses.append(
+                Pulse(
+                    channel=channel_name,
+                    t0=float(boundaries[step_index]),
+                    duration=float(durations[step_index]),
+                    envelope=square_envelope,
+                    carrier=0.0,
+                    phase=float(np.angle(coefficient)),
+                    amp=float(abs(coefficient)),
+                    label=f"optimal_control_{channel_name}_{step_index}",
+                )
+            )
+
+    metadata = {
+        "mapping": (
+            "Rotating-frame controls exported as square-envelope pulses on the propagation grid. "
+            "For repository drive targets, I/Q quadratures are combined into the complex channel coefficient "
+            "c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly."
+        ),
+        "parameterization": str(parameterization_name),
+        "time_grid_s": [float(value) for value in time_grid.step_durations_s],
+        "channels": channel_summary,
+    }
+    if extra_metadata:
+        metadata.update(dict(extra_metadata))
+    return pulses, drive_ops, metadata
+
+
 @dataclass(frozen=True)
 class PiecewiseConstantTimeGrid:
     step_durations_s: tuple[float, ...]
@@ -170,45 +250,13 @@ class ControlParameterization(ABC):
 
     def to_pulses(self, values: np.ndarray, *, waveform_values: np.ndarray | None = None) -> tuple[list[Pulse], dict[str, Any], dict[str, Any]]:
         waveform = self.command_values(values) if waveform_values is None else np.asarray(waveform_values, dtype=float)
-        channels, boundaries = self._channel_coefficients(waveform)
-        durations = np.asarray(self.time_grid.step_durations_s, dtype=float)
-        pulses: list[Pulse] = []
-        drive_ops: dict[str, Any] = {}
-        channel_summary: dict[str, Any] = {}
-        for channel_name, payload in channels.items():
-            drive_ops[channel_name] = payload["target"]
-            coefficients = np.asarray(payload["coefficients"], dtype=np.complex128)
-            channel_summary[channel_name] = {
-                "max_abs_amp": float(np.max(np.abs(coefficients))) if coefficients.size else 0.0,
-                "nonzero_slices": int(np.count_nonzero(np.abs(coefficients) > 1.0e-14)),
-            }
-            for step_index, coefficient in enumerate(coefficients):
-                if abs(coefficient) <= 1.0e-14:
-                    continue
-                pulses.append(
-                    Pulse(
-                        channel=channel_name,
-                        t0=float(boundaries[step_index]),
-                        duration=float(durations[step_index]),
-                        envelope=square_envelope,
-                        carrier=0.0,
-                        phase=float(np.angle(coefficient)),
-                        amp=float(abs(coefficient)),
-                        label=f"optimal_control_{channel_name}_{step_index}",
-                    )
-                )
-        metadata = {
-            "mapping": (
-                "Rotating-frame controls exported as square-envelope pulses on the propagation grid. "
-                "For repository drive targets, I/Q quadratures are combined into the complex channel coefficient "
-                "c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly."
-            ),
-            "parameterization": type(self).__name__,
-            "parameter_slices": int(self.n_slices),
-            "time_grid_s": [float(value) for value in self.time_grid.step_durations_s],
-            "channels": channel_summary,
-        }
-        return pulses, drive_ops, metadata
+        return waveform_values_to_pulses(
+            control_terms=self.control_terms,
+            time_grid=self.time_grid,
+            waveform_values=waveform,
+            parameterization_name=type(self).__name__,
+            extra_metadata={"parameter_slices": int(self.n_slices)},
+        )
 
 
 @dataclass(frozen=True)
@@ -498,4 +546,5 @@ __all__ = [
     "FourierParameterization",
     "LinearInterpolatedParameterization",
     "ControlSchedule",
+    "waveform_values_to_pulses",
 ]

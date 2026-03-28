@@ -3496,15 +3496,19 @@ Approximation boundary:
 
 ## 17C. Optimal Control (`cqed_sim.optimal_control`)
 
-The optimal-control package adds a solver-agnostic direct-control layer on top of the existing model, pulse, and simulator stack. The current backend is a dense closed-system GRAPE solver on a piecewise-constant propagation grid, with support for both plain piecewise-constant schedules and hardware-aware held-sample command parameterizations.
+The optimal-control package adds a solver-agnostic direct-control layer on top of the existing model, pulse, and simulator stack. It now exposes two public solve paths on the same `ControlProblem` abstraction:
+
+- `GrapeSolver` / `solve_grape(...)` for slice-level GRAPE on the propagation grid,
+- `StructuredControlSolver` / `solve_structured_control(...)` for structured, hardware-aware parameter-space optimization over smooth pulse families.
 
 The intended workflow is:
 
 1. Build a `ControlProblem` directly from dense operators or from an existing `cqed_sim` model.
-2. Define state-transfer and/or unitary objectives plus penalties.
-3. Solve with `GrapeSolver`.
-4. Export the optimized `ControlSchedule` back into standard `Pulse` objects.
-5. Replay through `SequenceCompiler` and `simulate_sequence(...)`.
+2. Define state-transfer, unitary, and/or custom objectives plus penalties.
+3. Choose either a slice-level GRAPE parameterization or a structured pulse-family parameterization.
+4. Solve with the corresponding backend.
+5. Export the optimized control back into standard `Pulse` objects.
+6. Replay through `SequenceCompiler` and `simulate_sequence(...)`.
 
 ### Core Problem Objects
 
@@ -3565,6 +3569,17 @@ The first hardware-aware building blocks are:
 - `BoundaryWindowHardwareMap(...)`
 - `SmoothIQRadiusLimitHardwareMap(...)`
 
+Structured pulse families now sit on top of this same command-to-physical pipeline:
+
+- `PulseParameterSpec`
+- `StructuredPulseFamily`
+- `GaussianDragPulseFamily`
+- `FourierSeriesPulseFamily`
+- `StructuredControlChannel`
+- `StructuredPulseParameterization`
+
+`StructuredPulseParameterization` differs from the older rectangular schedule parameterizations in one important way: the optimizer variables are not required to be one value per control per time slice. The parameter vector may instead be a flat list of named pulse-family parameters that expands onto the propagation grid and then flows through the same hardware model.
+
 For exported rotating-frame pulses, the complex baseband coefficient follows the same runtime convention as the rest of `cqed_sim`:
 
 \[
@@ -3576,6 +3591,9 @@ This is the compatibility bridge between the real-valued Hermitian quadrature Ha
 ### Objectives
 
 ```python
+CustomControlObjective(...)
+CustomObjectiveContext(...)
+CustomObjectiveEvaluation(...)
 StateTransferPair(...)
 StateTransferObjective(...)
 UnitaryObjective(...)
@@ -3592,8 +3610,11 @@ Supported task styles:
 - retained-subspace gate synthesis
 - full truncated-space unitary synthesis
 - phase-tolerant subspace objectives compatible with the logical-gauge ideas already used by `cqed_sim.unitary_synthesis`
+- custom control metrics with explicit physical-waveform gradients through `CustomControlObjective`
 
 `UnitaryObjective` evaluates unitary targets through weighted probe-state transfer pairs so the same machinery can represent direct full-space targets and restricted logical-subspace targets.
+
+`CustomControlObjective` is the extension point for study-specific metrics. The evaluator receives the active `ControlProblem`, `ControlSystem`, `ControlSchedule`, resolved command/physical waveforms, propagation object, and final unitary, and returns a scalar cost plus a gradient with respect to the physical control waveform.
 
 ### Penalties
 
@@ -3627,6 +3648,7 @@ For hardware-aware problems, penalties can be applied to one of three domains:
 build_control_terms_from_model(...)
 build_control_system_from_model(...)
 build_control_problem_from_model(...)
+build_structured_control_problem_from_model(...)
 ```
 
 These helpers reuse the existing model-layer drive operators and tensor-ordering conventions instead of introducing a separate Hamiltonian-construction path.
@@ -3635,6 +3657,33 @@ These helpers reuse the existing model-layer drive operators and tensor-ordering
 
 - `parameterization_cls=...` plus `parameterization_kwargs={...}` for structured command parameterizations such as `HeldSampleParameterization`,
 - `hardware_model=HardwareModel(...)` to attach a command-to-physical waveform transform directly to the problem.
+
+`build_structured_control_problem_from_model(...)` is the higher-level convenience builder for the new structured backend. It reuses `ModelControlChannelSpec` plus the existing model-layer drive operators, then attaches `StructuredPulseParameterization` instead of one of the rectangular schedule parameterizations.
+
+### Structured Parameter-Space Solver
+
+```python
+StructuredControlConfig(...)
+StructuredControlSolver(...)
+solve_structured_control(...)
+```
+
+Structured-control behavior:
+
+- optimizes the pulse-family parameter vector rather than raw slice amplitudes,
+- uses the same `HardwareModel` stage to propagate command waveforms into physical waveforms,
+- supports gradient-based and derivative-free SciPy methods through `StructuredControlConfig(use_gradients=...)`,
+- returns a standard `ControlResult` with `backend="structured-control"`.
+
+The current built-in structured families are:
+
+- `GaussianDragPulseFamily`
+- `FourierSeriesPulseFamily`
+
+and study artifact export is handled by:
+
+- `save_structured_control_artifacts(...)`
+- `StructuredControlArtifacts`
 
 ### GRAPE Solver
 
@@ -3676,6 +3725,8 @@ evaluate_control_with_simulator(...)
 
 `ControlResult` is the common result surface for optimized direct-control runs. `GrapeResult` is the current concrete result type returned by the GRAPE backend.
 
+Structured solves also return `ControlResult`, with `schedule.values` storing the optimized pulse-family parameter vector instead of a rectangular control-amplitude array.
+
 Shared result data includes:
 
 - the optimized `ControlSchedule`,
@@ -3689,6 +3740,8 @@ Shared result data includes:
 When a hardware model is present, the result also reports command-vs-physical fidelity summaries so users can see whether a numerically good command waveform remains good after the attached hardware transform.
 
 `ControlResult.to_pulses()` exports the schedule into standard `Pulse` objects plus the corresponding `drive_ops` mapping so the optimized control can be replayed through the normal `SequenceCompiler` and `simulate_sequence(...)` path.
+
+For structured studies, `save_structured_control_artifacts(...)` writes `result.json`, `parameters.csv`, waveform tables, spectra, and optimization-history plots for later analysis or hardware comparison.
 
 ### Simulator-Backed Replay and Noisy Evaluation
 

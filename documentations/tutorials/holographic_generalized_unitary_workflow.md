@@ -4,6 +4,9 @@ This page documents the fully worked generalized holographic example in:
 
 - `examples/quantum_algorithms/holographic_generalized_unitary_workflow.py`
 
+For a second concrete benchmark built from explicit GHZ and cluster-state
+preparation circuits, see `holographic_ghz_cluster_workflow.md`.
+
 The example exercises the new public finite-sequence interface:
 
 - `StepUnitarySpec`

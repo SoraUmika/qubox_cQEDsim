@@ -1,12 +1,13 @@
-# Semi-Autonomous Agent Workflow
+# Autonomous Agent Workflow
 
-The repository includes a repo-side two-agent workflow in `agent_workflow/` for semi-autonomous implementation, review, documentation, and resume handling.
+The repository includes a repo-side two-agent workflow in `agent_workflow/` for autonomous implementation, review, documentation, and resume handling.
 
 ## Roles
 
-- Human: provides the task plan and acceptance criteria.
-- Codex: executes code and test work.
-- Opus 4.6: reviews, audits completion, writes documentation artifacts, and writes the final summary.
+- Human: provides the task goal and optional plan.
+- Copilot `general-purpose`: executes code and test work.
+- Copilot `code-review`: reviews the execution result.
+- Copilot `general-purpose`: writes workflow documentation artifacts and the final summary.
 
 ## Launch Paths
 
@@ -25,7 +26,8 @@ The repository includes a repo-side two-agent workflow in `agent_workflow/` for 
 - timestamped artifacts under `agent_runs/`
 - bounded execute/test/review repair loop
 - resume support for incomplete runs
-- generic command backend abstraction for later provider wiring
+- generic command backend abstraction
+- shipped Copilot CLI programmatic backend profile
 - deterministic validation backend for local testing
 
 ## Important Note About Placement
@@ -40,7 +42,15 @@ Use `agent_workflow/tasks/validation_demo_task.yaml` to validate the orchestrati
 
 Backend profiles live in `agent_workflow/config.json`.
 
-The shipped `validation_demo` profile is fully runnable. Real Codex and Opus command integration should be configured explicitly through the generic command backend instead of relying on hardcoded assumptions about a local CLI contract.
+The default `copilot_cli_autonomous` profile invokes Copilot CLI in programmatic mode with `--agent`, `--prompt`, `--model gpt-5.4`, and `--allow-all-tools`, so the workflow can advance through its internal phases without waiting for the user to manually trigger each next step.
+
+For fully headless runs, make sure:
+
+- `copilot` is installed
+- you are already signed in
+- the repository has already been trusted by Copilot CLI
+
+If trust has not been granted yet, launch `copilot` once from the repo root and choose the option to remember the folder, or add the repo with `/add-dir`.
 
 ## Related Docs
 

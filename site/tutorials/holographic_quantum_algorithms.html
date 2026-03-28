@@ -1445,6 +1445,8 @@
       
         
       
+        
+      
     
     
     
@@ -1530,6 +1532,34 @@
   
   
     <li class="md-nav__item">
+      <a href="snap_fock_state_prep.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SNAP & Fock State Prep
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="optimal_control.html" class="md-nav__link">
         
   
@@ -1537,7 +1567,7 @@
   <span class="md-ellipsis">
     
   
-    GRAPE Optimal Control
+    Optimal Control
   
 
     
@@ -1824,6 +1854,8 @@
       
         
       
+        
+      
     
     
     
@@ -2017,6 +2049,34 @@
     
   
     Generalized Holographic Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="holographic_ghz_cluster_workflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Holographic GHZ and Cluster Workflow
   
 
     
@@ -3154,6 +3214,7 @@
 <li><code>examples/quantum_algorithms/holographic_mps_dephasing_example.py</code></li>
 <li><code>examples/quantum_algorithms/holographic_spin_model_example.py</code></li>
 <li><code>examples/quantum_algorithms/holographic_generalized_unitary_workflow.py</code></li>
+<li><code>examples/quantum_algorithms/holographic_ghz_cluster_workflow.py</code></li>
 </ul>
 <hr />
 <h2 id="conceptual-model">Conceptual Model<a class="headerlink" href="#conceptual-model" title="Permanent link">&para;</a></h2>
@@ -3262,8 +3323,16 @@ by the legacy <code>holographicSim.py</code> finite-sequence path.</p>
 <li>compares dense, MPS, exact extended-unitary, and sampled observables including a connected correlator</li>
 <li>includes a second stress test with mixed <code>physical</code>, <code>bond</code>, and <code>joint</code> step-unitary embeddings</li>
 </ul>
+<p><code>holographic_ghz_cluster_workflow.py</code></p>
+<ul>
+<li>starts from explicit GHZ and linear-cluster preparation circuits rather than a random target state</li>
+<li>validates analytically known GHZ parity/string correlators and cluster stabilizers</li>
+<li>converts both named entangled states into public MPS-derived holographic step sequences</li>
+<li>plots exact-vs-sampled observable comparisons for both states in one figure</li>
+</ul>
 <p>For the full walkthrough, figures, and exact numbers, see
-<code>holographic_generalized_unitary_workflow.md</code>.</p>
+<code>holographic_generalized_unitary_workflow.md</code> and
+<code>holographic_ghz_cluster_workflow.md</code>.</p>
 <hr />
 <h2 id="current-limits">Current Limits<a class="headerlink" href="#current-limits" title="Permanent link">&para;</a></h2>
 <ul>

@@ -2,13 +2,13 @@
 
 ## What This Is
 
-This repository now includes a repo-side semi-autonomous two-agent workflow under `agent_workflow/`.
+This repository now includes a repo-side autonomous two-agent workflow under `agent_workflow/`.
 
 The workflow is intended for tasks where:
 
-- a human usually provides the plan
-- Codex is the main implementation and test-running agent
-- Opus 4.6 acts as reviewer, documentation writer, completion auditor, and final summarizer
+- a human may provide the plan, but Copilot can continue the execution loop without step-by-step manual driving
+- a Copilot `general-purpose` agent is the main implementation and test-running agent
+- a Copilot `code-review` agent reviews the code, and Copilot `general-purpose` handles documentation and the final summary
 - the run should be resumable and auditable instead of depending on continuous manual supervision
 
 ## Why It Lives Repo-Side
@@ -86,6 +86,10 @@ Backend profiles are defined in `agent_workflow/config.json`.
 
 Shipped profiles:
 
+- `copilot_cli_autonomous`
+  - real Copilot CLI programmatic backend
+  - uses `gpt-5.4`
+  - uses Copilot built-in agents instead of repo-local mock roles
 - `unconfigured`
   - explicit placeholder profile for real provider configuration
 - `validation_demo`
@@ -93,13 +97,21 @@ Shipped profiles:
 
 ### Real provider integration
 
-The workflow ships a generic `CommandTemplateBackend` for shell-based integration, but it does not hardcode a guessed Copilot CLI contract.
+The workflow now ships a Copilot-backed programmatic profile. It invokes `copilot` with:
 
-Reason:
+- `--prompt`
+- `--agent`
+- `--model gpt-5.4`
+- `--allow-all-tools`
 
-- a local `copilot.ps1` exists on this machine
-- direct invocation is currently blocked by PowerShell execution policy
-- the exact command-line contract is environment-specific and should be configured explicitly
+This lets the orchestrator run execute, test, review, docs, and summary passes without asking the user to manually kick off the next step each time.
+
+One-time prerequisites still apply:
+
+- `copilot` must be installed and authenticated
+- the repository must be trusted by Copilot CLI
+
+If the repository has not been trusted yet, launch `copilot` once from the repo root and choose the option to remember the folder, or add the repo with `/add-dir`.
 
 ## Run Artifacts
 
@@ -120,13 +132,13 @@ The run state file is `RUN_STATE.json` and is the source of truth for resume beh
 
 The orchestration loop is:
 
-1. execute with Codex
+1. execute with Copilot `general-purpose`
 2. run tests
-3. review with Opus
+3. review with Copilot `code-review`
 4. if review requests repair, continue with the next execution pass
 5. stop only on acceptance, explicit blocking status, or the iteration cap
 
-This is the bounded autonomy mechanism. It does not loop forever.
+This is the bounded autonomy mechanism. It does not loop forever, but it no longer requires the user to manually drive each internal phase when the Copilot CLI backend is used.
 
 ## Validation Demo
 

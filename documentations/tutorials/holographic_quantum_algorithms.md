@@ -11,6 +11,7 @@ Representative example scripts live in:
 - `examples/quantum_algorithms/holographic_mps_dephasing_example.py`
 - `examples/quantum_algorithms/holographic_spin_model_example.py`
 - `examples/quantum_algorithms/holographic_generalized_unitary_workflow.py`
+- `examples/quantum_algorithms/holographic_ghz_cluster_workflow.py`
 
 ---
 
@@ -134,8 +135,16 @@ by the legacy `holographicSim.py` finite-sequence path.
 - compares dense, MPS, exact extended-unitary, and sampled observables including a connected correlator
 - includes a second stress test with mixed `physical`, `bond`, and `joint` step-unitary embeddings
 
+`holographic_ghz_cluster_workflow.py`
+
+- starts from explicit GHZ and linear-cluster preparation circuits rather than a random target state
+- validates analytically known GHZ parity/string correlators and cluster stabilizers
+- converts both named entangled states into public MPS-derived holographic step sequences
+- plots exact-vs-sampled observable comparisons for both states in one figure
+
 For the full walkthrough, figures, and exact numbers, see
-`holographic_generalized_unitary_workflow.md`.
+`holographic_generalized_unitary_workflow.md` and
+`holographic_ghz_cluster_workflow.md`.
 
 ---
 

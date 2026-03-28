@@ -1,21 +1,21 @@
 # Agent Workflow Package
 
-This folder contains the repo-side semi-autonomous two-agent workflow runtime.
+This folder contains the repo-side autonomous Copilot-driven workflow runtime.
 
 ## What It Contains
 
 - task-spec loading and minimal YAML fallback support
 - persistent run state and resumable phase tracking
-- prompt rendering for Codex and Opus roles
+- prompt rendering for execute, review, docs, and summary roles
 - backend abstraction for command and scripted providers
+- Copilot CLI programmatic invocation wrapper for built-in Copilot agents
 - artifact writing under `agent_runs/`
 - deterministic validation fixtures and demo backends
 
 ## What It Does Not Contain
 
 - reusable cQED simulation primitives
-- hardcoded Copilot CLI assumptions
-- package-level public APIs for `cqed_sim`
+- reusable package-level public APIs for `cqed_sim`
 
 ## Entry Points
 
@@ -27,6 +27,7 @@ This folder contains the repo-side semi-autonomous two-agent workflow runtime.
 ## Important Files
 
 - `config.json`
+- `copilot_programmatic.py`
 - `task_spec.py`
 - `state.py`
 - `backends.py`

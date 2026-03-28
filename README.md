@@ -49,7 +49,7 @@ Core library:
 - `cqed_sim/analysis`, `cqed_sim/calibration_targets`, `cqed_sim/backends`
   - Parameter translation, calibration-target surrogates, and optional dense NumPy/JAX backend support.
 - `cqed_sim/calibration`, `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`, `cqed_sim/unitary_synthesis`, `cqed_sim/optimal_control`
-  - Reusable calibration, diagnostics, tomography, gate I/O, plotting, gate-synthesis, and direct optimal-control helpers that remain part of the library surface, including reduced conditioned-qubit multitone reachability checks, full targeted-subspace multitone audits for dispersive SQR-style studies, and model-backed GRAPE optimization with pulse export back into the standard runtime stack.
+  - Reusable calibration, diagnostics, tomography, gate I/O, plotting, gate-synthesis, and direct optimal-control helpers that remain part of the library surface, including reduced conditioned-qubit multitone reachability checks, full targeted-subspace multitone audits for dispersive SQR-style studies, model-backed GRAPE optimization, and structured hardware-aware pulse-family optimization with pulse export back into the standard runtime stack.
 - `cqed_sim/rl_control`, `cqed_sim/system_id`
   - RL-facing hybrid control environments, action/observation/reward abstractions, benchmark tasks, domain randomization, diagnostics, and calibration-informed prior hooks for future fit-then-randomize workflows.
 

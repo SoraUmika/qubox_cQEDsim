@@ -18,7 +18,12 @@ from .initial_guesses import (
     random_control_schedule,
     zero_control_schedule,
 )
-from .objectives import StateTransferObjective, UnitaryObjective
+from .objectives import (
+    CustomControlObjective,
+    CustomObjectiveContext,
+    StateTransferObjective,
+    UnitaryObjective,
+)
 from .parameterizations import ControlSchedule
 from .penalties import (
     AmplitudePenalty,
@@ -81,6 +86,14 @@ class _PreparedObjective:
 
 
 @dataclass(frozen=True)
+class _PreparedCustomObjective:
+    kind: str
+    name: str
+    weight: float
+    raw_objective: CustomControlObjective
+
+
+@dataclass(frozen=True)
 class _PreparedLeakagePenalty:
     penalty: LeakagePenalty
     projector: np.ndarray
@@ -96,7 +109,7 @@ class _ScheduleEvaluation:
     resolved_waveforms: Any
 
 
-def _prepare_objective(problem, objective: StateTransferObjective | UnitaryObjective) -> _PreparedObjective:
+def _prepare_objective(problem, objective: StateTransferObjective | UnitaryObjective | CustomControlObjective):
     if isinstance(objective, StateTransferObjective):
         initial_states, target_states, weights, labels = objective.resolved_pairs(full_dim=problem.full_dim)
         return _PreparedObjective(
@@ -119,6 +132,13 @@ def _prepare_objective(problem, objective: StateTransferObjective | UnitaryObjec
             target_states=target_states,
             state_weights=weights,
             labels=labels,
+            raw_objective=objective,
+        )
+    if isinstance(objective, CustomControlObjective):
+        return _PreparedCustomObjective(
+            kind="custom",
+            name=str(objective.name),
+            weight=float(objective.weight),
             raw_objective=objective,
         )
     raise TypeError(f"Unsupported objective type '{type(objective).__name__}'.")
@@ -406,6 +426,9 @@ def _evaluate_system_jax(
     """
     from .propagators_jax import build_jax_evaluator
 
+    if any(isinstance(prepared, _PreparedCustomObjective) for prepared in prepared_objectives):
+        raise ValueError("CustomControlObjective is currently supported only with engine='numpy'.")
+
     if jax_evaluator is None:
         pair_counts = tuple(int(p.initial_states.shape[0]) for p in prepared_objectives)
         leak_mets = tuple(str(pp.penalty.metric) for pp in prepared_leakage_penalties)
@@ -569,6 +592,38 @@ def _evaluate_schedule(
         leakage_records: dict[int, list[tuple[float, float, np.ndarray]]] = {index: [] for index in range(len(prepared_leakage_penalties))}
 
         for prepared in prepared_objectives:
+            if isinstance(prepared, _PreparedCustomObjective):
+                custom_evaluation = prepared.raw_objective.evaluate(
+                    CustomObjectiveContext(
+                        problem=problem,
+                        system=system,
+                        schedule=schedule,
+                        resolved_waveforms=resolved,
+                        propagation=propagation,
+                        final_unitary=propagation.final_unitary,
+                    )
+                )
+                gradient_physical = np.asarray(custom_evaluation.gradient_physical, dtype=float)
+                if gradient_physical.shape != physical_values.shape:
+                    raise ValueError(
+                        f"Custom objective '{prepared.name}' returned gradient shape {gradient_physical.shape}, "
+                        f"expected {physical_values.shape}."
+                    )
+                weighted_cost = float(prepared.weight) * float(custom_evaluation.cost)
+                objective_total += weighted_cost
+                gradient_total += float(prepared.weight) * applied.pullback_physical(gradient_physical)
+                objective_reports.append(
+                    {
+                        "name": str(prepared.name),
+                        "kind": "custom",
+                        "weight": float(prepared.weight),
+                        "weighted_cost": float(weighted_cost),
+                        "custom_cost": float(custom_evaluation.cost),
+                        **dict(custom_evaluation.metrics),
+                    }
+                )
+                continue
+
             cost, gradient_physical, metrics, forward = _evaluate_state_objective(prepared, propagation, system.control_operators)
             weighted_cost = float(prepared.weight) * float(cost)
             objective_total += weighted_cost

@@ -31,4 +31,4 @@ allow_repo_edits: true
 review_required: true
 auto_resume: true
 stop_on_blocking_error: true
-backend_profile: unconfigured
+backend_profile: copilot_cli_autonomous

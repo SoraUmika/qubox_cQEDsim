@@ -33,6 +33,9 @@ from .evaluation import (
     evaluate_control_with_simulator,
 )
 from .objectives import (
+    CustomControlObjective,
+    CustomObjectiveContext,
+    CustomObjectiveEvaluation,
     StateTransferObjective,
     StateTransferPair,
     UnitaryObjective,
@@ -68,6 +71,20 @@ from .problems import (
     build_control_terms_from_model,
 )
 from .result import ControlResult, GrapeIterationRecord, GrapeResult
+from .structured import (
+    FourierSeriesPulseFamily,
+    GaussianDragPulseFamily,
+    PulseParameterSpec,
+    StructuredControlArtifacts,
+    StructuredControlChannel,
+    StructuredControlConfig,
+    StructuredControlSolver,
+    StructuredPulseFamily,
+    StructuredPulseParameterization,
+    build_structured_control_problem_from_model,
+    save_structured_control_artifacts,
+    solve_structured_control,
+)
 
 __all__ = [
     "ControlTerm",
@@ -98,6 +115,9 @@ __all__ = [
     "StateTransferPair",
     "StateTransferObjective",
     "UnitaryObjective",
+    "CustomObjectiveContext",
+    "CustomObjectiveEvaluation",
+    "CustomControlObjective",
     "state_preparation_objective",
     "multi_state_transfer_objective",
     "objective_from_unitary_synthesis_target",
@@ -132,4 +152,16 @@ __all__ = [
     "build_control_terms_from_model",
     "build_control_system_from_model",
     "build_control_problem_from_model",
+    "PulseParameterSpec",
+    "StructuredPulseFamily",
+    "GaussianDragPulseFamily",
+    "FourierSeriesPulseFamily",
+    "StructuredControlChannel",
+    "StructuredPulseParameterization",
+    "StructuredControlConfig",
+    "StructuredControlSolver",
+    "StructuredControlArtifacts",
+    "solve_structured_control",
+    "save_structured_control_artifacts",
+    "build_structured_control_problem_from_model",
 ]

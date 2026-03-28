@@ -6,6 +6,11 @@ import shutil
 import uuid
 
 from agent_workflow.artifacts import find_latest_run, slugify
+from agent_workflow.copilot_programmatic import (
+    build_copilot_command,
+    build_proxy_prompt,
+    resolve_agent_name,
+)
 from agent_workflow.cli import main as workflow_main
 from agent_workflow.task_spec import load_task_spec
 
@@ -78,6 +83,45 @@ def test_validation_demo_resume_completes_run(tmp_path: Path) -> None:
         assert (run_dir / "FINAL_SUMMARY.md").exists()
     finally:
         _cleanup_runs_for_title(title)
+
+
+def test_copilot_programmatic_uses_code_review_for_review_phase() -> None:
+    agent = resolve_agent_name(
+        "review",
+        default_agent="general-purpose",
+        overrides={"execute": "", "review": "", "docs": "", "summary": "", "planner": ""},
+    )
+    assert agent == "code-review"
+
+
+def test_copilot_programmatic_builds_small_proxy_prompt(tmp_path: Path) -> None:
+    cwd = tmp_path
+    prompt_path = tmp_path / "agent_runs" / "demo" / "EXECUTE_PROMPT_iter01.txt"
+    context_path = tmp_path / "agent_runs" / "demo" / "EXECUTE_CONTEXT_iter01.json"
+    prompt_path.parent.mkdir(parents=True, exist_ok=True)
+    prompt_path.write_text("prompt", encoding="utf-8")
+    context_path.write_text("{}", encoding="utf-8")
+    proxy_prompt = build_proxy_prompt(
+        prompt_path=prompt_path,
+        context_path=context_path,
+        working_directory=tmp_path / "workspace",
+        cwd=cwd,
+    )
+    assert "@agent_runs/demo/EXECUTE_PROMPT_iter01.txt" in proxy_prompt
+    assert "@agent_runs/demo/EXECUTE_CONTEXT_iter01.json" in proxy_prompt
+    assert "Return only the final output format requested by the prompt instructions." in proxy_prompt
+
+
+def test_copilot_programmatic_builds_allow_all_command() -> None:
+    command = build_copilot_command(
+        agent="general-purpose",
+        model="gpt-5.4",
+        prompt="Follow @prompt",
+        allow_all_tools=True,
+    )
+    assert command[:5] == ["copilot", "--agent", "general-purpose", "--prompt", "Follow @prompt"]
+    assert "--model" in command
+    assert "--allow-all-tools" in command
 
 
 def _write_validation_task(tmp_path: Path, title: str) -> Path:

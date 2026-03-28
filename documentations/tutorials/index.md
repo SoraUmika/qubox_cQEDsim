@@ -137,6 +137,7 @@ These documentation pages provide physics background, plots, and code summaries 
 
 ### Advanced Control
 - [Unitary Synthesis](unitary_synthesis.md) — gate sequence optimization: constraint, leakage, robust, Pareto, trajectory, flexible targets
+- [SNAP & Fock State Prep](snap_fock_state_prep.md) — SNAP gate physics, Displacement–SNAP–Displacement protocol, Wigner-verified Fock state preparation
 - [GRAPE Optimal Control](optimal_control.md) — GRAPE algorithm, hardware-aware mode, convergence plots, replay verification
 - [RL Hybrid Control](rl_hybrid_control.md) — Gym environment, measurement-conditioned control, domain randomization
 - [Hardware-Aware Control](hardware_context.md) — signal chain: filtering, DAC, IQ limits, gradient-through-hardware GRAPE
@@ -150,6 +151,7 @@ These documentation pages provide physics background, plots, and code summaries 
 ### Advanced Topics
 - [Holographic Quantum Algorithms](holographic_quantum_algorithms.md) — holographic channel estimation, MPS-inspired correlator sampling
 - [Generalized Holographic Workflow](holographic_generalized_unitary_workflow.md) — finite per-step unitary sequences, MPS lifting, and exact-vs-sampled validation
+- [Holographic GHZ and Cluster Workflow](holographic_ghz_cluster_workflow.md) — explicit GHZ and cluster-state circuits lifted into exact and sampled holographic sequences
 
 ---
 

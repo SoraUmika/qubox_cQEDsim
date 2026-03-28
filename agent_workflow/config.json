@@ -1,6 +1,70 @@
 {
-  "default_backend_profile": "unconfigured",
+  "default_backend_profile": "copilot_cli_autonomous",
   "backend_profiles": {
+    "copilot_cli_autonomous": {
+      "codex": {
+        "type": "command",
+        "name": "copilot-cli-codex",
+        "command": [
+          "{python_executable}",
+          "tools/run_copilot_programmatic.py",
+          "--phase",
+          "{phase}",
+          "--prompt-file",
+          "{prompt_file}",
+          "--context-file",
+          "{context_file}",
+          "--working-directory",
+          "{working_directory}",
+          "--model",
+          "gpt-5.4",
+          "--default-agent",
+          "general-purpose",
+          "--review-agent",
+          "code-review",
+          "--docs-agent",
+          "general-purpose",
+          "--summary-agent",
+          "general-purpose",
+          "--planner-agent",
+          "general-purpose",
+          "--allow-all-tools"
+        ],
+        "cwd": "{repo_root}",
+        "timeout_s": 1800
+      },
+      "opus": {
+        "type": "command",
+        "name": "copilot-cli-opus",
+        "command": [
+          "{python_executable}",
+          "tools/run_copilot_programmatic.py",
+          "--phase",
+          "{phase}",
+          "--prompt-file",
+          "{prompt_file}",
+          "--context-file",
+          "{context_file}",
+          "--working-directory",
+          "{working_directory}",
+          "--model",
+          "gpt-5.4",
+          "--default-agent",
+          "general-purpose",
+          "--review-agent",
+          "code-review",
+          "--docs-agent",
+          "general-purpose",
+          "--summary-agent",
+          "general-purpose",
+          "--planner-agent",
+          "general-purpose",
+          "--allow-all-tools"
+        ],
+        "cwd": "{repo_root}",
+        "timeout_s": 1800
+      }
+    },
     "unconfigured": {
       "codex": {
         "type": "unavailable",

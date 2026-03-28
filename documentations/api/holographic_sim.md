@@ -185,12 +185,14 @@ not accept nonzero burn-in because the steps are already fixed site by site.
 This is the main bridge between the report's channel/MPS language and the
 sampling API implemented here.
 
-For a full end-to-end worked example, including MPS construction, sequence
-validation, observable comparison, and stress testing with mixed `physical` /
-`bond` /
-`joint` step unitaries, see the tutorial page
-`documentations/tutorials/holographic_generalized_unitary_workflow.md` and the
-script `examples/quantum_algorithms/holographic_generalized_unitary_workflow.py`.
+For full end-to-end worked examples, see:
+
+- `documentations/tutorials/holographic_generalized_unitary_workflow.md` plus
+    `examples/quantum_algorithms/holographic_generalized_unitary_workflow.py` for
+    the seeded random-state and mixed-embedding validation path.
+- `documentations/tutorials/holographic_ghz_cluster_workflow.md` plus
+    `examples/quantum_algorithms/holographic_ghz_cluster_workflow.py` for named
+    GHZ and linear-cluster states with analytically known correlators.
 
 ---
 

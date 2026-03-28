@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence
 
 import numpy as np
 import qutip as qt
@@ -9,6 +9,46 @@ import qutip as qt
 from cqed_sim.unitary_synthesis.subspace import Subspace
 
 from .utils import as_square_matrix, as_state_vector
+
+
+@dataclass(frozen=True)
+class CustomObjectiveContext:
+    problem: Any
+    system: Any
+    schedule: Any
+    resolved_waveforms: Any
+    propagation: Any
+    final_unitary: np.ndarray
+
+
+@dataclass(frozen=True)
+class CustomObjectiveEvaluation:
+    cost: float
+    gradient_physical: np.ndarray
+    metrics: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "cost", float(self.cost))
+        object.__setattr__(self, "gradient_physical", np.asarray(self.gradient_physical, dtype=float))
+
+
+@dataclass(frozen=True)
+class CustomControlObjective:
+    evaluator: Callable[[CustomObjectiveContext], CustomObjectiveEvaluation] = field(repr=False)
+    weight: float = 1.0
+    name: str = "custom_objective"
+
+    def __post_init__(self) -> None:
+        if not callable(self.evaluator):
+            raise TypeError("CustomControlObjective.evaluator must be callable.")
+        if float(self.weight) <= 0.0:
+            raise ValueError("CustomControlObjective.weight must be positive.")
+
+    def evaluate(self, context: CustomObjectiveContext) -> CustomObjectiveEvaluation:
+        evaluation = self.evaluator(context)
+        if not isinstance(evaluation, CustomObjectiveEvaluation):
+            raise TypeError("CustomControlObjective.evaluator must return a CustomObjectiveEvaluation.")
+        return evaluation
 
 
 @dataclass(frozen=True)
@@ -203,6 +243,9 @@ def objective_from_unitary_synthesis_target(
 
 
 __all__ = [
+    "CustomObjectiveContext",
+    "CustomObjectiveEvaluation",
+    "CustomControlObjective",
     "StateTransferPair",
     "StateTransferObjective",
     "UnitaryObjective",

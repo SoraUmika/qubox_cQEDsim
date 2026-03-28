@@ -102,7 +102,7 @@ def json_ready(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [json_ready(item) for item in value]
     if isinstance(value, np.ndarray):
-        return value.tolist()
+        return json_ready(value.tolist())
     if isinstance(value, complex):
         return {"real": float(value.real), "imag": float(value.imag)}
     if hasattr(value, "item"):

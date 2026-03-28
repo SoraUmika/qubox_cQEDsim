@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#semi-autonomous-agent-workflow" class="md-skip">
+        <a href="#autonomous-agent-workflow" class="md-skip">
           Skip to content
         </a>
       
@@ -1560,6 +1560,8 @@
       
         
       
+        
+      
     
     
     
@@ -1642,6 +1644,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../tutorials/snap_fock_state_prep.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SNAP & Fock State Prep
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../tutorials/optimal_control.html" class="md-nav__link">
         
   
@@ -1649,7 +1679,7 @@
   <span class="md-ellipsis">
     
   
-    GRAPE Optimal Control
+    Optimal Control
   
 
     
@@ -1928,6 +1958,8 @@
       
         
       
+        
+      
     
     
     
@@ -2018,6 +2050,34 @@
     
   
     Generalized Holographic Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/holographic_ghz_cluster_workflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Holographic GHZ and Cluster Workflow
   
 
     
@@ -3147,13 +3207,14 @@
 
 
 
-<h1 id="semi-autonomous-agent-workflow">Semi-Autonomous Agent Workflow<a class="headerlink" href="#semi-autonomous-agent-workflow" title="Permanent link">&para;</a></h1>
-<p>The repository includes a repo-side two-agent workflow in <code>agent_workflow/</code> for semi-autonomous implementation, review, documentation, and resume handling.</p>
+<h1 id="autonomous-agent-workflow">Autonomous Agent Workflow<a class="headerlink" href="#autonomous-agent-workflow" title="Permanent link">&para;</a></h1>
+<p>The repository includes a repo-side two-agent workflow in <code>agent_workflow/</code> for autonomous implementation, review, documentation, and resume handling.</p>
 <h2 id="roles">Roles<a class="headerlink" href="#roles" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Human: provides the task plan and acceptance criteria.</li>
-<li>Codex: executes code and test work.</li>
-<li>Opus 4.6: reviews, audits completion, writes documentation artifacts, and writes the final summary.</li>
+<li>Human: provides the task goal and optional plan.</li>
+<li>Copilot <code>general-purpose</code>: executes code and test work.</li>
+<li>Copilot <code>code-review</code>: reviews the execution result.</li>
+<li>Copilot <code>general-purpose</code>: writes workflow documentation artifacts and the final summary.</li>
 </ul>
 <h2 id="launch-paths">Launch Paths<a class="headerlink" href="#launch-paths" title="Permanent link">&para;</a></h2>
 <ul>
@@ -3172,7 +3233,8 @@
 <li>timestamped artifacts under <code>agent_runs/</code></li>
 <li>bounded execute/test/review repair loop</li>
 <li>resume support for incomplete runs</li>
-<li>generic command backend abstraction for later provider wiring</li>
+<li>generic command backend abstraction</li>
+<li>shipped Copilot CLI programmatic backend profile</li>
 <li>deterministic validation backend for local testing</li>
 </ul>
 <h2 id="important-note-about-placement">Important Note About Placement<a class="headerlink" href="#important-note-about-placement" title="Permanent link">&para;</a></h2>
@@ -3181,7 +3243,14 @@
 <p>Use <code>agent_workflow/tasks/validation_demo_task.yaml</code> to validate the orchestration loop without modifying the main repository. It copies a small seed project into the run directory and uses the scripted backend profile to exercise incomplete-run resume behavior.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p>Backend profiles live in <code>agent_workflow/config.json</code>.</p>
-<p>The shipped <code>validation_demo</code> profile is fully runnable. Real Codex and Opus command integration should be configured explicitly through the generic command backend instead of relying on hardcoded assumptions about a local CLI contract.</p>
+<p>The default <code>copilot_cli_autonomous</code> profile invokes Copilot CLI in programmatic mode with <code>--agent</code>, <code>--prompt</code>, <code>--model gpt-5.4</code>, and <code>--allow-all-tools</code>, so the workflow can advance through its internal phases without waiting for the user to manually trigger each next step.</p>
+<p>For fully headless runs, make sure:</p>
+<ul>
+<li><code>copilot</code> is installed</li>
+<li>you are already signed in</li>
+<li>the repository has already been trusted by Copilot CLI</li>
+</ul>
+<p>If trust has not been granted yet, launch <code>copilot</code> once from the repo root and choose the option to remember the folder, or add the repo with <code>/add-dir</code>.</p>
 <h2 id="related-docs">Related Docs<a class="headerlink" href="#related-docs" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>README_AGENT_WORKFLOW.md</code></li>

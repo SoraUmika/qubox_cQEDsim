@@ -107,7 +107,8 @@ nav:
 
       - Advanced Control:
           - Unitary Synthesis: tutorials/unitary_synthesis.md
-          - GRAPE Optimal Control: tutorials/optimal_control.md
+          - SNAP & Fock State Prep: tutorials/snap_fock_state_prep.md
+          - Optimal Control: tutorials/optimal_control.md
           - RL Hybrid Control: tutorials/rl_hybrid_control.md
           - Hardware-Aware Control: tutorials/hardware_context.md
 
@@ -120,6 +121,7 @@ nav:
       - Advanced Topics:
           - Holographic Quantum Algorithms: tutorials/holographic_quantum_algorithms.md
           - Generalized Holographic Workflow: tutorials/holographic_generalized_unitary_workflow.md
+          - Holographic GHZ and Cluster Workflow: tutorials/holographic_ghz_cluster_workflow.md
 
   - Examples: examples.md
 

@@ -24,7 +24,7 @@ This automation layer is intended for task orchestration, prompt management, per
 
 ## Top-Level Standalone Scripts
 
-| Script | Description | Notebook companion |
+| Script | Description | Companion tutorial |
 |---|---|---|
 | `protocol_style_simulation.py` | Direct prepare -> compile -> simulate -> measure workflow using stable library primitives | `tutorials/00_getting_started/01_protocol_style_simulation.ipynb` |
 | `kerr_free_evolution.py` | Standalone Kerr free-evolution script built on low-level `cqed_sim` primitives | `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb` |
@@ -43,6 +43,7 @@ This automation layer is intended for task orchestration, prompt management, per
 | `unitary_synthesis_demo.py` | Target-unitary synthesis inside a qubit-cavity subspace | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
 | `unitary_synthesis_relevance_aware_optimizer.py` | Relevance-aware synthesis with observable, state-ensemble, and trajectory objectives plus accelerated ideal evaluation | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
 | `unitary_synthesis_flexible_target_actions.py` | Channel, reduced-state, and isometry target examples with truncation-aware diagnostics | `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` |
+| `structured_optimal_control_demo.py` | Structured, hardware-aware optimal-control study using Gaussian-DRAG and Fourier pulse families with artifact export and visualization | `tutorials/optimal_control.md` |
 | `grape_storage_subspace_gate_demo.py` | Model-backed GRAPE optimization of a storage logical-subspace gate with pulse export and runtime replay | `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` |
 | `hardware_constrained_grape_demo.py` | Hardware-aware GRAPE comparison showing held-sample controls, low-pass filtering, boundary windows, IQ-radius limits, and command-vs-physical replay | `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` |
 | `rl_hybrid_control_rollout.py` | Hybrid RL environment rollout with measurement-like observations, diagnostics, and domain-randomized evaluation | `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb` |
@@ -71,6 +72,7 @@ Under `examples/quantum_algorithms/`:
 | `holographic_burn_in_translation_invariant.py` | Translation-invariant channel with explicit burn-in before bulk estimation |
 | `holographic_spin_model_example.py` | Spin-inspired transfer-channel example motivated by the holographic report |
 | `holographic_generalized_unitary_workflow.py` | End-to-end generalized holographic workflow with finite per-step unitaries, MPS lifting, plots, and validation tables |
+| `holographic_ghz_cluster_workflow.py` | Concrete GHZ and linear-cluster workflows with exact circuit construction, holographic sampling, comparison plots, and site-resolved profiles for `i = 1..10` |
 
 ---
 

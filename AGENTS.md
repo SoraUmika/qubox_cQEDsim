@@ -98,6 +98,46 @@
 - If a feature is sufficiently distinct that a user or developer would benefit from a dedicated conceptual and usage guide, it should have its own `README.md`.
 - When adding a new major module or substantially expanding an existing one, create or update that module’s local `README.md` as part of the same task.
 
+## Literature Search and Citation Policy
+
+### When to Search
+
+- Before implementing any new physics feature, algorithm, gate, model, or simulation method, **search online** for the canonical reference paper(s) that define or first describe that feature.
+- Before reproducing a cQED experiment, spectroscopy measurement, control protocol, or numerical result, **search for the original publication** and retrieve the key equations, parameter values, and claimed results.
+- When adding a tutorial, example, or test that demonstrates a particular physical effect or algorithm, **identify the authoritative source** for that effect before writing any code.
+- When comparing simulator output to expected behavior, **search for published benchmarks or textbook derivations** to give the comparison a concrete external anchor.
+
+### What to Search For
+
+- The original paper introducing the method, gate, or protocol (e.g., Krastanov et al. for SNAP gates, GRAPE references for optimal control).
+- Review articles or textbook chapters that present the standard derivation or convention for the relevant physics.
+- Papers that provide the specific numerical values or qualitative behavior being reproduced.
+- arXiv preprints, Physical Review, Nature, Science, and cQED-focused journals (PRL, PRA, npj Quantum Information, Applied Physics Letters, etc.) are all valid sources.
+
+### How to Record the Reference
+
+- Every tutorial page under `documentations/tutorials/` that reproduces, demonstrates, or is inspired by a published result **must include a References section** citing the relevant papers in the following format:
+
+  ```
+  [1] Author(s), "Title," Journal/arXiv, Year. DOI or URL.
+  ```
+
+- Every entry under `test_against_papers/` must state in a header comment which paper is being checked, which figure or equation is being reproduced, and a full citation.
+- Code implementing a specific algorithm, decomposition, or formula from a paper must include a comment citing the source equation number and paper. Example:
+
+  ```python
+  # Implements Eq. (3) from Krastanov et al., Optica 2015
+  # DOI: 10.1364/OPTICA.2.000880
+  ```
+
+- When a paper summary is added to the `paper_summary/` folder, that file must itself begin with the full citation so it is unambiguous which paper it covers.
+
+### Integration with Existing Policies
+
+- After finding a reference, check whether the `paper_summary/` folder already has a summary for that paper. If not, and if the paper is sufficiently important to the task, add a summary file.
+- Physics conventions drawn from a found reference must be reconciled with `physics_and_conventions/physics_conventions_report.tex`. If they differ, document the discrepancy before choosing which convention to follow.
+- Do not proceed with implementing a physics feature or reproducing a result without at least one concrete external reference. If no reference can be found after a reasonable search, document that gap explicitly in implementation notes or the relevant inconsistency report.
+
 ## Physics and Convention Maintenance
 
 - Any new feature added to `cqed_sim` that introduces new physics, modifies an existing physical model, changes assumptions, or alters established conventions must also update the documentation in the `physics_and_conventions` folder.
@@ -124,6 +164,18 @@
 - Do not place new validation tests inside ad hoc scripts or notebooks when they belong in the formal `tests` suite.
 - Do not place typical usage demos outside `examples` unless there is a strong project-specific reason.
 
+### Tutorial Evidence and Plot Policy
+
+- Any new or materially updated tutorial under `documentations/tutorials` must point to the concrete code that produces the demonstrated result.
+- That code should live in `examples` unless there is a strong existing project convention requiring a different location.
+- Tutorials covering simulation behavior must include generated evidence from an actual run, not only descriptive prose. At minimum, include:
+  - the script, function, or workflow path that was run,
+  - the resulting plot, table, or other artifact that shows the simulation outcome,
+  - and enough reported values or narrative interpretation that a reader can tell what the simulation demonstrated.
+- When a tutorial introduces or updates a plot, regenerate the underlying simulation or example so the checked-in asset matches the current code and text.
+- If a tutorial page changes and it is part of the public website, rebuild the generated `site` output in the same task.
+- Holographic simulation tutorials are not exempt from this rule. They must include the exact example code path and concrete generated outputs such as observable plots, benchmark tables, sampled-versus-exact comparisons, or other simulation results that demonstrate the claimed behavior.
+
 ### Literature-Based Validation
 
 - If a task or prompt asks for verification against a paper, textbook, or other literature source—especially reproduction of published or reference results—that work should be organized under `test_against_papers`.
@@ -139,6 +191,7 @@
   - what assumptions or approximations are being used,
   - and what level of agreement is expected.
 - If reproducing a paper or textbook result also requires reusable regression coverage, add the formal automated portion under `tests` as appropriate, while keeping the literature-reproduction workflow organized under `test_against_papers`.
+- Before writing any literature-based validation, follow the **Literature Search and Citation Policy** above: search online for the paper, extract the key result, and include the full citation in the test file header. Use `/literature-review` to perform this step if the reference is not already known.
 
 ## Refactor and Inconsistency Reporting Policy
 

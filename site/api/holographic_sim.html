@@ -1433,6 +1433,8 @@
       
         
       
+        
+      
     
     
     
@@ -1515,6 +1517,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../tutorials/snap_fock_state_prep.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SNAP & Fock State Prep
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../tutorials/optimal_control.html" class="md-nav__link">
         
   
@@ -1522,7 +1552,7 @@
   <span class="md-ellipsis">
     
   
-    GRAPE Optimal Control
+    Optimal Control
   
 
     
@@ -1801,6 +1831,8 @@
       
         
       
+        
+      
     
     
     
@@ -1891,6 +1923,34 @@
     
   
     Generalized Holographic Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/holographic_ghz_cluster_workflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Holographic GHZ and Cluster Workflow
   
 
     
@@ -3323,12 +3383,15 @@ not accept nonzero burn-in because the steps are already fixed site by site.</p>
 </ul>
 <p>This is the main bridge between the report's channel/MPS language and the
 sampling API implemented here.</p>
-<p>For a full end-to-end worked example, including MPS construction, sequence
-validation, observable comparison, and stress testing with mixed <code>physical</code> /
-<code>bond</code> /
-<code>joint</code> step unitaries, see the tutorial page
-<code>documentations/tutorials/holographic_generalized_unitary_workflow.md</code> and the
-script <code>examples/quantum_algorithms/holographic_generalized_unitary_workflow.py</code>.</p>
+<p>For full end-to-end worked examples, see:</p>
+<ul>
+<li><code>documentations/tutorials/holographic_generalized_unitary_workflow.md</code> plus
+    <code>examples/quantum_algorithms/holographic_generalized_unitary_workflow.py</code> for
+    the seeded random-state and mixed-embedding validation path.</li>
+<li><code>documentations/tutorials/holographic_ghz_cluster_workflow.md</code> plus
+    <code>examples/quantum_algorithms/holographic_ghz_cluster_workflow.py</code> for named
+    GHZ and linear-cluster states with analytically known correlators.</li>
+</ul>
 <hr />
 <h2 id="future-facing-scaffolding">Future-Facing Scaffolding<a class="headerlink" href="#future-facing-scaffolding" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">objective</span> <span class="o">=</span> <span class="n">HoloVQEObjective</span><span class="p">([</span><span class="o">...</span><span class="p">])</span>

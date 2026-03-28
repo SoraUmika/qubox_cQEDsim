@@ -53,6 +53,50 @@ def _random_state(num_sites: int, *, seed: int) -> np.ndarray:
     return state.reshape((2,) * int(num_sites))
 
 
+def _hadamard() -> np.ndarray:
+    return (1.0 / np.sqrt(2.0)) * np.array([[1.0, 1.0], [1.0, -1.0]], dtype=np.complex128)
+
+
+def _controlled_z() -> np.ndarray:
+    return np.diag([1.0, 1.0, 1.0, -1.0]).astype(np.complex128)
+
+
+def _apply_single_qubit_gate(state: np.ndarray, gate: np.ndarray, site: int, num_sites: int) -> np.ndarray:
+    full = np.array([[1.0 + 0.0j]])
+    for idx in range(num_sites):
+        full = np.kron(full, gate if idx == site else np.eye(2, dtype=np.complex128))
+    return (full @ state.reshape(-1)).reshape((2,) * num_sites)
+
+
+def _apply_adjacent_two_qubit_gate(state: np.ndarray, gate: np.ndarray, site: int, num_sites: int) -> np.ndarray:
+    tensor = state.reshape((2,) * num_sites)
+    perm = [site, site + 1] + [idx for idx in range(num_sites) if idx not in (site, site + 1)]
+    inverse = np.argsort(perm)
+    permuted = np.transpose(tensor, perm)
+    leading = permuted.reshape(4, -1)
+    updated = (gate @ leading).reshape((2, 2) + tuple(2 for _ in range(num_sites - 2)))
+    return np.transpose(updated, inverse)
+
+
+def _cluster_state(num_sites: int) -> np.ndarray:
+    state = np.zeros((2,) * num_sites, dtype=np.complex128)
+    state[(0,) * num_sites] = 1.0
+    for site in range(num_sites):
+        state = _apply_single_qubit_gate(state, _hadamard(), site, num_sites)
+    for site in range(num_sites - 1):
+        state = _apply_adjacent_two_qubit_gate(state, _controlled_z(), site, num_sites)
+    return state / np.linalg.norm(state)
+
+
+def _cluster_stabilizer_operator_map(site: int, num_sites: int) -> dict[int, np.ndarray]:
+    operator_map: dict[int, np.ndarray] = {int(site): pauli_x().matrix}
+    if int(site) > 0:
+        operator_map[int(site) - 1] = pauli_z().matrix
+    if int(site) + 1 < int(num_sites):
+        operator_map[int(site) + 1] = pauli_z().matrix
+    return operator_map
+
+
 def _state_cases() -> list[pytest.ParamSpecArgs]:
     zero = np.array([1.0, 0.0], dtype=np.complex128)
     one = np.array([0.0, 1.0], dtype=np.complex128)
@@ -61,6 +105,7 @@ def _state_cases() -> list[pytest.ParamSpecArgs]:
         pytest.param("product_0000", _product_state([zero, zero, zero, zero]), id="product_0000"),
         pytest.param("product_+0+1", _product_state([plus, zero, plus, one]), id="product_+0+1"),
         pytest.param("ghz4", _ghz_state(4), id="ghz4"),
+        pytest.param("cluster4", _cluster_state(4), id="cluster4"),
         pytest.param("w4", _w_state(4), id="w4"),
         pytest.param("random4", _random_state(4, seed=123), id="random4"),
     ]
@@ -190,3 +235,52 @@ def test_holographic_expectations_match_dense_known_states(state_name: str, stat
         assert np.allclose(holographic_expectation, dense_expectation, atol=ATOL, rtol=0.0), (
             f"{state_name}: holographic expectation mismatch for {observable_name}"
         )
+
+
+def test_named_entangled_states_match_known_correlators() -> None:
+    ghz = _ghz_state(4)
+    ghz_sampler = HolographicSampler.from_mps_sequence(ghz)
+    ghz_cases = {
+        "Z0": ({0: pauli_z().matrix}, 0.0),
+        "Z3": ({3: pauli_z().matrix}, 0.0),
+        "Z0Z3": ({0: pauli_z().matrix, 3: pauli_z().matrix}, 1.0),
+        "X0X1X2X3": ({0: pauli_x().matrix, 1: pauli_x().matrix, 2: pauli_x().matrix, 3: pauli_x().matrix}, 1.0),
+    }
+    for operator_map, expected in ghz_cases.values():
+        exact = ghz_sampler.enumerate_correlator(_schedule_from_operator_map(operator_map, total_steps=4))
+        assert np.allclose(exact.mean, expected, atol=ATOL, rtol=0.0)
+
+    cluster = _cluster_state(4)
+    cluster_sampler = HolographicSampler.from_mps_sequence(cluster)
+    cluster_cases = {
+        "X0Z1": {0: pauli_x().matrix, 1: pauli_z().matrix},
+        "Z0X1Z2": {0: pauli_z().matrix, 1: pauli_x().matrix, 2: pauli_z().matrix},
+        "Z1X2Z3": {1: pauli_z().matrix, 2: pauli_x().matrix, 3: pauli_z().matrix},
+        "Z2X3": {2: pauli_z().matrix, 3: pauli_x().matrix},
+    }
+    for operator_map in cluster_cases.values():
+        exact = cluster_sampler.enumerate_correlator(_schedule_from_operator_map(operator_map, total_steps=4))
+        assert np.allclose(exact.mean, 1.0, atol=ATOL, rtol=0.0)
+
+
+def test_ten_site_named_entangled_state_profiles_match_known_values() -> None:
+    identity = np.eye(2, dtype=np.complex128)
+    num_sites = 10
+
+    ghz = _ghz_state(num_sites)
+    ghz_sampler = HolographicSampler.from_mps_sequence(ghz)
+    for site in range(num_sites):
+        one_point = {int(site): pauli_z().matrix}
+        one_point_exact = ghz_sampler.enumerate_correlator(_schedule_from_operator_map(one_point, total_steps=num_sites))
+        assert np.allclose(one_point_exact.mean, 0.0, atol=ATOL, rtol=0.0)
+
+        parity = {0: identity} if int(site) == 0 else {0: pauli_z().matrix, int(site): pauli_z().matrix}
+        parity_exact = ghz_sampler.enumerate_correlator(_schedule_from_operator_map(parity, total_steps=num_sites))
+        assert np.allclose(parity_exact.mean, 1.0, atol=ATOL, rtol=0.0)
+
+    cluster = _cluster_state(num_sites)
+    cluster_sampler = HolographicSampler.from_mps_sequence(cluster)
+    for site in range(num_sites):
+        stabilizer = _cluster_stabilizer_operator_map(int(site), num_sites)
+        stabilizer_exact = cluster_sampler.enumerate_correlator(_schedule_from_operator_map(stabilizer, total_steps=num_sites))
+        assert np.allclose(stabilizer_exact.mean, 1.0, atol=ATOL, rtol=0.0)

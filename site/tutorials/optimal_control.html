@@ -11,7 +11,7 @@
       
       
       
-        <link rel="prev" href="unitary_synthesis.html">
+        <link rel="prev" href="snap_fock_state_prep.html">
       
       
         <link rel="next" href="rl_hybrid_control.html">
@@ -25,7 +25,7 @@
     
     
       
-        <title>GRAPE Optimal Control - cqed_sim</title>
+        <title>Optimal Control - cqed_sim</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#grape-optimal-control-tutorial" class="md-skip">
+        <a href="#optimal-control-tutorial" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              GRAPE Optimal Control
+              Optimal Control
             
           </span>
         </div>
@@ -1447,6 +1447,8 @@
       
         
       
+        
+      
     
     
     
@@ -1527,6 +1529,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="snap_fock_state_prep.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SNAP & Fock State Prep
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1546,7 +1576,7 @@
   <span class="md-ellipsis">
     
   
-    GRAPE Optimal Control
+    Optimal Control
   
 
     
@@ -1564,7 +1594,7 @@
   <span class="md-ellipsis">
     
   
-    GRAPE Optimal Control
+    Optimal Control
   
 
     
@@ -1598,14 +1628,25 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Physics Background">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structured-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structured Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structured Workflow">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#the-optimal-control-problem" class="md-nav__link">
+  <a href="#built-in-pulse-families" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Optimal Control Problem
+        Built-in pulse families
       
     </span>
   </a>
@@ -1613,10 +1654,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#the-grape-algorithm" class="md-nav__link">
+  <a href="#minimal-structured-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The GRAPE Algorithm
+        Minimal structured example
       
     </span>
   </a>
@@ -1624,10 +1665,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#hardware-aware-optimal-control" class="md-nav__link">
+  <a href="#example-study-artifacts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hardware-Aware Optimal Control
+        Example study artifacts
       
     </span>
   </a>
@@ -1640,55 +1681,61 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-grape-does" class="md-nav__link">
+  <a href="#grape-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What GRAPE Does
+        GRAPE Workflow
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#minimal-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Minimal Example
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example Output
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-concepts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Concepts
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Key Concepts">
+    <nav class="md-nav" aria-label="GRAPE Workflow">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#time-grid-and-parameterization" class="md-nav__link">
+  <a href="#minimal-grape-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Time Grid and Parameterization
+        Minimal GRAPE example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-between-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing Between Them
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Practical Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hardware-aware-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware-aware optimization
       
     </span>
   </a>
@@ -1696,10 +1743,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#objectives" class="md-nav__link">
+  <a href="#multi-start-grape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Objectives
+        Multi-start GRAPE
       
     </span>
   </a>
@@ -1707,10 +1754,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#hardware-aware-mode" class="md-nav__link">
+  <a href="#leakage-penalties" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hardware-Aware Mode
+        Leakage penalties
       
     </span>
   </a>
@@ -1721,57 +1768,7 @@
   <a href="#replay-through-the-full-simulator" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Replay Through the Full Simulator
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#practical-considerations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Practical Considerations
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Practical Considerations">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#choosing-pulse-duration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Choosing Pulse Duration
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dealing-with-local-minima" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dealing with Local Minima
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#multi-mode-and-leakage-control" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multi-Mode and Leakage Control
+        Replay through the full simulator
       
     </span>
   </a>
@@ -2074,6 +2071,8 @@
       
         
       
+        
+      
     
     
     
@@ -2167,6 +2166,34 @@
     
   
     Generalized Holographic Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="holographic_ghz_cluster_workflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Holographic GHZ and Cluster Workflow
   
 
     
@@ -3163,14 +3190,25 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Physics Background">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structured-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structured Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structured Workflow">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#the-optimal-control-problem" class="md-nav__link">
+  <a href="#built-in-pulse-families" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Optimal Control Problem
+        Built-in pulse families
       
     </span>
   </a>
@@ -3178,10 +3216,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#the-grape-algorithm" class="md-nav__link">
+  <a href="#minimal-structured-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The GRAPE Algorithm
+        Minimal structured example
       
     </span>
   </a>
@@ -3189,10 +3227,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#hardware-aware-optimal-control" class="md-nav__link">
+  <a href="#example-study-artifacts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hardware-Aware Optimal Control
+        Example study artifacts
       
     </span>
   </a>
@@ -3205,55 +3243,61 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-grape-does" class="md-nav__link">
+  <a href="#grape-workflow" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What GRAPE Does
+        GRAPE Workflow
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#minimal-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Minimal Example
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Example Output
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-concepts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Concepts
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Key Concepts">
+    <nav class="md-nav" aria-label="GRAPE Workflow">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#time-grid-and-parameterization" class="md-nav__link">
+  <a href="#minimal-grape-example" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Time Grid and Parameterization
+        Minimal GRAPE example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-between-them" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing Between Them
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Practical Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hardware-aware-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware-aware optimization
       
     </span>
   </a>
@@ -3261,10 +3305,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#objectives" class="md-nav__link">
+  <a href="#multi-start-grape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Objectives
+        Multi-start GRAPE
       
     </span>
   </a>
@@ -3272,10 +3316,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#hardware-aware-mode" class="md-nav__link">
+  <a href="#leakage-penalties" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hardware-Aware Mode
+        Leakage penalties
       
     </span>
   </a>
@@ -3286,57 +3330,7 @@
   <a href="#replay-through-the-full-simulator" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Replay Through the Full Simulator
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#practical-considerations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Practical Considerations
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Practical Considerations">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#choosing-pulse-duration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Choosing Pulse Duration
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#dealing-with-local-minima" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dealing with Local Minima
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#multi-mode-and-leakage-control" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multi-Mode and Leakage Control
+        Replay through the full simulator
       
     </span>
   </a>
@@ -3442,184 +3436,239 @@
 
 
 
-<h1 id="grape-optimal-control-tutorial">GRAPE Optimal Control Tutorial<a class="headerlink" href="#grape-optimal-control-tutorial" title="Permanent link">&para;</a></h1>
-<p>This page introduces <code>cqed_sim</code>'s model-backed GRAPE (Gradient Ascent Pulse Engineering) solver. For the full interactive walkthrough, open:</p>
+<h1 id="optimal-control-tutorial">Optimal Control Tutorial<a class="headerlink" href="#optimal-control-tutorial" title="Permanent link">&para;</a></h1>
+<p><code>cqed_sim</code> now supports two direct-control workflows built on the same physical model and simulation stack:</p>
 <ul>
-<li><code>tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb</code></li>
+<li>structured, hardware-aware parameter-space optimization over smooth pulse families,</li>
+<li>GRAPE for slice-level waveform refinement.</li>
 </ul>
-<p>Companion scripts:</p>
+<p>Use the structured workflow when the experiment loop is naturally:</p>
+<ol>
+<li>propose a pulse family,</li>
+<li>pass it through a hardware or transfer model,</li>
+<li>simulate the effective waveform,</li>
+<li>update a small parameter vector.</li>
+</ol>
+<p>Use GRAPE when you need fine-grained piecewise control once the high-level pulse family is no longer the right abstraction.</p>
+<p>Primary entry points:</p>
 <ul>
-<li><code>examples/grape_storage_subspace_gate_demo.py</code></li>
+<li><code>examples/structured_optimal_control_demo.py</code></li>
 <li><code>examples/hardware_constrained_grape_demo.py</code></li>
+<li><code>examples/grape_storage_subspace_gate_demo.py</code></li>
+<li><code>tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb</code></li>
 </ul>
 <hr />
 <h2 id="physics-background">Physics Background<a class="headerlink" href="#physics-background" title="Permanent link">&para;</a></h2>
-<h3 id="the-optimal-control-problem">The Optimal Control Problem<a class="headerlink" href="#the-optimal-control-problem" title="Permanent link">&para;</a></h3>
-<p>Given a quantum system with Hamiltonian <span class="arithmatex">\(H(t) = H_0 + \sum_j u_j(t) H_j\)</span>, we want to find control waveforms <span class="arithmatex">\(\{u_j(t)\}\)</span> that maximize a fidelity objective:</p>
-<div class="arithmatex">\[\mathcal{F} = \left|\langle \psi_{\text{target}} | U(T) | \psi_0 \rangle\right|^2\]</div>
-<p>for state preparation, or</p>
-<div class="arithmatex">\[\mathcal{F} = \frac{1}{d^2}\left|\operatorname{Tr}\left[U_{\text{target}}^\dagger U(T)\right]\right|^2\]</div>
-<p>for unitary synthesis, where <span class="arithmatex">\(U(T) = \mathcal{T}\exp\left(-i\int_0^T H(t) dt\right)\)</span> is the propagator.</p>
-<p>For cQED, <span class="arithmatex">\(H_0\)</span> is the full dispersive Hamiltonian (including cavity, qubit, self-Kerr, dispersive shift), and <span class="arithmatex">\(H_j\)</span> are the drive coupling operators for each control line. Unlike idealized optimal control algorithms that work on abstract qubits, <code>cqed_sim</code> GRAPE operates on the physical Hilbert space including all cavity Fock levels and transmon levels.</p>
-<h3 id="the-grape-algorithm">The GRAPE Algorithm<a class="headerlink" href="#the-grape-algorithm" title="Permanent link">&para;</a></h3>
-<p>GRAPE (Khaneja et al. 2005) uses the following key insight: for <strong>piecewise-constant</strong> controls <span class="arithmatex">\(u_j(t) = u_j^{(k)}\)</span> on time steps <span class="arithmatex">\(k = 1, \ldots, N\)</span>, the gradient of the fidelity with respect to each control amplitude can be computed exactly:</p>
-<div class="arithmatex">\[\frac{\partial \mathcal{F}}{\partial u_j^{(k)}} = -2i \operatorname{Re}\left[\langle P_k | H_j | X_k \rangle\right]\]</div>
-<p>where <span class="arithmatex">\(|X_k\rangle = U_k \cdots U_1 |\psi_0\rangle\)</span> is the forward-propagated state and <span class="arithmatex">\(\langle P_k |\)</span> is the backward-propagated adjoint (target overlap). Computing both forward and backward propagations takes <span class="arithmatex">\(O(N d^2)\)</span> operations — the same scaling as a single forward simulation, making GRAPE highly efficient.</p>
-<p>The update rule is gradient ascent:</p>
-<div class="arithmatex">\[u_j^{(k)} \leftarrow u_j^{(k)} + \eta \frac{\partial \mathcal{F}}{\partial u_j^{(k)}}\]</div>
-<p>In <code>cqed_sim</code>, the solver uses L-BFGS-B for second-order convergence with box constraints on the amplitudes.</p>
-<h3 id="hardware-aware-optimal-control">Hardware-Aware Optimal Control<a class="headerlink" href="#hardware-aware-optimal-control" title="Permanent link">&para;</a></h3>
-<p>Real devices distort the programmed waveforms through:</p>
+<p>Given a quantum system with Hamiltonian</p>
+<div class="arithmatex">\[
+H(t) = H_0 + \sum_j u_j(t) H_j,
+\]</div>
+<p>the direct-control problem is to choose control waveforms that optimize a figure of merit such as state fidelity or unitary fidelity.</p>
+<p>For state preparation,</p>
+<div class="arithmatex">\[
+\mathcal{F}_{\mathrm{state}} = \left|\langle \psi_{\mathrm{target}} | U(T) | \psi_0 \rangle\right|^2.
+\]</div>
+<p>For unitary synthesis,</p>
+<div class="arithmatex">\[
+\mathcal{F}_{\mathrm{unitary}} = \frac{1}{d^2}\left|\operatorname{Tr}\left[U_{\mathrm{target}}^\dagger U(T)\right]\right|^2.
+\]</div>
+<p>In cQED, <code>cqed_sim</code> evaluates these objectives on the full truncated physical Hilbert space, not on an abstracted qubit-only toy model.</p>
+<hr />
+<h2 id="structured-workflow">Structured Workflow<a class="headerlink" href="#structured-workflow" title="Permanent link">&para;</a></h2>
+<p>The structured backend optimizes a low-dimensional parameter vector</p>
+<div class="arithmatex">\[
+\theta = (\theta_1, \ldots, \theta_P)
+\]</div>
+<p>instead of one independent amplitude per time sample.</p>
+<p>The internal pipeline is explicit:</p>
+<div class="arithmatex">\[
+\theta \rightarrow u_{\mathrm{cmd}}(t; \theta) \rightarrow u_{\mathrm{phys}}(t) = \mathcal{H}[u_{\mathrm{cmd}}] \rightarrow H(t; u_{\mathrm{phys}}).
+\]</div>
+<p>That separation matters because realistic hardware introduces:</p>
 <ul>
-<li><strong>Low-pass filtering</strong> (bandwidth-limited cables and amplifiers)</li>
-<li><strong>DAC quantization</strong> (finite bit depth)</li>
-<li><strong>IQ amplitude saturation</strong> (mixer or amplifier limits)</li>
-<li><strong>Finite rise/fall times</strong> (boundary windows)</li>
+<li>bandwidth limits,</li>
+<li>gain errors,</li>
+<li>delays or skews,</li>
+<li>boundary smoothing,</li>
+<li>I/Q distortions.</li>
 </ul>
-<p>If GRAPE ignores these effects, the optimized waveform — when applied to the actual hardware — will produce a distorted physical drive that differs from the intended one, reducing fidelity. Hardware-aware GRAPE includes the distortion model directly in the gradient computation, so the optimizer finds waveforms that produce the desired drive <strong>after</strong> filtering.</p>
-<hr />
-<h2 id="what-grape-does">What GRAPE Does<a class="headerlink" href="#what-grape-does" title="Permanent link">&para;</a></h2>
-<p>GRAPE finds piecewise-constant control waveforms that steer a quantum system toward a desired objective. It:</p>
-<ol>
-<li>Propagates the system forward slice-by-slice using the piecewise-constant schedule</li>
-<li>Propagates the adjoint (target) backward simultaneously</li>
-<li>Computes the exact gradient of the objective with respect to each slice amplitude</li>
-<li>Iterates using L-BFGS-B until convergence</li>
-</ol>
-<p>In <code>cqed_sim</code>, GRAPE works directly on the physical model Hamiltonian — it does not require an idealized qubit abstraction.</p>
-<hr />
-<h2 id="minimal-example">Minimal Example<a class="headerlink" href="#minimal-example" title="Permanent link">&para;</a></h2>
-<p>Prepare <span class="arithmatex">\(|g,0\rangle \to |e,0\rangle\)</span> (a qubit π-pulse) using GRAPE:</p>
+<h3 id="built-in-pulse-families">Built-in pulse families<a class="headerlink" href="#built-in-pulse-families" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>GaussianDragPulseFamily</code></li>
+</ul>
+<p>$$
+  u(t; \theta) = A \left[g(t; \sigma, c) + i\,\alpha\,\frac{dg}{d\tau}\right] e^{i\phi}
+  $$</p>
+<ul>
+<li><code>FourierSeriesPulseFamily</code></li>
+</ul>
+<p>$$
+  u(t; \theta) = I(t; \theta_I) - i Q(t; \theta_Q)
+  $$</p>
+<p>with truncated cosine and sine bases on each quadrature.</p>
+<h3 id="minimal-structured-example">Minimal structured example<a class="headerlink" href="#minimal-structured-example" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">DispersiveTransmonCavityModel</span><span class="p">,</span> <span class="n">FrameSpec</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">PiecewiseConstantTimeGrid</span><span class="p">,</span> <span class="n">ModelControlChannelSpec</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">build_control_problem_from_model</span><span class="p">,</span> <span class="n">state_preparation_objective</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">GrapeSolver</span><span class="p">,</span> <span class="n">GrapeConfig</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># 1. System and frame</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">model</span> <span class="o">=</span> <span class="n">DispersiveTransmonCavityModel</span><span class="p">(</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">omega_c</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">5e9</span><span class="p">,</span> <span class="n">omega_q</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">6e9</span><span class="p">,</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">chi</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">kerr</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">n_cav</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_tr</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="p">)</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="n">frame</span> <span class="o">=</span> <span class="n">FrameSpec</span><span class="p">(</span><span class="n">omega_c_frame</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">omega_c</span><span class="p">,</span> <span class="n">omega_q_frame</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">omega_q</span><span class="p">)</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="c1"># 2. Control problem: 6 piecewise-constant slices × 20 ns = 120 ns total</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="n">problem</span> <span class="o">=</span> <span class="n">build_control_problem_from_model</span><span class="p">(</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="n">model</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    <span class="n">time_grid</span><span class="o">=</span><span class="n">PiecewiseConstantTimeGrid</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">dt_s</span><span class="o">=</span><span class="mf">20e-9</span><span class="p">),</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    <span class="n">channel_specs</span><span class="o">=</span><span class="p">(</span><span class="n">ModelControlChannelSpec</span><span class="p">(</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span> <span class="n">quadratures</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;Q&quot;</span><span class="p">),</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        <span class="n">amplitude_bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">8e7</span><span class="p">,</span> <span class="mf">8e7</span><span class="p">),</span> <span class="n">export_channel</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    <span class="p">),),</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    <span class="n">objectives</span><span class="o">=</span><span class="p">(</span><span class="n">state_preparation_objective</span><span class="p">(</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>        <span class="n">model</span><span class="o">.</span><span class="n">basis_state</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>   <span class="c1"># initial: |g,0⟩</span>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>        <span class="n">model</span><span class="o">.</span><span class="n">basis_state</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>   <span class="c1"># target:  |e,0⟩</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    <span class="p">),),</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="p">)</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="c1"># 3. Solve</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="n">solver</span> <span class="o">=</span> <span class="n">GrapeSolver</span><span class="p">(</span><span class="n">GrapeConfig</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">random_scale</span><span class="o">=</span><span class="mf">0.15</span><span class="p">))</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Success: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Objective: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">objective_value</span><span class="si">:</span><span class="s2">.6e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">DispersiveTransmonCavityModel</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">FirstOrderLowPassHardwareMap</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">FrameSpec</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">GaussianDragPulseFamily</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">GainHardwareMap</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">HardwareModel</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">ModelControlChannelSpec</span><span class="p">,</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">PiecewiseConstantTimeGrid</span><span class="p">,</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">StructuredControlChannel</span><span class="p">,</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">StructuredControlConfig</span><span class="p">,</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">build_structured_control_problem_from_model</span><span class="p">,</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">solve_structured_control</span><span class="p">,</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">state_preparation_objective</span><span class="p">,</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">)</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">model</span> <span class="o">=</span> <span class="n">DispersiveTransmonCavityModel</span><span class="p">(</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    <span class="n">omega_c</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">5e9</span><span class="p">,</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    <span class="n">omega_q</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">6e9</span><span class="p">,</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    <span class="n">chi</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    <span class="n">kerr</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    <span class="n">n_cav</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    <span class="n">n_tr</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="p">)</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="n">frame</span> <span class="o">=</span> <span class="n">FrameSpec</span><span class="p">(</span><span class="n">omega_c_frame</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">omega_c</span><span class="p">,</span> <span class="n">omega_q_frame</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">omega_q</span><span class="p">)</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="n">problem</span> <span class="o">=</span> <span class="n">build_structured_control_problem_from_model</span><span class="p">(</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    <span class="n">time_grid</span><span class="o">=</span><span class="n">PiecewiseConstantTimeGrid</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">dt_s</span><span class="o">=</span><span class="mf">4e-9</span><span class="p">),</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    <span class="n">channel_specs</span><span class="o">=</span><span class="p">(</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>        <span class="n">ModelControlChannelSpec</span><span class="p">(</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span>
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>            <span class="n">target</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span>
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>            <span class="n">quadratures</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;Q&quot;</span><span class="p">),</span>
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>            <span class="n">amplitude_bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">8e7</span><span class="p">,</span> <span class="mf">8e7</span><span class="p">),</span>
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>            <span class="n">export_channel</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span>
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>        <span class="p">),</span>
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>    <span class="p">),</span>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>    <span class="n">structured_channels</span><span class="o">=</span><span class="p">(</span>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>        <span class="n">StructuredControlChannel</span><span class="p">(</span>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;gaussian_drag&quot;</span><span class="p">,</span>
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>            <span class="n">pulse_family</span><span class="o">=</span><span class="n">GaussianDragPulseFamily</span><span class="p">(</span><span class="n">default_phase</span><span class="o">=-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">),</span>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>            <span class="n">export_channel</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>        <span class="p">),</span>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>    <span class="p">),</span>
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>    <span class="n">objectives</span><span class="o">=</span><span class="p">(</span><span class="n">state_preparation_objective</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">basis_state</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">model</span><span class="o">.</span><span class="n">basis_state</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),),</span>
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>    <span class="n">hardware_model</span><span class="o">=</span><span class="n">HardwareModel</span><span class="p">(</span><span class="n">maps</span><span class="o">=</span><span class="p">(</span>
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>        <span class="n">GainHardwareMap</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">0.93</span><span class="p">,</span> <span class="n">export_channels</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;qubit&quot;</span><span class="p">,)),</span>
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>        <span class="n">FirstOrderLowPassHardwareMap</span><span class="p">(</span><span class="n">cutoff_hz</span><span class="o">=</span><span class="mf">28e6</span><span class="p">,</span> <span class="n">export_channels</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;qubit&quot;</span><span class="p">,)),</span>
+</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    <span class="p">)),</span>
+</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="p">)</span>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="n">result</span> <span class="o">=</span> <span class="n">solve_structured_control</span><span class="p">(</span>
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>    <span class="n">problem</span><span class="p">,</span>
+</span><span id="__span-0-58"><a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>    <span class="n">config</span><span class="o">=</span><span class="n">StructuredControlConfig</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">),</span>
+</span><span id="__span-0-59"><a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="example-study-artifacts">Example study artifacts<a class="headerlink" href="#example-study-artifacts" title="Permanent link">&para;</a></h3>
+<p>Running <code>examples/structured_optimal_control_demo.py</code> generates two study directories:</p>
+<ul>
+<li><code>outputs/structured_optimal_control_demo/gaussian_drag/</code></li>
+<li><code>outputs/structured_optimal_control_demo/fourier_basis/</code></li>
+</ul>
+<p>Each directory contains:</p>
+<ul>
+<li><code>result.json</code></li>
+<li><code>parameters.csv</code></li>
+<li><code>waveforms.csv</code></li>
+<li><code>history.csv</code></li>
+<li><code>waveforms.png</code></li>
+<li><code>spectrum.png</code></li>
+<li><code>optimization_history.png</code></li>
+</ul>
+<p>These files provide the requested time-domain waveform view, frequency-domain view, and objective/fidelity progression without requiring a notebook-only workflow.</p>
+<hr />
+<h2 id="grape-workflow">GRAPE Workflow<a class="headerlink" href="#grape-workflow" title="Permanent link">&para;</a></h2>
+<p>GRAPE remains useful when you want direct slice-level control on the propagation grid.</p>
+<p>For piecewise-constant controls <span class="arithmatex">\(u_j^{(k)}\)</span>, the GRAPE gradient is computed exactly from forward and backward propagation on the same grid used for the dense propagator.</p>
+<h3 id="minimal-grape-example">Minimal GRAPE example<a class="headerlink" href="#minimal-grape-example" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">DispersiveTransmonCavityModel</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">FrameSpec</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">GrapeConfig</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">GrapeSolver</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">ModelControlChannelSpec</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">PiecewiseConstantTimeGrid</span><span class="p">,</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">build_control_problem_from_model</span><span class="p">,</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="n">state_preparation_objective</span><span class="p">,</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">model</span> <span class="o">=</span> <span class="n">DispersiveTransmonCavityModel</span><span class="p">(</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="n">omega_c</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">5e9</span><span class="p">,</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">omega_q</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mf">6e9</span><span class="p">,</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="n">alpha</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    <span class="n">chi</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="n">kerr</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    <span class="n">n_cav</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="n">n_tr</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="p">)</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="n">frame</span> <span class="o">=</span> <span class="n">FrameSpec</span><span class="p">(</span><span class="n">omega_c_frame</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">omega_c</span><span class="p">,</span> <span class="n">omega_q_frame</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">omega_q</span><span class="p">)</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="n">problem</span> <span class="o">=</span> <span class="n">build_control_problem_from_model</span><span class="p">(</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    <span class="n">model</span><span class="p">,</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>    <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>    <span class="n">time_grid</span><span class="o">=</span><span class="n">PiecewiseConstantTimeGrid</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">dt_s</span><span class="o">=</span><span class="mf">20e-9</span><span class="p">),</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    <span class="n">channel_specs</span><span class="o">=</span><span class="p">(</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>        <span class="n">ModelControlChannelSpec</span><span class="p">(</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a>            <span class="n">target</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>            <span class="n">quadratures</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;Q&quot;</span><span class="p">),</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a>            <span class="n">amplitude_bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">8e7</span><span class="p">,</span> <span class="mf">8e7</span><span class="p">),</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>            <span class="n">export_channel</span><span class="o">=</span><span class="s2">&quot;qubit&quot;</span><span class="p">,</span>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>        <span class="p">),</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>    <span class="p">),</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>    <span class="n">objectives</span><span class="o">=</span><span class="p">(</span><span class="n">state_preparation_objective</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">basis_state</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">model</span><span class="o">.</span><span class="n">basis_state</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),),</span>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="p">)</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a>
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="n">result</span> <span class="o">=</span> <span class="n">GrapeSolver</span><span class="p">(</span><span class="n">GrapeConfig</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">))</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
-<h2 id="example-output">Example Output<a class="headerlink" href="#example-output" title="Permanent link">&para;</a></h2>
-<p>Running the example above produces a converged solution. The left panel shows the infidelity vs. iteration (semilogy scale, monotonically decreasing). The right panel shows the optimized I/Q control amplitudes as a step function:</p>
-<p><img alt="GRAPE Optimal Control" src="../assets/images/tutorials/grape_optimal_control.png" /></p>
-<p>A 120 ns π-pulse optimized by GRAPE achieves infidelity <span class="arithmatex">\(\lesssim 10^{-4}\)</span> in 80 iterations. The I-channel dominates (it implements the rotation axis), while the Q-channel remains near zero for a purely real rotation.</p>
+<h2 id="choosing-between-them">Choosing Between Them<a class="headerlink" href="#choosing-between-them" title="Permanent link">&para;</a></h2>
+<p>Choose structured control when:</p>
+<ul>
+<li>smoothness and hardware realism are the main constraints,</li>
+<li>you want meaningful parameters rather than raw samples,</li>
+<li>you plan to move toward hardware-closed-loop refinement.</li>
+</ul>
+<p>Choose GRAPE when:</p>
+<ul>
+<li>you need the extra expressivity of a slice-wise schedule,</li>
+<li>the command waveform itself is the object you want to refine,</li>
+<li>you already have a hardware-aware parameterization such as held-sample controls and want local refinement on top of it.</li>
+</ul>
 <hr />
-<h2 id="key-concepts">Key Concepts<a class="headerlink" href="#key-concepts" title="Permanent link">&para;</a></h2>
-<h3 id="time-grid-and-parameterization">Time Grid and Parameterization<a class="headerlink" href="#time-grid-and-parameterization" title="Permanent link">&para;</a></h3>
-<p>The control problem operates on a discrete time grid. Each slice has a constant control amplitude:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">PiecewiseConstantTimeGrid</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">grid</span> <span class="o">=</span> <span class="n">PiecewiseConstantTimeGrid</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">dt_s</span><span class="o">=</span><span class="mf">5e-9</span><span class="p">)</span>  <span class="c1"># 100 ns total</span>
-</span></code></pre></div>
-<p>For held-sample parameterization (each parameter value is held for multiple time slices):</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">HeldSampleParameterization</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">problem</span> <span class="o">=</span> <span class="n">build_control_problem_from_model</span><span class="p">(</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="o">...</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">parameterization_cls</span><span class="o">=</span><span class="n">HeldSampleParameterization</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">parameterization_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;sample_period_s&quot;</span><span class="p">:</span> <span class="mf">20e-9</span><span class="p">},</span>
+<h2 id="practical-notes">Practical Notes<a class="headerlink" href="#practical-notes" title="Permanent link">&para;</a></h2>
+<h3 id="hardware-aware-optimization">Hardware-aware optimization<a class="headerlink" href="#hardware-aware-optimization" title="Permanent link">&para;</a></h3>
+<p>Attach a <code>HardwareModel</code> to either workflow to optimize through the physical transfer path. The same command-vs-physical distinction is available through <code>resolve_control_schedule(...)</code> and the solve result metrics.</p>
+<h3 id="multi-start-grape">Multi-start GRAPE<a class="headerlink" href="#multi-start-grape" title="Permanent link">&para;</a></h3>
+<p>GRAPE restarts are handled through <code>solve_grape_multistart(...)</code> and <code>GrapeMultistartConfig(...)</code>, not through a <code>GrapeConfig(n_random_restarts=...)</code> field.</p>
+<h3 id="leakage-penalties">Leakage penalties<a class="headerlink" href="#leakage-penalties" title="Permanent link">&para;</a></h3>
+<p>Use <code>LeakagePenalty(...)</code> to suppress population outside the retained subspace. There is no <code>LeakagePenaltyObjective</code> class in the current public API.</p>
+<h3 id="replay-through-the-full-simulator">Replay through the full simulator<a class="headerlink" href="#replay-through-the-full-simulator" title="Permanent link">&para;</a></h3>
+<p>After either solve path, validate the final command or physical waveform through the time-domain runtime:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">replay</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">evaluate_with_simulator</span><span class="p">(</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">problem</span><span class="p">,</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">compiler_dt_s</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">waveform_mode</span><span class="o">=</span><span class="s2">&quot;physical&quot;</span><span class="p">,</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
-</span></code></pre></div>
-<h3 id="objectives">Objectives<a class="headerlink" href="#objectives" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Objective</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>state_preparation_objective(initial, target)</code></td>
-<td>Maximize overlap of evolved state with target</td>
-</tr>
-<tr>
-<td><code>UnitaryObjective(U_target, subspace)</code></td>
-<td>Match a unitary on a logical subspace</td>
-</tr>
-</tbody>
-</table>
-<h3 id="hardware-aware-mode">Hardware-Aware Mode<a class="headerlink" href="#hardware-aware-mode" title="Permanent link">&para;</a></h3>
-<p>Attach a <code>HardwareModel</code> to optimize through realistic signal-chain effects:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">HardwareModel</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.optimal_control.hardware</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">FirstOrderLowPassHardwareMap</span><span class="p">,</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">SmoothIQRadiusLimitHardwareMap</span><span class="p">,</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">BoundaryWindowHardwareMap</span><span class="p">,</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">)</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">problem</span> <span class="o">=</span> <span class="n">build_control_problem_from_model</span><span class="p">(</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="o">...</span><span class="p">,</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="n">hardware_model</span><span class="o">=</span><span class="n">HardwareModel</span><span class="p">(</span><span class="n">maps</span><span class="o">=</span><span class="p">(</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>        <span class="n">FirstOrderLowPassHardwareMap</span><span class="p">(</span><span class="n">cutoff_hz</span><span class="o">=</span><span class="mf">25e6</span><span class="p">,</span> <span class="n">export_channels</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;qubit&quot;</span><span class="p">,)),</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>        <span class="n">SmoothIQRadiusLimitHardwareMap</span><span class="p">(</span><span class="n">amplitude_max</span><span class="o">=</span><span class="mf">6e7</span><span class="p">,</span> <span class="n">export_channels</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;qubit&quot;</span><span class="p">,)),</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>        <span class="n">BoundaryWindowHardwareMap</span><span class="p">(</span><span class="n">ramp_slices</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">export_channels</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;qubit&quot;</span><span class="p">,)),</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="p">)),</span>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="p">)</span>
-</span></code></pre></div>
-<p>See the <a href="hardware_context.html">Hardware-Aware Control</a> tutorial for details.</p>
-<h3 id="replay-through-the-full-simulator">Replay Through the Full Simulator<a class="headerlink" href="#replay-through-the-full-simulator" title="Permanent link">&para;</a></h3>
-<p>After optimization, verify the result against the time-domain ODE solver:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">replay</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">evaluate_with_simulator</span><span class="p">(</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">problem</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">compiler_dt_s</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">waveform_mode</span><span class="o">=</span><span class="s2">&quot;physical&quot;</span><span class="p">,</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">)</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Replay fidelity: </span><span class="si">{</span><span class="n">replay</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s1">&#39;aggregate_fidelity&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></code></pre></div>
-<p>The replay step integrates the actual ODE using the optimized waveform — a higher-fidelity check than the GRAPE forward propagation, since it uses the continuous-time simulator rather than piecewise-constant approximation.</p>
-<hr />
-<h2 id="practical-considerations">Practical Considerations<a class="headerlink" href="#practical-considerations" title="Permanent link">&para;</a></h2>
-<h3 id="choosing-pulse-duration">Choosing Pulse Duration<a class="headerlink" href="#choosing-pulse-duration" title="Permanent link">&para;</a></h3>
-<p>There is a minimum time <span class="arithmatex">\(T_{\min}\)</span> required to achieve a given gate fidelity, set by the <strong>quantum speed limit</strong> (proportional to <span class="arithmatex">\(1/\Omega_{\max}\)</span> where <span class="arithmatex">\(\Omega_{\max}\)</span> is the amplitude bound). For a qubit π-pulse, <span class="arithmatex">\(T_{\min} \approx \pi / (2 \Omega_{\max})\)</span>. Using <span class="arithmatex">\(T \gg T_{\min}\)</span> gives GRAPE many degrees of freedom and typically converges faster; using <span class="arithmatex">\(T \approx T_{\min}\)</span> produces minimal-time but maximally-amplitude pulses.</p>
-<h3 id="dealing-with-local-minima">Dealing with Local Minima<a class="headerlink" href="#dealing-with-local-minima" title="Permanent link">&para;</a></h3>
-<p>GRAPE is a local optimizer. Use the <code>seed</code> parameter and <code>GrapeConfig(n_random_restarts=k)</code> to run multiple random initializations and return the best result.</p>
-<h3 id="multi-mode-and-leakage-control">Multi-Mode and Leakage Control<a class="headerlink" href="#multi-mode-and-leakage-control" title="Permanent link">&para;</a></h3>
-<p>For problems involving cavity Fock levels, add a leakage penalty to the objective to suppress population outside the target subspace:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.optimal_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">LeakagePenaltyObjective</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">problem</span> <span class="o">=</span> <span class="n">build_control_problem_from_model</span><span class="p">(</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="o">...</span><span class="p">,</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">objectives</span><span class="o">=</span><span class="p">(</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>        <span class="n">state_preparation_objective</span><span class="p">(</span><span class="n">initial</span><span class="p">,</span> <span class="n">target</span><span class="p">),</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        <span class="n">LeakagePenaltyObjective</span><span class="p">(</span><span class="n">weight</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">leakage_subspace</span><span class="o">=</span><span class="n">leaked_indices</span><span class="p">),</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="p">),</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../api/optimal_control.html">Optimal Control API</a> — full API reference</li>
-<li><a href="../api/hardware.html">Hardware &amp; Control API</a> — <code>HardwareModel</code>, <code>HardwareMap</code> types</li>
-<li><a href="hardware_context.html">Hardware-Aware Control Tutorial</a> — signal-chain modeling and GRAPE integration</li>
-<li><a href="unitary_synthesis.html">Unitary Synthesis</a> — gate-sequence optimization alternative to GRAPE</li>
+<li><a href="../api/optimal_control.html">Optimal Control API</a></li>
+<li><a href="../api/hardware.html">Hardware &amp; Control API</a></li>
+<li><a href="hardware_context.html">Hardware-Aware Control Tutorial</a></li>
+<li><a href="unitary_synthesis.html">Unitary Synthesis</a></li>
 </ul>
 
 

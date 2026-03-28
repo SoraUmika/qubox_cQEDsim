@@ -452,6 +452,89 @@ def plot_floquet_quasienergy_scan():
 
 
 # ---------------------------------------------------------------------------
+# 7. Fock State Wigner Functions
+# ---------------------------------------------------------------------------
+def plot_fock_state_wigners():
+    """4-panel Wigner function grid for Fock states |0⟩ – |3⟩."""
+    _apply_style()
+    print("[7/8] Fock state Wigner functions …")
+    try:
+        import qutip as qt
+
+        N = 25
+        xvec = np.linspace(-4, 4, 120)
+        labels = [r"$|0\rangle$ (vacuum)", r"$|1\rangle$", r"$|2\rangle$", r"$|3\rangle$"]
+
+        fig, axes = plt.subplots(1, 4, figsize=(14, 4))
+        for n, (ax, label) in enumerate(zip(axes, labels)):
+            state = qt.fock_dm(N, n)
+            W = qt.wigner(state, xvec, xvec)
+            vmax = max(abs(W.min()), abs(W.max()))
+            pcm = ax.pcolormesh(
+                xvec, xvec, W,
+                cmap="RdBu_r", vmin=-vmax, vmax=vmax, shading="auto",
+            )
+            plt.colorbar(pcm, ax=ax, fraction=0.046, pad=0.04)
+            ax.set_xlabel(r"Re($\alpha$)")
+            ax.set_ylabel(r"Im($\alpha$)")
+            ax.set_title(label)
+            ax.set_aspect("equal")
+
+        fig.suptitle("Fock State Wigner Functions", fontsize=14)
+        fig.tight_layout()
+        fig.savefig(OUT_DIR / "fock_state_wigners.png", dpi=150)
+        plt.close(fig)
+        print("    [ok] fock_state_wigners.png")
+    except Exception as exc:
+        print(f"    [skip] fock_state_wigners: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# 8. DSD Fock State Preparation — Ideal Target Wigner Functions
+# ---------------------------------------------------------------------------
+def plot_dsd_fock_preparation():
+    """Ideal Wigner functions for |1⟩, |2⟩, |3⟩ DSD preparation targets."""
+    _apply_style()
+    print("[8/8] DSD Fock preparation target Wigner functions …")
+    try:
+        import qutip as qt
+
+        N = 25
+        xvec = np.linspace(-4, 4, 120)
+        targets = [1, 2, 3]
+        labels = [r"Target $|1\rangle$", r"Target $|2\rangle$", r"Target $|3\rangle$"]
+
+        fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+        for n, (ax, label) in zip(targets, zip(axes, labels)):
+            state = qt.fock_dm(N, n)
+            W = qt.wigner(state, xvec, xvec)
+            vmax = max(abs(W.min()), abs(W.max()))
+            pcm = ax.pcolormesh(
+                xvec, xvec, W,
+                cmap="RdBu_r", vmin=-vmax, vmax=vmax, shading="auto",
+            )
+            plt.colorbar(pcm, ax=ax, fraction=0.046, pad=0.04)
+            # Annotate Wigner negativity at origin
+            w_origin = qt.wigner(state, np.array([0.0]), np.array([0.0]))
+            ax.plot(0, 0, "k+", ms=8, mew=2)
+            ax.set_xlabel(r"Re($\alpha$)")
+            ax.set_ylabel(r"Im($\alpha$)")
+            ax.set_title(f"{label}\n$W(0)={float(w_origin[0,0]):.3f}$")
+            ax.set_aspect("equal")
+
+        fig.suptitle(
+            "DSD Fock State Preparation — Ideal Target States",
+            fontsize=14,
+        )
+        fig.tight_layout()
+        fig.savefig(OUT_DIR / "dsd_fock_preparation.png", dpi=150)
+        plt.close(fig)
+        print("    [ok] dsd_fock_preparation.png")
+    except Exception as exc:
+        print(f"    [skip] dsd_fock_preparation: {exc}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
@@ -462,4 +545,6 @@ if __name__ == "__main__":
     plot_grape_optimal_control()
     plot_cross_kerr_phase()
     plot_floquet_quasienergy_scan()
+    plot_fock_state_wigners()
+    plot_dsd_fock_preparation()
     print(f"\nAll plots saved to {OUT_DIR}")

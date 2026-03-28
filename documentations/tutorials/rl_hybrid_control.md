@@ -128,6 +128,8 @@ diag = build_rollout_diagnostics(env)
 # Contains: state trajectory, Bloch vectors, photon numbers, fidelity curve
 ```
 
+![Hybrid RL control rollout](../assets/images/tutorials/rl_hybrid_rollout.png)
+
 ---
 
 ## Integration with RL Libraries

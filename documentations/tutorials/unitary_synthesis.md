@@ -216,6 +216,8 @@ The notebook demonstrates:
 - exporting and warm-starting a saved result
 - plotting convergence and inspecting a small Pareto front
 
+![Unitary synthesis convergence](../assets/images/tutorials/unitary_synthesis_convergence.png)
+
 The repository also includes standalone example scripts that extend the notebook with the newer workflows:
 
 - `examples/unitary_synthesis_relevance_aware_optimizer.py`

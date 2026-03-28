@@ -109,6 +109,8 @@ print(f"Fitted T1: {t1_result.t1_s:.2e} s")
 
 Each fit returns point estimates and uncertainty bounds. The spectroscopy fit gives the qubit frequency and linewidth; the Rabi fit gives the drive coupling and verifies the frequency calibration; the T1 fit gives the energy-relaxation time.
 
+![System identification calibration fits](../assets/images/tutorials/system_identification_fits.png)
+
 ---
 
 ### `02_evidence_to_randomizer_and_env.ipynb`

@@ -145,6 +145,8 @@ fig.suptitle("Same state, two coordinate conventions", fontsize=13)
 plt.tight_layout()
 ```
 
+![Alpha vs quadrature Wigner plot comparison](../assets/images/tutorials/phase_space_conventions.png)
+
 The two panels show an identical Gaussian blob, but with the horizontal axis scaled by $\sqrt{2}$.
 
 ---

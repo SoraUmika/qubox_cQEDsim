@@ -89,6 +89,8 @@ print(f"⟨n⟩ = {nbar:.3f}, P(e) = {pe:.3f}")
 - The oscillation period depends on drive amplitude, dispersive shift, and detuning accuracy.
 - The contrast is reduced by higher-order nonlinear terms (Kerr, anharmonicity).
 
+![Sideband interactions: red-sideband oscillations](../assets/images/tutorials/sideband_interactions.png)
+
 ---
 
 ## Key Parameters

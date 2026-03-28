@@ -109,6 +109,8 @@ for label, frame in [("correct", frame_ok), ("wrong", frame_bad)]:
 # wrong   → P(e) ≈ 0.02 (detuned, barely excites)
 ```
 
+![Frame sanity check: correct vs wrong frame](../assets/images/tutorials/frame_sanity_checks.png)
+
 ---
 
 ## Checklist

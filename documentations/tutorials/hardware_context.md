@@ -198,6 +198,8 @@ print(f"Physical fidelity: {physical_replay.metrics['aggregate_fidelity']:.6f}")
 | `GainHardwareMap` | Scalar gain | Yes |
 | `DelayHardwareMap` | Integer sample delay | Yes |
 
+![Programmed vs hardware-filtered waveform](../assets/images/tutorials/hardware_context_filter.png)
+
 ---
 
 ## Example Scripts

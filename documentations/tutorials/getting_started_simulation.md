@@ -141,6 +141,8 @@ A bar chart comparing exact probability with sampled frequency shows both near 0
 | Cavity $\langle n \rangle$ | $0$ |
 | Qubit purity | $1$ (pure state) |
 
+![X90 gate result: exact P(e) vs sampled frequency](../assets/images/tutorials/getting_started_x90.png)
+
 ---
 
 ## Workflow Summary

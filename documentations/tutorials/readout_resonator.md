@@ -80,6 +80,8 @@ print(f"IQ_e = ({np.real(alpha_e):.3f}, {np.imag(alpha_e):.3f})")
 - The separation $|\alpha_g - \alpha_e|$ is proportional to both the drive amplitude and the dispersive shift $\chi_r$.
 - Increasing the measurement time increases the pointer-state separation until $T_1$-limited qubit decay degrades the signal.
 
+![Readout resonator IQ pointer states](../assets/images/tutorials/readout_resonator_iq.png)
+
 ---
 
 ## Key Parameters

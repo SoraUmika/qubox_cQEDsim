@@ -142,6 +142,8 @@ by the legacy `holographicSim.py` finite-sequence path.
 - converts both named entangled states into public MPS-derived holographic step sequences
 - plots exact-vs-sampled observable comparisons for both states in one figure
 
+![Holographic correlator comparison](../assets/images/tutorials/holographic_correlator.png)
+
 For the full walkthrough, figures, and exact numbers, see
 `holographic_generalized_unitary_workflow.md` and
 `holographic_ghz_cluster_workflow.md`.

@@ -3753,7 +3753,7 @@
 </ol>
 <hr />
 <h2 id="workflow-1-constraint-limited-unitary-synthesis">Workflow 1: Constraint-Limited Unitary Synthesis<a class="headerlink" href="#workflow-1-constraint-limited-unitary-synthesis" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.unitary_synthesis</span> <span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">MultiObjective</span><span class="p">,</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">PrimitiveGate</span><span class="p">,</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">SynthesisConstraints</span><span class="p">,</span>
@@ -3782,8 +3782,8 @@
 <p>This is the right entry point when you want a hard or penalized bound on total duration, amplitude, or forbidden parameter regions.</p>
 <hr />
 <h2 id="workflow-2-leakage-aware-and-open-system-state-mapping">Workflow 2: Leakage-Aware and Open-System State Mapping<a class="headerlink" href="#workflow-2-leakage-aware-and-open-system-state-mapping" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoiseSpec</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.sim</span> <span class="kn">import</span> <span class="n">NoiseSpec</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span> <span class="nn">cqed_sim.unitary_synthesis</span> <span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">CQEDSystemAdapter</span><span class="p">,</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">LeakagePenalty</span><span class="p">,</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">MultiObjective</span><span class="p">,</span>
@@ -3809,7 +3809,7 @@
 <p>This path is the recommended notebook interface for dissipative state preparation and leakage-sensitive bosonic control problems.</p>
 <hr />
 <h2 id="workflow-3-robust-optimization-under-parameter-uncertainty">Workflow 3: Robust Optimization Under Parameter Uncertainty<a class="headerlink" href="#workflow-3-robust-optimization-under-parameter-uncertainty" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.unitary_synthesis</span> <span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">CQEDSystemAdapter</span><span class="p">,</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">MultiObjective</span><span class="p">,</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">Normal</span><span class="p">,</span>
@@ -3849,7 +3849,7 @@
 <p><code>ParetoFrontResult.results</code> contains every weighted run, and <code>ParetoFrontResult.nondominated()</code> returns the nondominated subset.</p>
 <hr />
 <h2 id="workflow-5-relevant-observables-trajectories-and-accelerated-evaluation">Workflow 5: Relevant Observables, Trajectories, and Accelerated Evaluation<a class="headerlink" href="#workflow-5-relevant-observables-trajectories-and-accelerated-evaluation" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.unitary_synthesis</span> <span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">ExecutionOptions</span><span class="p">,</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">LeakagePenalty</span><span class="p">,</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">MultiObjective</span><span class="p">,</span>
@@ -3879,7 +3879,7 @@
 <p>Use this pattern when the experiment cares about logical outputs, selected observables, and protocol checkpoints more than exact full-Hilbert-space operator agreement. The accelerated path currently targets closed-system <code>backend="ideal"</code> synthesis and falls back automatically for waveform-backed or noisy tasks.</p>
 <hr />
 <h2 id="workflow-6-flexible-target-action-matching">Workflow 6: Flexible Target-Action Matching<a class="headerlink" href="#workflow-6-flexible-target-action-matching" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.unitary_synthesis</span> <span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">ExecutionOptions</span><span class="p">,</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">PrimitiveGate</span><span class="p">,</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">TargetChannel</span><span class="p">,</span>

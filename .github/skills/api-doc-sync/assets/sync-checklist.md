@@ -15,6 +15,8 @@ Use this checklist after any public API or workflow change.
 - `documentations/tutorials/`
 - `documentations/index.md`
 - `mkdocs.yml` when navigation or page coverage changed
+- run `python -m mkdocs build --strict` after website-source changes
+- include the regenerated `site/` output in the same commit
 
 ## Local Feature Docs
 

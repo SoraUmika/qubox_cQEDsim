@@ -58,8 +58,9 @@ Core surfaces in this repo:
 5. Verify navigation and discoverability.
    - Make sure new or moved pages remain reachable from the existing documentation structure.
 6. Rebuild the official site output.
-   - Regenerate `site/` from the current MkDocs sources whenever public docs changed.
+   - Regenerate `site/` from the current MkDocs sources with `python -m mkdocs build --strict` whenever public docs, tutorials, or `mkdocs.yml` changed.
    - Confirm that new pages, navigation entries, and search output reflect the same changes.
+   - Make sure the regenerated `site/` files are included in the same commit instead of leaving them as local-only output.
 7. Finish with a drift pass.
    - Search for old names, old file paths, and outdated terminology after the main edit is done.
 
@@ -67,7 +68,7 @@ Core surfaces in this repo:
 
 - `API_REFERENCE.md` matches the implemented public API.
 - Relevant `documentations/` pages were updated in the same task.
-- `site/` was regenerated when public docs changed and matches the current MkDocs source.
+- `site/` was regenerated with `python -m mkdocs build --strict` when public docs changed and matches the current MkDocs source.
 - Examples, tutorials, and module READMEs use the current names and paths.
 - Tutorials that claim simulation results include the code path and generated artifacts that demonstrate those results.
 - Physics documentation was updated if semantics changed.

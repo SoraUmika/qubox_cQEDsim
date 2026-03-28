@@ -71,9 +71,6 @@ physics_and_conventions/write_probe.txt
 # Keep the compiled PDF and the .log for diagnostics;
 # ignore the .out and .aux already covered above.
 
-# ---------- MkDocs output ----------
-site/
-
 # ---------- Project-specific generated outputs ----------
 outputs/
 agent_runs/

@@ -173,7 +173,7 @@
   - the resulting plot, table, or other artifact that shows the simulation outcome,
   - and enough reported values or narrative interpretation that a reader can tell what the simulation demonstrated.
 - When a tutorial introduces or updates a plot, regenerate the underlying simulation or example so the checked-in asset matches the current code and text.
-- If a tutorial page changes and it is part of the public website, rebuild the generated `site` output in the same task.
+- If a tutorial page changes and it is part of the public website, rebuild the generated `site` output in the same task with `python -m mkdocs build --strict`, then make sure the regenerated `site/` files are included in the same commit.
 - Holographic simulation tutorials are not exempt from this rule. They must include the exact example code path and concrete generated outputs such as observable plots, benchmark tables, sampled-versus-exact comparisons, or other simulation results that demonstrate the claimed behavior.
 
 ### Literature-Based Validation
@@ -267,10 +267,11 @@
 
 - `API_REFERENCE.md` must remain consistent with the website documentation located under the `documentations` folder.
 - The generated `site` folder is the checked-in official website output and must remain consistent with both `API_REFERENCE.md` and the MkDocs source under `documentations`.
+- When `documentations/`, `mkdocs.yml`, or other public website inputs change, agents must run `python -m mkdocs build --strict` and commit the resulting `site/` updates in the same task.
 - When public APIs, module organization, function signatures, class behavior, configuration structures, usage patterns, or developer-facing workflows change, update both:
   - `API_REFERENCE.md`, and
   - the relevant website documentation pages under `documentations`.
-- When those website-source pages change, also rebuild and update the generated `site` output so the published HTML reflects the same changes.
+- When those website-source pages change, also rebuild and update the generated `site` output with `python -m mkdocs build --strict` so the published HTML reflects the same changes.
 - Do not update one documentation surface while leaving the other stale when they are intended to describe the same public behavior.
 - If `API_REFERENCE.md` is treated as the canonical public API reference, ensure that the website documentation reflects it accurately in wording, signatures, examples, and coverage.
 - If the website documentation contains higher-level guides, tutorials, walkthroughs, or reorganized API material, those pages must still remain semantically consistent with `API_REFERENCE.md`.
@@ -288,7 +289,7 @@
   6. Apply the refactor with minimal necessary changes that match project conventions.
   7. Update `API_REFERENCE.md` if the refactor changes public-facing code behavior or usage.
   8. Update relevant pages under `documentations` if developer-facing or public-facing documentation is affected.
-  9. Rebuild and update the generated `site` output when public documentation, tutorials, or API-reference pages changed.
+  9. Rebuild and update the generated `site` output with `python -m mkdocs build --strict` when public documentation, tutorials, API-reference pages, or `mkdocs.yml` changed, and include the resulting `site/` files in the same task.
   10. Update `physics_and_conventions/physics_conventions_report.tex` if the refactor changes physical meaning, conventions, or modeling assumptions.
   11. Run `physics_and_conventions/build_physics_conventions_report.bat` if the physics conventions document was changed.
   12. Add or update tests under `tests` as needed.

@@ -10,17 +10,62 @@ from cqed_sim.quantum_algorithms.holographic_sim import (
     HoloQUADSProgram,
     HoloVQEObjective,
     HolographicChannel,
+    HolographicChannelSequence,
     HolographicSampler,
     ObservableSchedule,
+    StepUnitarySpec,
     TimeSlice,
     BurnInConfig,
     MatrixProductState,
     channel_diagnostics,
     hadamard_reference_channel,
     partial_swap_channel,
+    pauli_x,
     pauli_z,
 )
 from cqed_sim.quantum_algorithms.holographic_sim.holographicSim import holographic_sim_bfs
+
+
+def _rotation_x(theta: float) -> np.ndarray:
+    return np.array(
+        [
+            [np.cos(theta / 2.0), -1j * np.sin(theta / 2.0)],
+            [-1j * np.sin(theta / 2.0), np.cos(theta / 2.0)],
+        ],
+        dtype=np.complex128,
+    )
+
+
+def _rotation_z(theta: float) -> np.ndarray:
+    return np.array(
+        [
+            [np.exp(-0.5j * theta), 0.0],
+            [0.0, np.exp(0.5j * theta)],
+        ],
+        dtype=np.complex128,
+    )
+
+
+def _mixed_step_specs() -> tuple[StepUnitarySpec, ...]:
+    theta = 0.37
+    partial_swap = np.array(
+        [
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, np.cos(theta), -1j * np.sin(theta), 0.0],
+            [0.0, -1j * np.sin(theta), np.cos(theta), 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+        dtype=np.complex128,
+    )
+    return (
+        StepUnitarySpec(_rotation_x(0.41), acts_on="physical", label="physical_rx"),
+        StepUnitarySpec(_rotation_z(-0.29), acts_on="bond", label="bond_rz"),
+        StepUnitarySpec(partial_swap, acts_on="joint", label="joint_partial_swap"),
+    )
+
+
+def _resolved_joint_unitaries(step_specs: tuple[StepUnitarySpec, ...], *, physical_dim: int, bond_dim: int) -> list[np.ndarray]:
+    return [spec.resolve_joint_unitary(physical_dim=physical_dim, bond_dim=bond_dim) for spec in step_specs]
 
 
 def test_channel_from_unitary_infers_dimensions() -> None:
@@ -36,6 +81,36 @@ def test_channel_from_unitary_infers_dimensions() -> None:
 def test_invalid_unitary_rejected() -> None:
     with pytest.raises(ValueError):
         HolographicChannel.from_unitary(np.ones((4, 4), dtype=np.complex128), physical_dim=2)
+
+
+def test_from_unitary_embeds_physical_and_bond_actions_in_physical_bond_order() -> None:
+    physical_unitary = _rotation_x(0.23)
+    bond_unitary = _rotation_z(-0.17)
+
+    physical_channel = HolographicChannel.from_unitary(
+        physical_unitary,
+        physical_dim=2,
+        bond_dim=3,
+        acts_on="physical",
+    )
+    bond_channel = HolographicChannel.from_unitary(
+        bond_unitary,
+        physical_dim=2,
+        acts_on="bond",
+    )
+
+    assert np.allclose(
+        physical_channel.joint_unitary,
+        np.kron(physical_unitary, np.eye(3, dtype=np.complex128)),
+        atol=1.0e-12,
+        rtol=0.0,
+    )
+    assert np.allclose(
+        bond_channel.joint_unitary,
+        np.kron(np.eye(2, dtype=np.complex128), bond_unitary),
+        atol=1.0e-12,
+        rtol=0.0,
+    )
 
 
 def test_projective_branch_normalization() -> None:
@@ -83,6 +158,58 @@ def test_legacy_bfs_wrapper_normalizes_probabilities() -> None:
     prob_sum = sum(float(branch["prob"]) for branch in branches)
     assert len(branches) == 2
     assert abs(prob_sum - 1.0) < 1.0e-12
+
+
+def test_channel_sequence_from_unitaries_matches_legacy_exact_branch_mean() -> None:
+    step_specs = _mixed_step_specs()
+    resolved_joint = _resolved_joint_unitaries(step_specs, physical_dim=2, bond_dim=2)
+    operator_list = [pauli_z().matrix, None, pauli_x().matrix]
+    schedule = ObservableSchedule(
+        [
+            {"step": 1, "operator": pauli_z()},
+            {"step": 3, "operator": pauli_x()},
+        ],
+        total_steps=3,
+    )
+
+    sequence = HolographicChannelSequence.from_unitaries(step_specs, physical_dim=2, bond_dim=2)
+    sampler = HolographicSampler(sequence)
+    exact = sampler.enumerate_correlator(schedule)
+    branches = holographic_sim_bfs(resolved_joint, operator_list, d=2)
+    legacy_mean = sum(complex(branch["prob"]) * complex(branch["weight"]) for branch in branches)
+
+    assert exact.mean == pytest.approx(legacy_mean, abs=1.0e-12)
+    assert exact.normalization_error == pytest.approx(0.0, abs=1.0e-12)
+
+
+def test_channel_sequence_sampling_tracks_exact_mean() -> None:
+    schedule = ObservableSchedule(
+        [
+            {"step": 1, "operator": pauli_z()},
+            {"step": 3, "operator": pauli_x()},
+        ],
+        total_steps=3,
+    )
+    sampler = HolographicSampler.from_unitary_sequence(_mixed_step_specs(), physical_dim=2, bond_dim=2)
+
+    exact = sampler.enumerate_correlator(schedule)
+    estimate = sampler.sample_correlator(schedule, shots=40_000, seed=11)
+    assert abs(estimate.mean - exact.mean) <= 6.0 * estimate.stderr
+
+
+def test_finite_channel_sequence_requires_matching_schedule_length() -> None:
+    sequence = HolographicChannelSequence.from_unitaries(_mixed_step_specs(), physical_dim=2, bond_dim=2)
+    sampler = HolographicSampler(sequence)
+    schedule = ObservableSchedule([{"step": 1, "operator": pauli_z()}], total_steps=1)
+
+    with pytest.raises(ValueError, match="sequence length"):
+        sampler.enumerate_correlator(schedule)
+
+
+def test_finite_channel_sequence_disallows_burn_in() -> None:
+    sequence = HolographicChannelSequence.from_unitaries(_mixed_step_specs(), physical_dim=2, bond_dim=2)
+    with pytest.raises(ValueError, match="Burn-in"):
+        HolographicSampler(sequence, burn_in=BurnInConfig(steps=1))
 
 
 def test_holo_vqe_scaffold_returns_serializable_result(tmp_path) -> None:

@@ -14,9 +14,17 @@ This package implements the generic holographic channel-estimation viewpoint fro
 
 ```python
 channel = HolographicChannel.from_unitary(U, physical_dim=2, bond_dim=4)
+channel = HolographicChannel.from_unitary(U_q, physical_dim=2, bond_dim=4, acts_on="physical")
+channel = HolographicChannel.from_unitary(U_b, physical_dim=2, acts_on="bond")
+sequence = HolographicChannelSequence.from_unitaries([
+    StepUnitarySpec(U_q, acts_on="physical"),
+    StepUnitarySpec(U_b, acts_on="bond"),
+    StepUnitarySpec(U_joint, acts_on="joint"),
+], physical_dim=2, bond_dim=4)
 channel = HolographicChannel.from_kraus(kraus_ops)
 channel = HolographicChannel.from_right_canonical_mps(tensor)
 channel = HolographicChannel.from_mps_state(psi, site=0)
+sequence = HolographicChannelSequence.from_mps_state(psi)
 unitary = right_canonical_tensor_to_stinespring_unitary(tensor)
 noise = BondNoiseChannel.dephasing(bond_dim=channel.bond_dim, probability=0.05)
 reset = BondNoiseChannel.amplitude_damping(bond_dim=channel.bond_dim, probability=0.10)
@@ -37,18 +45,25 @@ schedule = ObservableSchedule(
 sampler = HolographicSampler(channel, burn_in=BurnInConfig(steps=50), bond_noise=noise)
 result = sampler.sample_correlator(schedule, shots=5000)
 exact = sampler.enumerate_correlator(schedule)
+
+finite_sampler = HolographicSampler(sequence)
+finite_exact = finite_sampler.enumerate_correlator(
+    ObservableSchedule([...], total_steps=sequence.num_steps)
+)
 ```
 
 Key user-facing objects:
 
 - `BondNoiseChannel`
 - `HolographicChannel`
+- `HolographicChannelSequence`
 - `PurifiedChannelStep`
 - `ObservableSchedule`
 - `BurnInConfig`
 - `BoundaryCondition`
 - `HolographicSampler`
 - `HolographicMPSAlgorithm`
+- `StepUnitarySpec`
 
 ---
 
@@ -65,8 +80,22 @@ while also optionally retaining a dense joint unitary or right-canonical MPS dat
 Convenience constructors:
 
 - `HolographicChannel.from_mps_state(...)`
+- `HolographicChannel.from_unitary(..., acts_on="joint" | "physical" | "bond")`
+- `HolographicChannelSequence.from_unitaries(...)`
+- `HolographicChannelSequence.from_mps_state(...)`
 - `MatrixProductState.site_stinespring_unitary(...)`
+- `MatrixProductState.site_stinespring_unitaries(...)`
 - `right_canonical_tensor_to_stinespring_unitary(...)`
+
+The dense-unitary embedding convention is always `physical ⊗ bond`:
+
+- `acts_on="joint"` means the provided unitary already acts on the full `physical ⊗ bond` Hilbert space.
+- `acts_on="physical"` embeds as `U_physical ⊗ I_bond`.
+- `acts_on="bond"` embeds as `I_physical ⊗ U_bond`.
+
+`HolographicChannelSequence` validates a finite ordered step list with common
+`physical_dim` and `bond_dim`. This is the primary public abstraction for
+non-translation-invariant holographic workflows.
 
 Diagnostics:
 
@@ -135,6 +164,10 @@ Burn-in:
 - `HolographicSampler.summarize_burn_in(...)`
 - returns `BurnInSummary`
 
+`burn_in` remains defined as repeated application of a single translation-invariant
+channel before observable insertions begin. Finite explicit channel sequences do
+not accept nonzero burn-in because the steps are already fixed site by site.
+
 ---
 
 ## MPS Connection
@@ -145,10 +178,19 @@ Burn-in:
 - left-canonical conversion
 - expectation-value checks
 - conversion of a selected site tensor into `HolographicChannel`
+- conversion of all completed site tensors into `HolographicChannelSequence`
 - public completion of a selected right-canonical tensor into a dense Stinespring unitary
+- public completion of all completed site tensors into a dense per-step Stinespring-unitary list
 
 This is the main bridge between the report's channel/MPS language and the
 sampling API implemented here.
+
+For a full end-to-end worked example, including MPS construction, sequence
+validation, observable comparison, and stress testing with mixed `physical` /
+`bond` /
+`joint` step unitaries, see the tutorial page
+`documentations/tutorials/holographic_generalized_unitary_workflow.md` and the
+script `examples/quantum_algorithms/holographic_generalized_unitary_workflow.py`.
 
 ---
 

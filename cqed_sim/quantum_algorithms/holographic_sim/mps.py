@@ -264,6 +264,16 @@ class MatrixProductState:
             atol=atol,
         )
 
+    def site_stinespring_unitaries(
+        self,
+        *,
+        complete: bool = True,
+        atol: float = 1.0e-12,
+    ) -> tuple[np.ndarray, ...]:
+        return tuple(
+            self.site_stinespring_unitary(site, complete=complete, atol=atol) for site in range(self.num_sites)
+        )
+
     def to_holographic_channel(
         self,
         *,
@@ -282,6 +292,27 @@ class MatrixProductState:
         return HolographicChannel.from_right_canonical_mps(
             tensor,
             label=label if label is not None else f"mps_site_{int(site)}",
+            metadata=resolved_metadata,
+        )
+
+    def to_holographic_channel_sequence(
+        self,
+        *,
+        complete: bool = True,
+        label: str | None = None,
+        metadata: Mapping[str, Any] | None = None,
+    ) -> "HolographicChannelSequence":
+        from .step_sequence import HolographicChannelSequence
+
+        resolved_metadata = {"source": "MatrixProductState", "num_sites": int(self.num_sites)}
+        if metadata is not None:
+            resolved_metadata.update(dict(metadata))
+        return HolographicChannelSequence(
+            channels=tuple(
+                self.to_holographic_channel(site=site, complete=complete, label=f"mps_site_{site}")
+                for site in range(self.num_sites)
+            ),
+            label=label,
             metadata=resolved_metadata,
         )
 

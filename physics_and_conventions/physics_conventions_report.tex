@@ -568,10 +568,34 @@ match the repository's default physical-input convention
 \texttt{holographicSim.py} execution path.
 
 \noindent
+The public finite-step interface now also makes subsystem embedding explicit.
+When a step unitary is declared as physical-only, the implemented convention is
+
+\[
+U_{\mathrm{joint}} = U_{\mathrm{physical}} \otimes I_{\chi}.
+\]
+
+\noindent
+When a step unitary is declared as bond-only, the implemented convention is
+
+\[
+U_{\mathrm{joint}} = I_{d} \otimes U_{\mathrm{bond}}.
+\]
+
+\noindent
+Finite non-translation-invariant step programs are represented by
+\texttt{HolographicChannelSequence}. All steps in such a sequence share one
+physical dimension \(d\) and one bond dimension \(\chi\), but the unitary or
+Kraus data may differ from step to step.
+
+\noindent
 The package uses \texttt{burn\_in} to mean repeated application of the same
 holographic channel before observable insertions begin. This is the repository's
 convention for approaching bulk or steady-state behavior in the bond register.
 Observable insertions always refer to measurements on the physical register.
+Because this definition assumes one repeated channel, nonzero \texttt{burn\_in}
+is intentionally supported for single-channel workflows and disallowed for
+finite explicit step sequences whose full step list is already specified.
 
 \noindent
 The package also supports optional bond-only noise between holographic steps via

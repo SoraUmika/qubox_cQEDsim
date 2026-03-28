@@ -22,11 +22,13 @@ quantum-algorithm architecture described in
 
 - `BondNoiseChannel`
 - `HolographicChannel`
+- `HolographicChannelSequence`
 - `ObservableSchedule`
 - `HolographicSampler`
 - `HolographicMPSAlgorithm`
 - `HoloVQEObjective`
 - `HoloQUADSProgram`
+- `StepUnitarySpec`
 - `right_canonical_tensor_to_stinespring_unitary`
 
 ## Terminology mapping from the report
@@ -36,6 +38,7 @@ quantum-algorithm architecture described in
 | bond-space transfer channel | `HolographicChannel` |
 | optional bond-only noise | `BondNoiseChannel` |
 | purified / Stinespring embedding | `PurifiedChannelStep` |
+| finite per-step holographic program | `HolographicChannelSequence`, `StepUnitarySpec` |
 | measurement insertion pattern | `ObservableSchedule` |
 | holographic Monte Carlo estimator | `HolographicSampler.sample_correlator(...)` |
 | exact small-system branch table | `HolographicSampler.enumerate_correlator(...)` |
@@ -48,6 +51,8 @@ quantum-algorithm architecture described in
 
 - dense-unitary, Kraus, and right-canonical MPS channel construction
 - direct dense-state to channel / sampler convenience via `from_mps_state(...)`
+- finite non-translation-invariant step sequences via `HolographicChannelSequence.from_unitaries(...)`, `HolographicSampler.from_unitary_sequence(...)`, and `HolographicSampler.from_mps_sequence(...)`
+- explicit subsystem embedding for per-step unitaries through `StepUnitarySpec(acts_on="joint" | "physical" | "bond")`
 - Monte Carlo and exact branch enumeration
 - explicit burn-in and right-boundary postselection
 - optional bond-space noise maps, including computational-basis dephasing,
@@ -70,8 +75,13 @@ Built-in `BondNoiseChannel` constructors now cover three common wrapped cases:
 
 - full holographic variational optimization loops
 - hardware-aware holographic backends beyond the current optional bond-noise layer
-- general non-translation-invariant public channel sequences
 - large-scale MPS tooling beyond the included right-canonical helpers
+
+Finite per-step sequences are now first-class public objects. The remaining
+translation-invariant restriction is narrower: `burn_in` still means repeated
+application of one fixed channel before measurements begin, so it is supported
+for single-channel workflows but not for finite step sequences whose steps are
+all explicitly specified.
 
 The current design keeps those extensions natural without hardcoding the package
 to any one hardware model or paper benchmark.

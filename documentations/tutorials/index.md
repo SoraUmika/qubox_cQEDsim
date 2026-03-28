@@ -120,18 +120,36 @@ These numbered notebooks cover individual physics topics and API features in det
 
 ## Topical Guide Pages
 
-These documentation pages provide concise summaries of key tutorial topics:
+These documentation pages provide physics background, plots, and code summaries for each tutorial topic:
 
-- [Displacement & Spectroscopy](displacement_spectroscopy.md) — cavity displacement and number-splitting spectroscopy
-- [Kerr Free Evolution](kerr_free_evolution.md) — self-Kerr dynamics and phase-space collapse/revival
-- [Sideband Swap](sideband_swap.md) — red-sideband swap protocol
-- [System Identification & Randomization](system_identification.md) — calibration evidence, priors, and robust-control wiring
-- [Unitary Synthesis](unitary_synthesis.md) — gate sequence optimization in logical subspaces
-- [GRAPE Optimal Control](optimal_control.md) — model-backed GRAPE with hardware maps
-- [RL Hybrid Control](rl_hybrid_control.md) — reinforcement learning environment for cQED control
-- [Floquet Driven Systems](floquet_driven_systems.md) — quasienergy sweeps and multiphoton resonance diagnostics
-- [Hardware-Aware Control](hardware_context.md) — DAC, filtering, IQ imbalance, and control-stack realism
-- [Holographic Quantum Algorithms](holographic_quantum_algorithms.md) — holographic channel estimation and MPS-inspired sampling
+### Getting Started
+- [Protocol-Style Simulation](getting_started_simulation.md) — model → pulse → compile → simulate → measure
+
+### Core Physics
+- [Displacement & Spectroscopy](displacement_spectroscopy.md) — dispersive Hamiltonian, cavity displacement, number-splitting spectrum
+- [Number Splitting](number_splitting.md) — selective Gaussian probe, photon-number weight extraction, Poisson distribution comparison
+- [Kerr Free Evolution](kerr_free_evolution.md) — self-Kerr origin, Wigner collapse/revival, Schrödinger cat states
+- [Phase Space Conventions](phase_space_conventions.md) — quadrature vs. alpha coordinates, √2 rescaling, Wigner function background
+- [Cross-Kerr Interaction](cross_kerr.md) — conditional phase accumulation, three-mode system, controlled-phase gates
+
+### Sideband Protocols
+- [Sideband Swap & Bosonic Control](sideband_swap.md) — red-sideband energy matching, |e,0⟩↔|g,1⟩ Rabi oscillation, detuned/sequential/shelving variants
+
+### Advanced Control
+- [Unitary Synthesis](unitary_synthesis.md) — gate sequence optimization: constraint, leakage, robust, Pareto, trajectory, flexible targets
+- [GRAPE Optimal Control](optimal_control.md) — GRAPE algorithm, hardware-aware mode, convergence plots, replay verification
+- [RL Hybrid Control](rl_hybrid_control.md) — Gym environment, measurement-conditioned control, domain randomization
+- [Hardware-Aware Control](hardware_context.md) — signal chain: filtering, DAC, IQ limits, gradient-through-hardware GRAPE
+
+### System Identification
+- [Calibration & Domain Randomization](system_identification.md) — spectroscopy/Rabi/T1 fitting, calibration posteriors, RL training priors
+
+### Floquet & Driven Systems
+- [Floquet Driven Systems](floquet_driven_systems.md) — Floquet theorem, quasienergies, avoided crossings, multiphoton resonances
+
+### Advanced Topics
+- [Holographic Quantum Algorithms](holographic_quantum_algorithms.md) — holographic channel estimation, MPS-inspired correlator sampling
+- [Generalized Holographic Workflow](holographic_generalized_unitary_workflow.md) — finite per-step unitary sequences, MPS lifting, and exact-vs-sampled validation
 
 ---
 

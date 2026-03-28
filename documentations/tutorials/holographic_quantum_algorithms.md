@@ -10,6 +10,7 @@ Representative example scripts live in:
 - `examples/quantum_algorithms/holographic_burn_in_translation_invariant.py`
 - `examples/quantum_algorithms/holographic_mps_dephasing_example.py`
 - `examples/quantum_algorithms/holographic_spin_model_example.py`
+- `examples/quantum_algorithms/holographic_generalized_unitary_workflow.py`
 
 ---
 
@@ -36,15 +37,26 @@ regime.
 
 ```python
 from cqed_sim.quantum_algorithms.holographic_sim import (
+    HolographicChannelSequence,
     BondNoiseChannel,
     BurnInConfig,
     HolographicChannel,
     HolographicSampler,
     ObservableSchedule,
+    StepUnitarySpec,
     pauli_z,
 )
 
 channel = HolographicChannel.from_unitary(U, physical_dim=2, bond_dim=4)
+sequence = HolographicChannelSequence.from_unitaries(
+    [
+        StepUnitarySpec(U_q, acts_on="physical"),
+        StepUnitarySpec(U_b, acts_on="bond"),
+        StepUnitarySpec(U_joint, acts_on="joint"),
+    ],
+    physical_dim=2,
+    bond_dim=4,
+)
 noise = BondNoiseChannel.dephasing(bond_dim=channel.bond_dim, probability=0.05)
 # Other built-ins are available when dephasing is not the right model:
 # BondNoiseChannel.amplitude_damping(...)
@@ -58,6 +70,9 @@ schedule = ObservableSchedule(
 )
 sampler = HolographicSampler(channel, burn_in=BurnInConfig(steps=50), bond_noise=noise)
 estimate = sampler.sample_correlator(schedule, shots=5000)
+finite_exact = HolographicSampler(sequence).enumerate_correlator(
+    ObservableSchedule([...], total_steps=sequence.num_steps)
+)
 ```
 
 Use `enumerate_correlator(...)` on small examples to cross-check Monte Carlo
@@ -67,12 +82,15 @@ estimates exactly.
 
 ```python
 from cqed_sim.quantum_algorithms.holographic_sim import (
+    HolographicChannelSequence,
     HolographicSampler,
     right_canonical_tensor_to_stinespring_unitary,
 )
 
 sampler = HolographicSampler.from_mps_state(psi, site=0)
+finite_sampler = HolographicSampler.from_mps_sequence(psi)
 unitary = right_canonical_tensor_to_stinespring_unitary(sampler.channel.mps_matrices)
+unitaries = MatrixProductState(psi).site_stinespring_unitaries()
 ```
 
 `from_mps_state(...)` is the shortest route from a normalized dense state tensor
@@ -107,11 +125,23 @@ by the legacy `holographicSim.py` finite-sequence path.
 - spin-inspired transfer unitary
 - demonstrates a model-flavored correlator schedule
 
+`holographic_generalized_unitary_workflow.py`
+
+- starts from the computational-basis seed `|1011>`
+- builds a seeded random four-qubit target state and converts it into an MPS
+- checks the completed right-isometry tensors and dense Stinespring unitaries
+- runs the new finite public sequence API with many-shot sampling
+- compares dense, MPS, exact extended-unitary, and sampled observables including a connected correlator
+- includes a second stress test with mixed `physical`, `bond`, and `joint` step-unitary embeddings
+
+For the full walkthrough, figures, and exact numbers, see
+`holographic_generalized_unitary_workflow.md`.
+
 ---
 
 ## Current Limits
 
-- the public sampler API currently assumes a repeated channel rather than a fully general per-step channel list
+- finite per-step channel lists are supported, but `burn_in` remains a repeated-channel concept and is therefore only defined for translation-invariant single-channel workflows
 - optional bond-space noise maps are supported, but full hardware-aware holographic backends are not implemented yet
 - `HoloVQEObjective` and `HoloQUADSProgram` are intentionally lightweight scaffolds for future work
 

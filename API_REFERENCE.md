@@ -3302,9 +3302,17 @@ in `paper_summary/holographic_quantum_algorithms.pdf`.
 
 ```python
 HolographicChannel.from_unitary(U, physical_dim=2, bond_dim=4)
+HolographicChannel.from_unitary(U_q, physical_dim=2, bond_dim=4, acts_on="physical")
+HolographicChannel.from_unitary(U_b, physical_dim=2, acts_on="bond")
+HolographicChannelSequence.from_unitaries([
+    StepUnitarySpec(U_q, acts_on="physical"),
+    StepUnitarySpec(U_b, acts_on="bond"),
+    StepUnitarySpec(U_joint, acts_on="joint"),
+], physical_dim=2, bond_dim=4)
 HolographicChannel.from_kraus(kraus_ops)
 HolographicChannel.from_right_canonical_mps(tensor)
 HolographicChannel.from_mps_state(psi, site=0)
+HolographicChannelSequence.from_mps_state(psi)
 right_canonical_tensor_to_stinespring_unitary(tensor)
 BondNoiseChannel.dephasing(bond_dim=4, probability=0.05)
 BondNoiseChannel.amplitude_damping(bond_dim=4, probability=0.10)
@@ -3322,18 +3330,35 @@ ObservableSchedule([
 sampler = HolographicSampler(channel, burn_in=BurnInConfig(steps=50), bond_noise=noise)
 result = sampler.sample_correlator(schedule, shots=5000)
 exact = sampler.enumerate_correlator(schedule)
+
+finite_sampler = HolographicSampler(HolographicChannelSequence.from_mps_state(psi))
+finite_exact = finite_sampler.enumerate_correlator(
+    ObservableSchedule([...], total_steps=finite_sampler.channel.num_steps)
+)
 ```
 
 Highlights:
 
 - `HolographicChannel` is the main transfer-channel abstraction.
+- `HolographicChannelSequence` is the finite ordered step abstraction for non-translation-invariant workflows.
+- `StepUnitarySpec` makes `joint`, `physical`, and `bond` step-unitary embeddings explicit in `physical ⊗ bond` order.
 - `BondNoiseChannel` is the optional bond-only CPTP layer for dephasing, amplitude damping, depolarizing noise, or imported QuTiP superoperators.
 - `PurifiedChannelStep` formalizes the prepare-apply-measure-reset primitive.
 - `ObservableSchedule` and `ObservableInsertion` make measurement locations explicit.
 - `HolographicSampler` supports Monte Carlo sampling with uncertainty estimates.
 - `HolographicSampler.enumerate_correlator(...)` performs exact branch enumeration for small problems.
-- `MatrixProductState` plus `HolographicChannel.from_right_canonical_mps(...)` and `HolographicChannel.from_mps_state(...)` connect the estimator path to right-canonical MPS tensors.
+- `MatrixProductState` plus `HolographicChannel.from_right_canonical_mps(...)`, `HolographicChannel.from_mps_state(...)`, and `HolographicSampler.from_mps_sequence(...)` connect the estimator path to right-canonical MPS tensors and finite site-by-site sequences.
 - `right_canonical_tensor_to_stinespring_unitary(...)` exposes the dense Stinespring completion used by the legacy finite-sequence API.
+
+Embedding convention for `HolographicChannel.from_unitary(...)`:
+
+- `acts_on="joint"`: the supplied unitary already acts on `physical ⊗ bond`.
+- `acts_on="physical"`: the supplied unitary is embedded as `U_physical ⊗ I_bond`.
+- `acts_on="bond"`: the supplied unitary is embedded as `I_physical ⊗ U_bond`.
+
+`burn_in` remains a repeated-channel concept. It is therefore available for
+translation-invariant single-channel workflows and intentionally disallowed for
+finite explicit channel sequences.
 
 Built-in `BondNoiseChannel` constructors:
 

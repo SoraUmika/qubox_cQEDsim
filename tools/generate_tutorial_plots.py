@@ -289,6 +289,169 @@ def plot_grape_optimal_control():
 
 
 # ---------------------------------------------------------------------------
+# 5. Cross-Kerr Conditional Phase Accumulation
+# ---------------------------------------------------------------------------
+def plot_cross_kerr_phase():
+    """Relative phase vs free-evolution time for storage-readout cross-Kerr."""
+    _apply_style()
+    print("[5/6] Cross-Kerr phase accumulation …")
+    from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec, prepare_state
+    from cqed_sim.sequence import SequenceCompiler
+    from cqed_sim.sim import SimulationConfig, simulate_sequence
+
+    try:
+        from cqed_sim.core import DispersiveReadoutTransmonStorageModel
+        model = DispersiveReadoutTransmonStorageModel(
+            omega_s=2 * np.pi * 5.0e9,
+            omega_r=2 * np.pi * 7.5e9,
+            omega_q=2 * np.pi * 6.0e9,
+            chi_sr=2 * np.pi * 1.5e6,
+            chi_s=0.0,
+            chi_r=0.0,
+            n_storage=4,
+            n_readout=4,
+            n_tr=2,
+        )
+        from cqed_sim.core import FrameSpec as FS
+        frame = FS(
+            omega_s_frame=model.omega_s,
+            omega_r_frame=model.omega_r,
+            omega_q_frame=model.omega_q,
+        )
+
+        s0r1 = model.basis_state(0, 1, 0)
+        s1r1 = model.basis_state(1, 1, 0)
+        initial_state = (s0r1 + s1r1).unit()
+
+        chi_sr_hz = 1.5e6
+        times_ns = np.linspace(0, 700, 50)
+        phases = []
+
+        for t_ns in times_ns:
+            t_s = t_ns * 1e-9
+            if t_s == 0:
+                phases.append(0.0)
+                continue
+            compiled = SequenceCompiler(dt=2e-9).compile([], t_end=t_s)
+            result = simulate_sequence(
+                model, compiled, initial_state, {},
+                config=SimulationConfig(frame=frame),
+            )
+            state = result.final_state
+            amp_ref = s0r1.overlap(state)
+            amp_shifted = s1r1.overlap(state)
+            phases.append(float(np.angle(amp_shifted / amp_ref)))
+
+        theory_times_ns = np.linspace(0, 700, 300)
+        theory_phases = 2 * np.pi * chi_sr_hz * (theory_times_ns * 1e-9)
+
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.plot(times_ns, phases, "o", ms=4, color="#1f77b4", label="Simulation")
+        ax.plot(theory_times_ns, (theory_phases + np.pi) % (2 * np.pi) - np.pi,
+                "--", linewidth=1.5, color="#ff7f0e",
+                label=r"Theory: $\chi_{sr} \cdot t$")
+        ax.set_xlabel("Free evolution time (ns)")
+        ax.set_ylabel("Relative phase (rad)")
+        ax.set_title(
+            r"Cross-Kerr Conditional Phase  ($\chi_{sr}/2\pi = 1.5$ MHz)"
+        )
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(OUT_DIR / "cross_kerr_phase.png", dpi=150)
+        plt.close(fig)
+        print("    ✓ cross_kerr_phase.png")
+    except Exception as exc:
+        print(f"    ✗ cross_kerr_phase skipped: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# 6. Floquet Quasienergy Scan
+# ---------------------------------------------------------------------------
+def plot_floquet_quasienergy_scan():
+    """Quasienergy branches and avoided-crossing gap for a sideband drive sweep."""
+    _apply_style()
+    print("[6/6] Floquet quasienergy scan …")
+
+    try:
+        from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec
+        from cqed_sim.floquet import (
+            FloquetProblem,
+            FloquetConfig,
+            run_floquet_sweep,
+            build_target_drive_term,
+            SidebandDriveSpec,
+        )
+
+        model = DispersiveTransmonCavityModel(
+            omega_c=2 * np.pi * 5.05e9,
+            omega_q=2 * np.pi * 6.25e9,
+            alpha=2 * np.pi * (-250e6),
+            chi=2 * np.pi * (-15.0e6),
+            kerr=0.0,
+            n_cav=4,
+            n_tr=3,
+        )
+        frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
+
+        sideband = SidebandDriveSpec(
+            mode="storage", lower_level=0, upper_level=2, sideband="red"
+        )
+        omega_sb0 = model.sideband_transition_frequency(
+            cavity_level=0, lower_level=0, upper_level=2,
+            sideband="red", frame=frame,
+        )
+
+        scan_detunings_mhz = np.linspace(-0.25, 0.25, 25)
+        problems = []
+        for det_mhz in scan_detunings_mhz:
+            freq_hz = omega_sb0 / (2 * np.pi) + det_mhz * 1e6
+            drive = build_target_drive_term(
+                model, sideband,
+                amplitude=2 * np.pi * 0.03e6,
+                frequency=2 * np.pi * freq_hz,
+                waveform="cos",
+            )
+            problems.append(FloquetProblem(
+                model=model, frame=frame,
+                periodic_terms=(drive,),
+                period=1.0 / freq_hz,
+                label="sideband_scan",
+            ))
+
+        sweep = run_floquet_sweep(
+            problems,
+            parameter_values=scan_detunings_mhz,
+            config=FloquetConfig(n_time_samples=64),
+        )
+
+        tracked_mhz = sweep.tracked_quasienergies / (2 * np.pi * 1e6)
+        gap_mhz = np.min(np.abs(np.diff(tracked_mhz, axis=1)), axis=1)
+
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 7), sharex=True)
+        for i in range(tracked_mhz.shape[1]):
+            ax1.plot(scan_detunings_mhz, tracked_mhz[:, i], linewidth=1.5)
+        ax1.set_ylabel("Quasienergy (MHz)")
+        ax1.set_title("Floquet Quasienergy Branches — Sideband Drive Sweep")
+
+        ax2.plot(scan_detunings_mhz, gap_mhz, color="#d62728", linewidth=1.5)
+        ax2.axvline(
+            scan_detunings_mhz[np.argmin(gap_mhz)],
+            ls="--", color="gray", alpha=0.6, label="Min gap (resonance)",
+        )
+        ax2.set_ylabel("Min quasienergy gap (MHz)")
+        ax2.set_xlabel("Drive detuning (MHz)")
+        ax2.set_title("Avoided-Crossing Gap Diagnostic")
+        ax2.legend()
+
+        fig.tight_layout()
+        fig.savefig(OUT_DIR / "floquet_quasienergy_scan.png", dpi=150)
+        plt.close(fig)
+        print("    ✓ floquet_quasienergy_scan.png")
+    except Exception as exc:
+        print(f"    ✗ floquet_quasienergy_scan skipped: {exc}")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
@@ -297,4 +460,6 @@ if __name__ == "__main__":
     plot_kerr_free_evolution()
     plot_sideband_swap()
     plot_grape_optimal_control()
+    plot_cross_kerr_phase()
+    plot_floquet_quasienergy_scan()
     print(f"\nAll plots saved to {OUT_DIR}")

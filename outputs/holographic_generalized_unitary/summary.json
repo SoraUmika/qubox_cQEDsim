@@ -1,0 +1,370 @@
+{
+  "initial_state": {
+    "type": "computational_basis_seed",
+    "bits": [
+      1,
+      0,
+      1,
+      1
+    ]
+  },
+  "random_mps_construction": {
+    "description": "A seeded random four-qubit state generated from the computational-basis seed by site-local Haar-random SU(2) rotations followed by nearest-neighbor partial-swap entanglers. The MPS randomness therefore enters through the generated state structure, not through sampling noise.",
+    "seed": 12345,
+    "entangler_angles": [
+      0.41,
+      -0.33,
+      0.27
+    ],
+    "local_rotations": [
+      [
+        [
+          {
+            "real": -0.6602632374400261,
+            "imag": -0.011593447578441869
+          },
+          {
+            "real": 0.42535810168523003,
+            "imag": -0.6188606746184467
+          }
+        ],
+        [
+          {
+            "real": -0.4253581016852301,
+            "imag": -0.6188606746184466
+          },
+          {
+            "real": -0.6602632374400261,
+            "imag": 0.011593447578441834
+          }
+        ]
+      ],
+      [
+        [
+          {
+            "real": 0.23672375878912852,
+            "imag": -0.23200804970649527
+          },
+          {
+            "real": -0.9321182971850761,
+            "imag": 0.1459095848425645
+          }
+        ],
+        [
+          {
+            "real": 0.9321182971850758,
+            "imag": 0.1459095848425646
+          },
+          {
+            "real": 0.2367237587891284,
+            "imag": 0.23200804970649538
+          }
+        ]
+      ],
+      [
+        [
+          {
+            "real": 0.5730734654165953,
+            "imag": 0.5878348345037648
+          },
+          {
+            "real": -0.41060940538864854,
+            "imag": 0.3967832239217357
+          }
+        ],
+        [
+          {
+            "real": 0.4106094053886485,
+            "imag": 0.39678322392173565
+          },
+          {
+            "real": 0.5730734654165954,
+            "imag": -0.5878348345037648
+          }
+        ]
+      ],
+      [
+        [
+          {
+            "real": 0.35320873725098123,
+            "imag": 0.655589397607482
+          },
+          {
+            "real": 0.29668618242984585,
+            "imag": 0.5978490100597559
+          }
+        ],
+        [
+          {
+            "real": -0.2966861824298459,
+            "imag": 0.5978490100597559
+          },
+          {
+            "real": 0.35320873725098134,
+            "imag": -0.655589397607482
+          }
+        ]
+      ]
+    ]
+  },
+  "shots": {
+    "primary": 100000,
+    "stress_test": 80000
+  },
+  "observable_rows": [
+    {
+      "observable": "Z0",
+      "dense_real": -0.02109094205889632,
+      "mps_real": -0.02109094205889583,
+      "extended_exact_real": -0.021090942058895768,
+      "sampled_real": -0.02517999999999976,
+      "sampled_stderr": 0.003161290814461086,
+      "abs_error_sample_vs_exact": 0.0040890579411039935,
+      "abs_error_mps_vs_dense": 4.891920264322474e-16,
+      "abs_error_exact_vs_dense": 5.516420653606247e-16,
+      "z_score": 1.293477310723489
+    },
+    {
+      "observable": "X1",
+      "dense_real": 0.56743204176032,
+      "mps_real": 0.5674320417603205,
+      "extended_exact_real": 0.5674320417603197,
+      "sampled_real": 0.5702399999999959,
+      "sampled_stderr": 0.0025977549744556567,
+      "abs_error_sample_vs_exact": 0.002807958239676167,
+      "abs_error_mps_vs_dense": 4.460720844677568e-16,
+      "abs_error_exact_vs_dense": 3.3306690738754696e-16,
+      "z_score": 1.0809172794537933
+    },
+    {
+      "observable": "Z2",
+      "dense_real": -0.6105759411893887,
+      "mps_real": -0.6105759411893894,
+      "extended_exact_real": -0.6105759411893886,
+      "sampled_real": -0.618100000000005,
+      "sampled_stderr": 0.0024858772487508294,
+      "abs_error_sample_vs_exact": 0.007524058810616352,
+      "abs_error_mps_vs_dense": 6.662694674065453e-16,
+      "abs_error_exact_vs_dense": 1.1102230246251565e-16,
+      "z_score": 3.026721779764968
+    },
+    {
+      "observable": "Z0Z2",
+      "dense_real": -0.07207656151673507,
+      "mps_real": -0.07207656151673547,
+      "extended_exact_real": -0.07207656151673555,
+      "sampled_real": -0.07325999999999971,
+      "sampled_stderr": 0.0031537959966193123,
+      "abs_error_sample_vs_exact": 0.0011834384832641598,
+      "abs_error_mps_vs_dense": 4.024642582521177e-16,
+      "abs_error_exact_vs_dense": 4.85722573273506e-16,
+      "z_score": 0.37524255992865035
+    },
+    {
+      "observable": "X1Z3",
+      "dense_real": 0.0549342962683889,
+      "mps_real": 0.05493429626838902,
+      "extended_exact_real": 0.05493429626838898,
+      "sampled_real": 0.05530000000000025,
+      "sampled_stderr": 0.003157454480303402,
+      "abs_error_sample_vs_exact": 0.0003657037316112735,
+      "abs_error_mps_vs_dense": 1.183334157128162e-16,
+      "abs_error_exact_vs_dense": 7.632783294297951e-17,
+      "z_score": 0.11582232899716507
+    },
+    {
+      "observable": "Connected(Z0,Z2)",
+      "dense_real": -0.08495418331491669,
+      "mps_real": -0.08495418331491669,
+      "extended_exact_real": -0.08495418331491669,
+      "sampled_real": -0.0888237579999997,
+      "sampled_stderr": 0.0037105847546081874,
+      "abs_error_sample_vs_exact": 0.003869574685083005,
+      "abs_error_mps_vs_dense": 0.0,
+      "abs_error_exact_vs_dense": 0.0,
+      "z_score": 1.0428476752289157
+    }
+  ],
+  "structural_rows": [
+    {
+      "site": 0,
+      "tensor_shape": "(4, 2, 4)",
+      "joint_unitary_shape": "(8, 8)",
+      "kraus_completeness_error": 4.645528709840367e-16,
+      "right_canonical_error": 4.645528709840367e-16,
+      "unitarity_error": 5.646543570898836e-16
+    },
+    {
+      "site": 1,
+      "tensor_shape": "(4, 2, 4)",
+      "joint_unitary_shape": "(8, 8)",
+      "kraus_completeness_error": 8.960044069745523e-16,
+      "right_canonical_error": 8.960044069745523e-16,
+      "unitarity_error": 1.0378941890736462e-15
+    },
+    {
+      "site": 2,
+      "tensor_shape": "(4, 2, 4)",
+      "joint_unitary_shape": "(8, 8)",
+      "kraus_completeness_error": 1.051289657950798e-15,
+      "right_canonical_error": 1.051289657950798e-15,
+      "unitarity_error": 1.1732734182615616e-15
+    },
+    {
+      "site": 3,
+      "tensor_shape": "(4, 2, 4)",
+      "joint_unitary_shape": "(8, 8)",
+      "kraus_completeness_error": 8.777083671441753e-17,
+      "right_canonical_error": 8.777083671441753e-17,
+      "unitarity_error": 2.6528424393155147e-16
+    }
+  ],
+  "stress_test": {
+    "step_unitaries": [
+      {
+        "label": "physical_rx",
+        "acts_on": "physical",
+        "unitary_shape": [
+          2,
+          2
+        ],
+        "metadata": {}
+      },
+      {
+        "label": "bond_rz",
+        "acts_on": "bond",
+        "unitary_shape": [
+          2,
+          2
+        ],
+        "metadata": {}
+      },
+      {
+        "label": "joint_partial_swap",
+        "acts_on": "joint",
+        "unitary_shape": [
+          4,
+          4
+        ],
+        "metadata": {}
+      },
+      {
+        "label": "physical_rx_tail",
+        "acts_on": "physical",
+        "unitary_shape": [
+          2,
+          2
+        ],
+        "metadata": {}
+      }
+    ],
+    "exact_mean": {
+      "real": 1.4745149545802863e-17,
+      "imag": 0.0
+    },
+    "sampled_mean": {
+      "real": 0.0017250000000000154,
+      "imag": 0.0
+    },
+    "sampled_stderr": 0.0035355507429784905,
+    "rows": [
+      {
+        "metric": "extended_exact_real",
+        "value": 1.4745149545802863e-17
+      },
+      {
+        "metric": "sampled_real",
+        "value": 0.0017250000000000154
+      },
+      {
+        "metric": "sampled_stderr",
+        "value": 0.0035355507429784905
+      },
+      {
+        "metric": "legacy_exact_real",
+        "value": 1.474514954580286e-17
+      },
+      {
+        "metric": "abs_error_sample_vs_exact",
+        "value": 0.0017250000000000006
+      }
+    ]
+  },
+  "figures": {
+    "observables": "documentations\\assets\\images\\tutorials\\holographic_generalized_observables.png",
+    "stress_test": "documentations\\assets\\images\\tutorials\\holographic_generalized_stress_test.png"
+  },
+  "files": {
+    "observable_csv": "outputs\\holographic_generalized_unitary\\observable_comparison.csv",
+    "structural_csv": "outputs\\holographic_generalized_unitary\\structural_checks.csv",
+    "stress_csv": "outputs\\holographic_generalized_unitary\\stress_test_comparison.csv"
+  },
+  "derived_values": {
+    "Z0": {
+      "exact": {
+        "real": -0.021090942058895768,
+        "imag": 0.0
+      },
+      "sampled": {
+        "real": -0.02517999999999976,
+        "imag": 0.0
+      },
+      "sampled_stderr": 0.003161290814461086
+    },
+    "X1": {
+      "exact": {
+        "real": 0.5674320417603197,
+        "imag": 0.0
+      },
+      "sampled": {
+        "real": 0.5702399999999959,
+        "imag": 0.0
+      },
+      "sampled_stderr": 0.0025977549744556567
+    },
+    "Z2": {
+      "exact": {
+        "real": -0.6105759411893886,
+        "imag": 0.0
+      },
+      "sampled": {
+        "real": -0.618100000000005,
+        "imag": 0.0
+      },
+      "sampled_stderr": 0.0024858772487508294
+    },
+    "Z0Z2": {
+      "exact": {
+        "real": -0.07207656151673555,
+        "imag": 0.0
+      },
+      "sampled": {
+        "real": -0.07325999999999971,
+        "imag": 0.0
+      },
+      "sampled_stderr": 0.0031537959966193123
+    },
+    "X1Z3": {
+      "exact": {
+        "real": 0.05493429626838898,
+        "imag": 0.0
+      },
+      "sampled": {
+        "real": 0.05530000000000025,
+        "imag": 0.0
+      },
+      "sampled_stderr": 0.003157454480303402
+    },
+    "Connected(Z0,Z2)": {
+      "exact": {
+        "real": -0.08495418331491669,
+        "imag": 0.0
+      },
+      "sampled": {
+        "real": -0.0888237579999997,
+        "imag": 0.0
+      },
+      "sampled_stderr": 0.0037105847546081874
+    }
+  }
+}

@@ -91,16 +91,35 @@ nav:
 
   - Tutorials:
       - Overview: tutorials/index.md
-      - Displacement & Spectroscopy: tutorials/displacement_spectroscopy.md
-      - Kerr Free Evolution: tutorials/kerr_free_evolution.md
-      - Sideband Swap: tutorials/sideband_swap.md
-      - System Identification & Randomization: tutorials/system_identification.md
-      - Unitary Synthesis: tutorials/unitary_synthesis.md
-      - GRAPE Optimal Control: tutorials/optimal_control.md
-      - RL Hybrid Control: tutorials/rl_hybrid_control.md
-      - Floquet Driven Systems: tutorials/floquet_driven_systems.md
-      - Hardware-Aware Control: tutorials/hardware_context.md
-      - Holographic Quantum Algorithms: tutorials/holographic_quantum_algorithms.md
+
+      - Getting Started:
+          - Protocol-Style Simulation: tutorials/getting_started_simulation.md
+
+      - Core Physics:
+          - Displacement & Spectroscopy: tutorials/displacement_spectroscopy.md
+          - Number Splitting: tutorials/number_splitting.md
+          - Kerr Free Evolution: tutorials/kerr_free_evolution.md
+          - Phase Space Conventions: tutorials/phase_space_conventions.md
+          - Cross-Kerr Interaction: tutorials/cross_kerr.md
+
+      - Sideband Protocols:
+          - Sideband Swap & Bosonic Control: tutorials/sideband_swap.md
+
+      - Advanced Control:
+          - Unitary Synthesis: tutorials/unitary_synthesis.md
+          - GRAPE Optimal Control: tutorials/optimal_control.md
+          - RL Hybrid Control: tutorials/rl_hybrid_control.md
+          - Hardware-Aware Control: tutorials/hardware_context.md
+
+      - System Identification:
+          - Calibration & Domain Randomization: tutorials/system_identification.md
+
+      - Floquet & Driven Systems:
+          - Floquet Driven Systems: tutorials/floquet_driven_systems.md
+
+      - Advanced Topics:
+          - Holographic Quantum Algorithms: tutorials/holographic_quantum_algorithms.md
+          - Generalized Holographic Workflow: tutorials/holographic_generalized_unitary_workflow.md
 
   - Examples: examples.md
 

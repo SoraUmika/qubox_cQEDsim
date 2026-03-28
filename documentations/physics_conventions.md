@@ -66,8 +66,26 @@ through
 
 $$K_\sigma = V_\sigma^\dagger$$
 
+The public per-step embedding convention is now explicit:
+
+$$
+U_{\mathrm{joint}} = U_{\mathrm{physical}} \otimes I_{\mathrm{bond}}
+\qquad \text{for } \texttt{acts\_on="physical"},
+$$
+
+$$
+U_{\mathrm{joint}} = I_{\mathrm{physical}} \otimes U_{\mathrm{bond}}
+\qquad \text{for } \texttt{acts\_on="bond"}.
+$$
+
+Finite non-translation-invariant step lists are represented by
+`HolographicChannelSequence`. In that case the explicit sequence length is the
+physical step count, so observable schedules use `total_steps = sequence.num_steps`.
+
 `burn-in` means repeated application of the same holographic channel before the
-observable insertions begin. Observable schedules always refer to measurements
+observable insertions begin. Because of that definition, `burn-in` is supported
+for single repeated-channel workflows and intentionally disallowed for finite
+explicit step sequences. Observable schedules always refer to measurements
 performed on the physical register.
 
 ---

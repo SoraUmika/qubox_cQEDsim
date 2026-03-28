@@ -12,6 +12,7 @@ from .holographic_sim import (
     HoloQUADSProgram,
     HoloVQEObjective,
     HolographicChannel,
+    HolographicChannelSequence,
     HolographicMPSAlgorithm,
     HolographicSampler,
     IsingTransferSpec,
@@ -21,11 +22,13 @@ from .holographic_sim import (
     PhysicalObservable,
     PurifiedChannelStep,
     SamplingConfig,
+    StepUnitarySpec,
     TimeSlice,
 )
 
 __all__ = [
     "HolographicChannel",
+    "HolographicChannelSequence",
     "PurifiedChannelStep",
     "PhysicalObservable",
     "ObservableInsertion",
@@ -35,6 +38,7 @@ __all__ = [
     "SamplingConfig",
     "HolographicSampler",
     "HolographicMPSAlgorithm",
+    "StepUnitarySpec",
     "CorrelatorEstimate",
     "ExactCorrelatorResult",
     "ChannelDiagnostics",

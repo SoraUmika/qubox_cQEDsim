@@ -31,9 +31,12 @@ from .results import (
 )
 from .sampler import HolographicMPSAlgorithm, HolographicSampler
 from .schedules import ObservableInsertion, ObservableSchedule
+from .step_sequence import HolographicChannelSequence
+from .step_unitary import StepUnitarySpec
 
 __all__ = [
     "HolographicChannel",
+    "HolographicChannelSequence",
     "PurifiedChannelStep",
     "PhysicalObservable",
     "as_observable",
@@ -55,6 +58,7 @@ __all__ = [
     "EstimatorComparison",
     "HolographicSampler",
     "HolographicMPSAlgorithm",
+    "StepUnitarySpec",
     "MatrixProductState",
     "complete_right_isometry",
     "contract_mps",

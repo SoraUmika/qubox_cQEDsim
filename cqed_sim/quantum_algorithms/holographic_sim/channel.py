@@ -5,6 +5,7 @@ from typing import Any, Mapping, Sequence
 
 import numpy as np
 
+from .step_unitary import StepUnitarySpec, embed_step_unitary
 from .utils import (
     as_complex_array,
     basis_vector,
@@ -99,21 +100,48 @@ class HolographicChannel:
         *,
         physical_dim: int,
         bond_dim: int | None = None,
+        acts_on: str = "joint",
         reference_state: Any | None = None,
         label: str | None = None,
         metadata: Mapping[str, Any] | None = None,
     ) -> "HolographicChannel":
         physical_dim = ensure_positive_int(physical_dim, name="physical_dim")
-        unitary_arr = validate_unitary(unitary)
-        full_dim = int(unitary_arr.shape[0])
+        resolved_label = label
+        resolved_metadata = dict(metadata or {})
+        if isinstance(unitary, StepUnitarySpec):
+            if acts_on != "joint" and acts_on != unitary.acts_on:
+                raise ValueError("acts_on must match StepUnitarySpec.acts_on when both are provided.")
+            acts_on = unitary.acts_on
+            if resolved_label is None:
+                resolved_label = unitary.label
+            if unitary.metadata:
+                resolved_metadata.setdefault("unitary_spec", unitary.to_record())
+            unitary_input = unitary.unitary
+        else:
+            unitary_input = unitary
+        acts_on = str(acts_on).strip().lower()
+        raw_unitary = validate_unitary(unitary_input)
+        full_dim = int(raw_unitary.shape[0])
         if bond_dim is None:
-            if full_dim % physical_dim != 0:
-                raise ValueError(f"Unitary dimension {full_dim} is not divisible by physical_dim={physical_dim}.")
-            bond_dim = full_dim // physical_dim
+            if acts_on == "joint":
+                if full_dim % physical_dim != 0:
+                    raise ValueError(f"Unitary dimension {full_dim} is not divisible by physical_dim={physical_dim}.")
+                bond_dim = full_dim // physical_dim
+            elif acts_on == "bond":
+                bond_dim = full_dim
+            else:
+                raise ValueError("bond_dim must be provided when acts_on='physical'.")
         bond_dim = ensure_positive_int(bond_dim, name="bond_dim")
-        if full_dim != physical_dim * bond_dim:
+        unitary_arr = embed_step_unitary(
+            raw_unitary,
+            acts_on=acts_on,
+            physical_dim=physical_dim,
+            bond_dim=bond_dim,
+        )
+        if unitary_arr.shape != (physical_dim * bond_dim, physical_dim * bond_dim):
             raise ValueError(
-                f"Unitary dimension {full_dim} does not match physical_dim * bond_dim = {physical_dim * bond_dim}."
+                "Embedded unitary dimension does not match "
+                f"physical_dim * bond_dim = {physical_dim * bond_dim}."
             )
         ref = basis_vector(physical_dim, 0) if reference_state is None else np.asarray(as_complex_array(reference_state), dtype=np.complex128).reshape(-1)
         if ref.size != physical_dim:
@@ -121,14 +149,15 @@ class HolographicChannel:
         ref = ref / np.linalg.norm(ref)
         blocks = unitary_arr.reshape(physical_dim, bond_dim, physical_dim, bond_dim)
         kraus = [np.tensordot(blocks[outcome], ref, axes=([1], [0])) for outcome in range(physical_dim)]
+        resolved_metadata.setdefault("acts_on", acts_on)
         return cls(
             physical_dim=physical_dim,
             bond_dim=bond_dim,
             kraus_ops=tuple(kraus),
-            label=label,
+            label=resolved_label,
             joint_unitary=unitary_arr,
             reference_state=ref,
-            metadata=dict(metadata or {}),
+            metadata=resolved_metadata,
         )
 
     @classmethod

@@ -12,6 +12,7 @@ from .estimators import RunningStats
 from .noise import BondNoiseChannel
 from .results import BranchRecord, BurnInSummary, CorrelatorEstimate, ExactCorrelatorResult
 from .schedules import ObservableSchedule
+from .step_sequence import HolographicChannelSequence
 from .utils import basis_vector, coerce_density_matrix, progress_wrapper, state_overlap_probability, trace_distance
 
 
@@ -61,7 +62,7 @@ def _resolve_sampling_config(
 
 @dataclass
 class HolographicSampler:
-    channel: HolographicChannel
+    channel: HolographicChannel | HolographicChannelSequence
     left_state: Any | None = None
     burn_in: BurnInConfig | int = BurnInConfig()
     boundary: BoundaryCondition | None = None
@@ -70,10 +71,64 @@ class HolographicSampler:
     def __post_init__(self) -> None:
         self.burn_in = _resolve_burn_in(self.burn_in)
         self.boundary = _resolve_boundary(self.boundary)
+        self._channel_sequence = self.channel if isinstance(self.channel, HolographicChannelSequence) else None
+        self._translation_invariant_channel = self.channel if isinstance(self.channel, HolographicChannel) else None
+        resolved_bond_dim = self.bond_dim
         if self.left_state is None:
-            self.left_state = basis_vector(self.channel.bond_dim, 0)
-        self.left_state = coerce_density_matrix(self.left_state, dim=self.channel.bond_dim)
-        self._step = PurifiedChannelStep(self.channel, bond_noise=self.bond_noise)
+            self.left_state = basis_vector(resolved_bond_dim, 0)
+        self.left_state = coerce_density_matrix(self.left_state, dim=resolved_bond_dim)
+        if self._channel_sequence is not None:
+            if int(self.burn_in.steps) != 0:
+                raise ValueError("Burn-in is only supported for translation-invariant single-channel workflows.")
+            self._steps = tuple(
+                PurifiedChannelStep(channel, bond_noise=self.bond_noise) for channel in self._channel_sequence.channels
+            )
+            self._step = None
+        else:
+            assert self._translation_invariant_channel is not None
+            self._step = PurifiedChannelStep(self._translation_invariant_channel, bond_noise=self.bond_noise)
+            self._steps = None
+
+    @property
+    def physical_dim(self) -> int:
+        if self._channel_sequence is not None:
+            return self._channel_sequence.physical_dim
+        assert self._translation_invariant_channel is not None
+        return self._translation_invariant_channel.physical_dim
+
+    @property
+    def bond_dim(self) -> int:
+        if self._channel_sequence is not None:
+            return self._channel_sequence.bond_dim
+        assert self._translation_invariant_channel is not None
+        return self._translation_invariant_channel.bond_dim
+
+    @property
+    def is_finite_sequence(self) -> bool:
+        return self._channel_sequence is not None
+
+    def _metadata_record(self, *, boundary: BoundaryCondition | None) -> dict[str, Any]:
+        return {
+            "channel": None if self._translation_invariant_channel is None else self._translation_invariant_channel.to_record(),
+            "channel_sequence": None if self._channel_sequence is None else self._channel_sequence.to_record(),
+            "bond_noise": None if self.bond_noise is None else self.bond_noise.to_record(),
+            "boundary": None if boundary is None else boundary.to_record(),
+        }
+
+    def _validate_schedule_length(self, total_steps: int) -> None:
+        if self._channel_sequence is None:
+            return
+        if int(total_steps) != self._channel_sequence.num_steps:
+            raise ValueError(
+                "Finite holographic channel sequences require schedule.total_steps to equal the sequence length: "
+                f"got total_steps={int(total_steps)} and num_steps={self._channel_sequence.num_steps}."
+            )
+
+    def _step_for_index(self, step: int) -> PurifiedChannelStep:
+        if self._steps is not None:
+            return self._steps[int(step) - 1]
+        assert self._step is not None
+        return self._step
 
     @classmethod
     def from_mps_state(
@@ -104,20 +159,74 @@ class HolographicSampler:
             bond_noise=bond_noise,
         )
 
+    @classmethod
+    def from_mps_sequence(
+        cls,
+        state: Any,
+        *,
+        complete: bool = True,
+        chi_max: int | None = None,
+        label: str | None = None,
+        left_state: Any | None = None,
+        boundary: BoundaryCondition | None = None,
+        bond_noise: BondNoiseChannel | None = None,
+    ) -> "HolographicSampler":
+        sequence = HolographicChannelSequence.from_mps_state(
+            state,
+            complete=complete,
+            chi_max=chi_max,
+            label=label,
+        )
+        return cls(
+            channel=sequence,
+            left_state=left_state,
+            boundary=boundary,
+            bond_noise=bond_noise,
+        )
+
+    @classmethod
+    def from_unitary_sequence(
+        cls,
+        unitaries: Sequence[Any],
+        *,
+        physical_dim: int,
+        bond_dim: int,
+        label: str | None = None,
+        left_state: Any | None = None,
+        boundary: BoundaryCondition | None = None,
+        bond_noise: BondNoiseChannel | None = None,
+        reference_state: Any | None = None,
+    ) -> "HolographicSampler":
+        sequence = HolographicChannelSequence.from_unitaries(
+            unitaries,
+            physical_dim=physical_dim,
+            bond_dim=bond_dim,
+            reference_state=reference_state,
+            label=label,
+        )
+        return cls(
+            channel=sequence,
+            left_state=left_state,
+            boundary=boundary,
+            bond_noise=bond_noise,
+        )
+
     def summarize_burn_in(self, steps: int | None = None) -> BurnInSummary:
         num_steps = int(self.burn_in.steps if steps is None else steps)
         rho = np.array(self.left_state, copy=True)
         residuals = np.zeros(num_steps, dtype=float)
         for idx in range(num_steps):
-            next_rho = self._step.propagate(rho)
+            next_rho = self._step_for_index(1).propagate(rho)
             residuals[idx] = trace_distance(next_rho, rho)
             rho = next_rho
         return BurnInSummary(steps=num_steps, residuals=residuals, final_state=rho)
 
     def _initial_state_after_burn_in(self) -> np.ndarray:
         rho = np.array(self.left_state, copy=True)
+        if self._channel_sequence is not None:
+            return rho
         for _ in range(int(self.burn_in.steps)):
-            rho = self._step.propagate(rho)
+            rho = self._step_for_index(1).propagate(rho)
         return rho
 
     def _attempt_boundary_postselection(
@@ -129,7 +238,7 @@ class HolographicSampler:
     ) -> bool:
         if boundary is None or boundary.right_state is None or not boundary.postselect:
             return True
-        probability = state_overlap_probability(bond_state, boundary.right_state, dim=self.channel.bond_dim)
+        probability = state_overlap_probability(bond_state, boundary.right_state, dim=self.bond_dim)
         probability = min(max(probability, 0.0), 1.0)
         return bool(rng.random() <= probability)
 
@@ -144,6 +253,7 @@ class HolographicSampler:
         boundary: BoundaryCondition | None = None,
     ) -> CorrelatorEstimate:
         resolved_schedule = _resolve_schedule(schedule)
+        self._validate_schedule_length(int(resolved_schedule.total_steps))
         resolved_boundary = self.boundary if boundary is None else boundary
         config = _resolve_sampling_config(shots, seed=seed, show_progress=show_progress, store_samples=store_samples)
         rng = np.random.default_rng(config.seed)
@@ -162,10 +272,11 @@ class HolographicSampler:
             estimator = 1.0 + 0.0j
             for step in range(1, int(resolved_schedule.total_steps) + 1):
                 insertion = resolved_schedule.insertion_for_step(step)
+                step_operator = self._step_for_index(step)
                 if insertion is None:
-                    rho = self._step.propagate(rho)
+                    rho = step_operator.propagate(rho)
                     continue
-                outcome = self._step.sample_measurement(rho, insertion.observable, rng=rng)
+                outcome = step_operator.sample_measurement(rho, insertion.observable, rng=rng)
                 rho = outcome.bond_state
                 estimator *= complex(outcome.eigenvalue)
             if self._attempt_boundary_postselection(rho, boundary=resolved_boundary, rng=rng):
@@ -185,11 +296,7 @@ class HolographicSampler:
             total_steps=int(resolved_schedule.total_steps),
             schedule_record=resolved_schedule.to_record(),
             samples=stats.samples,
-            metadata={
-                "channel": self.channel.to_record(),
-                "bond_noise": None if self.bond_noise is None else self.bond_noise.to_record(),
-                "boundary": None if resolved_boundary is None else resolved_boundary.to_record(),
-            },
+            metadata=self._metadata_record(boundary=resolved_boundary),
         )
 
     def enumerate_correlator(
@@ -201,6 +308,7 @@ class HolographicSampler:
         max_branches: int | None = None,
     ) -> ExactCorrelatorResult:
         resolved_schedule = _resolve_schedule(schedule)
+        self._validate_schedule_length(int(resolved_schedule.total_steps))
         resolved_boundary = self.boundary if boundary is None else boundary
         initial_state = self._initial_state_after_burn_in()
         branches: list[dict[str, Any]] = [
@@ -214,12 +322,13 @@ class HolographicSampler:
 
         for step in range(1, int(resolved_schedule.total_steps) + 1):
             insertion = resolved_schedule.insertion_for_step(step)
+            step_operator = self._step_for_index(step)
             next_branches: list[dict[str, Any]] = []
             for branch in branches:
                 if insertion is None:
                     next_branches.append(
                         {
-                            "bond_state": self._step.propagate(branch["bond_state"]),
+                            "bond_state": step_operator.propagate(branch["bond_state"]),
                             "probability": float(branch["probability"]),
                             "estimator": complex(branch["estimator"]),
                             "eigenvalues": tuple(branch["eigenvalues"]),
@@ -227,7 +336,11 @@ class HolographicSampler:
                     )
                     continue
 
-                outcomes = self._step.enumerate_measurement_branches(branch["bond_state"], insertion.observable, atol=atol)
+                outcomes = step_operator.enumerate_measurement_branches(
+                    branch["bond_state"],
+                    insertion.observable,
+                    atol=atol,
+                )
                 for outcome in outcomes:
                     prob = float(branch["probability"]) * float(outcome.probability)
                     if prob <= atol:
@@ -255,7 +368,7 @@ class HolographicSampler:
                 accepted_probability *= state_overlap_probability(
                     branch["bond_state"],
                     resolved_boundary.right_state,
-                    dim=self.channel.bond_dim,
+                    dim=self.bond_dim,
                 )
             if accepted_probability > atol:
                 accepted_prob_sum += accepted_probability
@@ -286,17 +399,13 @@ class HolographicSampler:
             total_steps=int(resolved_schedule.total_steps),
             schedule_record=resolved_schedule.to_record(),
             branches=public_branches,
-            metadata={
-                "channel": self.channel.to_record(),
-                "bond_noise": None if self.bond_noise is None else self.bond_noise.to_record(),
-                "boundary": None if resolved_boundary is None else resolved_boundary.to_record(),
-            },
+            metadata=self._metadata_record(boundary=resolved_boundary),
         )
 
 
 @dataclass
 class HolographicMPSAlgorithm:
-    channel: HolographicChannel
+    channel: HolographicChannel | HolographicChannelSequence
     left_state: Any | None = None
     right_boundary: BoundaryCondition | None = None
     burn_in: BurnInConfig | int = BurnInConfig()
@@ -328,6 +437,58 @@ class HolographicMPSAlgorithm:
             left_state=left_state,
             right_boundary=right_boundary,
             burn_in=burn_in,
+            bond_noise=bond_noise,
+        )
+
+    @classmethod
+    def from_mps_sequence(
+        cls,
+        state: Any,
+        *,
+        complete: bool = True,
+        chi_max: int | None = None,
+        label: str | None = None,
+        left_state: Any | None = None,
+        right_boundary: BoundaryCondition | None = None,
+        bond_noise: BondNoiseChannel | None = None,
+    ) -> "HolographicMPSAlgorithm":
+        sequence = HolographicChannelSequence.from_mps_state(
+            state,
+            complete=complete,
+            chi_max=chi_max,
+            label=label,
+        )
+        return cls(
+            channel=sequence,
+            left_state=left_state,
+            right_boundary=right_boundary,
+            bond_noise=bond_noise,
+        )
+
+    @classmethod
+    def from_unitary_sequence(
+        cls,
+        unitaries: Sequence[Any],
+        *,
+        physical_dim: int,
+        bond_dim: int,
+        label: str | None = None,
+        left_state: Any | None = None,
+        right_boundary: BoundaryCondition | None = None,
+        bond_noise: BondNoiseChannel | None = None,
+        reference_state: Any | None = None,
+    ) -> "HolographicMPSAlgorithm":
+        sequence = HolographicChannelSequence.from_unitaries(
+            unitaries,
+            physical_dim=physical_dim,
+            bond_dim=bond_dim,
+            reference_state=reference_state,
+            label=label,
+        )
+        return cls(
+            channel=sequence,
+            left_state=left_state,
+            right_boundary=right_boundary,
             bond_noise=bond_noise,
         )
 

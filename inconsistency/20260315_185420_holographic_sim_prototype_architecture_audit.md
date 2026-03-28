@@ -59,10 +59,10 @@ This report records the inconsistencies found while refactoring the prototype
 - The current `mps.py` uses a specific tensor orientation and "complete right
   isometry" construction that needed explicit documentation during the refactor.
   That mapping is now documented in the new channel and conventions docs.
-- The new public sampler API is intentionally centered on repeated-channel
-  workflows. A first-class public API for fully non-translation-invariant
-  per-step channel sequences remains deferred, although the compatibility
-  wrapper still supports legacy per-step unitary lists.
+- The public sampler API now supports finite explicit per-step channel
+  sequences through `HolographicChannelSequence`. The remaining intentional
+  limitation is narrower: `burn_in` retains its repeated-channel meaning and is
+  therefore not defined for finite explicit sequences.
 
 ## Fix Update
 
@@ -87,6 +87,14 @@ This report records the inconsistencies found while refactoring the prototype
   `CorrelatorEstimate`, `ExactCorrelatorResult`, `BurnInSummary`, and
   `EnergyEstimate`, each with serialization helpers.
 - Remaining concern:
-  A polished first-class public abstraction for arbitrary per-step channel
-  sequences is still deferred; translation-invariant repeated-channel workflows
-  are the primary supported API in the new package.
+  Fixed on 2026-03-27.
+  A first-class public abstraction for arbitrary finite per-step channel
+  sequences was added through
+  `cqed_sim/quantum_algorithms/holographic_sim/step_unitary.py`,
+  `cqed_sim/quantum_algorithms/holographic_sim/step_sequence.py`, and the
+  generalized public sampler path in
+  `cqed_sim/quantum_algorithms/holographic_sim/sampler.py`.
+  The remaining narrower limitation is that `burn_in` retains its original
+  repeated-channel meaning and is therefore intentionally defined only for
+  single-channel translation-invariant workflows, not for finite explicit
+  sequences.

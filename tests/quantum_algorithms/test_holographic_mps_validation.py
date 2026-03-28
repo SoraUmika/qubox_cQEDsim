@@ -5,9 +5,11 @@ import pytest
 
 from cqed_sim.quantum_algorithms.holographic_sim import (
     HolographicChannel,
+    HolographicSampler,
     MatrixProductState,
     contract_mps,
     pauli_x,
+    ObservableSchedule,
     pauli_z,
     right_canonical_tensor_to_stinespring_unitary,
 )
@@ -94,6 +96,13 @@ def _holographic_expectation(mps: MatrixProductState, operator_map: dict[int, np
     return sum(complex(branch["prob"]) * complex(branch["weight"]) for branch in branches)
 
 
+def _schedule_from_operator_map(operator_map: dict[int, np.ndarray], *, total_steps: int) -> ObservableSchedule:
+    return ObservableSchedule(
+        [{"step": int(site) + 1, "operator": operator} for site, operator in sorted(operator_map.items())],
+        total_steps=total_steps,
+    )
+
+
 @pytest.mark.parametrize(("state_name", "state"), _state_cases())
 def test_right_canonical_tensor_stinespring_completion_matches_channel(state_name: str, state: np.ndarray) -> None:
     mps = MatrixProductState(state)
@@ -149,6 +158,20 @@ def test_public_stinespring_helper_accepts_matrix_sequences() -> None:
     expected = right_canonical_tensor_to_stinespring_unitary(tensor)
     observed = right_canonical_tensor_to_stinespring_unitary(matrices)
     assert np.allclose(observed, expected, atol=ATOL, rtol=0.0)
+
+
+@pytest.mark.parametrize(("state_name", "state"), _state_cases())
+def test_public_mps_sequence_sampler_matches_dense_expectations(state_name: str, state: np.ndarray) -> None:
+    mps = MatrixProductState(state)
+    mps.make_right_canonical(cast_complete=True)
+    sampler = HolographicSampler.from_mps_sequence(state)
+
+    for observable_name, operator_map in OBSERVABLE_CASES.items():
+        dense_expectation = _dense_expectation(state, operator_map)
+        exact = sampler.enumerate_correlator(_schedule_from_operator_map(operator_map, total_steps=mps.num_sites))
+        assert np.allclose(exact.mean, dense_expectation, atol=ATOL, rtol=0.0), (
+            f"{state_name}: public sequence sampler mismatch for {observable_name}"
+        )
 
 
 @pytest.mark.parametrize(("state_name", "state"), _state_cases())

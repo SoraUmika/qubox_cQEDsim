@@ -1,6 +1,6 @@
 site_name: cqed_sim
 site_description: "Hardware-faithful time-domain cQED pulse simulator built on QuTiP"
-site_url: ""
+site_url: "https://soraumika.github.io/qubox_cQEDsim/"
 
 docs_dir: documentations
 use_directory_urls: false

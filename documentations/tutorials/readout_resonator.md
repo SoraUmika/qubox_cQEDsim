@@ -35,6 +35,7 @@ from cqed_sim.core import (
 from cqed_sim.sim import SimulationConfig, simulate_sequence, reduced_cavity_state
 from cqed_sim.sequence import SequenceCompiler
 from cqed_sim.pulses import Pulse
+from cqed_sim.pulses.envelopes import square_envelope
 
 model = DispersiveTransmonCavityModel(
     omega_c=2*np.pi*7e9, omega_q=2*np.pi*6e9,
@@ -47,7 +48,8 @@ frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
 readout_pulse = Pulse(
     channel="cavity",
     t0=0.0, duration=1e-6,
-    frequency=model.omega_c, amplitude=2*np.pi*0.5e6, phase=0.0,
+    envelope=square_envelope,
+    carrier=0.0, amp=2*np.pi*0.5e6, phase=0.0,
 )
 
 # Prepare |g,0⟩ and |e,0⟩, drive the cavity, compare IQ
@@ -65,7 +67,7 @@ result_g = simulate_sequence(model, compiled, psi_g, {}, config=config)
 result_e = simulate_sequence(model, compiled, psi_e, {}, config=config)
 
 # Extract the cavity field ⟨a⟩ to get IQ coordinates
-a_op = model.a()
+a_op = model.cavity_annihilation()
 alpha_g = (a_op * result_g.final_state).tr()
 alpha_e = (a_op * result_e.final_state).tr()
 print(f"IQ_g = ({np.real(alpha_g):.3f}, {np.imag(alpha_g):.3f})")

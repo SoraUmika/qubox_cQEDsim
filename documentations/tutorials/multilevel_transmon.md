@@ -57,6 +57,7 @@ from cqed_sim.core import FrameSpec, StatePreparationSpec, qubit_state, fock_sta
 from cqed_sim.sim import SimulationConfig, simulate_sequence, reduced_qubit_state
 from cqed_sim.sequence import SequenceCompiler
 from cqed_sim.pulses import Pulse
+from cqed_sim.pulses.envelopes import square_envelope
 
 frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
 psi_g = prepare_state(model, StatePreparationSpec(
@@ -66,7 +67,8 @@ psi_g = prepare_state(model, StatePreparationSpec(
 # Short, strong pi pulse — may leak to |f⟩
 pi_pulse = Pulse(
     channel="qubit", t0=0.0, duration=10e-9,
-    frequency=model.omega_q, amplitude=2*np.pi*50e6, phase=0.0,
+    envelope=square_envelope,
+    carrier=0.0, amp=2*np.pi*50e6, phase=0.0,
 )
 compiled = SequenceCompiler(dt=0.5e-9).compile([pi_pulse])
 result = simulate_sequence(model, compiled, psi_g, {},

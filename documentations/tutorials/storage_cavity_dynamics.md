@@ -56,7 +56,7 @@ for t in delays:
     result = simulate_sequence(model, compiled, psi0, {},
                                config=SimulationConfig(frame=frame), noise=noise)
     rho_final = result.final_state
-    a = model.a()
+    a = model.cavity_annihilation()
     nbar.append(float(np.real((a.dag() * a * rho_final).tr())))
 ```
 

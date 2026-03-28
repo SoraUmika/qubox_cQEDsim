@@ -47,6 +47,7 @@ from cqed_sim.core import (
 from cqed_sim.sim import SimulationConfig, simulate_sequence, reduced_qubit_state
 from cqed_sim.sequence import SequenceCompiler
 from cqed_sim.pulses import Pulse
+from cqed_sim.pulses.envelopes import square_envelope
 
 model = DispersiveTransmonCavityModel(
     omega_c=2*np.pi*5e9, omega_q=2*np.pi*6e9,
@@ -65,7 +66,8 @@ omega_red = model.omega_q - model.omega_c
 
 sb_pulse = Pulse(
     channel="qubit", t0=0.0, duration=500e-9,
-    frequency=omega_red, amplitude=2*np.pi*5e6, phase=0.0,
+    envelope=square_envelope,
+    carrier=-omega_red, amp=2*np.pi*5e6, phase=0.0,
 )
 
 compiler = SequenceCompiler(dt=2e-9)
@@ -73,7 +75,7 @@ compiled = compiler.compile([sb_pulse])
 config = SimulationConfig(frame=frame)
 
 result = simulate_sequence(model, compiled, psi_e0, {}, config=config)
-a = model.a()
+a = model.cavity_annihilation()
 nbar = float(np.real((a.dag() * a * result.final_state).tr()))
 rho_q = reduced_qubit_state(result.final_state)
 pe = float(np.real(rho_q[1, 1]))

@@ -24,7 +24,7 @@ This produces fast oscillations in the lab frame instead of smooth Rabi nutation
 
 **Symptom:** $P_e(t)$ oscillates at GHz frequencies instead of MHz Rabi rate.
 
-**Fix:** Ensure `FrameSpec(omega_q_frame=model.omega_q)` and `Pulse(frequency=model.omega_q)`.
+**Fix:** Ensure `FrameSpec(omega_q_frame=model.omega_q)` and `Pulse(..., envelope=square_envelope, carrier=0.0)`.
 
 ### 2. Wrong Sign Convention for χ
 
@@ -75,6 +75,7 @@ from cqed_sim.core import (
 from cqed_sim.sim import SimulationConfig, simulate_sequence, reduced_qubit_state
 from cqed_sim.sequence import SequenceCompiler
 from cqed_sim.pulses import Pulse
+from cqed_sim.pulses.envelopes import square_envelope
 
 model = DispersiveTransmonCavityModel(
     omega_c=2*np.pi*5e9, omega_q=2*np.pi*6e9,
@@ -95,7 +96,7 @@ psi0 = prepare_state(model, StatePreparationSpec(
     qubit=qubit_state("g"), storage=fock_state(0),
 ))
 pulse = Pulse(channel="qubit", t0=0.0, duration=40e-9,
-              frequency=model.omega_q, amplitude=2*np.pi*12.5e6, phase=0.0)
+              envelope=square_envelope, carrier=0.0, amp=2*np.pi*12.5e6, phase=0.0)
 compiler = SequenceCompiler(dt=1e-9)
 
 for label, frame in [("correct", frame_ok), ("wrong", frame_bad)]:

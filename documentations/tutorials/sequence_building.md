@@ -38,6 +38,7 @@ import numpy as np
 from cqed_sim.core import DispersiveTransmonCavityModel
 from cqed_sim.sequence import SequenceCompiler
 from cqed_sim.pulses import Pulse
+from cqed_sim.pulses.envelopes import square_envelope
 
 model = DispersiveTransmonCavityModel(
     omega_c=2*np.pi*5e9, omega_q=2*np.pi*6e9,
@@ -52,11 +53,13 @@ amp = 2*np.pi*12.5e6  # calibrated π/2 amplitude
 
 pulse_1 = Pulse(
     channel="qubit", t0=0.0, duration=pi2_dur,
-    frequency=model.omega_q, amplitude=amp, phase=0.0,
+    envelope=square_envelope,
+    carrier=0.0, amp=amp, phase=0.0,
 )
 pulse_2 = Pulse(
     channel="qubit", t0=pi2_dur + delay, duration=pi2_dur,
-    frequency=model.omega_q, amplitude=amp, phase=0.0,
+    envelope=square_envelope,
+    carrier=0.0, amp=amp, phase=0.0,
 )
 
 compiler = SequenceCompiler(dt=2e-9)
@@ -106,9 +109,9 @@ pe_sweep = []
 for d in delays_ns:
     d_sec = d * 1e-9
     p1 = Pulse(channel="qubit", t0=0.0, duration=pi2_dur,
-               frequency=model.omega_q, amplitude=amp, phase=0.0)
+               envelope=square_envelope, carrier=0.0, amp=amp, phase=0.0)
     p2 = Pulse(channel="qubit", t0=pi2_dur + d_sec, duration=pi2_dur,
-               frequency=model.omega_q, amplitude=amp, phase=0.0)
+               envelope=square_envelope, carrier=0.0, amp=amp, phase=0.0)
     comp = compiler.compile([p1, p2])
     result = simulate_sequence(model, comp, psi0, {}, config=config)
     rho_q = reduced_qubit_state(result.final_state)

@@ -56,7 +56,7 @@ for nc in dims_cav:
     compiled = SequenceCompiler(dt=2e-9).compile([], t_end=2e-6)
     result = simulate_sequence(model, compiled, psi0, {},
                                config=SimulationConfig(frame=frame))
-    a = model.a()
+    a = model.cavity_annihilation()
     nbar = float(np.real((a.dag() * a * result.final_state).tr()))
     nbar_results.append(nbar)
     print(f"n_cav={nc:3d}  ⟨n⟩={nbar:.4f}")

@@ -2,6 +2,8 @@
 
 The primary guided workflow notebook for this topic is now `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`.
 
+The coordinate-convention companion notebook is `tutorials/10_core_workflows/03_phase_space_coordinates_and_wigner_conventions.ipynb`.
+
 The earlier foundations notebook `tutorials/14_kerr_free_evolution.ipynb` still remains useful as a broader curriculum stop.
 
 This page keeps a compact topical summary and points to the related standalone scripts.
@@ -13,6 +15,7 @@ This page keeps a compact topical summary and points to the related standalone s
 Use the guided notebook and the related repo-side scripts:
 
 - `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`
+- `tutorials/10_core_workflows/03_phase_space_coordinates_and_wigner_conventions.ipynb`
 - `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
 - `examples/workflows/kerr_free_evolution.py`
 - `examples/kerr_free_evolution.py`
@@ -57,7 +60,7 @@ initial_state = prepare_state(
 )
 
 rho_c = reduced_cavity_state(initial_state)
-xvec, yvec, wigner = cavity_wigner(rho_c)
+xvec, yvec, wigner = cavity_wigner(rho_c, coordinate="alpha")
 ```
 
 ---
@@ -68,8 +71,10 @@ Evolving a coherent state $|\alpha=2\rangle$ under the Kerr Hamiltonian $H_K = \
 
 ![Kerr Free Evolution — Wigner Snapshots](../assets/images/tutorials/kerr_free_evolution_wigner.png)
 
-At $t = 0$ the state is a coherent blob; by $T_K/4$ it has stretched into a crescent; at $T_K/2$ it forms a Schrödinger-cat-like superposition; and at $3T_K/4$ the crescent appears on the opposite side.
+At $t = 0$ the state is a coherent blob centered near $(\mathrm{Re}(\alpha), \mathrm{Im}(\alpha)) = (2, 0)$ because the plot is drawn in coherent-state `alpha` coordinates. By $T_K/4$ it has stretched into a crescent; at $T_K/2$ it forms a Schrödinger-cat-like superposition; and at $3T_K/4$ the crescent appears on the opposite side.
+
+If you instead call `cavity_wigner(..., coordinate="quadrature")`, the same initial coherent state will appear near $x = \sqrt{2}\,\alpha$ on the horizontal axis. The companion coordinate-convention notebook walks through that rescaling explicitly.
 
 ---
 
-For the full guided walkthrough, use `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`. For the sign-check companion, use `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`. For a compact executable script, use the example workflow module or standalone script.
+For the full guided walkthrough, use `tutorials/10_core_workflows/02_kerr_free_evolution.ipynb`. For the coordinate-convention companion, use `tutorials/10_core_workflows/03_phase_space_coordinates_and_wigner_conventions.ipynb`. For the sign-check companion, use `tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`. For a compact executable script, use the example workflow module or standalone script.

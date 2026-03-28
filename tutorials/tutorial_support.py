@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import factorial
 
 import numpy as np
 from scipy.optimize import curve_fit
@@ -79,6 +80,38 @@ def cross_kerr_conditional_phase(
 ) -> np.ndarray:
     delays = np.asarray(delays_s, dtype=float)
     return -float(chi_sr_rad_s) * delays
+
+
+def coherent_state_fock_probabilities(alpha: complex, levels: int) -> np.ndarray:
+    n_levels = int(levels)
+    if n_levels < 1:
+        raise ValueError("levels must be positive.")
+    occupations = np.arange(n_levels, dtype=int)
+    mean_photon_number = abs(complex(alpha)) ** 2
+    probabilities = np.exp(-mean_photon_number) * np.power(mean_photon_number, occupations, dtype=float)
+    probabilities = probabilities / np.asarray([factorial(int(n)) for n in occupations], dtype=float)
+    total = float(np.sum(probabilities))
+    if total <= 0.0:
+        raise ValueError("Poisson probabilities did not normalize to a positive value.")
+    return probabilities / total
+
+
+def gaussian_selective_spectrum_response(
+    detunings_rad_s: float | np.ndarray,
+    line_centers_rad_s: float | np.ndarray,
+    weights: float | np.ndarray,
+    sigma_time_s: float,
+    *,
+    scale: float = 1.0,
+) -> np.ndarray:
+    detunings = np.asarray(detunings_rad_s, dtype=float).reshape(-1, 1)
+    centers = np.asarray(line_centers_rad_s, dtype=float).reshape(1, -1)
+    spectral_weights = np.asarray(weights, dtype=float).reshape(-1)
+    if centers.shape[1] != spectral_weights.size:
+        raise ValueError("line_centers_rad_s and weights must have the same length.")
+    sigma_t = float(sigma_time_s)
+    kernel = np.exp(-((detunings - centers) * sigma_t) ** 2)
+    return float(scale) * (kernel @ spectral_weights)
 
 
 def final_expectation(result, key: str) -> float:
@@ -341,6 +374,7 @@ __all__ = [
     "fit_rabi_vs_amplitude",
     "fit_rabi_vs_duration",
     "fit_ramsey_signal",
+    "coherent_state_fock_probabilities",
     "gaussian_quasistatic_echo_excited_population",
     "gaussian_quasistatic_ramsey_excited_population",
     "hz_to_angular",
@@ -355,4 +389,5 @@ __all__ = [
     "resonant_drive_excited_population",
     "t1_relaxation_population",
     "us",
+    "gaussian_selective_spectrum_response",
 ]

@@ -962,6 +962,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1110,6 +1114,34 @@
   
   
     <li class="md-nav__item">
+      <a href="system_identification.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Identification & Randomization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="unitary_synthesis.html" class="md-nav__link">
         
   
@@ -1174,6 +1206,34 @@
     
   
     RL Hybrid Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="floquet_driven_systems.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Floquet Driven Systems
   
 
     
@@ -2277,10 +2337,32 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#31-system-id-domain-randomization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31 — System ID &amp; Domain Randomization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#40-validation-conventions" class="md-nav__link">
     <span class="md-ellipsis">
       
         40 — Validation &amp; Conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#50-floquet-driven-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        50 — Floquet Driven Systems
       
     </span>
   </a>
@@ -2402,7 +2484,7 @@
 
 
 <h1 id="tutorial-curriculum">Tutorial Curriculum<a class="headerlink" href="#tutorial-curriculum" title="Permanent link">&para;</a></h1>
-<p>The <code>cqed_sim</code> tutorial library contains <strong>41 Jupyter notebooks</strong> organized into two complementary tracks:</p>
+<p>The <code>cqed_sim</code> tutorial library contains <strong>47 Jupyter notebooks</strong> organized into two complementary tracks:</p>
 <ol>
 <li><strong>Workflow tutorials</strong> — categorized by topic, starting from a first simulation and building toward optimal control and RL</li>
 <li><strong>Foundational curriculum</strong> — numbered 01–26, covering individual API features and physics concepts in depth</li>
@@ -2415,7 +2497,7 @@
 </div>
 <hr />
 <h2 id="learning-path">Learning Path<a class="headerlink" href="#learning-path" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Getting Started → Core Workflows → Bosonic &amp; Sideband → Advanced Protocols → Validation
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Getting Started → Core Workflows → Bosonic &amp; Sideband → Advanced Protocols → System ID &amp; Randomization → Floquet → Validation
 </span></code></pre></div>
 <p>Each stage builds on the previous one. Within each stage, notebooks are intended to be read in order.</p>
 <hr />
@@ -2446,11 +2528,19 @@
 <tbody>
 <tr>
 <td><code>10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb</code></td>
-<td>Displace the cavity, sweep qubit drive frequency, resolve photon-number peaks</td>
+<td>Calibrated displacement plus selective Gaussian qubit spectroscopy with resolved photon-number peaks</td>
 </tr>
 <tr>
 <td><code>10_core_workflows/02_kerr_free_evolution.ipynb</code></td>
-<td>Coherent-state evolution under self-Kerr: phase-space distortion and collapse/revival</td>
+<td>Coherent-state evolution under self-Kerr in alpha-coordinate Wigner space</td>
+</tr>
+<tr>
+<td><code>10_core_workflows/03_phase_space_coordinates_and_wigner_conventions.ipynb</code></td>
+<td>Compare quadrature and alpha-coordinate Wigner plots and verify the expected sqrt(2) rescaling</td>
+</tr>
+<tr>
+<td><code>10_core_workflows/04_selective_gaussian_number_splitting.ipynb</code></td>
+<td>Interpret resolved peak heights as cavity photon-number weights and compare against coherent-state theory</td>
 </tr>
 </tbody>
 </table>
@@ -2516,6 +2606,25 @@
 </tr>
 </tbody>
 </table>
+<h3 id="31-system-id-domain-randomization">31 — System ID &amp; Domain Randomization<a class="headerlink" href="#31-system-id-domain-randomization" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Notebook</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>31_system_identification_and_domain_randomization/01_calibration_targets_and_fitting.ipynb</code></td>
+<td>Build calibration-target traces and inspect fitted spectroscopy, Rabi, and T1 parameters</td>
+</tr>
+<tr>
+<td><code>31_system_identification_and_domain_randomization/02_evidence_to_randomizer_and_env.ipynb</code></td>
+<td>Convert calibration evidence into domain-randomization priors and inspect environment reset metadata</td>
+</tr>
+</tbody>
+</table>
 <h3 id="40-validation-conventions">40 — Validation &amp; Conventions<a class="headerlink" href="#40-validation-conventions" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2528,6 +2637,25 @@
 <tr>
 <td><code>40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb</code></td>
 <td>Verify Kerr sign convention and rotating-frame consistency</td>
+</tr>
+</tbody>
+</table>
+<h3 id="50-floquet-driven-systems">50 — Floquet Driven Systems<a class="headerlink" href="#50-floquet-driven-systems" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Notebook</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>50_floquet_driven_systems/01_sideband_quasienergy_scan.ipynb</code></td>
+<td>Sweep a periodic sideband drive and track avoided crossings in the dressed quasienergy spectrum</td>
+</tr>
+<tr>
+<td><code>50_floquet_driven_systems/02_branch_tracking_and_multiphoton_resonances.ipynb</code></td>
+<td>Interpret Floquet quasienergies using integer-order multiphoton resonance conditions</td>
 </tr>
 </tbody>
 </table>
@@ -2687,9 +2815,12 @@
 <li><a href="displacement_spectroscopy.html">Displacement &amp; Spectroscopy</a> — cavity displacement and number-splitting spectroscopy</li>
 <li><a href="kerr_free_evolution.html">Kerr Free Evolution</a> — self-Kerr dynamics and phase-space collapse/revival</li>
 <li><a href="sideband_swap.html">Sideband Swap</a> — red-sideband swap protocol</li>
+<li><a href="system_identification.html">System Identification &amp; Randomization</a> — calibration evidence, priors, and robust-control wiring</li>
 <li><a href="unitary_synthesis.html">Unitary Synthesis</a> — gate sequence optimization in logical subspaces</li>
 <li><a href="optimal_control.html">GRAPE Optimal Control</a> — model-backed GRAPE with hardware maps</li>
 <li><a href="rl_hybrid_control.html">RL Hybrid Control</a> — reinforcement learning environment for cQED control</li>
+<li><a href="floquet_driven_systems.html">Floquet Driven Systems</a> — quasienergy sweeps and multiphoton resonance diagnostics</li>
+<li><a href="hardware_context.html">Hardware-Aware Control</a> — DAC, filtering, IQ imbalance, and control-stack realism</li>
 <li><a href="holographic_quantum_algorithms.html">Holographic Quantum Algorithms</a> — holographic channel estimation and MPS-inspired sampling</li>
 </ul>
 <hr />

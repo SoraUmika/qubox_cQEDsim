@@ -22,7 +22,7 @@ def main() -> None:
 
     result = run_kerr_free_evolution(
         times_us_to_seconds(TIMES_US),
-        cavity_state=coherent_state(1.8),
+        cavity_state=coherent_state(2.0),
         parameter_set="phase_evolution",
         n_cav=30,
         wigner_n_points=121,

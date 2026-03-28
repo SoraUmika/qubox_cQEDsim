@@ -1444,6 +1444,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1591,6 +1595,34 @@
   
   
     <li class="md-nav__item">
+      <a href="tutorials/system_identification.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Identification & Randomization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="tutorials/unitary_synthesis.html" class="md-nav__link">
         
   
@@ -1655,6 +1687,34 @@
     
   
     RL Hybrid Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tutorials/floquet_driven_systems.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Floquet Driven Systems
   
 
     
@@ -3573,11 +3633,11 @@ dispersive phase between the two branches is the same.</p>
 = |g\rangle\langle g|\otimes D(\alpha_g) + |e\rangle\langle e|\otimes D(\alpha_e)
 \quad\text{(general form)}\]</div>
 <h4 id="sqr-tensor-ordering">SQR tensor ordering<a class="headerlink" href="#sqr-tensor-ordering" title="Permanent link">&para;</a></h4>
-<p><code>sqr</code> and <code>multi_sqr</code> use <strong>cavity first, qubit second</strong>
-(natural for <span class="arithmatex">\(|n\rangle\langle n|\otimes R_\phi(\theta)\)</span>):</p>
-<div class="arithmatex">\[U_\text{SQR}(\theta,\phi;n) = |n\rangle\langle n|\otimes R_\phi(\theta) + \sum_{m\neq n}|m\rangle\langle m|\otimes I\]</div>
-<p>The legacy <code>sqr_op(thetas, phis)</code> in <code>cqed_sim.core.ideal_gates</code> uses <strong>qubit
-first, cavity second</strong> with a dense array interface only.</p>
+<p><code>sqr</code> and <code>multi_sqr</code> use <strong>qubit first, cavity second</strong>, consistent with all
+other qubit-cavity gates in the package:</p>
+<div class="arithmatex">\[U_\text{SQR}(\theta,\phi;n) = R_\phi(\theta)\otimes|n\rangle\langle n| + I\otimes\sum_{m\neq n}|m\rangle\langle m|\]</div>
+<p>The legacy <code>sqr_op(thetas, phis)</code> in <code>cqed_sim.core.ideal_gates</code> also uses <strong>qubit
+first, cavity second</strong> with a dense array interface.</p>
 <h4 id="jaynescummings-and-blue-sideband-gates">Jaynes–Cummings and blue-sideband gates<a class="headerlink" href="#jaynescummings-and-blue-sideband-gates" title="Permanent link">&para;</a></h4>
 <p>Qubit first, cavity second.
 $<span class="arithmatex">\(H_\text{JC} = g\!\left(\sigma_+\otimes a + \sigma_-\otimes a^\dagger\right), \quad

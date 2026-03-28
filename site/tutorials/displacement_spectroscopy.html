@@ -962,6 +962,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1223,6 +1227,34 @@
   
   
     <li class="md-nav__item">
+      <a href="system_identification.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Identification & Randomization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="unitary_synthesis.html" class="md-nav__link">
         
   
@@ -1287,6 +1319,34 @@
     
   
     RL Hybrid Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="floquet_driven_systems.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Floquet Driven Systems
   
 
     
@@ -2457,6 +2517,7 @@
 <p>The primary guided notebook path for this topic now lives in the workflow tutorial suite:</p>
 <ul>
 <li><code>tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb</code></li>
+<li><code>tutorials/10_core_workflows/04_selective_gaussian_number_splitting.ipynb</code></li>
 </ul>
 <p>The earlier foundations material is still useful for background:</p>
 <ul>
@@ -2467,9 +2528,9 @@
 <p>This page remains as a compact topical summary of the same physics.</p>
 <hr />
 <h2 id="physics-background">Physics Background<a class="headerlink" href="#physics-background" title="Permanent link">&para;</a></h2>
-<p>In a dispersive qubit–cavity system, the qubit transition frequency shifts with cavity photon number:</p>
+<p>In a dispersive qubit-cavity system, the qubit transition frequency shifts with cavity photon number:</p>
 <div class="arithmatex">\[\omega_{ge}(n) = \omega_{ge}(0) + \chi \cdot n\]</div>
-<p>By displacing the cavity into a coherent state and then sweeping a qubit drive frequency, one can resolve individual photon-number peaks in the spectroscopy signal.</p>
+<p>By displacing the cavity into a coherent state and then sweeping a weak selective qubit drive frequency, one can resolve individual photon-number peaks in the spectroscopy signal. In the weak-drive limit, the line amplitudes are proportional to the displaced cavity's photon-number weights.</p>
 <hr />
 <h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -2499,12 +2560,12 @@
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">gate</span> <span class="o">=</span> <span class="n">DisplacementGate</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;displace&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">im</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">disp_pulses</span><span class="p">,</span> <span class="n">disp_ops</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">build_displacement_pulse</span><span class="p">(</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">gate</span><span class="p">,</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="p">{</span><span class="s2">&quot;duration_displacement_s&quot;</span><span class="p">:</span> <span class="mf">200e-9</span><span class="p">},</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="p">{</span><span class="s2">&quot;duration_displacement_s&quot;</span><span class="p">:</span> <span class="mf">120e-9</span><span class="p">},</span>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="step-2-sweep-qubit-drive-frequency">Step 2: Sweep Qubit Drive Frequency<a class="headerlink" href="#step-2-sweep-qubit-drive-frequency" title="Permanent link">&para;</a></h2>
-<p>After displacing, apply a weak qubit probe at different frequencies and measure the qubit excitation probability:</p>
+<p>After displacing, apply a long weak Gaussian qubit probe at different frequencies and measure the qubit excitation probability:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">carrier_for_transition_frequency</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.pulses</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pulse</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.pulses.envelopes</span><span class="w"> </span><span class="kn">import</span> <span class="n">gaussian_envelope</span>
@@ -2513,8 +2574,8 @@
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">reduced_qubit_state</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1"># Sweep detunings around the bare qubit frequency</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">detunings_hz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">15e6</span><span class="p">,</span> <span class="mf">5e6</span><span class="p">,</span> <span class="mi">201</span><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1"># Sweep detunings around the dressed qubit line in the matched rotating frame</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">detunings_hz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">16e6</span><span class="p">,</span> <span class="mf">2e6</span><span class="p">,</span> <span class="mi">181</span><span class="p">)</span>
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">pe_values</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
 </span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="k">for</span> <span class="n">det_hz</span> <span class="ow">in</span> <span class="n">detunings_hz</span><span class="p">:</span>
@@ -2522,16 +2583,16 @@
 </span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>    <span class="n">carrier</span> <span class="o">=</span> <span class="n">carrier_for_transition_frequency</span><span class="p">(</span><span class="n">omega_probe</span><span class="p">)</span>
 </span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
 </span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>    <span class="n">probe_pulse</span> <span class="o">=</span> <span class="n">Pulse</span><span class="p">(</span>
-</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>        <span class="s2">&quot;q&quot;</span><span class="p">,</span> <span class="mf">300e-9</span><span class="p">,</span> <span class="mf">500e-9</span><span class="p">,</span>
-</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>        <span class="n">partial</span><span class="p">(</span><span class="n">gaussian_envelope</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.25</span><span class="p">),</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>        <span class="s2">&quot;q&quot;</span><span class="p">,</span> <span class="mf">160e-9</span><span class="p">,</span> <span class="mf">2.5e-6</span><span class="p">,</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>        <span class="n">partial</span><span class="p">(</span><span class="n">gaussian_envelope</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.18</span><span class="p">),</span>
 </span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>        <span class="n">carrier</span><span class="o">=</span><span class="n">carrier</span><span class="p">,</span>
-</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>        <span class="n">amp</span><span class="o">=</span><span class="mf">0.01</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>        <span class="n">amp</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mf">0.04e6</span><span class="p">,</span>
 </span><span id="__span-2-22"><a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>    <span class="p">)</span>
 </span><span id="__span-2-23"><a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
 </span><span id="__span-2-24"><a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>    <span class="n">all_pulses</span> <span class="o">=</span> <span class="n">disp_pulses</span> <span class="o">+</span> <span class="p">[</span><span class="n">probe_pulse</span><span class="p">]</span>
 </span><span id="__span-2-25"><a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>    <span class="n">drive_ops</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">disp_ops</span><span class="p">,</span> <span class="s2">&quot;q&quot;</span><span class="p">:</span> <span class="s2">&quot;qubit&quot;</span><span class="p">}</span>
 </span><span id="__span-2-26"><a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>
-</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    <span class="n">compiled</span> <span class="o">=</span> <span class="n">SequenceCompiler</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="mf">2e-9</span><span class="p">)</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">all_pulses</span><span class="p">,</span> <span class="n">t_end</span><span class="o">=</span><span class="mf">850e-9</span><span class="p">)</span>
+</span><span id="__span-2-27"><a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>    <span class="n">compiled</span> <span class="o">=</span> <span class="n">SequenceCompiler</span><span class="p">(</span><span class="n">dt</span><span class="o">=</span><span class="mf">2e-9</span><span class="p">)</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">all_pulses</span><span class="p">,</span> <span class="n">t_end</span><span class="o">=</span><span class="mf">2.7e-6</span><span class="p">)</span>
 </span><span id="__span-2-28"><a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>
 </span><span id="__span-2-29"><a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">simulate_sequence</span><span class="p">(</span>
 </span><span id="__span-2-30"><a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>        <span class="n">model</span><span class="p">,</span> <span class="n">compiled</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">basis_state</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">drive_ops</span><span class="p">,</span>
@@ -2544,7 +2605,7 @@
 </span></code></pre></div>
 <hr />
 <h2 id="step-3-analyze-the-spectrum">Step 3: Analyze the Spectrum<a class="headerlink" href="#step-3-analyze-the-spectrum" title="Permanent link">&para;</a></h2>
-<p>The spectrum shows peaks at each photon-number manifold, separated by χ:</p>
+<p>The spectrum shows peaks at each photon-number manifold, separated by <span class="arithmatex">\(\chi\)</span>:</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
@@ -2564,11 +2625,15 @@
 <li><span class="arithmatex">\(\delta = 2\chi / (2\pi)\)</span> (n=2 manifold)</li>
 <li>etc.</li>
 </ul>
-<p>with amplitudes following the Poisson distribution <span class="arithmatex">\(P(n) = e^{-|\alpha|^2} |\alpha|^{2n} / n!\)</span>.</p>
+<p>with amplitudes that closely follow the displaced-state photon-number weights. For an ideal coherent state this is the Poisson distribution</p>
+<div class="arithmatex">\[
+P(n) = e^{-|\alpha|^2} \frac{|\alpha|^{2n}}{n!}.
+\]</div>
+<p>The workflow notebook overlays the pulse-level spectrum with a weak-drive Gaussian theory curve and compares the normalized resolved peak heights against the simulated cavity Fock weights.</p>
 <hr />
 <h2 id="related-repo-assets">Related Repo Assets<a class="headerlink" href="#related-repo-assets" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Guided notebooks: <code>tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb</code>, <code>tutorials/03_cavity_displacement_basics.ipynb</code>, <code>tutorials/07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb</code></li>
+<li>Guided notebooks: <code>tutorials/10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb</code>, <code>tutorials/10_core_workflows/04_selective_gaussian_number_splitting.ipynb</code>, <code>tutorials/03_cavity_displacement_basics.ipynb</code>, <code>tutorials/07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb</code></li>
 <li>Standalone script: <code>examples/displacement_qubit_spectroscopy.py</code></li>
 </ul>
 <p>Use the numbered notebooks when you want the full teaching flow and the standalone script when you want one compact executable example.</p>

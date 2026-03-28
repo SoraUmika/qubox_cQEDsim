@@ -76,6 +76,27 @@ def test_coherent_state_evolution_shows_nonlinear_distortion():
     assert fidelity < 0.995
 
 
+def test_default_wigner_snapshots_use_alpha_coordinates():
+    result = run_kerr_free_evolution(
+        times_us_to_seconds([0.0]),
+        cavity_state=coherent_state(2.0),
+        parameter_set="phase_evolution",
+        n_cav=30,
+        wigner_times_s=times_us_to_seconds([0.0]),
+        wigner_n_points=91,
+        wigner_extent=4.6,
+    )
+    snapshot = result.snapshots[0]
+    assert result.metadata["wigner_coordinate"] == "alpha"
+    assert snapshot.wigner is not None
+
+    peak_index = np.unravel_index(np.argmax(snapshot.wigner["w"]), snapshot.wigner["w"].shape)
+    peak_x = float(snapshot.wigner["xvec"][peak_index[1]])
+    peak_y = float(snapshot.wigner["yvec"][peak_index[0]])
+    assert np.isclose(peak_x, 2.0, atol=0.15)
+    assert np.isclose(peak_y, 0.0, atol=0.15)
+
+
 def test_value_2_model_uses_alternate_coefficients():
     model = build_kerr_free_evolution_model("value_2", n_cav=10)
     phase = resolve_kerr_parameter_set("phase_evolution")

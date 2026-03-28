@@ -1,6 +1,6 @@
 ---
 name: cqed-refactor
-description: "Refactor cqed_sim modules or repo-side workflow tooling while preserving project conventions. Use when cleaning up modules, reorganizing APIs, renaming symbols, removing dead code, or doing behavior-preserving maintenance that may require inconsistency reports, tests, API_REFERENCE.md updates, website documentation sync, examples, or physics documentation updates."
+description: "Refactor cqed_sim modules or repo-side workflow tooling while preserving project conventions. Use when cleaning up modules, reorganizing APIs, renaming symbols, removing dead code, or doing behavior-preserving maintenance that may require inconsistency reports, tests, API_REFERENCE.md updates, website documentation sync, generated site rebuilds, examples, or physics documentation updates."
 argument-hint: "Describe the refactor target, affected modules, and whether public APIs or physics meaning change."
 ---
 
@@ -45,6 +45,7 @@ Use this skill for repo-wide maintenance work where the main risk is incomplete 
    - Avoid adding duplicate abstractions or temporary compatibility layers unless the task explicitly calls for them.
 5. Synchronize affected surfaces.
    - Public API change: update `API_REFERENCE.md` and the matching pages under `documentations/`.
+   - Public documentation change: rebuild and update the generated `site/` output so the official webpage matches the source docs.
    - Physics or convention change: update `physics_and_conventions/physics_conventions_report.tex` and rebuild the PDF.
    - Major reusable feature area: add or update the local module `README.md`.
 6. Add validation.
@@ -62,5 +63,6 @@ Use this skill for repo-wide maintenance work where the main risk is incomplete 
 - Tests were added or updated under `tests/`.
 - `API_REFERENCE.md` was updated if public behavior changed.
 - `documentations/` was updated if user-facing or developer-facing docs changed.
+- `site/` was regenerated when public docs or tutorials changed.
 - The physics report was updated and rebuilt if conventions changed.
 - Local module `README.md` files were updated for any major feature area that changed.

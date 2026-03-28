@@ -94,9 +94,11 @@ nav:
       - Displacement & Spectroscopy: tutorials/displacement_spectroscopy.md
       - Kerr Free Evolution: tutorials/kerr_free_evolution.md
       - Sideband Swap: tutorials/sideband_swap.md
+      - System Identification & Randomization: tutorials/system_identification.md
       - Unitary Synthesis: tutorials/unitary_synthesis.md
       - GRAPE Optimal Control: tutorials/optimal_control.md
       - RL Hybrid Control: tutorials/rl_hybrid_control.md
+      - Floquet Driven Systems: tutorials/floquet_driven_systems.md
       - Hardware-Aware Control: tutorials/hardware_context.md
       - Holographic Quantum Algorithms: tutorials/holographic_quantum_algorithms.md
 

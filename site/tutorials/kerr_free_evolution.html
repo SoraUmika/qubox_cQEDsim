@@ -962,6 +962,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1201,6 +1205,34 @@
   
   
     <li class="md-nav__item">
+      <a href="system_identification.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Identification & Randomization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="unitary_synthesis.html" class="md-nav__link">
         
   
@@ -1265,6 +1297,34 @@
     
   
     RL Hybrid Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="floquet_driven_systems.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Floquet Driven Systems
   
 
     
@@ -2411,6 +2471,7 @@
 
 <h1 id="tutorial-kerr-free-evolution">Tutorial: Kerr Free Evolution<a class="headerlink" href="#tutorial-kerr-free-evolution" title="Permanent link">&para;</a></h1>
 <p>The primary guided workflow notebook for this topic is now <code>tutorials/10_core_workflows/02_kerr_free_evolution.ipynb</code>.</p>
+<p>The coordinate-convention companion notebook is <code>tutorials/10_core_workflows/03_phase_space_coordinates_and_wigner_conventions.ipynb</code>.</p>
 <p>The earlier foundations notebook <code>tutorials/14_kerr_free_evolution.ipynb</code> still remains useful as a broader curriculum stop.</p>
 <p>This page keeps a compact topical summary and points to the related standalone scripts.</p>
 <hr />
@@ -2418,6 +2479,7 @@
 <p>Use the guided notebook and the related repo-side scripts:</p>
 <ul>
 <li><code>tutorials/10_core_workflows/02_kerr_free_evolution.ipynb</code></li>
+<li><code>tutorials/10_core_workflows/03_phase_space_coordinates_and_wigner_conventions.ipynb</code></li>
 <li><code>tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb</code></li>
 <li><code>examples/workflows/kerr_free_evolution.py</code></li>
 <li><code>examples/kerr_free_evolution.py</code></li>
@@ -2454,15 +2516,16 @@
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">)</span>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="n">rho_c</span> <span class="o">=</span> <span class="n">reduced_cavity_state</span><span class="p">(</span><span class="n">initial_state</span><span class="p">)</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">xvec</span><span class="p">,</span> <span class="n">yvec</span><span class="p">,</span> <span class="n">wigner</span> <span class="o">=</span> <span class="n">cavity_wigner</span><span class="p">(</span><span class="n">rho_c</span><span class="p">)</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">xvec</span><span class="p">,</span> <span class="n">yvec</span><span class="p">,</span> <span class="n">wigner</span> <span class="o">=</span> <span class="n">cavity_wigner</span><span class="p">(</span><span class="n">rho_c</span><span class="p">,</span> <span class="n">coordinate</span><span class="o">=</span><span class="s2">&quot;alpha&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="wigner-function-snapshots">Wigner Function Snapshots<a class="headerlink" href="#wigner-function-snapshots" title="Permanent link">&para;</a></h2>
 <p>Evolving a coherent state <span class="arithmatex">\(|\alpha=2\rangle\)</span> under the Kerr Hamiltonian <span class="arithmatex">\(H_K = \frac{K}{2} a^{\dagger 2} a^2\)</span> produces characteristic phase-space deformations at fractions of the Kerr revival period <span class="arithmatex">\(T_K = 2\pi / |K|\)</span>:</p>
 <p><img alt="Kerr Free Evolution — Wigner Snapshots" src="../assets/images/tutorials/kerr_free_evolution_wigner.png" /></p>
-<p>At <span class="arithmatex">\(t = 0\)</span> the state is a coherent blob; by <span class="arithmatex">\(T_K/4\)</span> it has stretched into a crescent; at <span class="arithmatex">\(T_K/2\)</span> it forms a Schrödinger-cat-like superposition; and at <span class="arithmatex">\(3T_K/4\)</span> the crescent appears on the opposite side.</p>
+<p>At <span class="arithmatex">\(t = 0\)</span> the state is a coherent blob centered near <span class="arithmatex">\((\mathrm{Re}(\alpha), \mathrm{Im}(\alpha)) = (2, 0)\)</span> because the plot is drawn in coherent-state <code>alpha</code> coordinates. By <span class="arithmatex">\(T_K/4\)</span> it has stretched into a crescent; at <span class="arithmatex">\(T_K/2\)</span> it forms a Schrödinger-cat-like superposition; and at <span class="arithmatex">\(3T_K/4\)</span> the crescent appears on the opposite side.</p>
+<p>If you instead call <code>cavity_wigner(..., coordinate="quadrature")</code>, the same initial coherent state will appear near <span class="arithmatex">\(x = \sqrt{2}\,\alpha\)</span> on the horizontal axis. The companion coordinate-convention notebook walks through that rescaling explicitly.</p>
 <hr />
-<p>For the full guided walkthrough, use <code>tutorials/10_core_workflows/02_kerr_free_evolution.ipynb</code>. For the sign-check companion, use <code>tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb</code>. For a compact executable script, use the example workflow module or standalone script.</p>
+<p>For the full guided walkthrough, use <code>tutorials/10_core_workflows/02_kerr_free_evolution.ipynb</code>. For the coordinate-convention companion, use <code>tutorials/10_core_workflows/03_phase_space_coordinates_and_wigner_conventions.ipynb</code>. For the sign-check companion, use <code>tutorials/40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb</code>. For a compact executable script, use the example workflow module or standalone script.</p>
 
 
 

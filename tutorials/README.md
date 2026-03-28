@@ -12,12 +12,18 @@ If you want the real-world workflow path first, use this order:
 1. `00_getting_started/01_protocol_style_simulation.ipynb`
 2. `10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb`
 3. `10_core_workflows/02_kerr_free_evolution.ipynb`
-4. `20_bosonic_and_sideband/01_sideband_swap.ipynb`
-5. `20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb`
-6. `30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
-7. `30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
-8. `30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
-9. `40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
+4. `10_core_workflows/03_phase_space_coordinates_and_wigner_conventions.ipynb`
+5. `10_core_workflows/04_selective_gaussian_number_splitting.ipynb`
+6. `20_bosonic_and_sideband/01_sideband_swap.ipynb`
+7. `20_bosonic_and_sideband/03_sequential_sideband_reset.ipynb`
+8. `30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
+9. `30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`
+10. `30_advanced_protocols/05_rl_hybrid_control_environment.ipynb`
+11. `31_system_identification_and_domain_randomization/01_calibration_targets_and_fitting.ipynb`
+12. `31_system_identification_and_domain_randomization/02_evidence_to_randomizer_and_env.ipynb`
+13. `50_floquet_driven_systems/01_sideband_quasienergy_scan.ipynb`
+14. `50_floquet_driven_systems/02_branch_tracking_and_multiphoton_resonances.ipynb`
+15. `40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb`
 
 If you want the older foundations-first path, start with:
 
@@ -36,9 +42,13 @@ If you want the older foundations-first path, start with:
 ### `10_core_workflows`
 
 - `01_displacement_then_qubit_spectroscopy.ipynb`
-  - Coherent displacement followed by qubit spectroscopy and number splitting.
+  - Calibrated displacement followed by selective Gaussian qubit spectroscopy and resolved number splitting.
 - `02_kerr_free_evolution.ipynb`
-  - Storage self-Kerr phase winding and Wigner-function distortion.
+  - Storage self-Kerr phase winding and alpha-coordinate Wigner-function distortion.
+- `03_phase_space_coordinates_and_wigner_conventions.ipynb`
+  - Compare quadrature and alpha-coordinate Wigner plots for the same coherent state.
+- `04_selective_gaussian_number_splitting.ipynb`
+  - Diagnose when resolved spectroscopy peak heights recover cavity photon-number weights.
 
 ### `20_bosonic_and_sideband`
 
@@ -66,10 +76,24 @@ If you want the older foundations-first path, start with:
 - `05_rl_hybrid_control_environment.ipynb`
   - Hybrid bosonic-ancilla RL environment construction, measurement-like observations, diagnostics, and domain-randomized evaluation.
 
+### `31_system_identification_and_domain_randomization`
+
+- `01_calibration_targets_and_fitting.ipynb`
+  - Generate spectroscopy, Rabi, and T1 calibration targets and inspect the fitted parameter summaries they produce.
+- `02_evidence_to_randomizer_and_env.ipynb`
+  - Convert calibration evidence into domain-randomization priors and wire them into a hybrid control environment.
+
 ### `40_validation_and_conventions`
 
 - `01_kerr_sign_and_frame_checks.ipynb`
   - Convention-validation notebook for Kerr sign and frame interpretation.
+
+### `50_floquet_driven_systems`
+
+- `01_sideband_quasienergy_scan.ipynb`
+  - Sweep a periodic sideband drive and track the resulting quasienergy branches across detuning.
+- `02_branch_tracking_and_multiphoton_resonances.ipynb`
+  - Relate dressed Floquet structure to integer-order multiphoton resonance conditions.
 
 ## Migration Notes
 

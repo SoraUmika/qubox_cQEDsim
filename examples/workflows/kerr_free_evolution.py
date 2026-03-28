@@ -212,6 +212,7 @@ def _snapshot_from_state(
     include_wigner: bool,
     wigner_n_points: int,
     wigner_extent: float,
+    wigner_coordinate: str,
 ) -> KerrEvolutionSnapshot:
     cavity_state = reduced_cavity_state(state)
     dim = int(cavity_state.dims[0][0])
@@ -221,7 +222,12 @@ def _snapshot_from_state(
     cavity_photon_number = float(np.real((cavity_state * adag * a).tr()))
     wigner = None
     if include_wigner:
-        xvec, yvec, values = cavity_wigner(cavity_state, n_points=int(wigner_n_points), extent=float(wigner_extent))
+        xvec, yvec, values = cavity_wigner(
+            cavity_state,
+            n_points=int(wigner_n_points),
+            extent=float(wigner_extent),
+            coordinate=str(wigner_coordinate),
+        )
         wigner = {"xvec": xvec, "yvec": yvec, "w": values}
     return KerrEvolutionSnapshot(
         time_s=float(time_s),
@@ -247,6 +253,7 @@ def run_kerr_free_evolution(
     wigner_times_s: Sequence[float] | None = None,
     wigner_n_points: int = 81,
     wigner_extent: float = 5.0,
+    wigner_coordinate: str = "alpha",
     max_step: float | None = None,
 ) -> KerrFreeEvolutionResult:
     if state_prep is not None and (cavity_state is not None or qubit is not None):
@@ -274,6 +281,7 @@ def run_kerr_free_evolution(
                 include_wigner=bool(include_wigner),
                 wigner_n_points=int(wigner_n_points),
                 wigner_extent=float(wigner_extent),
+                wigner_coordinate=str(wigner_coordinate),
             )
         )
 
@@ -287,6 +295,7 @@ def run_kerr_free_evolution(
         metadata={
             "use_rotating_frame": bool(use_rotating_frame),
             "omega_ro_hz": float(preset.omega_ro_hz),
+            "wigner_coordinate": str(wigner_coordinate),
         },
     )
 
@@ -352,6 +361,7 @@ def plot_kerr_wigner_snapshots(
     *,
     max_cols: int = 3,
     show_colorbar: bool = True,
+    coordinate: str | None = None,
 ):
     try:
         import matplotlib.pyplot as plt
@@ -363,43 +373,65 @@ def plot_kerr_wigner_snapshots(
     if not panels:
         raise ValueError("Result does not contain Wigner snapshots.")
 
+    target_coordinate = str(coordinate or result.metadata.get("wigner_coordinate", "alpha"))
+    stored_coordinate = str(result.metadata.get("wigner_coordinate", "alpha"))
+    x_label = r"Re($\alpha$)" if target_coordinate == "alpha" else "x"
+    y_label = r"Im($\alpha$)" if target_coordinate == "alpha" else "p"
+
     n_cols = max(1, min(int(max_cols), len(panels)))
     n_rows = int(np.ceil(len(panels) / n_cols))
     fig, axes = plt.subplots(
         n_rows,
         n_cols,
-        figsize=(3.6 * n_cols, 3.5 * n_rows),
+        figsize=(4.0 * n_cols, 3.9 * n_rows),
         squeeze=False,
-        constrained_layout=True,
-        gridspec_kw={"wspace": 0.08, "hspace": 0.16},
+        constrained_layout=False,
+        gridspec_kw={"wspace": 0.24, "hspace": 0.28},
     )
-    all_w = np.concatenate([panel.wigner["w"].ravel() for panel in panels if panel.wigner is not None])
+    rendered_panels: list[tuple[np.ndarray, np.ndarray, np.ndarray, float]] = []
+    for panel in panels:
+        assert panel.wigner is not None
+        if target_coordinate == stored_coordinate:
+            rendered_panels.append((panel.wigner["xvec"], panel.wigner["yvec"], panel.wigner["w"], panel.time_us))
+            continue
+        xvec = np.asarray(panel.wigner["xvec"], dtype=float)
+        yvec = np.asarray(panel.wigner["yvec"], dtype=float)
+        _, _, values = cavity_wigner(panel.cavity_state, xvec=xvec, yvec=yvec, coordinate=target_coordinate)
+        rendered_panels.append((xvec, yvec, values, panel.time_us))
+
+    all_w = np.concatenate([values.ravel() for _, _, values, _ in rendered_panels])
     vmax = float(np.max(np.abs(all_w)))
     norm = TwoSlopeNorm(vcenter=0.0, vmin=-vmax, vmax=vmax) if vmax > 0.0 else None
 
     image = None
-    for axis, panel in zip(axes.ravel(), panels, strict=True):
-        assert panel.wigner is not None
-        xvec = panel.wigner["xvec"]
-        yvec = panel.wigner["yvec"]
+    for axis, (xvec, yvec, values, time_us) in zip(axes.ravel(), rendered_panels, strict=True):
         image = axis.imshow(
-            panel.wigner["w"],
+            values,
             origin="lower",
             extent=[xvec[0], xvec[-1], yvec[0], yvec[-1]],
             cmap="RdBu_r",
             norm=norm,
             aspect="equal",
         )
-        axis.set_title(f"t = {panel.time_us:g} us")
-        axis.set_xlabel("x")
-        axis.set_ylabel("p")
+        axis.set_title(f"t = {time_us:g} us")
+        axis.set_xlabel(x_label)
+        axis.set_ylabel(y_label)
 
     for axis in axes.ravel()[len(panels):]:
         axis.axis("off")
 
     if image is not None and show_colorbar:
-        fig.colorbar(image, ax=axes.ravel().tolist(), shrink=0.86, label="W(x, p)")
-    fig.suptitle(f"Kerr free evolution: {result.parameter_set.name}", y=0.98)
+        fig.colorbar(
+            image,
+            ax=axes.ravel().tolist(),
+            shrink=0.88,
+            fraction=0.028,
+            pad=0.02,
+            aspect=30,
+            label=r"$W(\alpha)$" if target_coordinate == "alpha" else "W(x, p)",
+        )
+    fig.subplots_adjust(top=0.82 if show_colorbar else 0.86, right=0.92 if show_colorbar else 0.97)
+    fig.suptitle(f"Kerr free evolution: {result.parameter_set.name}", y=0.96)
     return fig
 
 

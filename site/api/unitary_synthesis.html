@@ -960,6 +960,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1107,6 +1111,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../tutorials/system_identification.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Identification & Randomization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../tutorials/unitary_synthesis.html" class="md-nav__link">
         
   
@@ -1171,6 +1203,34 @@
     
   
     RL Hybrid Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/floquet_driven_systems.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Floquet Driven Systems
   
 
     
@@ -1802,6 +1862,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#user-defined-gate-factories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User-Defined Gate Factories
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gate-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gate Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gate-order-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gate-Order Search
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2410,6 +2503,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#user-defined-gate-factories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User-Defined Gate Factories
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gate-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gate Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gate-order-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gate-Order Search
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2654,11 +2780,6 @@
 <td>Number-selective contiguous cavity phase gate</td>
 </tr>
 <tr>
-<td><code>ConditionalPhaseSQR</code></td>
-<td><code>phases_n: list[float]</code>, <code>drift_model: DriftPhaseModel</code></td>
-<td>Conditional phase via free-evolution SQR block</td>
-</tr>
-<tr>
 <td><code>FreeEvolveCondPhase</code></td>
 <td><code>drift_model: DriftPhaseModel</code></td>
 <td>Free-evolution conditional phase with no explicit drive pulse</td>
@@ -2789,6 +2910,102 @@
 </ul>
 <p><code>logical_block_phase_diagnostics(...)</code> extracts gauge-fixed block-overlap phases from a restricted operator, reports the best-fit ideal cavity-only block-phase correction, and returns the residual RMS after an optional applied correction.</p>
 <p>Phase handling now supports <code>none</code>, <code>global</code>, <code>diagonal</code>, and <code>block</code> gauges.</p>
+<hr />
+<h2 id="user-defined-gate-factories">User-Defined Gate Factories<a class="headerlink" href="#user-defined-gate-factories" title="Permanent link">&para;</a></h2>
+<p>Three factory helpers create <code>PrimitiveGate</code> instances from user-supplied
+objects, making it easy to inject custom gates into the synthesis optimizer.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">make_gate_from_matrix</span><span class="p">(</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>    <span class="n">name</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">100e-9</span><span class="p">,</span> <span class="n">optimize_time</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>    <span class="n">time_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PrimitiveGate</span>
+</span></code></pre></div>
+<p>Create a gate from a fixed unitary matrix.  No parameters are exposed for
+optimization.  Set <code>optimize_time=True</code> to let the optimizer vary the duration.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">make_gate_from_callable</span><span class="p">(</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>    <span class="n">name</span><span class="p">,</span> <span class="n">unitary_fn</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameter_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>    <span class="n">duration</span><span class="o">=</span><span class="mf">100e-9</span><span class="p">,</span> <span class="n">optimize_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">time_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PrimitiveGate</span>
+</span></code></pre></div>
+<p>Create a gate whose unitary is computed by <code>fn(parameters, model) -&gt; array</code>.
+Parameters are automatically included in the optimizer search space.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">make_gate_from_waveform</span><span class="p">(</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>    <span class="n">name</span><span class="p">,</span> <span class="n">waveform_fn</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parameter_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>    <span class="n">duration</span><span class="o">=</span><span class="mf">100e-9</span><span class="p">,</span> <span class="n">optimize_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">time_bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PrimitiveGate</span>
+</span></code></pre></div>
+<p>Create a gate backed by a pulse waveform generator.  Returns <code>list[Pulse]</code>,
+<code>(pulses, drive_ops)</code>, or <code>{"pulses": ..., "drive_ops": ...}</code>.  Waveform
+primitives go through the full runtime stack.</p>
+<hr />
+<h2 id="gate-registry">Gate Registry<a class="headerlink" href="#gate-registry" title="Permanent link">&para;</a></h2>
+<p>The gate registry maps custom gate names to factory callables so they can be
+referenced by name in <code>UnitarySynthesizer(gateset=[...])</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">GateRegistry</span><span class="p">:</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span> <span class="o">...</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">100e-9</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="o">...</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_registered</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span> <span class="o">...</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">registered_names</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
+</span></code></pre></div>
+<p>A pre-constructed singleton <code>gate_registry</code> is exported from
+<code>cqed_sim.unitary_synthesis</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="n">gate_registry</span><span class="p">,</span> <span class="n">make_gate_from_callable</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">gate_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    <span class="s2">&quot;MyCZ&quot;</span><span class="p">,</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>    <span class="k">lambda</span> <span class="n">name</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">make_gate_from_callable</span><span class="p">(</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>        <span class="n">name</span><span class="p">,</span> <span class="n">my_cz_fn</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{},</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>    <span class="p">),</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="p">)</span>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">UnitarySynthesizer</span><span class="p">(</span><span class="n">gateset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;QubitRotation&quot;</span><span class="p">,</span> <span class="s2">&quot;MyCZ&quot;</span><span class="p">],</span> <span class="o">...</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="gate-order-search">Gate-Order Search<a class="headerlink" href="#gate-order-search" title="Permanent link">&para;</a></h2>
+<p><code>GateOrderOptimizer</code> wraps <code>UnitarySynthesizer</code> and searches over gate
+orderings drawn from a pool.</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">GateOrderConfig</span><span class="p">:</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a>    <span class="n">max_sequence_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a>    <span class="n">min_sequence_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a>    <span class="n">allow_repetitions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="__span-25-6"><a id="__codelineno-25-6" name="__codelineno-25-6" href="#__codelineno-25-6"></a>    <span class="n">search_strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;random&quot;</span>   <span class="c1"># &quot;random&quot; | &quot;exhaustive&quot; | &quot;greedy&quot;</span>
+</span><span id="__span-25-7"><a id="__codelineno-25-7" name="__codelineno-25-7" href="#__codelineno-25-7"></a>    <span class="n">n_random_trials</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span>
+</span><span id="__span-25-8"><a id="__codelineno-25-8" name="__codelineno-25-8" href="#__codelineno-25-8"></a>    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="__span-25-9"><a id="__codelineno-25-9" name="__codelineno-25-9" href="#__codelineno-25-9"></a>    <span class="n">early_stop_infidelity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">GateOrderOptimizer</span><span class="p">:</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gate_pool</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">order_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">synthesizer_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span> <span class="o">...</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GateOrderSearchResult</span><span class="p">:</span> <span class="o">...</span>
+</span></code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="nd">@dataclass</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">GateOrderSearchResult</span><span class="p">:</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>    <span class="n">best_result</span><span class="p">:</span> <span class="n">SynthesisResult</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>    <span class="n">best_ordering</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">GateBase</span><span class="p">]</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>    <span class="n">all_results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">GateBase</span><span class="p">],</span> <span class="n">SynthesisResult</span><span class="p">]]</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>    <span class="n">n_orderings_tried</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>    <span class="n">order_config</span><span class="p">:</span> <span class="n">GateOrderConfig</span>
+</span></code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Strategy</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"random"</code></td>
+<td>Sample <em>n_random_trials</em> random orderings (default, scalable)</td>
+</tr>
+<tr>
+<td><code>"exhaustive"</code></td>
+<td>Enumerate all permutations up to <em>max_sequence_length</em></td>
+</tr>
+<tr>
+<td><code>"greedy"</code></td>
+<td>Iteratively append the gate that most improves the objective</td>
+</tr>
+</tbody>
+</table>
 
 
 

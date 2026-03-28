@@ -51,80 +51,13 @@ def plot_displacement_spectroscopy():
     """Number-splitting spectrum: P(e) vs qubit-drive detuning."""
     _apply_style()
     print("[1/4] Displacement spectroscopy …")
-    from functools import partial
-
-    from cqed_sim.core import (
-        DispersiveTransmonCavityModel,
-        FrameSpec,
-        carrier_for_transition_frequency,
-    )
-    from cqed_sim.io import DisplacementGate
-    from cqed_sim.pulses import Pulse, build_displacement_pulse
-    from cqed_sim.pulses.envelopes import gaussian_envelope
-    from cqed_sim.sequence import SequenceCompiler
-    from cqed_sim.sim import SimulationConfig, simulate_sequence, reduced_qubit_state
-
-    model = DispersiveTransmonCavityModel(
-        omega_c=2 * np.pi * 5.0e9,
-        omega_q=2 * np.pi * 6.0e9,
-        alpha=2 * np.pi * (-200e6),
-        chi=2 * np.pi * (-2.84e6),
-        kerr=2 * np.pi * (-2e3),
-        n_cav=15,
-        n_tr=2,
-    )
-    frame = FrameSpec(
-        omega_c_frame=model.omega_c,
-        omega_q_frame=model.omega_q,
+    from examples.displacement_qubit_spectroscopy import (
+        run_displacement_then_qubit_spectroscopy,
+        save_artifacts,
     )
 
-    gate = DisplacementGate(index=0, name="displace", re=2.0, im=0.0)
-    disp_pulses, disp_ops, _ = build_displacement_pulse(
-        gate, {"duration_displacement_s": 200e-9}
-    )
-
-    detunings_hz = np.linspace(-15e6, 5e6, 201)
-    pe_values = []
-
-    for det_hz in detunings_hz:
-        omega_probe = 2 * np.pi * det_hz
-        carrier = carrier_for_transition_frequency(omega_probe)
-        probe_pulse = Pulse(
-            "q", 300e-9, 500e-9,
-            partial(gaussian_envelope, sigma=0.25),
-            carrier=carrier,
-            amp=0.01 * np.pi,
-        )
-        all_pulses = disp_pulses + [probe_pulse]
-        drive_ops = {**disp_ops, "q": "qubit"}
-        compiled = SequenceCompiler(dt=2e-9).compile(all_pulses, t_end=850e-9)
-        result = simulate_sequence(
-            model, compiled, model.basis_state(0, 0), drive_ops,
-            config=SimulationConfig(frame=frame),
-        )
-        rho_q = reduced_qubit_state(result.final_state)
-        pe_values.append(float(np.real(rho_q[1, 1])))
-
-    pe_values = np.array(pe_values)
-
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(detunings_hz / 1e6, pe_values, color="#1f77b4", linewidth=1.5)
-    ax.set_xlabel("Qubit drive detuning (MHz)")
-    ax.set_ylabel("P(e)")
-    ax.set_title("Displacement + Qubit Spectroscopy  ($|\\alpha|=2$)")
-
-    # Mark expected peak locations: χ·n for n = 0..5
-    chi_hz = -2.84e6
-    for n in range(6):
-        detuning = chi_hz * n
-        if detunings_hz[0] <= detuning <= detunings_hz[-1]:
-            ax.axvline(detuning / 1e6, color="gray", ls="--", alpha=0.5, lw=0.8)
-            ax.text(detuning / 1e6, ax.get_ylim()[1] * 0.9, f"$n={n}$",
-                    ha="center", fontsize=9, color="gray")
-
-    fig.tight_layout()
-    fig.savefig(OUT_DIR / "displacement_spectroscopy.png")
-    plt.close(fig)
+    result = run_displacement_then_qubit_spectroscopy()
+    save_artifacts(result)
     print("    ✓ displacement_spectroscopy.png")
 
 
@@ -135,64 +68,35 @@ def plot_kerr_free_evolution():
     """Wigner-function snapshots during Kerr-only free evolution."""
     _apply_style()
     print("[2/4] Kerr free evolution Wigner snapshots …")
-    from cqed_sim.core import (
-        DispersiveTransmonCavityModel,
-        FrameSpec,
-        StatePreparationSpec,
-        coherent_state,
-        prepare_state,
+    from cqed_sim.core import coherent_state
+    from examples.workflows.kerr_free_evolution import (
+        plot_kerr_wigner_snapshots,
+        run_kerr_free_evolution,
     )
-    from cqed_sim.sim import reduced_cavity_state
-    import qutip as qt
 
-    model = DispersiveTransmonCavityModel(
-        omega_c=2 * np.pi * 5.0e9,
-        omega_q=2 * np.pi * 6.0e9,
-        alpha=2 * np.pi * (-200e6),
-        chi=2 * np.pi * (-2.84e6),
-        kerr=2 * np.pi * (-2e3),
+    kerr_hz = -2.0e3
+    t_kerr_s = 1.0 / abs(kerr_hz)
+    snapshot_times_s = [0.0, 0.25 * t_kerr_s, 0.5 * t_kerr_s, 0.75 * t_kerr_s]
+    result = run_kerr_free_evolution(
+        snapshot_times_s,
+        cavity_state=coherent_state(2.0),
+        parameter_set="phase_evolution",
         n_cav=25,
-        n_tr=2,
+        wigner_times_s=snapshot_times_s,
+        wigner_n_points=121,
+        wigner_extent=4.6,
+        wigner_coordinate="alpha",
     )
-    frame = FrameSpec(
-        omega_c_frame=model.omega_c,
-        omega_q_frame=model.omega_q,
+    fig = plot_kerr_wigner_snapshots(result, max_cols=4, show_colorbar=True, coordinate="alpha")
+    symbolic_labels = [r"$t = 0$", r"$t = T_K/4$", r"$t = T_K/2$", r"$t = 3T_K/4$"]
+    for axis, label in zip(fig.axes[:4], symbolic_labels, strict=True):
+        axis.set_title(label)
+    fig.suptitle(
+        r"Kerr Free Evolution -- Wigner Function Snapshots  ($|\alpha|=2$, $K/2\pi=-2$ kHz)",
+        fontsize=13,
+        y=0.96,
     )
-
-    # Kerr Hamiltonian: H_kerr = (K/2) a†² a²  in the interaction picture
-    K = model.kerr
-    a = qt.destroy(model.n_cav)
-    H_kerr = 0.5 * K * (a.dag() ** 2) * (a ** 2)
-
-    # Initial cavity coherent state |α=2⟩
-    alpha = 2.0
-    psi0_cav = qt.coherent(model.n_cav, alpha)
-
-    # Evolve at a few snapshot times
-    T_kerr = 2 * np.pi / abs(K)  # Kerr revival period
-    fractions = [0, 0.25, 0.5, 0.75]
-    labels = ["$t = 0$", "$t = T_K/4$", "$t = T_K/2$", "$t = 3T_K/4$"]
-    times = [f * T_kerr for f in fractions]
-
-    xvec = np.linspace(-5, 5, 101)
-
-    fig, axes = plt.subplots(1, 4, figsize=(16, 3.8))
-    for ax, t, label in zip(axes, times, labels):
-        U = (-1j * H_kerr * t).expm()
-        psi_t = U * psi0_cav
-        W = qt.wigner(psi_t, xvec, xvec)
-        cf = ax.contourf(xvec, xvec, W, 100, cmap="RdBu_r",
-                         vmin=-0.35, vmax=0.35)
-        ax.set_title(label)
-        ax.set_xlabel("Re(α)")
-        ax.set_ylabel("Im(α)" if ax == axes[0] else "")
-        ax.set_aspect("equal")
-
-    fig.colorbar(cf, ax=axes.tolist(), shrink=0.8, label="$W(\\alpha)$")
-    fig.suptitle("Kerr Free Evolution — Wigner Function Snapshots  ($|\\alpha|=2$, $K/2\\pi = -2$ kHz)",
-                 fontsize=13)
-    fig.tight_layout(rect=[0, 0, 1, 0.93])
-    fig.savefig(OUT_DIR / "kerr_free_evolution_wigner.png")
+    fig.savefig(OUT_DIR / "kerr_free_evolution_wigner.png", dpi=170)
     plt.close(fig)
     print("    ✓ kerr_free_evolution_wigner.png")
 

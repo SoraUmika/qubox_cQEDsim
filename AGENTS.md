@@ -213,14 +213,16 @@
 ## API Reference and Website Documentation Synchronization
 
 - `API_REFERENCE.md` must remain consistent with the website documentation located under the `documentations` folder.
+- The generated `site` folder is the checked-in official website output and must remain consistent with both `API_REFERENCE.md` and the MkDocs source under `documentations`.
 - When public APIs, module organization, function signatures, class behavior, configuration structures, usage patterns, or developer-facing workflows change, update both:
   - `API_REFERENCE.md`, and
   - the relevant website documentation pages under `documentations`.
+- When those website-source pages change, also rebuild and update the generated `site` output so the published HTML reflects the same changes.
 - Do not update one documentation surface while leaving the other stale when they are intended to describe the same public behavior.
 - If `API_REFERENCE.md` is treated as the canonical public API reference, ensure that the website documentation reflects it accurately in wording, signatures, examples, and coverage.
 - If the website documentation contains higher-level guides, tutorials, walkthroughs, or reorganized API material, those pages must still remain semantically consistent with `API_REFERENCE.md`.
 - Any inconsistency discovered between `API_REFERENCE.md` and the website documentation should be treated as a documentation inconsistency and corrected as part of the task when relevant.
-- If a refactor or feature addition changes the intended public or developer-facing interface, verify explicitly that `API_REFERENCE.md` and the `documentations` folder are synchronized before considering the task complete.
+- If a refactor or feature addition changes the intended public or developer-facing interface, verify explicitly that `API_REFERENCE.md`, the `documentations` folder, and the generated `site` output are synchronized before considering the task complete.
 
 ## Expected Refactor Workflow
 
@@ -233,11 +235,12 @@
   6. Apply the refactor with minimal necessary changes that match project conventions.
   7. Update `API_REFERENCE.md` if the refactor changes public-facing code behavior or usage.
   8. Update relevant pages under `documentations` if developer-facing or public-facing documentation is affected.
-  9. Update `physics_and_conventions/physics_conventions_report.tex` if the refactor changes physical meaning, conventions, or modeling assumptions.
-  10. Run `physics_and_conventions/build_physics_conventions_report.bat` if the physics conventions document was changed.
-  11. Add or update tests under `tests` as needed.
-  12. Add or update examples under `examples` if the intended user workflow or recommended usage has changed.
-  13. Add or update module-level `README.md` files for any new or substantially changed major feature areas.
+  9. Rebuild and update the generated `site` output when public documentation, tutorials, or API-reference pages changed.
+  10. Update `physics_and_conventions/physics_conventions_report.tex` if the refactor changes physical meaning, conventions, or modeling assumptions.
+  11. Run `physics_and_conventions/build_physics_conventions_report.bat` if the physics conventions document was changed.
+  12. Add or update tests under `tests` as needed.
+  13. Add or update examples under `examples` if the intended user workflow or recommended usage has changed.
+  14. Add or update module-level `README.md` files for any new or substantially changed major feature areas.
 
 ## General Quality Bar
 
@@ -249,6 +252,7 @@
   - examples,
   - API documentation,
   - website documentation,
+  - generated website output under `site`,
   - module-level READMEs,
   - and physics/conventions documentation,
   rather than modifying code in isolation.

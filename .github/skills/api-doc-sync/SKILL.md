@@ -1,6 +1,6 @@
 ---
 name: api-doc-sync
-description: "Keep public API and documentation surfaces synchronized. Use when changing function signatures, parameter names, module organization, public workflows, file paths, or examples and when API_REFERENCE.md, documentations pages, physics docs, examples, or module READMEs may drift out of sync."
+description: "Keep public API and documentation surfaces synchronized. Use when changing function signatures, parameter names, module organization, public workflows, file paths, or examples and when API_REFERENCE.md, documentations pages, generated site output, physics docs, examples, or module READMEs may drift out of sync."
 argument-hint: "Describe the public API or workflow change and list any renamed files, symbols, or parameters."
 ---
 
@@ -13,7 +13,7 @@ Use this skill when the primary risk is stale documentation after code changes.
 - Public function, class, or module signatures changed.
 - Parameter names, return shapes, or workflow steps changed.
 - Files or tutorials moved and old cross-references may now be stale.
-- `API_REFERENCE.md` and `documentations/` need to stay aligned.
+- `API_REFERENCE.md`, `documentations/`, and generated `site/` output need to stay aligned.
 - A convention change also affects user-facing explanations.
 
 ## Sync Surfaces
@@ -27,12 +27,14 @@ Core surfaces in this repo:
 - `documentations/user_guides/`
 - `documentations/tutorials/`
 - `documentations/index.md` and related navigation pages
+- `site/` generated HTML/search output for the official website
 - local module `README.md` files for major reusable features
 - `physics_and_conventions/physics_conventions_report.tex` when semantics change
 
 ## Common Failure Modes to Prevent
 
 - Updating `API_REFERENCE.md` but leaving `documentations/` stale.
+- Updating `documentations/` but leaving the checked-in `site/` output stale.
 - Renaming parameters in code but not in examples or tutorials.
 - Leaving deleted file paths or notebook references in docs.
 - Treating a physics-meaning change as if it were documentation-only.
@@ -52,13 +54,17 @@ Core surfaces in this repo:
    - If yes, update `physics_and_conventions/physics_conventions_report.tex` as part of the same task.
 5. Verify navigation and discoverability.
    - Make sure new or moved pages remain reachable from the existing documentation structure.
-6. Finish with a drift pass.
+6. Rebuild the official site output.
+   - Regenerate `site/` from the current MkDocs sources whenever public docs changed.
+   - Confirm that new pages, navigation entries, and search output reflect the same changes.
+7. Finish with a drift pass.
    - Search for old names, old file paths, and outdated terminology after the main edit is done.
 
 ## Completion Checklist
 
 - `API_REFERENCE.md` matches the implemented public API.
 - Relevant `documentations/` pages were updated in the same task.
+- `site/` was regenerated when public docs changed and matches the current MkDocs source.
 - Examples, tutorials, and module READMEs use the current names and paths.
 - Physics documentation was updated if semantics changed.
 - A final search confirmed that stale names or references were removed.

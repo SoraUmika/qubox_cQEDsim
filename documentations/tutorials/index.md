@@ -1,6 +1,6 @@
 # Tutorial Curriculum
 
-The `cqed_sim` tutorial library contains **41 Jupyter notebooks** organized into two complementary tracks:
+The `cqed_sim` tutorial library contains **47 Jupyter notebooks** organized into two complementary tracks:
 
 1. **Workflow tutorials** — categorized by topic, starting from a first simulation and building toward optimal control and RL
 2. **Foundational curriculum** — numbered 01–26, covering individual API features and physics concepts in depth
@@ -16,7 +16,7 @@ Both tracks can be used independently. Start with the workflow tutorials for a g
 ## Learning Path
 
 ```
-Getting Started → Core Workflows → Bosonic & Sideband → Advanced Protocols → Validation
+Getting Started → Core Workflows → Bosonic & Sideband → Advanced Protocols → System ID & Randomization → Floquet → Validation
 ```
 
 Each stage builds on the previous one. Within each stage, notebooks are intended to be read in order.
@@ -35,8 +35,10 @@ Each stage builds on the previous one. Within each stage, notebooks are intended
 
 | Notebook | Description |
 |---|---|
-| `10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb` | Displace the cavity, sweep qubit drive frequency, resolve photon-number peaks |
-| `10_core_workflows/02_kerr_free_evolution.ipynb` | Coherent-state evolution under self-Kerr: phase-space distortion and collapse/revival |
+| `10_core_workflows/01_displacement_then_qubit_spectroscopy.ipynb` | Calibrated displacement plus selective Gaussian qubit spectroscopy with resolved photon-number peaks |
+| `10_core_workflows/02_kerr_free_evolution.ipynb` | Coherent-state evolution under self-Kerr in alpha-coordinate Wigner space |
+| `10_core_workflows/03_phase_space_coordinates_and_wigner_conventions.ipynb` | Compare quadrature and alpha-coordinate Wigner plots and verify the expected sqrt(2) rescaling |
+| `10_core_workflows/04_selective_gaussian_number_splitting.ipynb` | Interpret resolved peak heights as cavity photon-number weights and compare against coherent-state theory |
 
 ### 20 — Bosonic & Sideband
 
@@ -58,11 +60,25 @@ Each stage builds on the previous one. Within each stage, notebooks are intended
 | `30_advanced_protocols/05_rl_hybrid_control_environment.ipynb` | Gym-compatible RL environment for cQED control with measurement-like observations |
 | `30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` | GRAPE optimal control: problem setup, hardware maps, solve, replay, and benchmark |
 
+### 31 — System ID & Domain Randomization
+
+| Notebook | Description |
+|---|---|
+| `31_system_identification_and_domain_randomization/01_calibration_targets_and_fitting.ipynb` | Build calibration-target traces and inspect fitted spectroscopy, Rabi, and T1 parameters |
+| `31_system_identification_and_domain_randomization/02_evidence_to_randomizer_and_env.ipynb` | Convert calibration evidence into domain-randomization priors and inspect environment reset metadata |
+
 ### 40 — Validation & Conventions
 
 | Notebook | Description |
 |---|---|
 | `40_validation_and_conventions/01_kerr_sign_and_frame_checks.ipynb` | Verify Kerr sign convention and rotating-frame consistency |
+
+### 50 — Floquet Driven Systems
+
+| Notebook | Description |
+|---|---|
+| `50_floquet_driven_systems/01_sideband_quasienergy_scan.ipynb` | Sweep a periodic sideband drive and track avoided crossings in the dressed quasienergy spectrum |
+| `50_floquet_driven_systems/02_branch_tracking_and_multiphoton_resonances.ipynb` | Interpret Floquet quasienergies using integer-order multiphoton resonance conditions |
 
 ---
 
@@ -109,9 +125,12 @@ These documentation pages provide concise summaries of key tutorial topics:
 - [Displacement & Spectroscopy](displacement_spectroscopy.md) — cavity displacement and number-splitting spectroscopy
 - [Kerr Free Evolution](kerr_free_evolution.md) — self-Kerr dynamics and phase-space collapse/revival
 - [Sideband Swap](sideband_swap.md) — red-sideband swap protocol
+- [System Identification & Randomization](system_identification.md) — calibration evidence, priors, and robust-control wiring
 - [Unitary Synthesis](unitary_synthesis.md) — gate sequence optimization in logical subspaces
 - [GRAPE Optimal Control](optimal_control.md) — model-backed GRAPE with hardware maps
 - [RL Hybrid Control](rl_hybrid_control.md) — reinforcement learning environment for cQED control
+- [Floquet Driven Systems](floquet_driven_systems.md) — quasienergy sweeps and multiphoton resonance diagnostics
+- [Hardware-Aware Control](hardware_context.md) — DAC, filtering, IQ imbalance, and control-stack realism
 - [Holographic Quantum Algorithms](holographic_quantum_algorithms.md) — holographic channel estimation and MPS-inspired sampling
 
 ---

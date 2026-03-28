@@ -242,6 +242,18 @@
   13. Add or update examples under `examples` if the intended user workflow or recommended usage has changed.
   14. Add or update module-level `README.md` files for any new or substantially changed major feature areas.
 
+## Auto-Commit and Push Policy
+
+- After every Claude session that produces file changes, the project is automatically committed and pushed to `origin` via a `Stop` hook configured in `.claude/settings.local.json`.
+- The hook fires when Claude finishes responding. It runs in the background (`async: true`) so it does not block session teardown.
+- The commit message is derived from `git diff --cached --stat` and takes the form:
+  `auto: <N files changed, X insertions(+), Y deletions(-)>`
+- The hook only commits and pushes if `git status --porcelain` reports at least one change. It is a no-op if there are no uncommitted changes.
+- The hook runs `git add -A` before committing, so all tracked and untracked changes in the working tree are included.
+- This is a local-only setting (`.claude/settings.local.json`, gitignored) and does not affect other contributors.
+- If a push fails (no remote, auth issue, branch protection), the hook silently swallows the error and the session ends normally.
+- Do not rely on this hook for commits that require meaningful messages, branch management, or PR creation — use explicit git commands for those.
+
 ## General Quality Bar
 
 - Prefer correctness, consistency, and maintainability over unnecessary abstraction.

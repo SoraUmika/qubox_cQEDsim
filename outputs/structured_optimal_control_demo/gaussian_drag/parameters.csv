@@ -1,6 +1,0 @@
-name,value,lower_bound,upper_bound,default,units,description
-gaussian_drag.amplitude,28616478.740180563,0.0,70000000.0,25000000.0,rad/s,Peak complex-envelope amplitude.
-gaussian_drag.sigma_fraction,0.18805628747593672,0.1,0.24,0.18,,Gaussian sigma as a fraction of the total duration.
-gaussian_drag.center_fraction,0.5073819472018625,0.42,0.58,0.5,,Envelope center as a fraction of the total duration.
-gaussian_drag.phase_rad,-1.9161111560688378,-3.141592653589793,3.141592653589793,-1.5707963267948966,rad,Global complex-envelope phase.
-gaussian_drag.drag_alpha,1.5094939251929253e-07,-0.3,0.3,0.0,,Dimensionless DRAG derivative weight.

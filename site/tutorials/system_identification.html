@@ -3906,7 +3906,7 @@
 <li>How to think about these outputs as workflow inputs for later system-identification stages</li>
 </ul>
 <p><strong>Running calibration targets:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.system_id</span> <span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">run_spectroscopy</span><span class="p">,</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">run_rabi</span><span class="p">,</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">run_t1</span><span class="p">,</span>
@@ -3954,7 +3954,7 @@
 <li>What metadata and observation products are produced at <code>env.reset(...)</code></li>
 </ul>
 <p><strong>Creating calibration evidence:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationEvidence</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.system_id</span> <span class="kn">import</span> <span class="n">CalibrationEvidence</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">evidence</span> <span class="o">=</span> <span class="n">CalibrationEvidence</span><span class="p">(</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">spectroscopy</span> <span class="o">=</span> <span class="n">spec_result</span><span class="p">,</span>
@@ -3965,7 +3965,7 @@
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated χ/2π: </span><span class="si">{</span><span class="n">evidence</span><span class="o">.</span><span class="n">chi_hz</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">evidence</span><span class="o">.</span><span class="n">chi_uncertainty_hz</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2"> Hz&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Converting to domain randomizer:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">randomizer_from_calibration</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.system_id</span> <span class="kn">import</span> <span class="n">randomizer_from_calibration</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">randomizer</span> <span class="o">=</span> <span class="n">randomizer_from_calibration</span><span class="p">(</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">evidence</span><span class="p">,</span>
@@ -3978,7 +3978,7 @@
 </span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s2">: mean=</span><span class="si">{</span><span class="n">dist</span><span class="o">.</span><span class="n">mean</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">, std=</span><span class="si">{</span><span class="n">dist</span><span class="o">.</span><span class="n">std</span><span class="si">:</span><span class="s2">.3e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></code></pre></div>
 <p><strong>Wiring into an RL environment:</strong></p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.rl_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">HybridCQEDEnv</span><span class="p">,</span> <span class="n">HybridEnvConfig</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.rl_control</span> <span class="kn">import</span> <span class="n">HybridCQEDEnv</span><span class="p">,</span> <span class="n">HybridEnvConfig</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">config</span> <span class="o">=</span> <span class="n">HybridEnvConfig</span><span class="p">(</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">task</span>                <span class="o">=</span> <span class="s2">&quot;qubit_pi_pulse&quot;</span><span class="p">,</span>

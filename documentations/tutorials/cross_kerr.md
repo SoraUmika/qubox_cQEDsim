@@ -71,6 +71,7 @@ model = DispersiveReadoutTransmonStorageModel(
     omega_s   = 2 * np.pi * 5.0e9,    # Storage cavity frequency
     omega_r   = 2 * np.pi * 7.5e9,    # Readout resonator frequency
     omega_q   = 2 * np.pi * 6.0e9,    # Transmon qubit frequency
+    alpha     = 2 * np.pi * (-200e6),  # Transmon anharmonicity
     chi_sr    = 2 * np.pi * 1.5e6,    # Storage-readout cross-Kerr
     chi_s     = 0.0,                   # Storage self-Kerr (set to 0 here)
     chi_r     = 0.0,                   # Readout self-Kerr (set to 0 here)
@@ -80,9 +81,9 @@ model = DispersiveReadoutTransmonStorageModel(
 )
 
 frame = FrameSpec(
-    omega_s_frame = model.omega_s,
-    omega_r_frame = model.omega_r,
+    omega_c_frame = model.omega_s,
     omega_q_frame = model.omega_q,
+    omega_r_frame = model.omega_r,
 )
 ```
 
@@ -96,9 +97,9 @@ from cqed_sim.sequence import SequenceCompiler
 from cqed_sim.sim import SimulationConfig, simulate_sequence
 import numpy as np
 
-# Initial state: (|0_s, 1_r⟩ + |1_s, 1_r⟩) / √2
-s0r1 = model.basis_state(0, 1, 0)   # storage=0, readout=1, qubit=g
-s1r1 = model.basis_state(1, 1, 0)   # storage=1, readout=1, qubit=g
+# Initial state: (|0_s, 1_r⟩ + |1_s, 1_r⟩) / √2  (qubit in |g⟩)
+s0r1 = model.basis_state(0, 0, 1)   # qubit=g, storage=0, readout=1
+s1r1 = model.basis_state(0, 1, 1)   # qubit=g, storage=1, readout=1
 initial_state = (s0r1 + s1r1).unit()
 
 # Free-evolution times to probe phase accumulation
@@ -150,6 +151,14 @@ plt.tight_layout()
 ```
 
 The simulation points overlay with the theory line. The population of each branch remains constant — cross-Kerr is a purely phase-accumulating interaction with no number transfer.
+
+### Generated Plot
+
+The figure below shows the simulation result produced by `tools/generate_tutorial_plots.py`:
+
+![Cross-Kerr Conditional Phase](../assets/images/tutorials/cross_kerr_phase.png)
+
+The blue circles are the simulated relative phase at each free-evolution time, and the dashed orange line is the analytic prediction $\Delta\phi = \chi_{sr} \cdot t$.
 
 ---
 

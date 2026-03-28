@@ -172,6 +172,12 @@ Each directory contains:
 
 These files provide the requested time-domain waveform view, frequency-domain view, and objective/fidelity progression without requiring a notebook-only workflow.
 
+### Generated GRAPE Plot
+
+The figure below shows the GRAPE convergence curve and optimized waveform for a qubit $|g,0\rangle \to |e,0\rangle$ state-preparation problem, produced by `tools/generate_tutorial_plots.py`:
+
+![GRAPE Optimal Control](../assets/images/tutorials/grape_optimal_control.png)
+
 ---
 
 ## GRAPE Workflow

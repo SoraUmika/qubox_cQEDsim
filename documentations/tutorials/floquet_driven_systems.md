@@ -108,7 +108,7 @@ for det_mhz in scan_detunings_mhz:
     problems.append(FloquetProblem(
         model=model, frame=frame,
         periodic_terms=(drive,),
-        period=1.0 / freq_hz,
+        period=1.0 / abs(freq_hz),
     ))
 
 sweep = run_floquet_sweep(
@@ -124,6 +124,12 @@ The sweep produces two panels:
 1. **Quasienergy branches vs. detuning** — multiple branches tracked with consistent labeling across the scan. Near the resonance condition (detuning = 0), two branches form an avoided crossing: they repel each other rather than crossing.
 
 2. **Minimum quasienergy gap vs. detuning** — a sharp dip at the resonance. The depth of the dip gives the effective sideband coupling rate. The position of the minimum locates the true resonance frequency (which can differ from the bare sideband frequency due to drive-induced level repulsion).
+
+### Generated Plot
+
+The figure below shows the quasienergy branches and avoided-crossing gap produced by `tools/generate_tutorial_plots.py`:
+
+![Floquet Quasienergy Scan](../assets/images/tutorials/floquet_quasienergy_scan.png)
 
 ---
 

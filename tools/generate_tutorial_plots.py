@@ -305,6 +305,7 @@ def plot_cross_kerr_phase():
             omega_s=2 * np.pi * 5.0e9,
             omega_r=2 * np.pi * 7.5e9,
             omega_q=2 * np.pi * 6.0e9,
+            alpha=2 * np.pi * (-200e6),
             chi_sr=2 * np.pi * 1.5e6,
             chi_s=0.0,
             chi_r=0.0,
@@ -312,11 +313,10 @@ def plot_cross_kerr_phase():
             n_readout=4,
             n_tr=2,
         )
-        from cqed_sim.core import FrameSpec as FS
-        frame = FS(
-            omega_s_frame=model.omega_s,
-            omega_r_frame=model.omega_r,
+        frame = FrameSpec(
+            omega_c_frame=model.omega_s,
             omega_q_frame=model.omega_q,
+            omega_r_frame=model.omega_r,
         )
 
         s0r1 = model.basis_state(0, 1, 0)
@@ -373,13 +373,12 @@ def plot_floquet_quasienergy_scan():
     print("[6/6] Floquet quasienergy scan …")
 
     try:
-        from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec
+        from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec, SidebandDriveSpec
         from cqed_sim.floquet import (
             FloquetProblem,
             FloquetConfig,
             run_floquet_sweep,
             build_target_drive_term,
-            SidebandDriveSpec,
         )
 
         model = DispersiveTransmonCavityModel(
@@ -414,7 +413,7 @@ def plot_floquet_quasienergy_scan():
             problems.append(FloquetProblem(
                 model=model, frame=frame,
                 periodic_terms=(drive,),
-                period=1.0 / freq_hz,
+                period=1.0 / abs(freq_hz),
                 label="sideband_scan",
             ))
 

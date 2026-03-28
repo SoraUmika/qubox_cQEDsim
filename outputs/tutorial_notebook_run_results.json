@@ -1,0 +1,284 @@
+[
+  {
+    "notebook": "tutorials\\00_getting_started\\01_protocol_style_simulation.ipynb",
+    "status": "OK",
+    "elapsed_s": 7.6,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\00_tutorial_index.ipynb",
+    "status": "OK",
+    "elapsed_s": 2.5,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\01_getting_started_minimal_dispersive_model.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.4,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\02_units_frames_and_conventions.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.2,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\03_cavity_displacement_basics.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.3,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\04_qubit_drive_and_basic_population_dynamics.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.1,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\05_observables_states_and_visualization.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.4,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\06_qubit_spectroscopy.ipynb",
+    "status": "OK",
+    "elapsed_s": 5.8,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb",
+    "status": "OK",
+    "elapsed_s": 9.0,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\08_dispersive_shift_and_dressed_frequencies.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.2,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\09_power_rabi.ipynb",
+    "status": "OK",
+    "elapsed_s": 5.0,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\10_core_workflows\\01_displacement_then_qubit_spectroscopy.ipynb",
+    "status": "OK",
+    "elapsed_s": 9.8,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\10_core_workflows\\02_kerr_free_evolution.ipynb",
+    "status": "FAIL",
+    "elapsed_s": 5.1,
+    "error": "\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m,\u001b[49m\u001b[43m \u001b[49m\u001b[33;43mr\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[33;43m$t = 3T_K/4$\u001b[39;49m\u001b[33;43m\"\u001b[39;49m\u001b[43m]\u001b[49m\u001b[43m,\u001b[49m\n\u001b[32m     18\u001b[39m \u001b[43m    \u001b[49m\u001b[43mstrict\u001b[49m\u001b[43m=\u001b[49m\u001b[38;5;28;43;01mTrue\u001b[39;49;00m\u001b[43m,\u001b[49m\n\u001b[32m     19\u001b[39m \u001b[43m)\u001b[49m\u001b[43m:\u001b[49m\n\u001b[32m     20\u001b[39m \u001b[43m    \u001b[49m\u001b[43maxis\u001b[49m\u001b[43m.\u001b[49m\u001b[43mset_title\u001b[49m\u001b[43m(\u001b[49m\u001b[43mlabel\u001b[49m\u001b[43m)\u001b[49m\n\u001b[32m     21\u001b[39m plt.show()\n\n\u001b[31mValueError\u001b[39m: zip() argument 2 is longer than argument 1"
+  },
+  {
+    "notebook": "tutorials\\10_core_workflows\\03_phase_space_coordinates_and_wigner_conventions.ipynb",
+    "status": "FAIL",
+    "elapsed_s": 7.4,
+    "error": "aceback (most recent call last)\n\u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[2]\u001b[39m\u001b[32m, line 2\u001b[39m\n\u001b[32m      1\u001b[39m alpha = \u001b[32m2.0\u001b[39m + \u001b[32m0.0\u001b[39mj\n\u001b[32m----> \u001b[39m\u001b[32m2\u001b[39m rho_cavity = \u001b[43mcoherent_state\u001b[49m\u001b[43m(\u001b[49m\u001b[43malpha\u001b[49m\u001b[43m)\u001b[49m\u001b[43m.\u001b[49m\u001b[43mproj\u001b[49m()\n\u001b[32m      3\u001b[39m expected_quadrature_center = np.sqrt(\u001b[32m2.0\u001b[39m) * np.real(alpha)\n\u001b[32m      4\u001b[39m expected_alpha_center = np.real(alpha)\n\n\u001b[31mAttributeError\u001b[39m: 'SubsystemStateSpec' object has no attribute 'proj'"
+  },
+  {
+    "notebook": "tutorials\\10_core_workflows\\04_selective_gaussian_number_splitting.ipynb",
+    "status": "OK",
+    "elapsed_s": 11.1,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\10_time_rabi.ipynb",
+    "status": "OK",
+    "elapsed_s": 8.6,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\11_qubit_T1_relaxation.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.9,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\12_qubit_ramsey_T2star.ipynb",
+    "status": "OK",
+    "elapsed_s": 5.7,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\13_spin_echo_and_dephasing_mitigation.ipynb",
+    "status": "OK",
+    "elapsed_s": 12.8,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\14_kerr_free_evolution.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.5,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\15_cross_kerr_and_conditional_phase_accumulation.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.1,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\16_storage_cavity_coherent_state_dynamics.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.2,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\17_readout_resonator_response.ipynb",
+    "status": "OK",
+    "elapsed_s": 7.5,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\18_multilevel_transmon_effects.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.4,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\19_anharmonicity_and_leakage_under_strong_drive.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.1,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\20_bosonic_and_sideband\\01_sideband_swap.ipynb",
+    "status": "OK",
+    "elapsed_s": 8.5,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\20_bosonic_and_sideband\\02_detuned_sideband_synchronization.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.7,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\20_bosonic_and_sideband\\03_sequential_sideband_reset.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.8,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\20_bosonic_and_sideband\\04_shelving_isolation.ipynb",
+    "status": "OK",
+    "elapsed_s": 7.5,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\20_truncation_convergence_checks.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.4,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\21_building_sequences_from_gates_and_pulses.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.4,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\22_parameter_sweeps_and_batch_simulation.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.6,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\23_analysis_fitting_and_result_extraction.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.2,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\24_sideband_like_interactions.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.5,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\25_small_calibration_workflow_end_to_end.ipynb",
+    "status": "OK",
+    "elapsed_s": 5.0,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\26_frame_sanity_checks_and_common_failure_modes.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.7,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\30_advanced_protocols\\01_multimode_crosskerr.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.2,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\30_advanced_protocols\\02_open_system_sideband_degradation.ipynb",
+    "status": "OK",
+    "elapsed_s": 7.6,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\30_advanced_protocols\\03_unitary_synthesis_workflow.ipynb",
+    "status": "OK",
+    "elapsed_s": 6.0,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\30_advanced_protocols\\04_snap_optimization_workflow.ipynb",
+    "status": "OK",
+    "elapsed_s": 5.3,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\30_advanced_protocols\\05_rl_hybrid_control_environment.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.3,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\30_advanced_protocols\\06_grape_optimal_control_workflow.ipynb",
+    "status": "OK",
+    "elapsed_s": 9.5,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\31_system_identification_and_domain_randomization\\01_calibration_targets_and_fitting.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.3,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\31_system_identification_and_domain_randomization\\02_evidence_to_randomizer_and_env.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.2,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\40_validation_and_conventions\\01_kerr_sign_and_frame_checks.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.2,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\50_floquet_driven_systems\\01_sideband_quasienergy_scan.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.7,
+    "error": ""
+  },
+  {
+    "notebook": "tutorials\\50_floquet_driven_systems\\02_branch_tracking_and_multiphoton_resonances.ipynb",
+    "status": "OK",
+    "elapsed_s": 4.3,
+    "error": ""
+  }
+]

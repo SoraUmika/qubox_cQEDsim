@@ -1954,6 +1954,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#generated-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated Plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#50_floquet_driven_systems02_branch_tracking_and_multiphoton_resonancesipynb" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3216,6 +3227,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#generated-plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated Plot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#50_floquet_driven_systems02_branch_tracking_and_multiphoton_resonancesipynb" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3417,7 +3439,7 @@
 </span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FloquetProblem</span><span class="p">(</span>
 </span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="n">frame</span><span class="p">,</span>
 </span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>        <span class="n">periodic_terms</span><span class="o">=</span><span class="p">(</span><span class="n">drive</span><span class="p">,),</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        <span class="n">period</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">freq_hz</span><span class="p">,</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        <span class="n">period</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">freq_hz</span><span class="p">),</span>
 </span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>    <span class="p">))</span>
 </span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>
 </span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="n">sweep</span> <span class="o">=</span> <span class="n">run_floquet_sweep</span><span class="p">(</span>
@@ -3435,6 +3457,9 @@
 <p><strong>Minimum quasienergy gap vs. detuning</strong> — a sharp dip at the resonance. The depth of the dip gives the effective sideband coupling rate. The position of the minimum locates the true resonance frequency (which can differ from the bare sideband frequency due to drive-induced level repulsion).</p>
 </li>
 </ol>
+<h3 id="generated-plot">Generated Plot<a class="headerlink" href="#generated-plot" title="Permanent link">&para;</a></h3>
+<p>The figure below shows the quasienergy branches and avoided-crossing gap produced by <code>tools/generate_tutorial_plots.py</code>:</p>
+<p><img alt="Floquet Quasienergy Scan" src="../assets/images/tutorials/floquet_quasienergy_scan.png" /></p>
 <hr />
 <h3 id="50_floquet_driven_systems02_branch_tracking_and_multiphoton_resonancesipynb"><code>50_floquet_driven_systems/02_branch_tracking_and_multiphoton_resonances.ipynb</code><a class="headerlink" href="#50_floquet_driven_systems02_branch_tracking_and_multiphoton_resonancesipynb" title="Permanent link">&para;</a></h3>
 <p>This notebook solves a single driven problem near a half-frequency qubit condition and identifies which bare energy gaps satisfy integer-harmonic resonance conditions.</p>

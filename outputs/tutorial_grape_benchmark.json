@@ -28,8 +28,8 @@
       },
       "solve": {
         "success": true,
-        "message": "CONVERGENCE: NORM OF PROJECTED GRADIENT <= PGTOL",
-        "runtime_s": 0.002888499991968274,
+        "message": "CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL",
+        "runtime_s": 0.0034382000158075243,
         "iteration_count": 0,
         "function_evaluations": 1,
         "objective_value": 0.0,
@@ -51,7 +51,8 @@
           ]
         },
         "pulse_metadata": {
-          "mapping": "Piecewise-constant rotating-frame controls exported as square-envelope pulses. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly.",
+          "mapping": "Rotating-frame controls exported as square-envelope pulses on the propagation grid. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly.",
+          "parameterization": "PiecewiseConstantParameterization",
           "time_grid_s": [
             2e-08,
             2e-08
@@ -61,10 +62,50 @@
               "max_abs_amp": 39269908.16987241,
               "nonzero_slices": 2
             }
+          },
+          "parameter_slices": 2,
+          "waveform_mode": "command",
+          "parameterization_metrics": {
+            "parameterization": "PiecewiseConstantParameterization",
+            "parameter_slices": 2,
+            "time_slices": 2,
+            "effective_update_period_s": 2e-08
+          },
+          "hardware_metrics": {
+            "hardware_active": false,
+            "hardware_map_count": 0,
+            "command_max_abs_amplitude": 39269908.16987241,
+            "command_rms_amplitude": 39269908.16987241,
+            "command_max_slew": 0.0,
+            "command_rms_slew": 0.0,
+            "physical_max_abs_amplitude": 39269908.16987241,
+            "physical_rms_amplitude": 39269908.16987241,
+            "physical_max_slew": 0.0,
+            "physical_rms_slew": 0.0
           }
         },
         "compiler_dt_s": 1e-09,
         "duration_s": 4e-08,
+        "waveform_mode": "command",
+        "parameterization_metrics": {
+          "parameterization": "PiecewiseConstantParameterization",
+          "parameter_slices": 2,
+          "time_slices": 2,
+          "effective_update_period_s": 2e-08
+        },
+        "hardware_metrics": {
+          "hardware_active": false,
+          "hardware_map_count": 0,
+          "command_max_abs_amplitude": 39269908.16987241,
+          "command_rms_amplitude": 39269908.16987241,
+          "command_max_slew": 0.0,
+          "command_rms_slew": 0.0,
+          "physical_max_abs_amplitude": 39269908.16987241,
+          "physical_rms_amplitude": 39269908.16987241,
+          "physical_max_slew": 0.0,
+          "physical_rms_slew": 0.0
+        },
+        "hardware_reports": [],
         "member_reports": [
           {
             "label": "nominal",
@@ -114,7 +155,8 @@
           ]
         },
         "pulse_metadata": {
-          "mapping": "Piecewise-constant rotating-frame controls exported as square-envelope pulses. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly.",
+          "mapping": "Rotating-frame controls exported as square-envelope pulses on the propagation grid. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly.",
+          "parameterization": "PiecewiseConstantParameterization",
           "time_grid_s": [
             2e-08,
             2e-08
@@ -124,10 +166,50 @@
               "max_abs_amp": 39269908.16987241,
               "nonzero_slices": 2
             }
+          },
+          "parameter_slices": 2,
+          "waveform_mode": "command",
+          "parameterization_metrics": {
+            "parameterization": "PiecewiseConstantParameterization",
+            "parameter_slices": 2,
+            "time_slices": 2,
+            "effective_update_period_s": 2e-08
+          },
+          "hardware_metrics": {
+            "hardware_active": false,
+            "hardware_map_count": 0,
+            "command_max_abs_amplitude": 39269908.16987241,
+            "command_rms_amplitude": 39269908.16987241,
+            "command_max_slew": 0.0,
+            "command_rms_slew": 0.0,
+            "physical_max_abs_amplitude": 39269908.16987241,
+            "physical_rms_amplitude": 39269908.16987241,
+            "physical_max_slew": 0.0,
+            "physical_rms_slew": 0.0
           }
         },
         "compiler_dt_s": 1e-09,
         "duration_s": 4e-08,
+        "waveform_mode": "command",
+        "parameterization_metrics": {
+          "parameterization": "PiecewiseConstantParameterization",
+          "parameter_slices": 2,
+          "time_slices": 2,
+          "effective_update_period_s": 2e-08
+        },
+        "hardware_metrics": {
+          "hardware_active": false,
+          "hardware_map_count": 0,
+          "command_max_abs_amplitude": 39269908.16987241,
+          "command_rms_amplitude": 39269908.16987241,
+          "command_max_slew": 0.0,
+          "command_rms_slew": 0.0,
+          "physical_max_abs_amplitude": 39269908.16987241,
+          "physical_rms_amplitude": 39269908.16987241,
+          "physical_max_slew": 0.0,
+          "physical_rms_slew": 0.0
+        },
+        "hardware_reports": [],
         "member_reports": [
           {
             "label": "noisy",
@@ -173,7 +255,7 @@
           "evaluation": 1,
           "objective": 0.0,
           "gradient_norm": 4.679240163218305e-24,
-          "elapsed_s": 0.0016087000258266926
+          "elapsed_s": 0.0014464999840129167
         }
       ]
     }

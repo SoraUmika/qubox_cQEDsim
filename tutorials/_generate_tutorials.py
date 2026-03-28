@@ -95,6 +95,7 @@ from tutorials.tutorial_support import (
     angular_to_ghz,
     angular_to_hz,
     angular_to_mhz,
+    cross_kerr_conditional_phase,
     final_expectation,
     fit_echo_signal,
     fit_exponential_decay,
@@ -102,7 +103,12 @@ from tutorials.tutorial_support import (
     fit_rabi_vs_amplitude,
     fit_rabi_vs_duration,
     fit_ramsey_signal,
+    gaussian_quasistatic_echo_excited_population,
+    gaussian_quasistatic_ramsey_excited_population,
     ns,
+    ramsey_population,
+    resonant_drive_excited_population,
+    t1_relaxation_population,
     us,
 )
 
@@ -662,14 +668,14 @@ def generate_batch_1() -> None:
                 "Tutorials 01 and 02 are recommended first.",
             ),
             md("## 1. Goal\n\nWe will apply a resonant square pulse, store the trajectory, and verify that a calibrated pulse produces the expected population transfer."),
-            md("## 2. Physical Background\n\nIn a matched rotating frame, a resonant qubit drive produces Rabi oscillations between `|g>` and `|e>`. For a two-level qubit with a square envelope, a pulse of duration `t_pi = pi / Omega` produces an ideal `pi` rotation."),
+            md("## 2. Physical Background\n\nIn the repository's square-pulse drive convention, a resonant two-level qubit evolves as `P_e(t) = sin^2(Omega t)`, so an ideal `pi` pulse occurs at `t_pi = pi / (2 Omega)`. This notebook checks that the pulse-level simulation follows that normalization explicitly."),
             md("## 3. Imports"),
             code(COMMON_IMPORTS),
             md("## 4. Simulation Parameters"),
             code(
                 """
         omega_rabi = 2.0 * np.pi * 8.0e6
-        pulse_duration = np.pi / omega_rabi
+        pulse_duration = np.pi / (2.0 * omega_rabi)
         dt = pulse_duration / 200.0
         """
             ),
@@ -714,18 +720,24 @@ def generate_batch_1() -> None:
             {"q": "qubit"},
             config=SimulationConfig(frame=frame, store_states=True, max_step=dt),
         )
-        trajectory_t_ns = compiled.tlist * 1.0e9
+        trajectory_t = np.asarray(compiled.tlist, dtype=float)
+        trajectory_t_ns = trajectory_t * 1.0e9
         p_e = np.asarray(result.expectations["P_e"], dtype=float)
         p_g = np.asarray(result.expectations["P_g"], dtype=float)
+        theory_p_e = resonant_drive_excited_population(omega_rabi, trajectory_t)
+        theory_p_g = 1.0 - theory_p_e
         print(f"Final excited-state population: {p_e[-1]:.4f}")
+        print(f"Maximum |simulation - theory| for P_e: {np.max(np.abs(p_e - theory_p_e)):.3e}")
         """
             ),
             md("## 8. Visualizing the Results"),
             code(
                 """
         fig, ax = plt.subplots()
-        ax.plot(trajectory_t_ns, p_g, label=r"$P_g$")
-        ax.plot(trajectory_t_ns, p_e, label=r"$P_e$")
+        ax.plot(trajectory_t_ns, p_g, label=r"simulation $P_g$")
+        ax.plot(trajectory_t_ns, p_e, label=r"simulation $P_e$")
+        ax.plot(trajectory_t_ns, theory_p_g, "--", color="tab:blue", alpha=0.8, label=r"theory $1 - \\sin^2(\\Omega t)$")
+        ax.plot(trajectory_t_ns, theory_p_e, "--", color="tab:orange", alpha=0.8, label=r"theory $\\sin^2(\\Omega t)$")
         ax.set_xlabel("Time [ns]")
         ax.set_ylabel("Population")
         ax.set_title("Resonant qubit drive in the matched rotating frame")
@@ -733,7 +745,7 @@ def generate_batch_1() -> None:
         plt.show()
         """
             ),
-            md("## 9. Physical Interpretation\n\nBecause the frame is matched and the drive is resonant, the dynamics are clean population exchange between `|g>` and `|e>`. Later tutorials reuse the same ingredients for power-Rabi and time-Rabi sweeps."),
+            md("## 9. Physical Interpretation\n\nBecause the frame is matched and the drive is resonant, the simulated populations follow the expected `sin^2(Omega t)` exchange. This is the foundational normalization used again in the power-Rabi and time-Rabi tutorials later in the curriculum."),
             md("## 10. Exercises / Next Steps\n\n- Halve the pulse duration and confirm that the final state is close to an `x90` rotation instead of a `pi` rotation.\n- Add a small detuning through `carrier_for_transition_frequency(...)` and observe the loss of full inversion.\n- Continue to Tutorials 09 and 10 for calibration-style Rabi sweeps."),
         ],
     )
@@ -922,8 +934,10 @@ def generate_batch_1() -> None:
             code(
                 """
         fit = fit_lorentzian_peak(detuning_mhz, responses)
+        expected_center_mhz = 0.0
         print("Fitted spectroscopy center [MHz]:", fit.parameters["center"])
         print("Fitted width [MHz]:", fit.parameters["width"])
+        print("Center error [kHz]:", 1.0e3 * (fit.parameters["center"] - expected_center_mhz))
         """
             ),
             md("## 8. Visualizing the Results"),
@@ -932,6 +946,7 @@ def generate_batch_1() -> None:
         fig, ax = plt.subplots()
         ax.plot(detuning_mhz, responses, "o", label="simulation")
         ax.plot(detuning_mhz, fit.model_y, "-", label="Lorentzian fit")
+        ax.axvline(expected_center_mhz, color="black", linestyle=":", label="expected center")
         ax.axvline(fit.parameters["center"], color="tab:red", linestyle="--", label="fit center")
         ax.set_xlabel("Transition detuning relative to the qubit frame [MHz]")
         ax.set_ylabel(r"Final $P_e$")
@@ -1122,7 +1137,7 @@ def generate_batch_1() -> None:
                 "Tutorials 04 and 06 are recommended first.",
             ),
             md("## 1. Goal\n\nWe will perform a fixed-duration amplitude sweep and fit the resulting oscillation to estimate the drive scale needed for a `pi` pulse."),
-            md("## 2. Physical Background\n\nAt fixed duration, the excited-state population oscillates as the drive area changes. The `pi`-pulse amplitude is the amplitude that produces one half-cycle of the Rabi oscillation."),
+            md("## 2. Physical Background\n\nFor the square-pulse convention used by `cqed_sim`, a resonant drive of strength `Omega` applied for time `T` gives `P_e = sin^2(Omega T)`. At fixed duration, sweeping the amplitude therefore sweeps the argument of that sine directly."),
             md("## 3. Imports"),
             code(COMMON_IMPORTS),
             md("## 4. Simulation Parameters"),
@@ -1171,9 +1186,11 @@ def generate_batch_1() -> None:
             md("## 7. Running the Simulation"),
             code(
                 """
+        theory_responses = resonant_drive_excited_population(amplitudes_rad_s, duration)
         fit = fit_rabi_vs_amplitude(amplitudes_rad_s, responses, duration=duration)
         print(f"Estimated pi amplitude / 2pi = {angular_to_mhz(fit.parameters['pi_amplitude']):.3f} MHz")
         print(f"Estimated pi/2 amplitude / 2pi = {angular_to_mhz(fit.parameters['pi_over_two_amplitude']):.3f} MHz")
+        print(f"RMS deviation from sin^2(Omega T): {np.sqrt(np.mean((responses - theory_responses) ** 2)):.3e}")
         """
             ),
             md("## 8. Visualizing the Results"),
@@ -1181,6 +1198,7 @@ def generate_batch_1() -> None:
                 """
         fig, ax = plt.subplots()
         ax.plot(amplitudes_mhz, responses, "o", label="simulation")
+        ax.plot(amplitudes_mhz, theory_responses, "--", color="black", alpha=0.8, label=r"theory $\\sin^2(\\Omega T)$")
         ax.plot(amplitudes_mhz, fit.model_y, "-", label="fit")
         ax.axvline(angular_to_mhz(fit.parameters["pi_amplitude"]), color="tab:red", linestyle="--", label="pi amplitude")
         ax.axvline(angular_to_mhz(fit.parameters["pi_over_two_amplitude"]), color="tab:green", linestyle="--", label="pi/2 amplitude")
@@ -1208,7 +1226,7 @@ def generate_batch_2() -> None:
                 "Tutorials 04 and 09 are recommended first.",
             ),
             md("## 1. Goal\n\nWe will keep the pulse amplitude fixed, vary the pulse duration, and fit the resulting oscillation to recover the Rabi rate."),
-            md("## 2. Physical Background\n\nA time-Rabi experiment keeps the drive strength fixed and measures how long it takes to reach the desired rotation angle. This is the duration-space complement of the power-Rabi notebook."),
+            md("## 2. Physical Background\n\nWith a fixed resonant square-pulse amplitude `Omega`, the two-level result is `P_e(t) = sin^2(Omega t)`. The time-Rabi experiment therefore measures the oscillation period in duration space and infers `t_pi = pi / (2 Omega)`."),
             md("## 3. Imports"),
             code(COMMON_IMPORTS),
             md("## 4. Simulation Parameters"),
@@ -1257,9 +1275,11 @@ def generate_batch_2() -> None:
             md("## 7. Running the Simulation"),
             code(
                 """
+        theory_responses = resonant_drive_excited_population(omega_rabi, np.maximum(durations_s, dt))
         fit = fit_rabi_vs_duration(durations_s, responses)
         print(f"Estimated pi time = {fit.parameters['pi_time_s'] / ns:.3f} ns")
         print(f"Estimated pi/2 time = {fit.parameters['pi_over_two_time_s'] / ns:.3f} ns")
+        print(f"RMS deviation from sin^2(Omega t): {np.sqrt(np.mean((responses - theory_responses) ** 2)):.3e}")
         """
             ),
             md("## 8. Visualizing the Results"),
@@ -1267,6 +1287,7 @@ def generate_batch_2() -> None:
                 """
         fig, ax = plt.subplots()
         ax.plot(durations_ns, responses, "o", label="simulation")
+        ax.plot(durations_ns, theory_responses, "--", color="black", alpha=0.8, label=r"theory $\\sin^2(\\Omega t)$")
         ax.plot(durations_ns, fit.model_y, "-", label="fit")
         ax.axvline(fit.parameters["pi_time_s"] / ns, color="tab:red", linestyle="--", label="pi time")
         ax.axvline(fit.parameters["pi_over_two_time_s"] / ns, color="tab:green", linestyle="--", label="pi/2 time")
@@ -1342,9 +1363,11 @@ def generate_batch_2() -> None:
             md("## 7. Running the Simulation"),
             code(
                 """
+        theory_responses = t1_relaxation_population(delays_s, t1_true)
         fit = fit_exponential_decay(delays_s, responses, parameter_name="t1")
         print(f"True T1 = {t1_true / us:.3f} us")
         print(f"Fitted T1 = {fit.parameters['t1'] / us:.3f} us")
+        print(f"Maximum |simulation - exp(-t/T1)| = {np.max(np.abs(responses - theory_responses)):.3e}")
         """
             ),
             md("## 8. Visualizing the Results"),
@@ -1352,6 +1375,7 @@ def generate_batch_2() -> None:
                 """
         fig, ax = plt.subplots()
         ax.plot(delays_us, responses, "o", label="simulation")
+        ax.plot(delays_us, theory_responses, "--", color="black", alpha=0.8, label=r"theory $e^{-t/T_1}$")
         ax.plot(delays_us, fit.model_y, "-", label="fit")
         ax.set_xlabel("Delay [us]")
         ax.set_ylabel(r"Final $P_e$")
@@ -1455,11 +1479,13 @@ def generate_batch_2() -> None:
             md("## 7. Running the Simulation"),
             code(
                 """
+        theory_responses = ramsey_population(delays_s, detuning, t2_star_true)
         fit = fit_ramsey_signal(delays_s, responses, p0=(detuning, t2_star_true, 0.5, 0.5, 0.0))
         print(f"True detuning / 2pi = {detuning / (2.0 * np.pi * 1.0e6):.3f} MHz")
         print(f"Fitted detuning / 2pi = {fit.parameters['detuning'] / (2.0 * np.pi * 1.0e6):.3f} MHz")
         print(f"True T2* = {t2_star_true / us:.3f} us")
         print(f"Fitted T2* = {fit.parameters['t2_star'] / us:.3f} us")
+        print(f"Maximum |simulation - theory| = {np.max(np.abs(responses - theory_responses)):.3e}")
         """
             ),
             md("## 8. Visualizing the Results"),
@@ -1467,6 +1493,7 @@ def generate_batch_2() -> None:
                 """
         fig, ax = plt.subplots()
         ax.plot(delays_us, responses, "o", label="simulation")
+        ax.plot(delays_us, theory_responses, "--", color="black", alpha=0.8, label=r"theory $0.5(1 + e^{-t/T_2^*}\\cos(\\Delta t))$")
         ax.plot(delays_us, fit.model_y, "-", label="fit")
         ax.set_xlabel("Free-evolution delay [us]")
         ax.set_ylabel(r"Final $P_e$")
@@ -1486,20 +1513,21 @@ def generate_batch_2() -> None:
             title_cell(
                 13,
                 "Spin Echo and Dephasing Mitigation",
-                "Compare a Ramsey-style free-evolution experiment to a Hahn-echo sequence under the same dephasing model and fit the echo envelope.",
+                "Compare Ramsey and Hahn echo under quasi-static detuning disorder and verify the ensemble-averaged traces against the closed-form theory.",
                 "Tutorials 11 and 12 are recommended first.",
             ),
-            md("## 1. Goal\n\nWe will show that a spin-echo sequence suppresses static phase accumulation and extends the visible coherence envelope relative to a Ramsey-style experiment."),
-            md("## 2. Physical Background\n\nA Hahn echo inserts a `pi` pulse halfway through the free evolution. That pulse reverses the sign of static phase accumulation, which makes the sequence less sensitive to low-frequency detuning offsets than Ramsey."),
+            md("## 1. Goal\n\nWe will model quasi-static detuning disorder explicitly, ensemble-average the resulting pulse-level Ramsey and Hahn-echo traces, and compare them to the textbook closed-form predictions."),
+            md("## 2. Physical Background\n\nFor a fixed detuning offset `delta`, Ramsey gives `P_e^Ramsey(t | delta) = 0.5 (1 + cos(delta t))` while a Hahn echo with a final `-x90` readout pulse refocuses that same static detuning and ideally returns `P_e^Echo(t | delta) = 1`. Averaging over a Gaussian detuning distribution with width `sigma_delta` yields the standard Ramsey envelope `0.5 (1 + exp(-sigma_delta^2 t^2 / 2))`, while the ideal echo stays flat because the static phase cancels exactly."),
             md("## 3. Imports"),
             code(COMMON_IMPORTS),
             md("## 4. Simulation Parameters"),
             code(
                 """
-        t1_true = 40.0 * us
-        t2_star_true = 10.0 * us
-        t2_echo_target = 18.0 * us
-        delays_us = np.linspace(0.0, 24.0, 37)
+        sigma_detuning = 2.0 * np.pi * 0.22e6
+        detuning_offsets = np.linspace(-4.0, 4.0, 31) * sigma_detuning
+        detuning_weights = np.exp(-0.5 * (detuning_offsets / sigma_detuning) ** 2)
+        detuning_weights = detuning_weights / np.sum(detuning_weights)
+        delays_us = np.linspace(0.0, 8.0, 9)
         rotation_duration = 30.0 * ns
         rotation_sigma_fraction = 0.18
         dt = 4.0 * ns
@@ -1517,9 +1545,6 @@ def generate_batch_2() -> None:
             n_cav=1,
             n_tr=2,
         )
-        frame = FrameSpec(omega_q_frame=model.omega_q)
-        tphi_true = pure_dephasing_time_from_t1_t2(t1_s=t1_true, t2_s=t2_star_true)
-        noise = NoiseSpec(t1=t1_true, tphi=tphi_true)
         x90_pulses, _, _ = build_rotation_pulse(
             RotationGate(index=0, name="x90", theta=np.pi / 2.0, phi=0.0),
             {"duration_rotation_s": rotation_duration, "rotation_sigma_fraction": rotation_sigma_fraction},
@@ -1528,76 +1553,89 @@ def generate_batch_2() -> None:
             RotationGate(index=1, name="x180", theta=np.pi, phi=0.0),
             {"duration_rotation_s": rotation_duration, "rotation_sigma_fraction": rotation_sigma_fraction},
         )
+        minus_x90_pulses, _, _ = build_rotation_pulse(
+            RotationGate(index=2, name="minus_x90", theta=np.pi / 2.0, phi=np.pi),
+            {"duration_rotation_s": rotation_duration, "rotation_sigma_fraction": rotation_sigma_fraction},
+        )
         x90 = x90_pulses[0]
         x180 = x180_pulses[0]
+        minus_x90 = minus_x90_pulses[0]
+        delays_s = delays_us * us
         """
             ),
             md("## 6. Pulse / Sequence Construction"),
             code(
                 """
-        delays_s = delays_us * us
-        ramsey_like = []
-        echo = []
-        for delay_s in delays_s:
-            ramsey_pulses = [
-                Pulse(x90.channel, 0.0, x90.duration, x90.envelope, amp=x90.amp, carrier=x90.carrier, phase=0.0, label="ramsey_a"),
-                Pulse(x90.channel, x90.duration + delay_s, x90.duration, x90.envelope, amp=x90.amp, carrier=x90.carrier, phase=0.0, label="ramsey_b"),
-            ]
-            ramsey_t_end = 2.0 * x90.duration + delay_s + dt
-            ramsey_compiled = SequenceCompiler(dt=dt).compile(ramsey_pulses, t_end=ramsey_t_end)
-            ramsey_result = simulate_sequence(
-                model,
-                ramsey_compiled,
-                model.basis_state(0, 0),
-                {"qubit": "qubit"},
-                config=SimulationConfig(frame=frame, max_step=dt),
-                noise=noise,
-            )
-            ramsey_like.append(final_expectation(ramsey_result, "P_e"))
+        def simulate_static_detuning_trace(delta_omega):
+            frame = FrameSpec(omega_q_frame=model.omega_q + float(delta_omega))
+            ramsey_trace = []
+            echo_trace = []
+            for delay_s in delays_s:
+                ramsey_pulses = [
+                    Pulse(x90.channel, 0.0, x90.duration, x90.envelope, amp=x90.amp, carrier=x90.carrier, phase=x90.phase, label="ramsey_a"),
+                    Pulse(x90.channel, x90.duration + delay_s, x90.duration, x90.envelope, amp=x90.amp, carrier=x90.carrier, phase=x90.phase, label="ramsey_b"),
+                ]
+                ramsey_t_end = 2.0 * x90.duration + delay_s + dt
+                ramsey_result = simulate_sequence(
+                    model,
+                    SequenceCompiler(dt=dt).compile(ramsey_pulses, t_end=ramsey_t_end),
+                    model.basis_state(0, 0),
+                    {"qubit": "qubit"},
+                    config=SimulationConfig(frame=frame, max_step=dt),
+                )
+                ramsey_trace.append(final_expectation(ramsey_result, "P_e"))
 
-            echo_pulses = [
-                Pulse(x90.channel, 0.0, x90.duration, x90.envelope, amp=x90.amp, carrier=x90.carrier, phase=0.0, label="echo_a"),
-                Pulse(x180.channel, x90.duration + 0.5 * delay_s, x180.duration, x180.envelope, amp=x180.amp, carrier=x180.carrier, phase=0.0, label="echo_pi"),
-                Pulse(x90.channel, x90.duration + delay_s + x180.duration, x90.duration, x90.envelope, amp=x90.amp, carrier=x90.carrier, phase=0.0, label="echo_b"),
-            ]
-            echo_t_end = 2.0 * x90.duration + x180.duration + delay_s + dt
-            echo_compiled = SequenceCompiler(dt=dt).compile(echo_pulses, t_end=echo_t_end)
-            echo_result = simulate_sequence(
-                model,
-                echo_compiled,
-                model.basis_state(0, 0),
-                {"qubit": "qubit"},
-                config=SimulationConfig(frame=frame, max_step=dt),
-                noise=noise,
-            )
-            echo.append(final_expectation(echo_result, "P_e"))
-        ramsey_like = np.asarray(ramsey_like, dtype=float)
-        echo = np.asarray(echo, dtype=float)
+                echo_pulses = [
+                    Pulse(x90.channel, 0.0, x90.duration, x90.envelope, amp=x90.amp, carrier=x90.carrier, phase=x90.phase, label="echo_a"),
+                    Pulse(x180.channel, x90.duration + 0.5 * delay_s, x180.duration, x180.envelope, amp=x180.amp, carrier=x180.carrier, phase=x180.phase, label="echo_pi"),
+                    Pulse(minus_x90.channel, x90.duration + delay_s + x180.duration, minus_x90.duration, minus_x90.envelope, amp=minus_x90.amp, carrier=minus_x90.carrier, phase=minus_x90.phase, label="echo_b"),
+                ]
+                echo_t_end = 2.0 * x90.duration + x180.duration + delay_s + dt
+                echo_result = simulate_sequence(
+                    model,
+                    SequenceCompiler(dt=dt).compile(echo_pulses, t_end=echo_t_end),
+                    model.basis_state(0, 0),
+                    {"qubit": "qubit"},
+                    config=SimulationConfig(frame=frame, max_step=dt),
+                )
+                echo_trace.append(final_expectation(echo_result, "P_e"))
+
+            return np.asarray(ramsey_trace, dtype=float), np.asarray(echo_trace, dtype=float)
         """
             ),
             md("## 7. Running the Simulation"),
             code(
                 """
-        fit = fit_echo_signal(delays_s, echo, p0=(t2_echo_target, 0.5, 0.5))
-        print(f"Representative echo-envelope fit T2_echo = {fit.parameters['t2_echo'] / us:.3f} us")
+        ramsey_mean = np.zeros_like(delays_s, dtype=float)
+        echo_mean = np.zeros_like(delays_s, dtype=float)
+        for delta_omega, weight in zip(detuning_offsets, detuning_weights, strict=True):
+            ramsey_trace, echo_trace = simulate_static_detuning_trace(delta_omega)
+            ramsey_mean += float(weight) * ramsey_trace
+            echo_mean += float(weight) * echo_trace
+
+        ramsey_theory = gaussian_quasistatic_ramsey_excited_population(delays_s, sigma_detuning)
+        echo_theory = gaussian_quasistatic_echo_excited_population(delays_s)
+        print(f"Ramsey ensemble RMS error = {np.sqrt(np.mean((ramsey_mean - ramsey_theory) ** 2)):.3e}")
+        print(f"Echo ensemble RMS error = {np.sqrt(np.mean((echo_mean - echo_theory) ** 2)):.3e}")
         """
             ),
             md("## 8. Visualizing the Results"),
             code(
                 """
         fig, ax = plt.subplots()
-        ax.plot(delays_us, ramsey_like, "o-", label="Ramsey-style sequence")
-        ax.plot(delays_us, echo, "o-", label="Spin echo")
-        ax.plot(delays_us, fit.model_y, "--", label="Echo fit")
+        ax.plot(delays_us, ramsey_mean, "o-", label="pulse-level Ramsey ensemble")
+        ax.plot(delays_us, ramsey_theory, "--", color="tab:blue", alpha=0.8, label=r"theory $0.5(1 + e^{-\\sigma_\\delta^2 t^2 / 2})$")
+        ax.plot(delays_us, echo_mean, "o-", label="pulse-level Hahn echo ensemble")
+        ax.plot(delays_us, echo_theory, ":", color="tab:orange", alpha=0.8, label="ideal echo theory")
         ax.set_xlabel("Total delay [us]")
         ax.set_ylabel(r"Final $P_e$")
-        ax.set_title("Spin echo mitigates low-frequency dephasing")
+        ax.set_title("Spin echo refocuses quasi-static detuning")
         ax.legend()
         plt.show()
         """
             ),
-            md("## 9. Physical Interpretation\n\nThe echo trace decays more slowly because the middle `pi` pulse refocuses static or slowly varying phase errors. That is why echo is often used to distinguish reversible dephasing from irreversible coherence loss."),
-            md("## 10. Exercises / Next Steps\n\n- Add a deliberate detuning offset and verify that the Ramsey-like sequence is much more sensitive to it than the echo sequence.\n- Compare the fitted echo envelope to the direct `run_t2_echo(...)` calibration-target helper introduced later in Tutorial 23.\n- Continue to Tutorial 14 for bosonic Kerr dynamics."),
+            md("## 9. Physical Interpretation\n\nThis notebook now isolates the physics that Hahn echo actually refocuses: quasi-static detuning disorder. The middle `pi` pulse cancels the deterministic phase picked up in the first half of the sequence, so the ensemble-averaged echo stays near unity even when Ramsey dephases to `0.5`. Markovian `T_phi` noise is a different process and is not what this tutorial is meant to demonstrate."),
+            md("## 10. Exercises / Next Steps\n\n- Add a finite `T1` model on top of the static detuning ensemble and watch the echo plateau acquire an irreversible decay envelope.\n- Increase `sigma_detuning` and confirm that the Ramsey collapse speeds up while the ideal echo stays nearly unchanged.\n- Continue to Tutorial 14 for bosonic Kerr dynamics."),
         ],
     )
 
@@ -1611,7 +1649,7 @@ def generate_batch_2() -> None:
                 "Tutorials 03, 05, and 08 are recommended first.",
             ),
             md("## 1. Goal\n\nWe will isolate self-Kerr evolution in the storage mode and visualize how the cavity moments and Wigner function change over time."),
-            md("## 2. Physical Background\n\nIn the matched rotating frame, a cavity with self-Kerr no longer undergoes a large bare rotation, but it still accumulates number-dependent phase. That phase bends the coherent-state trajectory away from rigid harmonic motion."),
+            md("## 2. Physical Background\n\nIn the matched rotating frame, a cavity with self-Kerr no longer undergoes a large bare rotation, but it still accumulates number-dependent phase. The exact invariant in this closed system is `⟨n(t)⟩ = |alpha|^2`, while the Kerr phase shears the coherent-state trajectory in phase space."),
             md("## 3. Imports"),
             code(COMMON_IMPORTS),
             md("## 4. Simulation Parameters"),
@@ -1624,6 +1662,7 @@ def generate_batch_2() -> None:
             md("## 5. Model Construction"),
             code(
                 """
+        initial_alpha = 1.8
         model = DispersiveTransmonCavityModel(
             omega_c=GHz(5.05),
             omega_q=GHz(6.25),
@@ -1636,7 +1675,7 @@ def generate_batch_2() -> None:
         frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
         initial_state = prepare_state(
             model,
-            StatePreparationSpec(qubit=qubit_state("g"), storage=coherent_state(1.8)),
+            StatePreparationSpec(qubit=qubit_state("g"), storage=coherent_state(initial_alpha)),
         )
         """
             ),
@@ -1658,6 +1697,8 @@ def generate_batch_2() -> None:
         )
         cavity_means = np.array([mode_moments(state, "storage")["a"] for state in result.states], dtype=np.complex128)
         photon_numbers = np.array([mode_moments(state, "storage")["n"] for state in result.states], dtype=float)
+        expected_photon_number = np.full_like(photon_numbers, abs(initial_alpha) ** 2, dtype=float)
+        print(f"Maximum |<n> - |alpha|^2| = {np.max(np.abs(photon_numbers - expected_photon_number)):.3e}")
         """
             ),
             md("## 8. Visualizing the Results"),
@@ -1669,10 +1710,12 @@ def generate_batch_2() -> None:
         axes[0].set_ylabel(r"Im$\\langle a \\rangle$")
         axes[0].set_title("Coherent-state trajectory under self-Kerr")
 
-        axes[1].plot(compiled.tlist / us, photon_numbers)
+        axes[1].plot(compiled.tlist / us, photon_numbers, label="simulation")
+        axes[1].plot(compiled.tlist / us, expected_photon_number, "--", color="black", alpha=0.8, label=r"theory $|\\alpha|^2$")
         axes[1].set_xlabel("Time [us]")
         axes[1].set_ylabel(r"$\\langle n \\rangle$")
         axes[1].set_title("Mean cavity occupation during Kerr evolution")
+        axes[1].legend()
         plt.show()
 
         final_rho_c = reduced_cavity_state(result.final_state)
@@ -1686,7 +1729,7 @@ def generate_batch_2() -> None:
         plt.show()
         """
             ),
-            md("## 9. Physical Interpretation\n\nThe cavity photon number stays nearly constant because there is no loss term here. The interesting physics is the nonlinear phase accumulation, which shears the phase-space distribution and bends the coherent-state trajectory."),
+            md("## 9. Physical Interpretation\n\nThe cavity photon number stays locked to `|alpha|^2` because the Hamiltonian is closed and number conserving. The visible change is purely phase-space shearing: different Fock components accumulate different phases even though the population distribution itself is unchanged."),
             md("## 10. Exercises / Next Steps\n\n- Reverse the sign of the Kerr coefficient and compare the direction of the phase-space bending.\n- Add a small cavity decay rate and observe how loss and Kerr compete.\n- Continue to Tutorials 15 and 16 for cross-Kerr and lossy bosonic dynamics."),
         ],
     )
@@ -1701,7 +1744,7 @@ def generate_batch_2() -> None:
                 "Tutorials 08 and 14 are recommended first.",
             ),
             md("## 1. Goal\n\nWe will compare free evolution with and without a readout photon and measure the extra phase accumulated by a storage-mode superposition."),
-            md("## 2. Physical Background\n\nA cross-Kerr term shifts one bosonic mode depending on the occupation of another. In a storage-readout setting, that means the storage phase evolution can depend on the readout photon number even when the transmon stays in `|g>`."),
+            md("## 2. Physical Background\n\nA cross-Kerr term shifts one bosonic mode depending on the occupation of another. For the storage superposition `(|0> + |1>) / sqrt(2)` with one readout photon present, the relative storage phase obeys `phi_cond(t) = -chi_sr t` because the unitary evolution is `exp(-i H t)`."),
             md("## 3. Imports"),
             code(COMMON_IMPORTS),
             md("## 4. Simulation Parameters"),
@@ -1758,6 +1801,9 @@ def generate_batch_2() -> None:
         phase_r0 = relative_phase(result_r0.states, 0)
         phase_r1 = relative_phase(result_r1.states, 1)
         conditional_phase = phase_r1 - phase_r0
+        times_s = np.asarray(compiled.tlist, dtype=float)
+        expected_conditional_phase = cross_kerr_conditional_phase(times_s, model.chi_sr)
+        print(f"Maximum |simulation - theory| = {np.max(np.abs(conditional_phase - expected_conditional_phase)):.3e}")
         """
             ),
             md("## 8. Visualizing the Results"),
@@ -1765,6 +1811,7 @@ def generate_batch_2() -> None:
                 """
         fig, ax = plt.subplots()
         ax.plot(compiled.tlist / us, conditional_phase, label="simulated conditional phase")
+        ax.plot(compiled.tlist / us, expected_conditional_phase, "--", color="black", alpha=0.8, label=r"theory $-\\chi_{sr} t$")
         ax.set_xlabel("Time [us]")
         ax.set_ylabel("Extra phase [rad]")
         ax.set_title("Storage phase conditioned on readout occupancy")
@@ -1772,7 +1819,7 @@ def generate_batch_2() -> None:
         plt.show()
         """
             ),
-            md("## 9. Physical Interpretation\n\nThe difference between the two phase traces is the operational meaning of the storage-readout cross-Kerr term. This is the bosonic analogue of a conditional frequency pull: one mode's phase evolution knows about the other's occupation."),
+            md("## 9. Physical Interpretation\n\nThe simulated slope follows `-chi_sr` because the conditional phase is a dynamical phase generated by `exp(-i H t)`. This is the bosonic analogue of a conditional frequency pull: one mode's phase evolution knows about the other's occupation, and the sign is fixed by the Hamiltonian convention rather than by plotting choices."),
             md("## 10. Exercises / Next Steps\n\n- Increase `chi_sr` and confirm that the phase slope scales linearly.\n- Add storage or readout self-Kerr and separate the conditional effect from the single-mode nonlinearity.\n- Continue to Tutorial 17 for readout-chain modeling on top of the three-mode picture."),
         ],
     )

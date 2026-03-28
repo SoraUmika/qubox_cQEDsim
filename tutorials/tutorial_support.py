@@ -38,6 +38,49 @@ def angular_to_ghz(angular_frequency: float) -> float:
     return angular_to_hz(angular_frequency) / 1.0e9
 
 
+def resonant_drive_excited_population(
+    omega_drive: float | np.ndarray,
+    duration_s: float | np.ndarray,
+) -> np.ndarray:
+    return np.sin(np.asarray(omega_drive, dtype=float) * np.asarray(duration_s, dtype=float)) ** 2
+
+
+def t1_relaxation_population(delays_s: float | np.ndarray, t1_s: float) -> np.ndarray:
+    delays = np.asarray(delays_s, dtype=float)
+    return np.exp(-delays / float(t1_s))
+
+
+def ramsey_population(
+    delays_s: float | np.ndarray,
+    detuning_rad_s: float,
+    t2_star_s: float,
+) -> np.ndarray:
+    delays = np.asarray(delays_s, dtype=float)
+    return 0.5 * (1.0 + np.exp(-delays / float(t2_star_s)) * np.cos(float(detuning_rad_s) * delays))
+
+
+def gaussian_quasistatic_ramsey_excited_population(
+    delays_s: float | np.ndarray,
+    sigma_detuning_rad_s: float,
+) -> np.ndarray:
+    delays = np.asarray(delays_s, dtype=float)
+    sigma = float(sigma_detuning_rad_s)
+    return 0.5 * (1.0 + np.exp(-0.5 * (sigma * delays) ** 2))
+
+
+def gaussian_quasistatic_echo_excited_population(delays_s: float | np.ndarray) -> np.ndarray:
+    delays = np.asarray(delays_s, dtype=float)
+    return np.ones_like(delays, dtype=float)
+
+
+def cross_kerr_conditional_phase(
+    delays_s: float | np.ndarray,
+    chi_sr_rad_s: float,
+) -> np.ndarray:
+    delays = np.asarray(delays_s, dtype=float)
+    return -float(chi_sr_rad_s) * delays
+
+
 def final_expectation(result, key: str) -> float:
     return float(np.real(np.asarray(result.expectations[key], dtype=np.complex128)[-1]))
 
@@ -288,6 +331,7 @@ __all__ = [
     "angular_to_hz",
     "angular_to_mhz",
     "coherent_alpha_from_state_moment",
+    "cross_kerr_conditional_phase",
     "echo_signal",
     "exponential_decay",
     "final_expectation",
@@ -297,6 +341,8 @@ __all__ = [
     "fit_rabi_vs_amplitude",
     "fit_rabi_vs_duration",
     "fit_ramsey_signal",
+    "gaussian_quasistatic_echo_excited_population",
+    "gaussian_quasistatic_ramsey_excited_population",
     "hz_to_angular",
     "khz",
     "lorentzian",
@@ -305,5 +351,8 @@ __all__ = [
     "rabi_vs_amplitude",
     "rabi_vs_duration",
     "ramsey_signal",
+    "ramsey_population",
+    "resonant_drive_excited_population",
+    "t1_relaxation_population",
     "us",
 ]

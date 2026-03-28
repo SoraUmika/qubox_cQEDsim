@@ -122,6 +122,22 @@ These numbered notebooks cover individual physics topics and API features in det
 
 These documentation pages provide physics background, plots, and code summaries for each tutorial topic:
 
+### Foundational Curriculum
+- [Minimal Dispersive Model](minimal_dispersive_model.md) — model construction, dressed energy spectrum, ω_ge(n) vs photon number
+- [Units, Frames & Conventions](units_frames_conventions.md) — angular frequency units, rotating frame, carrier sign, χ sign convention
+- [Qubit Drive & Rabi](qubit_drive_rabi.md) — resonant Rabi oscillation, time Rabi, power Rabi
+- [Observables & Visualization](observables_visualization.md) — Bloch vectors, Wigner functions, reduced states
+- [Dispersive Shift & Dressed States](dispersive_shift_dressed.md) — exact vs linear dispersive shift, Kerr curvature
+- [Open System Dynamics](open_system_dynamics.md) — T₁ relaxation, Ramsey dephasing, Hahn spin echo
+- [Storage Cavity Dynamics](storage_cavity_dynamics.md) — coherent state decay, cavity lifetime
+- [Readout Resonator](readout_resonator.md) — dispersive readout, IQ separation, pointer states
+- [Multilevel Transmon](multilevel_transmon.md) — higher transmon levels, anharmonic spectrum, leakage
+- [Truncation Convergence](truncation_convergence.md) — choosing n_cav and n_tr, convergence testing
+- [Sequence Building](sequence_building.md) — pulse sequences, compilation, batch simulation
+- [Sideband Interactions](sideband_interactions.md) — red/blue sideband, state transfer, SNAP building blocks
+- [Calibration Workflow](calibration_workflow.md) — Rabi calibration, T₁/T₂ fitting, end-to-end loop
+- [Frame Sanity Checks](frame_sanity_checks.md) — common failure modes, diagnostic checklist
+
 ### Getting Started
 - [Protocol-Style Simulation](getting_started_simulation.md) — model → pulse → compile → simulate → measure
 

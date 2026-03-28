@@ -92,6 +92,22 @@ nav:
   - Tutorials:
       - Overview: tutorials/index.md
 
+      - Foundational Curriculum:
+          - Minimal Dispersive Model: tutorials/minimal_dispersive_model.md
+          - Units, Frames & Conventions: tutorials/units_frames_conventions.md
+          - Qubit Drive & Rabi: tutorials/qubit_drive_rabi.md
+          - Observables & Visualization: tutorials/observables_visualization.md
+          - Dispersive Shift & Dressed States: tutorials/dispersive_shift_dressed.md
+          - Open System Dynamics: tutorials/open_system_dynamics.md
+          - Storage Cavity Dynamics: tutorials/storage_cavity_dynamics.md
+          - Readout Resonator: tutorials/readout_resonator.md
+          - Multilevel Transmon: tutorials/multilevel_transmon.md
+          - Truncation Convergence: tutorials/truncation_convergence.md
+          - Sequence Building: tutorials/sequence_building.md
+          - Sideband Interactions: tutorials/sideband_interactions.md
+          - Calibration Workflow: tutorials/calibration_workflow.md
+          - Frame Sanity Checks: tutorials/frame_sanity_checks.md
+
       - Getting Started:
           - Protocol-Style Simulation: tutorials/getting_started_simulation.md
 

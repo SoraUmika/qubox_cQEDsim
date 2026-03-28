@@ -1,0 +1,11 @@
+name,value,lower_bound,upper_bound,default,units,description
+fourier_basis.i_cos_0,18049584.172569335,-40000000.0,40000000.0,0.0,rad/s,I-quadrature cosine coefficient for Fourier mode 0.
+fourier_basis.i_cos_1,6917940.479742642,-40000000.0,40000000.0,0.0,rad/s,I-quadrature cosine coefficient for Fourier mode 1.
+fourier_basis.i_cos_2,6053087.04022349,-40000000.0,40000000.0,0.0,rad/s,I-quadrature cosine coefficient for Fourier mode 2.
+fourier_basis.i_sin_1,10584472.012595247,-40000000.0,40000000.0,0.0,rad/s,I-quadrature sine coefficient for Fourier mode 1.
+fourier_basis.i_sin_2,-1066757.6032601541,-40000000.0,40000000.0,0.0,rad/s,I-quadrature sine coefficient for Fourier mode 2.
+fourier_basis.q_cos_0,36721688.81526205,-40000000.0,40000000.0,0.0,rad/s,Q-quadrature cosine coefficient for Fourier mode 0.
+fourier_basis.q_cos_1,-17589219.122382972,-40000000.0,40000000.0,0.0,rad/s,Q-quadrature cosine coefficient for Fourier mode 1.
+fourier_basis.q_cos_2,-2832873.615255177,-40000000.0,40000000.0,0.0,rad/s,Q-quadrature cosine coefficient for Fourier mode 2.
+fourier_basis.q_sin_1,9963409.252950478,-40000000.0,40000000.0,0.0,rad/s,Q-quadrature sine coefficient for Fourier mode 1.
+fourier_basis.q_sin_2,4502799.144385102,-40000000.0,40000000.0,0.0,rad/s,Q-quadrature sine coefficient for Fourier mode 2.

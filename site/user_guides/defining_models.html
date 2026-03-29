@@ -3824,8 +3824,8 @@
 <hr />
 <h2 id="two-mode-dispersivetransmoncavitymodel">Two-Mode: DispersiveTransmonCavityModel<a class="headerlink" href="#two-mode-dispersivetransmoncavitymodel" title="Permanent link">&para;</a></h2>
 <p>The most common starting point for qubit + storage/cavity simulations:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span> <span class="nn">cqed_sim.core</span> <span class="kn">import</span> <span class="n">DispersiveTransmonCavityModel</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">DispersiveTransmonCavityModel</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">model</span> <span class="o">=</span> <span class="n">DispersiveTransmonCavityModel</span><span class="p">(</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">omega_c</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mf">5.0e9</span><span class="p">,</span>       <span class="c1"># Cavity frequency (rad/s)</span>
@@ -3912,8 +3912,8 @@
 <hr />
 <h2 id="three-mode-dispersivereadouttransmonstoragemodel">Three-Mode: DispersiveReadoutTransmonStorageModel<a class="headerlink" href="#three-mode-dispersivereadouttransmonstoragemodel" title="Permanent link">&para;</a></h2>
 <p>For systems with a readout resonator:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span> <span class="nn">cqed_sim.core</span> <span class="kn">import</span> <span class="n">DispersiveReadoutTransmonStorageModel</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">DispersiveReadoutTransmonStorageModel</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">model</span> <span class="o">=</span> <span class="n">DispersiveReadoutTransmonStorageModel</span><span class="p">(</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">omega_s</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="mf">5.0e9</span><span class="p">,</span>       <span class="c1"># Storage frequency (rad/s)</span>
@@ -3947,8 +3947,8 @@
 <hr />
 <h2 id="general-universalcqedmodel">General: UniversalCQEDModel<a class="headerlink" href="#general-universalcqedmodel" title="Permanent link">&para;</a></h2>
 <p>For maximum flexibility, including multilevel transmon, arbitrary number of bosonic modes, and custom couplings:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span> <span class="nn">cqed_sim.core</span> <span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">BosonicModeSpec</span><span class="p">,</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">DispersiveCouplingSpec</span><span class="p">,</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">TransmonModeSpec</span><span class="p">,</span>
@@ -4008,7 +4008,7 @@
 </span></code></pre></div>
 <h3 id="additional-coupling-terms">Additional Coupling Terms<a class="headerlink" href="#additional-coupling-terms" title="Permanent link">&para;</a></h3>
 <p>Add cross-Kerr, self-Kerr, and exchange couplings:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.core</span> <span class="kn">import</span> <span class="n">CrossKerrSpec</span><span class="p">,</span> <span class="n">SelfKerrSpec</span><span class="p">,</span> <span class="n">ExchangeSpec</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">CrossKerrSpec</span><span class="p">,</span> <span class="n">SelfKerrSpec</span><span class="p">,</span> <span class="n">ExchangeSpec</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">model</span> <span class="o">=</span> <span class="n">UniversalCQEDModel</span><span class="p">(</span>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="o">...</span><span class="p">,</span>
@@ -4033,9 +4033,9 @@
 <h2 id="inspecting-energy-levels">Inspecting Energy Levels<a class="headerlink" href="#inspecting-energy-levels" title="Permanent link">&para;</a></h2>
 <p>Every model now exposes <code>energy_spectrum(...)</code> for exact diagonalization of the
 static Hamiltonian:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">from</span> <span class="nn">cqed_sim</span> <span class="kn">import</span> <span class="n">FrameSpec</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="kn">from</span> <span class="nn">cqed_sim.plotting</span> <span class="kn">import</span> <span class="n">plot_energy_levels</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">FrameSpec</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.plotting</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_energy_levels</span>
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
 </span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">lab_spectrum</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">energy_spectrum</span><span class="p">(</span><span class="n">frame</span><span class="o">=</span><span class="n">FrameSpec</span><span class="p">(),</span> <span class="n">levels</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 </span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>

@@ -2893,6 +2893,8 @@ class LeakagePenalty:
     metric: str = "worst"
     checkpoint_weight: float = 0.0
     checkpoints: tuple[int, ...] = ()
+    edge_weight: float = 0.0
+    edge_projector: Subspace | Sequence[int] | np.ndarray | None = None
 ```
 
 ```python
@@ -2932,6 +2934,8 @@ ParameterDistribution(
 )
 ```
 
+`LeakagePenalty.weight` penalizes final retained-subspace leakage. `checkpoint_weight` adds a soft path-leakage term evaluated at the requested partial products while still leaving path-leakage metrics visible in reports even when that penalty weight is zero. `edge_weight` penalizes occupancy of the user-specified `edge_projector` separately from logical leakage, which is useful for steering residual amplitude away from the truncation edge without changing the task target itself.
+
 ### 17.7 UnitarySynthesizer
 
 ```python
@@ -2964,6 +2968,7 @@ Important behavior:
 - Closed-system unitary targets still use direct subspace-unitary fidelity.
 - Open-system unitary targets automatically switch to probe-state fidelity.
 - `ObservableTarget`, `TrajectoryTarget`, `TargetReducedStateMapping`, `TargetIsometry`, and `TargetChannel` let the task be defined directly on relevant outputs, reduced states, logical columns, checkpointed trajectories, or full process actions.
+- Relevant-map objectives can be regularized with final logical leakage, checkpoint/path leakage, and edge-projector occupancy without turning the problem into a full-Hilbert-space unitary match.
 - `system=...` is the preferred future-facing entry point for backend integration.
 - `model=...` remains supported for cQED workflows and is auto-wrapped.
 - `parameter_distribution` samples model variants and folds them into the synthesis objective.
@@ -3055,6 +3060,8 @@ class SynthesisResult:
 | `diagnostics()` | `-> dict` | Compact diagnostic dict (sequence, report, history) |
 | `plot_convergence(what, fidelity_what)` | `-> Figure` | 2-panel convergence plot (objective + fidelity) |
 
+`SynthesisResult.report` records target metadata, execution-backend selection, selected-metric details, logical/path/edge leakage summaries, `leakage_diagnostics.path_profile`, serialized edge-projector metadata, truncation sanity diagnostics, and target-specific reduced-state, isometry, observable, trajectory, or channel metrics when applicable.
+
 #### ParetoFrontResult
 
 ```python
@@ -3096,7 +3103,10 @@ class LogicalBlockPhaseDiagnostics:
 |---|---|---|
 | `subspace_unitary_fidelity(actual, target, gauge="global", block_slices=None)` | `(ndarray, ndarray, str, ...) -> float` | Subspace fidelity with gauge `"none"`, `"global"`, `"diagonal"`, or `"block"` |
 | `leakage_metrics(full_operator, subspace, probes=None, n_jobs=1)` | `(ndarray, Subspace, ...) -> LeakageMetrics` | Compute average/worst leakage from subspace basis vectors |
+| `projector_population_metrics(states, projector, *, full_dim=None)` | `(Sequence, Any, ...) -> LeakageMetrics` | Average/worst occupancy of a user-specified projector across propagated states |
+| `projected_density_matrix(state, projector, *, full_dim=None, normalize=False)` | `(qt.Qobj\|ndarray, Any, ...) -> tuple[ndarray, float]` | Project a state or density matrix onto a logical/user projector and return the retained trace |
 | `logical_block_phase_diagnostics(actual, target, *, block_slices, applied_correction_phases=None)` | `(ndarray, ndarray, ...) -> LogicalBlockPhaseDiagnostics` | Gauge-fixed block-overlap phases, best-fit block-phase correction, and residual RMS after an optional applied correction |
+| `state_population_distribution(state)` | `(qt.Qobj\|ndarray) -> ndarray` | Basis-population distribution for a propagated pure state or density matrix |
 | `state_leakage_metrics(states, subspace)` | `(Sequence, Subspace) -> LeakageMetrics` | Leakage from already-propagated output states |
 | `state_mapping_metrics(outputs, targets, *, weights=None)` | `(Sequence, Sequence, ...) -> dict` | Weighted state fidelity and error metrics |
 | `channel_action_metrics(actual_superoperator, actual_choi, *, target_choi, target_superoperator=None, trace_values=None)` | `-> dict` | Channel/process error, overlap, trace-preservation, and CP diagnostics |
@@ -3116,6 +3126,21 @@ Channel-style targets additionally report `channel_overlap`, `channel_choi_error
 `complete_positivity_violation`. All synthesis reports now also include
 `truncation.retained_edge_population_*` and `truncation.outside_tail_population_*`
 for cutoff sanity checks.
+
+#### Visualization Helpers
+
+**Module path:** `cqed_sim.unitary_synthesis.visualization`
+
+These plotting helpers are intended for post-fit leakage analysis and tutorial/example reporting:
+
+- `reorder_operator_by_subspace(operator, logical_subspace)`
+- `plot_operator_magnitude_heatmap(operator, logical_subspace, *, ax=None, title=..., cmap="magma")`
+- `plot_leakage_block_heatmap(operator, logical_subspace, *, ax=None, title=..., cmap="magma")`
+- `plot_output_population_bars(states, *, basis_labels=None, state_labels=None, axes=None, max_states=None)`
+- `plot_density_matrix_heatmap(state, *, ax=None, title=..., cmap="magma")`
+- `plot_projected_logical_density(state, logical_projector, *, ax=None, title=..., normalize=False, cmap="magma")`
+- `plot_leakage_profile(profile, *, ax=None, x_axis="step", title=None)`
+- `plot_edge_population_summary(truncation_metrics, *, edge_metrics=None, ax=None, title=...)`
 
 #### Progress Reporting
 

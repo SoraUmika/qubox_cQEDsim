@@ -55,7 +55,7 @@ Each stage builds on the previous one. Within each stage, notebooks are intended
 |---|---|
 | `30_advanced_protocols/01_multimode_crosskerr.ipynb` | Multi-mode cross-Kerr interaction and conditional phase accumulation |
 | `30_advanced_protocols/02_open_system_sideband_degradation.ipynb` | Open-system degradation of sideband swap under T₁, T₂, and cavity loss |
-| `30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` | Subspace-targeted unitary synthesis with gate sequence optimization |
+| `30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` | Constraint-aware, leakage-aware, target-action, and leakage-visualization unitary synthesis workflows |
 | `30_advanced_protocols/04_snap_optimization_workflow.ipynb` | SNAP gate optimization for bosonic state preparation |
 | `30_advanced_protocols/05_rl_hybrid_control_environment.ipynb` | Gym-compatible RL environment for cQED control with measurement-like observations |
 | `30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` | GRAPE optimal control: problem setup, hardware maps, solve, replay, and benchmark |
@@ -152,7 +152,7 @@ These documentation pages provide physics background, plots, and code summaries 
 - [Sideband Swap & Bosonic Control](sideband_swap.md) — red-sideband energy matching, |e,0⟩↔|g,1⟩ Rabi oscillation, detuned/sequential/shelving variants
 
 ### Advanced Control
-- [Unitary Synthesis](unitary_synthesis.md) — gate sequence optimization: constraint, leakage, robust, Pareto, trajectory, flexible targets
+- [Unitary Synthesis](unitary_synthesis.md) — gate sequence optimization: constraint, leakage, robust, Pareto, target-action matching, and leakage visualization
 - [SNAP & Fock State Prep](snap_fock_state_prep.md) — SNAP gate physics, Displacement–SNAP–Displacement protocol, Wigner-verified Fock state preparation
 - [GRAPE Optimal Control](optimal_control.md) — GRAPE algorithm, hardware-aware mode, convergence plots, replay verification
 - [RL Hybrid Control](rl_hybrid_control.md) — Gym environment, measurement-conditioned control, domain randomization

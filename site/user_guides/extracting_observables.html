@@ -3734,7 +3734,7 @@
 <hr />
 <h2 id="partial-traces">Partial Traces<a class="headerlink" href="#partial-traces" title="Permanent link">&para;</a></h2>
 <p>Extract reduced states for individual subsystems:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.sim</span> <span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">reduced_qubit_state</span><span class="p">,</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">reduced_cavity_state</span><span class="p">,</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">reduced_storage_state</span><span class="p">,</span>
@@ -3755,13 +3755,13 @@
 </span></code></pre></div>
 <hr />
 <h2 id="bloch-vector">Bloch Vector<a class="headerlink" href="#bloch-vector" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.sim</span> <span class="kn">import</span> <span class="n">bloch_xyz_from_joint</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">bloch_xyz_from_joint</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">bloch_xyz_from_joint</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 </span></code></pre></div>
 <p>Computes the Bloch vector from the reduced qubit state. Requires a two-level transmon.</p>
 <h3 id="fock-conditioned-bloch-vectors">Fock-Conditioned Bloch Vectors<a class="headerlink" href="#fock-conditioned-bloch-vectors" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.sim</span> <span class="kn">import</span> <span class="n">conditioned_bloch_xyz</span><span class="p">,</span> <span class="n">conditioned_qubit_state</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">conditioned_bloch_xyz</span><span class="p">,</span> <span class="n">conditioned_qubit_state</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">p_n</span><span class="p">,</span> <span class="n">valid</span> <span class="o">=</span> <span class="n">conditioned_bloch_xyz</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">rho_q</span><span class="p">,</span> <span class="n">p_n</span><span class="p">,</span> <span class="n">valid</span> <span class="o">=</span> <span class="n">conditioned_qubit_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
@@ -3769,7 +3769,7 @@
 <p>Returns the Bloch vector of the qubit conditioned on the cavity being in Fock state <span class="arithmatex">\(|n\rangle\)</span>.</p>
 <hr />
 <h2 id="photon-numbers-and-moments">Photon Numbers and Moments<a class="headerlink" href="#photon-numbers-and-moments" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.sim</span> <span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">cavity_moments</span><span class="p">,</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">storage_moments</span><span class="p">,</span>
 </span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">readout_moments</span><span class="p">,</span>
@@ -3787,7 +3787,7 @@
 </span></code></pre></div>
 <hr />
 <h2 id="multilevel-population-helpers">Multilevel Population Helpers<a class="headerlink" href="#multilevel-population-helpers" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.sim</span> <span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">subsystem_level_population</span><span class="p">,</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">transmon_level_populations</span><span class="p">,</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">compute_shelving_leakage</span><span class="p">,</span>
@@ -3808,7 +3808,7 @@
 </span></code></pre></div>
 <hr />
 <h2 id="qubit-conditioned-mode-observables">Qubit-Conditioned Mode Observables<a class="headerlink" href="#qubit-conditioned-mode-observables" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.sim</span> <span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">qubit_conditioned_subsystem_state</span><span class="p">,</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">qubit_conditioned_mode_moments</span><span class="p">,</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">readout_response_by_qubit_state</span><span class="p">,</span>
@@ -3826,7 +3826,7 @@
 </span></code></pre></div>
 <hr />
 <h2 id="wigner-function">Wigner Function<a class="headerlink" href="#wigner-function" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span> <span class="nn">cqed_sim.sim</span> <span class="kn">import</span> <span class="n">cavity_wigner</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">cavity_wigner</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">rho_c</span> <span class="o">=</span> <span class="n">reduced_cavity_state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">xvec</span><span class="p">,</span> <span class="n">yvec</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">cavity_wigner</span><span class="p">(</span>
@@ -3844,7 +3844,7 @@
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">pe_vs_time</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">expectations</span><span class="p">[</span><span class="s2">&quot;P_e&quot;</span><span class="p">]</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Custom observables</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="kn">from</span> <span class="nn">cqed_sim.sim</span> <span class="kn">import</span> <span class="n">SimulationConfig</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">SimulationConfig</span>
 </span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
 </span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">simulate_sequence</span><span class="p">(</span>
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">model</span><span class="p">,</span> <span class="n">compiled</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">,</span> <span class="n">drive_ops</span><span class="p">,</span>

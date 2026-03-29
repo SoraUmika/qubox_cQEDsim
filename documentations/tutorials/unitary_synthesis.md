@@ -4,14 +4,16 @@ The main workflow notebook is:
 
 - `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
 
-The unitary-synthesis material now covers six realistic synthesis patterns. The notebook covers the first four workflows below, and the two standalone example scripts at the end cover the new relevance-aware and flexible target-action workflows:
+The unitary-synthesis material now covers six realistic synthesis patterns in the main notebook, plus one standalone relevance-aware example script:
 
 1. constraint-limited optimization
 2. leakage-aware synthesis
 3. robust synthesis under model uncertainty
-4. multi-objective / Pareto exploration
-5. relevance-aware observable and trajectory objectives with accelerated ideal evaluation
-6. flexible target-action matching for reduced states, isometries, and channels
+4. export, warm start, and Pareto exploration
+5. flexible target-action matching for reduced states, isometries, and channels
+6. leakage-aware relevant-map optimization and visualization
+
+The separate `examples/unitary_synthesis_relevance_aware_optimizer.py` script still covers observable and trajectory objectives with accelerated ideal evaluation.
 
 ---
 
@@ -114,7 +116,7 @@ The synthesizer evaluates sampled model variants during optimization and records
 
 ---
 
-## Workflow 4: Pareto Exploration
+## Workflow 4: Export, Warm Start, and Pareto Exploration
 
 ```python
 front = synth.explore_pareto(
@@ -131,42 +133,7 @@ front = synth.explore_pareto(
 
 ---
 
-## Workflow 5: Relevant Observables, Trajectories, and Accelerated Evaluation
-
-```python
-from cqed_sim.unitary_synthesis import (
-    ExecutionOptions,
-    LeakagePenalty,
-    MultiObjective,
-    ObservableTarget,
-    TrajectoryCheckpoint,
-    TrajectoryTarget,
-    UnitarySynthesizer,
-)
-
-synth = UnitarySynthesizer(
-    subspace=subspace,
-    primitives=primitives,
-    target=TrajectoryTarget(
-        initial_states=[psi0],
-        checkpoints=[
-            TrajectoryCheckpoint(step=2, target_states=(phi2,), weight=1.0),
-            TrajectoryCheckpoint(step=4, observables=(number_op,), target_expectations=[[1.0]], weight=0.5),
-        ],
-    ),
-    leakage_penalty=LeakagePenalty(weight=0.05, checkpoint_weight=0.1, checkpoints=(2, 4)),
-    objectives=MultiObjective(task_weight=1.0, duration_weight=0.1, gate_count_weight=0.05),
-    execution=ExecutionOptions(engine="numpy"),
-)
-
-result = synth.fit(maxiter=200)
-```
-
-Use this pattern when the experiment cares about logical outputs, selected observables, and protocol checkpoints more than exact full-Hilbert-space operator agreement. The accelerated path currently targets closed-system `backend="ideal"` synthesis and falls back automatically for waveform-backed or noisy tasks.
-
----
-
-## Workflow 6: Flexible Target-Action Matching
+## Workflow 5: Flexible Target-Action Matching
 
 ```python
 from cqed_sim.unitary_synthesis import (
@@ -204,6 +171,33 @@ Use this path when the experiment only cares about a logical reduced state, an e
 
 ---
 
+## Workflow 6: Leakage-Aware Relevant-Map Optimization and Visualization
+
+```python
+import matplotlib.pyplot as plt
+
+from examples.unitary_synthesis_leakage_aware_visualization import (
+    comparison_summary,
+    plot_case_overview,
+    run_comparison,
+)
+
+results = run_comparison(maxiter_penalized=8)
+summary = comparison_summary(results)
+figures = plot_case_overview(results)
+plt.show()
+```
+
+This workflow keeps the task definition on the relevant reduced map while adding explicit regularizers and diagnostics for where discarded amplitude goes. The comparison uses three cases:
+
+- no leakage penalty
+- final logical leakage penalty
+- logical leakage plus an edge-projector penalty that steers the residual leakage away from the highest retained ancillary level
+
+The example is intentionally small and uses bounded iteration counts so the notebook remains responsive while still showing the qualitative difference between hidden ancilla motion, total logical leakage, and edge-of-truncation occupancy.
+
+---
+
 ## Notebook Outputs
 
 The notebook demonstrates:
@@ -213,12 +207,14 @@ The notebook demonstrates:
 - running a constrained unitary-target optimization
 - running leakage-aware noisy state-mapping synthesis
 - adding a `ParameterDistribution` for robustness
-- exporting and warm-starting a saved result
-- plotting convergence and inspecting a small Pareto front
+- exporting and warm-starting a saved result while inspecting a small Pareto front
+- running channel-first and isometry-style target-action matching
+- comparing leakage-aware relevant-map solutions with operator, density-matrix, and leakage-profile visualizations
 
 ![Unitary synthesis convergence](../assets/images/tutorials/unitary_synthesis_convergence.png)
 
-The repository also includes standalone example scripts that extend the notebook with the newer workflows:
+The repository also includes standalone example scripts that complement the notebook:
 
 - `examples/unitary_synthesis_relevance_aware_optimizer.py`
 - `examples/unitary_synthesis_flexible_target_actions.py`
+- `examples/unitary_synthesis_leakage_aware_visualization.py`

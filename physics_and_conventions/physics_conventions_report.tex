@@ -275,6 +275,11 @@ tensor ordering, and drive-target semantics used elsewhere in the repository.
   \item Leakage penalties are defined relative to a retained subspace in the same
   full Hilbert space used by the model and by the existing
   \texttt{unitary\_synthesis} subspace machinery.
+  \item The leakage-objective layer may distinguish final retained-subspace
+  leakage, checkpoint/path leakage along selected partial evolutions, and
+  occupancy of a user-chosen edge projector. The edge projector is an additional
+  regularizer or diagnostic; it does not redefine the logical subspace or change
+  a reduced-state or isometry task into a full-space unitary objective.
   \item Optional hardware maps such as first-order low-pass filters, radial I/Q
   limits, and boundary windows modify the physical waveform seen by GRAPE without
   changing the underlying Hamiltonian sign, frame, or tensor-ordering convention.

@@ -112,6 +112,69 @@ def test_isometry_target_matches_selected_logical_columns() -> None:
     result = synth.fit(maxiter=1)
     assert result.report["target"]["type"] == "isometry"
     assert result.report["metrics"]["state_fidelity_mean"] > 0.999999
+    assert result.report["metrics"]["isometry_coherent_fidelity"] > 0.999999
+
+
+def test_isometry_metric_override_distinguishes_basis_vs_coherent_match() -> None:
+    phase_skew = np.diag([1.0, -1.0, 1.0, 1.0]).astype(np.complex128)
+    target_isometry = np.eye(4, dtype=np.complex128)[:, :2]
+    primitive = PrimitiveGate(
+        name="phase_skew",
+        duration=20.0e-9,
+        matrix=phase_skew,
+        hilbert_dim=4,
+    )
+
+    coherent = UnitarySynthesizer(
+        subspace=Subspace.custom(4, range(4)),
+        primitives=[primitive],
+        target=TargetIsometry(target_isometry),
+        optimize_times=False,
+        seed=29,
+    ).fit(maxiter=1)
+
+    basis = UnitarySynthesizer(
+        subspace=Subspace.custom(4, range(4)),
+        primitives=[primitive],
+        target=TargetIsometry(target_isometry),
+        metric="isometry_basis_fidelity",
+        optimize_times=False,
+        seed=29,
+    ).fit(maxiter=1)
+
+    assert coherent.report["objective"]["selected_metrics"]["selected_metric_name"] == "isometry_coherent_fidelity"
+    assert basis.report["objective"]["selected_metrics"]["selected_metric_name"] == "isometry_basis_fidelity"
+    assert coherent.report["metrics"]["isometry_basis_fidelity"] > 0.999999
+    assert basis.report["metrics"]["isometry_basis_fidelity"] > 0.999999
+    assert coherent.report["metrics"]["isometry_coherent_fidelity"] < 1.0e-12
+    assert coherent.objective > 0.99
+    assert basis.objective < 1.0e-12
+
+
+def test_isometry_target_accepts_explicit_input_subspace() -> None:
+    primitive = PrimitiveGate(
+        name="identity4",
+        duration=20.0e-9,
+        matrix=np.eye(4, dtype=np.complex128),
+        hilbert_dim=4,
+    )
+    target = TargetIsometry.from_basis_map(
+        target_states=[
+            np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128),
+            np.array([0.0, 0.0, 1.0, 0.0], dtype=np.complex128),
+        ],
+        input_subspace=Subspace.custom(4, [0, 2]),
+    )
+    result = UnitarySynthesizer(
+        subspace=Subspace.custom(4, range(4)),
+        primitives=[primitive],
+        target=target,
+        optimize_times=False,
+        seed=31,
+    ).fit(maxiter=1)
+
+    assert result.report["metrics"]["isometry_coherent_fidelity"] > 0.999999
+    assert result.report["metrics"]["isometry_basis_fidelity"] > 0.999999
 
 
 def test_truncation_report_detects_outside_tail_loading() -> None:

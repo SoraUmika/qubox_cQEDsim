@@ -17,11 +17,13 @@ class LeakagePenalty:
     metric: str = "worst"
     checkpoint_weight: float = 0.0
     checkpoints: tuple[int, ...] = ()
+    edge_weight: float = 0.0
+    edge_projector: Any | None = None
 
     def __post_init__(self) -> None:
         if self.metric not in {"worst", "average"}:
             raise ValueError("LeakagePenalty.metric must be 'worst' or 'average'.")
-        if float(self.weight) < 0.0 or float(self.checkpoint_weight) < 0.0:
+        if float(self.weight) < 0.0 or float(self.checkpoint_weight) < 0.0 or float(self.edge_weight) < 0.0:
             raise ValueError("LeakagePenalty weights must be non-negative.")
         object.__setattr__(self, "checkpoints", tuple(int(idx) for idx in self.checkpoints))
 
@@ -50,11 +52,35 @@ class LeakagePenalty:
             subspace_payload = None
         else:
             subspace_payload = [int(idx) for idx in subspace]
+        edge_projector = self.edge_projector
+        if isinstance(edge_projector, Subspace):
+            edge_payload: Any = {
+                "kind": "subspace",
+                "subspace_kind": edge_projector.kind,
+                "full_dim": int(edge_projector.full_dim),
+                "indices": list(edge_projector.indices),
+                "labels": list(edge_projector.labels),
+            }
+        elif edge_projector is None:
+            edge_payload = None
+        elif isinstance(edge_projector, (list, tuple)) and edge_projector and all(isinstance(idx, (int, np.integer)) for idx in edge_projector):
+            edge_payload = {
+                "kind": "indices",
+                "indices": [int(idx) for idx in edge_projector],
+            }
+        else:
+            shape = np.asarray(edge_projector).shape
+            edge_payload = {
+                "kind": "matrix",
+                "shape": [int(dim) for dim in shape],
+            }
         return {
             "weight": float(self.weight),
             "metric": str(self.metric),
             "checkpoint_weight": float(self.checkpoint_weight),
             "checkpoints": [int(idx) for idx in self.checkpoints],
+            "edge_weight": float(self.edge_weight),
+            "edge_projector": edge_payload,
             "allowed_subspace": subspace_payload,
         }
 

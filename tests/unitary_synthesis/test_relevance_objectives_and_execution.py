@@ -121,7 +121,73 @@ def test_checkpoint_leakage_penalty_detects_intermediate_leakage() -> None:
     result = synth.fit(maxiter=1)
     assert result.report["metrics"]["leakage_worst"] < 1.0e-12
     assert result.report["metrics"]["checkpoint_leakage_worst"] > 0.99
+    assert result.report["metrics"]["path_leakage_worst"] > 0.99
     assert result.report["objective"]["checkpoint_leakage_term"] > 0.0
+    assert len(result.report["leakage_diagnostics"]["path_profile"]) == 3
+
+
+def test_path_leakage_metric_alias_can_be_selected_without_checkpoint_penalty() -> None:
+    leak = np.array(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, 0.0, -1.0],
+            [0.0, 1.0, 0.0],
+        ],
+        dtype=np.complex128,
+    )
+    unleak = leak.conj().T
+    primitives = [
+        PrimitiveGate(name="leak", duration=10.0e-9, matrix=leak, hilbert_dim=3),
+        PrimitiveGate(name="unleak", duration=10.0e-9, matrix=unleak, hilbert_dim=3),
+    ]
+    synth = UnitarySynthesizer(
+        subspace=Subspace.custom(3, [0, 1]),
+        primitives=primitives,
+        target=TargetStateMapping(
+            initial_state=np.array([0.0, 1.0, 0.0], dtype=np.complex128),
+            target_state=np.array([0.0, 1.0, 0.0], dtype=np.complex128),
+        ),
+        leakage_penalty=LeakagePenalty(weight=0.0, checkpoint_weight=0.0, checkpoints=(1,)),
+        metric="path_leakage_worst",
+        optimize_times=False,
+        execution=ExecutionOptions(engine="numpy"),
+        seed=8,
+    )
+    result = synth.fit(maxiter=1)
+    assert result.report["objective"]["selected_metrics"]["selected_metric_name"] == "path_leakage_worst"
+    assert result.report["metrics"]["path_leakage_worst"] > 0.99
+    assert result.report["objective"]["checkpoint_leakage_term"] < 1.0e-12
+    assert result.objective > 0.99
+
+
+def test_edge_projector_penalty_is_separate_from_logical_leakage() -> None:
+    swap_02 = np.array(
+        [
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+        dtype=np.complex128,
+    )
+    synth = UnitarySynthesizer(
+        subspace=Subspace.custom(4, range(4)),
+        primitives=[PrimitiveGate(name="swap_02", duration=10.0e-9, matrix=swap_02, hilbert_dim=4)],
+        target=TargetStateMapping(
+            initial_state=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128),
+            target_state=np.array([0.0, 0.0, 1.0, 0.0], dtype=np.complex128),
+        ),
+        leakage_penalty=LeakagePenalty(weight=0.0, checkpoint_weight=0.0, edge_weight=0.5, edge_projector=[2]),
+        optimize_times=False,
+        execution=ExecutionOptions(engine="numpy"),
+        seed=9,
+    )
+    result = synth.fit(maxiter=1)
+    assert result.report["metrics"]["state_average_fidelity"] > 0.999999
+    assert result.report["metrics"]["logical_leakage_worst"] < 1.0e-12
+    assert result.report["metrics"]["edge_population_worst"] > 0.999999
+    assert result.report["objective"]["edge_population_term"] > 0.49
+    assert result.objective > 0.49
 
 
 def test_fast_path_matches_legacy_for_supported_ideal_problem() -> None:

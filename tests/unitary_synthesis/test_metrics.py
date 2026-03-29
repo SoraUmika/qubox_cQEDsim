@@ -3,8 +3,11 @@ from __future__ import annotations
 import numpy as np
 
 from cqed_sim.unitary_synthesis.metrics import (
+    isometry_basis_fidelity,
+    isometry_coherent_fidelity,
     leakage_metrics,
     logical_block_phase_diagnostics,
+    subspace_unitary_process_fidelity,
     subspace_unitary_fidelity,
 )
 from cqed_sim.unitary_synthesis.subspace import Subspace
@@ -84,3 +87,21 @@ def test_b5_logical_block_phase_diagnostics_extract_residuals_and_best_fit() -> 
     )
     assert corrected.rms_block_phase_error_rad < 1.0e-12
     assert np.allclose(corrected.residual_block_phases_rad, 0.0, atol=1.0e-12)
+
+
+def test_process_fidelity_is_squared_trace_overlap() -> None:
+    actual = np.diag([1.0, 1.0j]).astype(np.complex128)
+    target = np.eye(2, dtype=np.complex128)
+    overlap = subspace_unitary_fidelity(actual, target, gauge="global")
+    process = subspace_unitary_process_fidelity(actual, target, gauge="global")
+    assert np.isclose(overlap, np.sqrt(0.5), atol=1.0e-12)
+    assert np.isclose(process, overlap * overlap, atol=1.0e-12)
+
+
+def test_isometry_coherent_fidelity_penalizes_relative_column_phase() -> None:
+    actual = np.diag([1.0, -1.0, 1.0, 1.0]).astype(np.complex128)
+    target = np.eye(4, dtype=np.complex128)[:, :2]
+    basis = isometry_basis_fidelity(actual, target)
+    coherent = isometry_coherent_fidelity(actual, target)
+    assert np.isclose(basis, 1.0, atol=1.0e-12)
+    assert coherent < 1.0e-12

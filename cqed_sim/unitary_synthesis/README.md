@@ -44,7 +44,7 @@ The synthesizer uses the same dispersive Hamiltonian and Kerr conventions as `cq
 ### Constraints and objectives
 
 - **`SynthesisConstraints`**: Hard and soft constraints including leakage bounds, amplitude limits, and tone-spacing requirements.
-- **`LeakagePenalty`**: Additive penalty for population outside the computational subspace.
+- **`LeakagePenalty`**: Additive penalties for final retained-subspace leakage, optional checkpoint/path leakage, and optional edge-projector occupancy.
 - **`MultiObjective`**: Combines fidelity and additional penalty terms into a single optimization objective.
 - **`ParameterDistribution`** (`Normal`, `Uniform`): Parameter-uncertainty distributions for robust synthesis.
 
@@ -55,9 +55,16 @@ The synthesizer uses the same dispersive Hamiltonian and Kerr conventions as `cq
 ### Metrics
 
 - **`subspace_unitary_fidelity(...)`**: Fidelity of a unitary restricted to a subspace.
-- **`leakage_metrics(...)`**: Leakage diagnostics.
+- **`leakage_metrics(...)`**, **`projector_population_metrics(...)`**, **`state_population_distribution(...)`**: Leakage, projector-occupancy, and basis-population diagnostics.
+- **`projected_density_matrix(...)`**: Density matrix projected onto a logical or user-specified projector, together with its retained trace.
 - **`logical_block_phase_diagnostics(...)`**: Phase diagnostics for block-diagonal targets.
 - **`operator_truncation_sanity_metrics(...)`**, `truncation_sanity_metrics(...)`: Sanity checks for operator truncation.
+
+### Visualization
+
+- **`plot_operator_magnitude_heatmap(...)`**, **`plot_leakage_block_heatmap(...)`**: Full-operator and leakage-block heatmaps with logical/leakage block boundaries.
+- **`plot_output_population_bars(...)`**, **`plot_density_matrix_heatmap(...)`**, **`plot_projected_logical_density(...)`**: Representative output-state population and density-matrix views.
+- **`plot_leakage_profile(...)`**, **`plot_edge_population_summary(...)`**: Leakage-vs-step/time and edge-of-truncation summaries.
 
 ### Progress reporting
 
@@ -133,7 +140,7 @@ For a full notebook walkthrough: `tutorials/30_advanced_protocols/03_unitary_syn
 - Subspace fidelity is computed using the normalized Hilbert–Schmidt inner product on the specified logical subspace.
 - Drift phases between gates are tracked via `DriftPhaseModel` using the static Hamiltonian in the specified rotating frame.
 - The pulse waveform sign convention applies to output pulses: `Pulse.carrier = -omega_transition(frame)`.
-- Leakage is defined as population outside the logical subspace at the end of the gate sequence.
+- Leakage is defined relative to the retained logical subspace. Optional checkpoint/path leakage and edge-projector occupancy are separate regularizers layered on top of the same relevant-map objective rather than a redefinition of the task target.
 
 ## Relationships to Other Modules
 
@@ -154,4 +161,5 @@ For a full notebook walkthrough: `tutorials/30_advanced_protocols/03_unitary_syn
 ## References
 
 - Tutorial notebook: `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
+- Leakage-aware comparison example: `examples/unitary_synthesis_leakage_aware_visualization.py`
 - Root `README.md` — lists the full public API surface for synthesis.

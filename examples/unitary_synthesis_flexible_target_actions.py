@@ -106,13 +106,70 @@ def run_isometry_demo() -> None:
         optimize_times=False,
         seed=13,
     ).fit(maxiter=1)
-    print("isometry fidelity:", result.report["metrics"]["state_fidelity_mean"])
+    print("isometry coherent fidelity:", result.report["metrics"]["isometry_coherent_fidelity"])
+    print("isometry basis fidelity:", result.report["metrics"]["isometry_basis_fidelity"])
+
+
+def run_metric_selection_demo() -> None:
+    phase_skew = np.diag([1.0, -1.0, 1.0, 1.0]).astype(np.complex128)
+    primitive = PrimitiveGate(
+        name="phase_skew",
+        duration=20.0e-9,
+        matrix=phase_skew,
+        hilbert_dim=4,
+    )
+    target = TargetIsometry(np.eye(4, dtype=np.complex128)[:, :2])
+    coherent = UnitarySynthesizer(
+        subspace=Subspace.custom(4, range(4)),
+        primitives=[primitive],
+        target=target,
+        optimize_times=False,
+        seed=19,
+    ).fit(maxiter=1)
+    basis = UnitarySynthesizer(
+        subspace=Subspace.custom(4, range(4)),
+        primitives=[primitive],
+        target=target,
+        metric="isometry_basis_fidelity",
+        optimize_times=False,
+        seed=19,
+    ).fit(maxiter=1)
+    print("default selected metric:", coherent.report["objective"]["selected_metrics"]["selected_metric_name"])
+    print("default objective:", coherent.objective)
+    print("basis selected metric:", basis.report["objective"]["selected_metrics"]["selected_metric_name"])
+    print("basis objective:", basis.objective)
+
+
+def run_explicit_input_subspace_demo() -> None:
+    primitive = PrimitiveGate(
+        name="identity4",
+        duration=20.0e-9,
+        matrix=np.eye(4, dtype=np.complex128),
+        hilbert_dim=4,
+    )
+    target = TargetIsometry.from_basis_map(
+        target_states=[
+            np.array([1.0, 0.0, 0.0, 0.0], dtype=np.complex128),
+            np.array([0.0, 0.0, 1.0, 0.0], dtype=np.complex128),
+        ],
+        input_subspace=Subspace.custom(4, [0, 2]),
+    )
+    result = UnitarySynthesizer(
+        subspace=Subspace.custom(4, range(4)),
+        primitives=[primitive],
+        target=target,
+        optimize_times=False,
+        seed=23,
+    ).fit(maxiter=1)
+    print("explicit-input isometry coherent fidelity:", result.report["metrics"]["isometry_coherent_fidelity"])
 
 
 def main() -> None:
     run_channel_demo()
     run_reduced_state_demo()
     run_isometry_demo()
+    run_metric_selection_demo()
+    run_explicit_input_subspace_demo()
 
 
 if __name__ == "__main__":

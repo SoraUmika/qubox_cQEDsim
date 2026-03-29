@@ -207,6 +207,8 @@ class LeakagePenalty:
     metric: str = "worst"
     checkpoint_weight: float = 0.0
     checkpoints: tuple[int, ...] = ()
+    edge_weight: float = 0.0
+    edge_projector: Subspace | Sequence[int] | np.ndarray | None = None
 ```
 
 ```python
@@ -245,7 +247,7 @@ ParameterDistribution(
 )
 ```
 
-These objects lift the older low-level `hardware_limits`, `constraints`, and leakage knobs into a notebook-facing API. `LeakagePenalty.checkpoint_weight` adds a soft intermediate-leakage cost, `MultiObjective.gate_count_weight` measures effective active-gate count for fixed-structure sequences, and `ExecutionOptions` selects the legacy versus accelerated evaluation backend.
+These objects lift the older low-level `hardware_limits`, `constraints`, and leakage knobs into a notebook-facing API. `LeakagePenalty.weight` penalizes final retained-subspace leakage, `LeakagePenalty.checkpoint_weight` adds a soft path-leakage cost at selected checkpoints while still reporting path metrics when the weight is zero, and `LeakagePenalty.edge_weight` penalizes occupancy of a user-defined `edge_projector` separately from logical leakage. `MultiObjective.gate_count_weight` measures effective active-gate count for fixed-structure sequences, and `ExecutionOptions` selects the legacy versus accelerated evaluation backend.
 
 ---
 
@@ -281,6 +283,7 @@ Important behavior:
 - Closed-system unitary targets still use direct unitary fidelity on the selected subspace.
 - Noisy/open-system unitary targets now use probe-state fidelity automatically.
 - `ObservableTarget`, `TrajectoryTarget`, `TargetReducedStateMapping`, `TargetIsometry`, and `TargetChannel` are all first-class task objectives and participate in the same leakage, duration, compactness, and robustness framework.
+- Relevant-map objectives such as `TargetReducedStateMapping` and `TargetIsometry` can add logical leakage, path leakage, and edge-projector regularizers without changing the task into a full-Hilbert-space unitary match.
 - `system=...` is the preferred architecture-facing entry point for future backends.
 - `model=...` remains supported for cQED usage and is auto-wrapped into `CQEDSystemAdapter`.
 - `synthesis_constraints.max_amplitude` is compiled into the existing hardware-amplitude limits.
@@ -305,7 +308,8 @@ payload = result.to_payload()
 - target/gauge metadata
 - objective-component breakdown
 - execution-backend selection and fallback reason
-- residual and checkpoint leakage summaries
+- residual, logical, checkpoint/path, and edge-projector leakage summaries
+- `leakage_diagnostics.path_profile` plus serialized edge-projector metadata for leakage-vs-step visualizations
 - reduced-state, channel, observable, and trajectory task metrics when applicable
 - truncation-edge and outside-tail population diagnostics for Hilbert-cutoff sanity checks
 - sequence parameters and time-grid details
@@ -321,6 +325,9 @@ Key metrics in `cqed_sim.unitary_synthesis.metrics`:
 
 - `subspace_unitary_fidelity(...)`
 - `leakage_metrics(...)`
+- `projector_population_metrics(...)`
+- `projected_density_matrix(...)`
+- `state_population_distribution(...)`
 - `logical_block_phase_diagnostics(...)`
 - `state_leakage_metrics(...)`
 - `state_mapping_metrics(...)`
@@ -334,6 +341,16 @@ Key metrics in `cqed_sim.unitary_synthesis.metrics`:
 `logical_block_phase_diagnostics(...)` extracts gauge-fixed block-overlap phases from a restricted operator, reports the best-fit ideal cavity-only block-phase correction, and returns the residual RMS after an optional applied correction.
 
 Phase handling now supports `none`, `global`, `diagonal`, and `block` gauges.
+
+Visualization helpers in `cqed_sim.unitary_synthesis.visualization` include:
+
+- `plot_operator_magnitude_heatmap(...)`
+- `plot_leakage_block_heatmap(...)`
+- `plot_output_population_bars(...)`
+- `plot_density_matrix_heatmap(...)`
+- `plot_projected_logical_density(...)`
+- `plot_leakage_profile(...)`
+- `plot_edge_population_summary(...)`
 
 ---
 

@@ -28,10 +28,20 @@ from .metrics import (
     channel_representation_from_outputs,
     observable_expectation_metrics,
     operator_truncation_sanity_metrics,
+    projector_population_metrics,
     state_leakage_metrics,
     state_mapping_metrics,
+    channel_isometry_basis_fidelity,
+    channel_isometry_random_superposition_metrics,
+    channel_isometry_retention,
+    isometry_basis_fidelity,
+    isometry_coherent_fidelity,
+    isometry_random_superposition_metrics,
+    isometry_retention,
+    subspace_unitary_process_fidelity,
     truncation_sanity_metrics,
 )
+from .objectives import MetricSpec, metric_cost, resolve_metric_specs
 from .progress import (
     CompositeReporter,
     HistoryReporter,
@@ -58,6 +68,7 @@ from .subspace import Subspace
 from .systems import QuantumSystem, resolve_quantum_system
 from .targets import (
     ObservableTarget,
+    SubspaceSpec,
     TargetChannel,
     TargetIsometry,
     TargetReducedStateMapping,
@@ -421,6 +432,14 @@ def _reduce_state_for_target(state: qt.Qobj, reduction: Mapping[str, Any]) -> qt
         if state.isoper:
             return qt.Qobj(subspace.restrict_operator(np.asarray(state.full(), dtype=np.complex128)), dims=[[subspace.dim], [subspace.dim]])
         return qt.Qobj(subspace.extract(np.asarray(state.full(), dtype=np.complex128).reshape(-1)), dims=[[subspace.dim], [1]])
+    if kind == "basis":
+        basis = np.asarray(reduction["basis_matrix"], dtype=np.complex128)
+        reduced_dim = int(basis.shape[1])
+        if state.isoper:
+            reduced = basis.conj().T @ np.asarray(state.full(), dtype=np.complex128) @ basis
+            return qt.Qobj(reduced, dims=[[reduced_dim], [reduced_dim]])
+        reduced = basis.conj().T @ np.asarray(state.full(), dtype=np.complex128).reshape(-1)
+        return qt.Qobj(reduced.reshape(-1), dims=[[reduced_dim], [1]])
     if kind == "partial_trace":
         dims = reduction.get("subsystem_dims")
         if dims is not None and int(np.prod([int(dim) for dim in dims])) == int(state.shape[0]):
@@ -480,6 +499,67 @@ def _truncation_metrics_for_simulation(
             diag_indices = [index + channel_dim * index for index in range(channel_dim)]
             states = [states[index] for index in diag_indices if index < len(states)]
     return truncation_sanity_metrics(states, subspace)
+
+
+def _logical_basis_output_states(full_operator: np.ndarray, subspace: Subspace) -> list[qt.Qobj]:
+    operator = np.asarray(full_operator, dtype=np.complex128)
+    eye = np.eye(subspace.dim, dtype=np.complex128)
+    return [
+        qt.Qobj(operator @ subspace.embed(eye[:, column]), dims=[[subspace.full_dim], [1]])
+        for column in range(subspace.dim)
+    ]
+
+
+def _diagonal_probe_outputs(states: Sequence[qt.Qobj], input_dim: int) -> list[qt.Qobj]:
+    diag_indices = [index + input_dim * index for index in range(int(input_dim))]
+    return [states[index] for index in diag_indices if index < len(states)]
+
+
+def _edge_population_metrics_from_states(
+    states: Sequence[qt.Qobj | np.ndarray],
+    penalty: LeakagePenalty | None,
+    *,
+    full_dim: int,
+) -> dict[str, float]:
+    if penalty is None or penalty.edge_projector is None:
+        return {"edge_population_average": 0.0, "edge_population_worst": 0.0}
+    metrics = projector_population_metrics(states, penalty.edge_projector, full_dim=full_dim)
+    return {
+        "edge_population_average": float(metrics.average),
+        "edge_population_worst": float(metrics.worst),
+    }
+
+
+def _edge_metrics_for_simulation(
+    simulation: SimulationResult | None,
+    payload: Mapping[str, Any],
+) -> dict[str, float]:
+    penalty = payload.get("leakage_penalty")
+    if simulation is None or penalty is None or penalty.edge_projector is None:
+        return {"edge_population_average": 0.0, "edge_population_worst": 0.0}
+
+    full_dim = int(payload["subspace"].full_dim)
+    target_type = str(payload.get("target_type", "unitary"))
+    open_system = _has_open_system(payload.get("backend_settings", {}))
+    states: list[qt.Qobj] = []
+
+    if simulation.state_outputs is not None:
+        states = list(simulation.state_outputs)
+        if target_type == "channel":
+            channel_target = payload.get("channel_target") or {}
+            states = _diagonal_probe_outputs(states, int(channel_target.get("input_dim", 0)))
+        elif target_type == "unitary" and open_system and payload.get("target_channel_view") is not None:
+            channel_target = payload.get("target_channel_view") or {}
+            states = _diagonal_probe_outputs(states, int(channel_target.get("input_dim", 0)))
+        elif target_type == "isometry" and open_system and payload.get("target_channel_view") is not None:
+            channel_target = payload.get("target_channel_view") or {}
+            states = _diagonal_probe_outputs(states, int(channel_target.get("input_dim", 0)))
+    elif simulation.full_operator is not None:
+        analysis_subspace = payload.get("leakage_subspace")
+        if isinstance(analysis_subspace, Subspace):
+            states = _logical_basis_output_states(simulation.full_operator, analysis_subspace)
+
+    return _edge_population_metrics_from_states(states, penalty, full_dim=full_dim)
 
 
 def _sequence_amplitude_series(sequence: GateSequence, channel: str) -> np.ndarray:
@@ -644,6 +724,17 @@ def _leakage_cost(metrics: Mapping[str, Any], penalty: LeakagePenalty | None, fa
     return raw, weight * raw
 
 
+def _edge_population_cost(metrics: Mapping[str, Any], penalty: LeakagePenalty | None) -> tuple[float, float]:
+    if penalty is None or penalty.edge_projector is None:
+        return 0.0, 0.0
+    mode = str(penalty.metric)
+    if mode == "average":
+        raw = float(metrics.get("edge_population_average", 0.0))
+    else:
+        raw = float(metrics.get("edge_population_worst", 0.0))
+    return raw, float(penalty.edge_weight) * raw
+
+
 def _target_gauge(target: Any, fallback: str) -> str:
     if isinstance(target, TargetUnitary):
         return target.resolved_gauge(fallback=fallback)
@@ -656,12 +747,156 @@ def _target_blocks(target: Any, subspace: Subspace | None, fallback: str) -> tup
     return None
 
 
+def _merge_objective_defaults(
+    objectives: MultiObjective | None,
+    overrides: Mapping[str, float],
+) -> MultiObjective | None:
+    if not overrides:
+        return objectives
+    payload = MultiObjective().to_record() if objectives is None else objectives.to_record()
+    for key, value in overrides.items():
+        if key not in payload:
+            continue
+        current = payload.get(key)
+        if current in {None, 0.0}:
+            payload[key] = float(value)
+    return MultiObjective(**payload)
+
+
+def _selected_metric_summary(
+    metric_specs: Sequence[MetricSpec],
+    available_metrics: Mapping[str, Any],
+) -> dict[str, Any]:
+    if not metric_specs:
+        raise ValueError("At least one MetricSpec is required.")
+    total_cost = 0.0
+    terms: list[dict[str, Any]] = []
+    for spec in metric_specs:
+        if spec.name not in available_metrics:
+            raise ValueError(f"Selected metric '{spec.name}' is not available for the current target/evaluation path.")
+        value = float(available_metrics[spec.name])
+        if not np.isfinite(value):
+            raise ValueError(f"Selected metric '{spec.name}' produced a non-finite value.")
+        cost = metric_cost(spec.name, value, sense=spec.resolved_sense())
+        weighted_cost = float(spec.weight) * float(cost)
+        terms.append(
+            {
+                "name": str(spec.name),
+                "value": float(value),
+                "cost": float(cost),
+                "weight": float(spec.weight),
+                "weighted_cost": float(weighted_cost),
+                "sense": str(spec.resolved_sense()),
+            }
+        )
+        total_cost += float(weighted_cost)
+    return {
+        "selected_metric_name": str(metric_specs[0].name),
+        "selected_metric_value": float(available_metrics[metric_specs[0].name]),
+        "selected_metric_cost": float(total_cost),
+        "selected_metric_terms": terms,
+    }
+
+
+def _metric_specs_require_channel_view(metric_specs: Sequence[MetricSpec]) -> bool:
+    channel_metrics = {
+        "channel_overlap",
+        "channel_process_fidelity",
+        "channel_average_gate_fidelity",
+        "channel_entanglement_fidelity",
+        "channel_choi_error",
+    }
+    return any(spec.name in channel_metrics for spec in metric_specs)
+
+
+def _with_canonical_metric_aliases(metrics: Mapping[str, Any]) -> dict[str, Any]:
+    resolved = dict(metrics)
+    if "state_fidelity_mean" in resolved and "state_average_fidelity" not in resolved:
+        resolved["state_average_fidelity"] = float(resolved["state_fidelity_mean"])
+    if "state_fidelity_min" in resolved and "state_min_fidelity" not in resolved:
+        resolved["state_min_fidelity"] = float(resolved["state_fidelity_min"])
+    if "leakage_average" in resolved and "logical_leakage_average" not in resolved:
+        resolved["logical_leakage_average"] = float(resolved["leakage_average"])
+    if "leakage_worst" in resolved and "logical_leakage_worst" not in resolved:
+        resolved["logical_leakage_worst"] = float(resolved["leakage_worst"])
+    if "checkpoint_leakage_average" in resolved and "path_leakage_average" not in resolved:
+        resolved["path_leakage_average"] = float(resolved["checkpoint_leakage_average"])
+    if "checkpoint_leakage_worst" in resolved and "path_leakage_worst" not in resolved:
+        resolved["path_leakage_worst"] = float(resolved["checkpoint_leakage_worst"])
+    if "isometry_retention" in resolved and "isometry_output_leakage" not in resolved:
+        resolved["isometry_output_leakage"] = float(1.0 - float(resolved["isometry_retention"]))
+    return resolved
+
+
+def _resolve_selected_task_metrics(
+    raw_metrics: Mapping[str, Any],
+    payload: Mapping[str, Any],
+    *,
+    fidelity_key: str | None = None,
+    leakage_term: float = 0.0,
+    checkpoint_leak: Mapping[str, float] | None = None,
+) -> dict[str, Any]:
+    metric_specs = tuple(payload.get("metric_specs", ()))
+    resolved_metrics = _with_canonical_metric_aliases(raw_metrics)
+    checkpoint = {
+        "checkpoint_leakage_average": 0.0,
+        "checkpoint_leakage_worst": 0.0,
+        "checkpoint_leakage_term": 0.0,
+    }
+    if checkpoint_leak is not None:
+        checkpoint.update({str(key): float(value) for key, value in checkpoint_leak.items()})
+    resolved_metrics.update(checkpoint)
+    resolved_metrics = _with_canonical_metric_aliases(resolved_metrics)
+    selected_summary = _selected_metric_summary(metric_specs, resolved_metrics)
+
+    resolved_fidelity_key = fidelity_key
+    if resolved_fidelity_key is None:
+        primary_spec = metric_specs[0]
+        if primary_spec.resolved_sense() == "maximize":
+            resolved_fidelity_key = primary_spec.name
+    fidelity_value = float(resolved_metrics.get(resolved_fidelity_key, np.nan)) if resolved_fidelity_key is not None else float("nan")
+
+    resolved_metrics.update(
+        {
+            "fidelity": float(fidelity_value),
+            "selected_metric_value": float(selected_summary["selected_metric_value"]),
+            "selected_metric_cost": float(selected_summary["selected_metric_cost"]),
+            "fidelity_loss": float(selected_summary["selected_metric_cost"]),
+            "leakage_term": float(leakage_term),
+            "objective": float(selected_summary["selected_metric_cost"] + float(leakage_term) + float(checkpoint["checkpoint_leakage_term"])),
+        }
+    )
+    return resolved_metrics
+
+
+def _channel_metrics_from_outputs(
+    outputs: Sequence[qt.Qobj],
+    channel_target: Mapping[str, Any],
+) -> tuple[dict[str, float], np.ndarray, np.ndarray, np.ndarray]:
+    reduced_outputs = _reduce_state_collection(outputs, channel_target["reduction"])
+    actual_super, actual_choi, trace_values = channel_representation_from_outputs(
+        reduced_outputs,
+        input_dim=int(channel_target["input_dim"]),
+        output_dim=int(channel_target["output_dim"]),
+    )
+    sim_metrics = channel_action_metrics(
+        actual_super,
+        actual_choi,
+        target_choi=channel_target["target_choi"],
+        target_superoperator=channel_target.get("target_superoperator"),
+        trace_values=trace_values,
+        input_dim=int(channel_target["input_dim"]),
+        output_dim=int(channel_target["output_dim"]),
+    )
+    return sim_metrics, actual_super, actual_choi, trace_values
+
+
 def _checkpoint_leakage_metrics(
     history: Mapping[int, Sequence[qt.Qobj]],
     penalty: LeakagePenalty | None,
     subspace: Subspace | None,
 ) -> dict[str, float]:
-    if penalty is None or subspace is None or float(penalty.checkpoint_weight) <= 0.0:
+    if penalty is None or subspace is None:
         return {
             "checkpoint_leakage_average": 0.0,
             "checkpoint_leakage_worst": 0.0,
@@ -689,6 +924,77 @@ def _checkpoint_leakage_metrics(
         "checkpoint_leakage_worst": worst,
         "checkpoint_leakage_term": float(penalty.checkpoint_weight) * raw,
     }
+
+
+def _path_leakage_profile(
+    sequence: GateSequence,
+    payload: Mapping[str, Any],
+) -> list[dict[str, float]]:
+    leakage_subspace = payload.get("leakage_subspace")
+    if not isinstance(leakage_subspace, Subspace):
+        return []
+
+    target_type = str(payload.get("target_type", "unitary"))
+    settings = dict(payload.get("backend_settings", {}))
+    eval_system: QuantumSystem = payload["system"]
+    settings["system"] = eval_system
+    open_system = _has_open_system(settings)
+    steps = list(range(0, len(sequence.gates) + 1))
+
+    if target_type == "unitary":
+        initial_states = _apply_system_dims_to_states(_unitary_checkpoint_probe_states(leakage_subspace), eval_system)
+    elif target_type == "state_mapping":
+        initial_states = _apply_system_dims_to_states(list(payload["state_mapping"]["initial_states"]), eval_system)
+    elif target_type == "reduced_state_mapping":
+        initial_states = _apply_system_dims_to_states(list(payload["reduced_state_mapping"]["initial_states"]), eval_system)
+    elif target_type == "observable":
+        initial_states = _apply_system_dims_to_states(list(payload["observable_target"]["initial_states"]), eval_system)
+    elif target_type == "trajectory":
+        initial_states = _apply_system_dims_to_states(list(payload["trajectory_target"]["initial_states"]), eval_system)
+    elif target_type == "channel":
+        channel_target = payload.get("channel_target") or {}
+        initial_states = _diagonal_probe_outputs(list(channel_target.get("probe_operators", ())), int(channel_target.get("input_dim", 0)))
+        initial_states = _apply_explicit_dims_to_states(
+            _apply_system_dims_to_states(initial_states, eval_system),
+            channel_target.get("subsystem_dims"),
+        )
+    elif target_type == "isometry" and open_system and payload.get("target_channel_view") is not None:
+        channel_target = payload.get("target_channel_view") or {}
+        initial_states = _diagonal_probe_outputs(list(channel_target.get("probe_operators", ())), int(channel_target.get("input_dim", 0)))
+        initial_states = _apply_explicit_dims_to_states(
+            _apply_system_dims_to_states(initial_states, eval_system),
+            channel_target.get("subsystem_dims"),
+        )
+    elif target_type == "isometry":
+        initial_states = _apply_system_dims_to_states(list(payload["state_mapping"]["initial_states"]), eval_system)
+    else:
+        initial_states = []
+
+    if not initial_states:
+        return []
+
+    history = sequence.propagate_states_with_checkpoints(
+        initial_states,
+        steps,
+        backend=payload["backend"],
+        backend_settings=settings,
+    )
+    cumulative_time = np.concatenate(([0.0], np.cumsum(np.asarray(sequence.gate_durations(), dtype=float))))
+    profile: list[dict[str, float]] = []
+    for step in steps:
+        outputs = history.get(int(step), [])
+        if not outputs:
+            continue
+        leak = state_leakage_metrics(outputs, leakage_subspace)
+        profile.append(
+            {
+                "step": float(step),
+                "time": float(cumulative_time[min(int(step), cumulative_time.size - 1)]),
+                "average": float(leak.average),
+                "worst": float(leak.worst),
+            }
+        )
+    return profile
 
 
 def _unitary_checkpoint_probe_states(subspace: Subspace) -> list[qt.Qobj]:
@@ -749,19 +1055,24 @@ def _evaluate_target_simulation(
             )
         else:
             sim_metrics.update({"leakage_average": 0.0, "leakage_worst": 0.0})
+        sim_metrics.update(
+            _edge_population_metrics_from_states(
+                final_states,
+                payload.get("leakage_penalty"),
+                full_dim=int(payload["subspace"].full_dim),
+            )
+        )
         checkpoint_leak = {
             "checkpoint_leakage_average": 0.0,
             "checkpoint_leakage_worst": 0.0,
             "checkpoint_leakage_term": 0.0,
         }
-        sim_metrics.update(
-            {
-                "fidelity": float("nan"),
-                "fidelity_loss": float(sim_metrics.get("weighted_observable_error", np.nan)),
-                "leakage_term": 0.0,
-                "objective": float(sim_metrics.get("weighted_observable_error", np.nan)),
-                **checkpoint_leak,
-            }
+        sim_metrics = _resolve_selected_task_metrics(
+            sim_metrics,
+            payload,
+            fidelity_key=None,
+            leakage_term=0.0,
+            checkpoint_leak=checkpoint_leak,
         )
         simulation = SimulationResult(
             full_operator=None,
@@ -823,19 +1134,26 @@ def _evaluate_target_simulation(
         else:
             leakage = {"leakage_average": 0.0, "leakage_worst": 0.0}
         checkpoint_leak = _checkpoint_leakage_metrics(history, payload.get("leakage_penalty"), leakage_subspace)
-        metrics = {
-            "fidelity": float("nan"),
-            "fidelity_loss": float(task_loss),
+        edge_metrics = _edge_population_metrics_from_states(
+            final_states,
+            payload.get("leakage_penalty"),
+            full_dim=int(payload["subspace"].full_dim),
+        )
+        metrics = _resolve_selected_task_metrics(
+            {
             "trajectory_task_loss": float(task_loss),
             "trajectory_state_error_mean": float(np.mean(state_losses)) if state_losses else 0.0,
             "trajectory_observable_error_mean": float(np.mean(observable_losses)) if observable_losses else 0.0,
             "checkpoint_count": float(len(checkpoint_steps)),
             "leakage_average": float(leakage["leakage_average"]),
             "leakage_worst": float(leakage["leakage_worst"]),
-            "leakage_term": 0.0,
-            "objective": float(task_loss + checkpoint_leak["checkpoint_leakage_term"]),
-            **checkpoint_leak,
-        }
+            **edge_metrics,
+            },
+            payload,
+            fidelity_key=None,
+            leakage_term=0.0,
+            checkpoint_leak=checkpoint_leak,
+        )
         simulation = SimulationResult(
             full_operator=None,
             subspace_operator=None,
@@ -888,6 +1206,7 @@ def _evaluate_target_simulation(
             )
         else:
             sim_metrics.update({"leakage_average": 0.0, "leakage_worst": 0.0})
+        sim_metrics.update(_edge_metrics_for_simulation(simulation, payload))
         checkpoint_history: dict[int, list[qt.Qobj]] = {}
         leakage_penalty = payload.get("leakage_penalty")
         if leakage_penalty is not None and float(leakage_penalty.checkpoint_weight) > 0.0:
@@ -901,14 +1220,16 @@ def _evaluate_target_simulation(
         checkpoint_leak = _checkpoint_leakage_metrics(checkpoint_history, leakage_penalty, leakage_subspace)
         sim_metrics.update(
             {
-                "fidelity": float(sim_metrics.get("state_fidelity_mean", np.nan)),
-                "fidelity_loss": float(sim_metrics.get("weighted_state_infidelity", np.nan)),
                 "reduced_state_fidelity_mean": float(sim_metrics.get("state_fidelity_mean", np.nan)),
                 "reduced_state_fidelity_min": float(sim_metrics.get("state_fidelity_min", np.nan)),
-                "leakage_term": float(leak_term),
-                "objective": float(sim_metrics.get("weighted_state_error", np.nan) + leak_term + checkpoint_leak["checkpoint_leakage_term"]),
-                **checkpoint_leak,
             }
+        )
+        sim_metrics = _resolve_selected_task_metrics(
+            sim_metrics,
+            payload,
+            fidelity_key="state_fidelity_mean",
+            leakage_term=float(leak_term),
+            checkpoint_leak=checkpoint_leak,
         )
         simulation.metrics = dict(sim_metrics)
         return dict(sim_metrics), simulation if return_simulation else None
@@ -930,21 +1251,10 @@ def _evaluate_target_simulation(
         )
         if simulation.state_outputs is None:
             raise ValueError("Channel optimization requires propagated operator outputs.")
-        reduced_outputs = _reduce_state_collection(simulation.state_outputs, channel_target["reduction"])
-        actual_super, actual_choi, trace_values = channel_representation_from_outputs(
-            reduced_outputs,
-            channel_dim=int(channel_target["channel_dim"]),
-        )
-        sim_metrics = channel_action_metrics(
-            actual_super,
-            actual_choi,
-            target_choi=channel_target["target_choi"],
-            target_superoperator=channel_target.get("target_superoperator"),
-            trace_values=trace_values,
-        )
+        sim_metrics, _, _, _ = _channel_metrics_from_outputs(simulation.state_outputs, channel_target)
         leak_term = 0.0
         if leakage_subspace is not None:
-            channel_dim = int(channel_target["channel_dim"])
+            channel_dim = int(channel_target["input_dim"])
             diag_indices = [index + channel_dim * index for index in range(channel_dim)]
             leakage_outputs = [simulation.state_outputs[index] for index in diag_indices if index < len(simulation.state_outputs)]
             leak = state_leakage_metrics(leakage_outputs, leakage_subspace)
@@ -957,10 +1267,11 @@ def _evaluate_target_simulation(
             )
         else:
             sim_metrics.update({"leakage_average": 0.0, "leakage_worst": 0.0})
+        sim_metrics.update(_edge_metrics_for_simulation(simulation, payload))
         checkpoint_history: dict[int, list[qt.Qobj]] = {}
         leakage_penalty = payload.get("leakage_penalty")
         if leakage_penalty is not None and float(leakage_penalty.checkpoint_weight) > 0.0:
-            channel_dim = int(channel_target["channel_dim"])
+            channel_dim = int(channel_target["input_dim"])
             diag_indices = [index + channel_dim * index for index in range(channel_dim)]
             diag_probe_operators = [probe_operators[index] for index in diag_indices if index < len(probe_operators)]
             checkpoint_steps = list(leakage_penalty.checkpoints) if leakage_penalty.checkpoints else list(range(1, len(sequence.gates) + 1))
@@ -971,19 +1282,17 @@ def _evaluate_target_simulation(
                 backend_settings={**sim_settings, "system": eval_system},
             )
         checkpoint_leak = _checkpoint_leakage_metrics(checkpoint_history, leakage_penalty, leakage_subspace)
-        sim_metrics.update(
-            {
-                "fidelity": float(sim_metrics.get("channel_overlap", np.nan)),
-                "fidelity_loss": float(sim_metrics.get("channel_choi_error", np.nan)),
-                "leakage_term": float(leak_term),
-                "objective": float(sim_metrics.get("channel_choi_error", np.nan) + leak_term + checkpoint_leak["checkpoint_leakage_term"]),
-                **checkpoint_leak,
-            }
+        sim_metrics = _resolve_selected_task_metrics(
+            sim_metrics,
+            payload,
+            fidelity_key="channel_process_fidelity",
+            leakage_term=float(leak_term),
+            checkpoint_leak=checkpoint_leak,
         )
         simulation.metrics = dict(sim_metrics)
         return dict(sim_metrics), simulation if return_simulation else None
 
-    if target_type in {"state_mapping", "isometry"}:
+    if target_type == "state_mapping":
         mapping = payload["state_mapping"]
         initial_states = _apply_system_dims_to_states(list(mapping["initial_states"]), eval_system)
         target_states = _apply_system_dims_to_states(list(mapping["target_states"]), eval_system)
@@ -1017,6 +1326,7 @@ def _evaluate_target_simulation(
             )
         else:
             sim_metrics.update({"leakage_average": 0.0, "leakage_worst": 0.0})
+        sim_metrics.update(_edge_metrics_for_simulation(simulation, payload))
         checkpoint_history: dict[int, list[qt.Qobj]] = {}
         leakage_penalty = payload.get("leakage_penalty")
         if leakage_penalty is not None and float(leakage_penalty.checkpoint_weight) > 0.0:
@@ -1028,14 +1338,207 @@ def _evaluate_target_simulation(
                 backend_settings={**sim_settings, "system": eval_system},
             )
         checkpoint_leak = _checkpoint_leakage_metrics(checkpoint_history, leakage_penalty, leakage_subspace)
-        sim_metrics.update(
-            {
-                "fidelity": float(sim_metrics.get("state_fidelity_mean", np.nan)),
-                "fidelity_loss": float(sim_metrics.get("weighted_state_infidelity", np.nan)),
-                "leakage_term": float(leak_term),
-                "objective": float(sim_metrics.get("weighted_state_error", np.nan) + leak_term + checkpoint_leak["checkpoint_leakage_term"]),
-                **checkpoint_leak,
-            }
+        sim_metrics = _resolve_selected_task_metrics(
+            sim_metrics,
+            payload,
+            fidelity_key="state_fidelity_mean",
+            leakage_term=float(leak_term),
+            checkpoint_leak=checkpoint_leak,
+        )
+        simulation.metrics = dict(sim_metrics)
+        return dict(sim_metrics), simulation if return_simulation else None
+
+    if target_type == "isometry":
+        if not isinstance(target_object, TargetIsometry):
+            raise ValueError("Isometry-target simulation requires TargetIsometry metadata.")
+        mapping = payload["state_mapping"]
+        target_channel = payload.get("target_channel_view")
+        leakage_penalty = payload.get("leakage_penalty")
+        isometry_weights = target_object.weights if target_object.weights else None
+
+        if open_system and target_channel is not None:
+            probe_operators = _apply_system_dims_to_states(list(target_channel["probe_operators"]), eval_system)
+            probe_operators = _apply_explicit_dims_to_states(probe_operators, target_channel.get("subsystem_dims"))
+            simulation = eval_system.simulate_sequence(
+                sequence=sequence,
+                subspace=payload["subspace"],
+                backend=payload["backend"],
+                state_inputs=probe_operators,
+                need_operator=False,
+                leakage_weight=float(payload["leakage_weight"]),
+                gauge=str(payload["gauge"]),
+                block_slices=payload.get("target_blocks"),
+                **sim_settings,
+            )
+            if simulation.state_outputs is None:
+                raise ValueError("Open-system isometry targets require propagated operator outputs.")
+            sim_metrics, actual_super, _, _ = _channel_metrics_from_outputs(simulation.state_outputs, target_channel)
+            target_matrix = target_object.resolved_output_matrix(
+                full_dim=payload["subspace"].full_dim,
+                subspace=payload["subspace"],
+            )
+            sim_metrics.update(
+                {
+                    "isometry_basis_fidelity": float(
+                        channel_isometry_basis_fidelity(
+                            actual_super,
+                            target_matrix,
+                            input_dim=int(target_channel["input_dim"]),
+                            output_dim=int(target_channel["output_dim"]),
+                            weights=isometry_weights,
+                        )
+                    ),
+                    "isometry_retention": float(
+                        channel_isometry_retention(
+                            actual_super,
+                            target_matrix,
+                            input_dim=int(target_channel["input_dim"]),
+                            output_dim=int(target_channel["output_dim"]),
+                            weights=isometry_weights,
+                        )
+                    ),
+                    **channel_isometry_random_superposition_metrics(
+                        actual_super,
+                        target_matrix,
+                        input_dim=int(target_channel["input_dim"]),
+                        output_dim=int(target_channel["output_dim"]),
+                        seed=int(payload.get("worker_seed", 0)),
+                    ),
+                }
+            )
+            sim_metrics["isometry_output_leakage"] = float(1.0 - float(sim_metrics["isometry_retention"]))
+            leak_term = 0.0
+            if leakage_subspace is not None:
+                channel_dim = int(target_channel["input_dim"])
+                diag_indices = [index + channel_dim * index for index in range(channel_dim)]
+                leakage_outputs = [simulation.state_outputs[index] for index in diag_indices if index < len(simulation.state_outputs)]
+                leak = state_leakage_metrics(leakage_outputs, leakage_subspace)
+                leak_term = float(payload["leakage_weight"]) * float(leak.worst)
+                sim_metrics.update(
+                    {
+                        "leakage_average": float(leak.average),
+                        "leakage_worst": float(leak.worst),
+                    }
+                )
+            else:
+                sim_metrics.update({"leakage_average": 0.0, "leakage_worst": 0.0})
+            sim_metrics.update(_edge_metrics_for_simulation(simulation, payload))
+
+            checkpoint_history: dict[int, list[qt.Qobj]] = {}
+            if leakage_penalty is not None and float(leakage_penalty.checkpoint_weight) > 0.0:
+                channel_dim = int(target_channel["input_dim"])
+                diag_indices = [index + channel_dim * index for index in range(channel_dim)]
+                diag_probe_operators = [probe_operators[index] for index in diag_indices if index < len(probe_operators)]
+                checkpoint_steps = list(leakage_penalty.checkpoints) if leakage_penalty.checkpoints else list(range(1, len(sequence.gates) + 1))
+                checkpoint_history = sequence.propagate_states_with_checkpoints(
+                    diag_probe_operators,
+                    checkpoint_steps,
+                    backend=payload["backend"],
+                    backend_settings={**sim_settings, "system": eval_system},
+                )
+            checkpoint_leak = _checkpoint_leakage_metrics(checkpoint_history, leakage_penalty, leakage_subspace)
+            sim_metrics = _resolve_selected_task_metrics(
+                sim_metrics,
+                payload,
+                fidelity_key="channel_process_fidelity",
+                leakage_term=float(leak_term),
+                checkpoint_leak=checkpoint_leak,
+            )
+            simulation.metrics = dict(sim_metrics)
+            return dict(sim_metrics), simulation if return_simulation else None
+
+        initial_states = _apply_system_dims_to_states(list(mapping["initial_states"]), eval_system)
+        target_states = _apply_system_dims_to_states(list(mapping["target_states"]), eval_system)
+        simulation = eval_system.simulate_sequence(
+            sequence=sequence,
+            subspace=payload["subspace"],
+            backend=payload["backend"],
+            state_inputs=initial_states,
+            need_operator=not open_system,
+            leakage_weight=float(payload["leakage_weight"]),
+            gauge=str(payload["gauge"]),
+            block_slices=payload.get("target_blocks"),
+            **sim_settings,
+        )
+        if simulation.state_outputs is None:
+            raise ValueError("Isometry optimization requires propagated output states.")
+        sim_metrics = state_mapping_metrics(
+            simulation.state_outputs,
+            target_states,
+            weights=mapping["weights"],
+        )
+        if simulation.full_operator is not None and not open_system:
+            input_spec = target_object.resolved_input_subspace(
+                full_dim=payload["subspace"].full_dim,
+                subspace=payload["subspace"],
+            )
+            target_matrix = target_object.resolved_output_matrix(
+                full_dim=payload["subspace"].full_dim,
+                subspace=payload["subspace"],
+            )
+            sim_metrics.update(
+                {
+                    "isometry_coherent_fidelity": float(
+                        isometry_coherent_fidelity(
+                            simulation.full_operator,
+                            target_matrix,
+                            input_basis=input_spec.basis_matrix,
+                        )
+                    ),
+                    "isometry_basis_fidelity": float(
+                        isometry_basis_fidelity(
+                            simulation.full_operator,
+                            target_matrix,
+                            input_basis=input_spec.basis_matrix,
+                            weights=isometry_weights,
+                        )
+                    ),
+                    "isometry_retention": float(
+                        isometry_retention(
+                            simulation.full_operator,
+                            target_matrix,
+                            input_basis=input_spec.basis_matrix,
+                            weights=isometry_weights,
+                        )
+                    ),
+                    **isometry_random_superposition_metrics(
+                        simulation.full_operator,
+                        target_matrix,
+                        input_basis=input_spec.basis_matrix,
+                        seed=int(payload.get("worker_seed", 0)),
+                    ),
+                }
+            )
+            sim_metrics["isometry_output_leakage"] = float(1.0 - float(sim_metrics["isometry_retention"]))
+        leak_term = 0.0
+        if leakage_subspace is not None:
+            leak = state_leakage_metrics(simulation.state_outputs, leakage_subspace)
+            leak_term = float(payload["leakage_weight"]) * float(leak.worst)
+            sim_metrics.update(
+                {
+                    "leakage_average": float(leak.average),
+                    "leakage_worst": float(leak.worst),
+                }
+            )
+        else:
+            sim_metrics.update({"leakage_average": 0.0, "leakage_worst": 0.0})
+        sim_metrics.update(_edge_metrics_for_simulation(simulation, payload))
+        checkpoint_history: dict[int, list[qt.Qobj]] = {}
+        if leakage_penalty is not None and float(leakage_penalty.checkpoint_weight) > 0.0:
+            checkpoint_steps = list(leakage_penalty.checkpoints) if leakage_penalty.checkpoints else list(range(1, len(sequence.gates) + 1))
+            checkpoint_history = sequence.propagate_states_with_checkpoints(
+                initial_states,
+                checkpoint_steps,
+                backend=payload["backend"],
+                backend_settings={**sim_settings, "system": eval_system},
+            )
+        checkpoint_leak = _checkpoint_leakage_metrics(checkpoint_history, leakage_penalty, leakage_subspace)
+        sim_metrics = _resolve_selected_task_metrics(
+            sim_metrics,
+            payload,
+            fidelity_key="isometry_coherent_fidelity" if simulation.full_operator is not None and not open_system else "state_fidelity_mean",
+            leakage_term=float(leak_term),
+            checkpoint_leak=checkpoint_leak,
         )
         simulation.metrics = dict(sim_metrics)
         return dict(sim_metrics), simulation if return_simulation else None
@@ -1045,6 +1548,64 @@ def _evaluate_target_simulation(
         raise ValueError("Unitary-target simulation requires TargetUnitary metadata.")
 
     if open_system:
+        target_channel = payload.get("target_channel_view")
+        leakage_penalty = payload.get("leakage_penalty")
+        if target_channel is not None:
+            probe_operators = _apply_system_dims_to_states(list(target_channel["probe_operators"]), eval_system)
+            probe_operators = _apply_explicit_dims_to_states(probe_operators, target_channel.get("subsystem_dims"))
+            simulation = eval_system.simulate_sequence(
+                sequence=sequence,
+                subspace=payload["subspace"],
+                backend=payload["backend"],
+                state_inputs=probe_operators,
+                need_operator=False,
+                leakage_weight=float(payload["leakage_weight"]),
+                gauge=str(payload["gauge"]),
+                block_slices=payload.get("target_blocks"),
+                **sim_settings,
+            )
+            if simulation.state_outputs is None:
+                raise ValueError("Open-system unitary channel-view evaluation requires propagated operator outputs.")
+            sim_metrics, _, _, _ = _channel_metrics_from_outputs(simulation.state_outputs, target_channel)
+            leak_term = 0.0
+            if leakage_subspace is not None:
+                channel_dim = int(target_channel["input_dim"])
+                diag_indices = [index + channel_dim * index for index in range(channel_dim)]
+                leakage_outputs = [simulation.state_outputs[index] for index in diag_indices if index < len(simulation.state_outputs)]
+                leak = state_leakage_metrics(leakage_outputs, leakage_subspace)
+                leak_term = float(payload["leakage_weight"]) * float(leak.worst)
+                sim_metrics.update(
+                    {
+                        "leakage_average": float(leak.average),
+                        "leakage_worst": float(leak.worst),
+                    }
+                )
+            else:
+                sim_metrics.update({"leakage_average": 0.0, "leakage_worst": 0.0})
+            sim_metrics.update(_edge_metrics_for_simulation(simulation, payload))
+            checkpoint_history: dict[int, list[qt.Qobj]] = {}
+            if leakage_penalty is not None and float(leakage_penalty.checkpoint_weight) > 0.0:
+                channel_dim = int(target_channel["input_dim"])
+                diag_indices = [index + channel_dim * index for index in range(channel_dim)]
+                diag_probe_operators = [probe_operators[index] for index in diag_indices if index < len(probe_operators)]
+                checkpoint_steps = list(leakage_penalty.checkpoints) if leakage_penalty.checkpoints else list(range(1, len(sequence.gates) + 1))
+                checkpoint_history = sequence.propagate_states_with_checkpoints(
+                    diag_probe_operators,
+                    checkpoint_steps,
+                    backend=payload["backend"],
+                    backend_settings={**sim_settings, "system": eval_system},
+                )
+            checkpoint_leak = _checkpoint_leakage_metrics(checkpoint_history, leakage_penalty, leakage_subspace)
+            sim_metrics = _resolve_selected_task_metrics(
+                sim_metrics,
+                payload,
+                fidelity_key="channel_process_fidelity",
+                leakage_term=float(leak_term),
+                checkpoint_leak=checkpoint_leak,
+            )
+            simulation.metrics = dict(sim_metrics)
+            return dict(sim_metrics), simulation if return_simulation else None
+
         probe_states, target_states = target.resolved_probe_pairs(
             full_dim=payload["subspace"].full_dim,
             subspace=payload["subspace"],
@@ -1080,8 +1641,8 @@ def _evaluate_target_simulation(
             )
         else:
             sim_metrics.update({"leakage_average": 0.0, "leakage_worst": 0.0})
+        sim_metrics.update(_edge_metrics_for_simulation(simulation, payload))
         checkpoint_history: dict[int, list[qt.Qobj]] = {}
-        leakage_penalty = payload.get("leakage_penalty")
         if leakage_penalty is not None and float(leakage_penalty.checkpoint_weight) > 0.0:
             checkpoint_steps = list(leakage_penalty.checkpoints) if leakage_penalty.checkpoints else list(range(1, len(sequence.gates) + 1))
             checkpoint_history = sequence.propagate_states_with_checkpoints(
@@ -1091,23 +1652,28 @@ def _evaluate_target_simulation(
                 backend_settings={**sim_settings, "system": eval_system},
             )
         checkpoint_leak = _checkpoint_leakage_metrics(checkpoint_history, leakage_penalty, leakage_subspace)
-        sim_metrics.update(
-            {
-                "fidelity": float(sim_metrics.get("state_fidelity_mean", np.nan)),
-                "fidelity_loss": float(sim_metrics.get("weighted_state_infidelity", np.nan)),
-                "leakage_term": float(leak_term),
-                "objective": float(sim_metrics.get("weighted_state_error", np.nan) + leak_term + checkpoint_leak["checkpoint_leakage_term"]),
-                **checkpoint_leak,
-            }
+        sim_metrics = _resolve_selected_task_metrics(
+            sim_metrics,
+            payload,
+            fidelity_key="state_fidelity_mean",
+            leakage_term=float(leak_term),
+            checkpoint_leak=checkpoint_leak,
         )
         simulation.metrics = dict(sim_metrics)
         return dict(sim_metrics), simulation if return_simulation else None
 
+    target_channel = payload.get("target_channel_view")
     simulation = eval_system.simulate_sequence(
         sequence=sequence,
         subspace=payload["subspace"],
         backend=payload["backend"],
         target_subspace=payload.get("target_subspace"),
+        state_inputs=None
+        if target_channel is None
+        else _apply_explicit_dims_to_states(
+            _apply_system_dims_to_states(list(target_channel["probe_operators"]), eval_system),
+            target_channel.get("subsystem_dims"),
+        ),
         leakage_weight=float(payload["leakage_weight"]),
         gauge=str(payload["gauge"]),
         block_slices=payload.get("target_blocks"),
@@ -1130,8 +1696,27 @@ def _evaluate_target_simulation(
             backend_settings={**sim_settings, "system": eval_system},
         )
         checkpoint_leak = _checkpoint_leakage_metrics(checkpoint_history, leakage_penalty, leakage_subspace)
-    simulation.metrics.update(checkpoint_leak)
-    simulation.metrics["objective"] = float(simulation.metrics.get("objective", 0.0) + checkpoint_leak["checkpoint_leakage_term"])
+    if simulation.subspace_operator is not None and payload.get("target_subspace") is not None:
+        simulation.metrics["subspace_unitary_overlap"] = float(simulation.metrics.get("fidelity", np.nan))
+        simulation.metrics["subspace_unitary_process_fidelity"] = float(
+            subspace_unitary_process_fidelity(
+                simulation.subspace_operator,
+                np.asarray(payload["target_subspace"], dtype=np.complex128),
+                gauge=str(payload["gauge"]),
+                block_slices=payload.get("target_blocks"),
+            )
+        )
+    if target_channel is not None and simulation.state_outputs is not None:
+        channel_metrics, _, _, _ = _channel_metrics_from_outputs(simulation.state_outputs, target_channel)
+        simulation.metrics.update(channel_metrics)
+    simulation.metrics.update(_edge_metrics_for_simulation(simulation, payload))
+    simulation.metrics = _resolve_selected_task_metrics(
+        simulation.metrics,
+        payload,
+        fidelity_key="subspace_unitary_process_fidelity",
+        leakage_term=float(simulation.metrics.get("leakage_term", 0.0)),
+        checkpoint_leak=checkpoint_leak,
+    )
     return dict(simulation.metrics), simulation if return_simulation else None
 
 
@@ -1188,6 +1773,7 @@ def _make_progress_event(
             "infidelity": float(sim_metrics.get("fidelity_loss", 0.0)),
             "leakage": float(sim_metrics.get("leakage_term", 0.0)),
             "checkpoint_leakage": float(sim_metrics.get("checkpoint_leakage_term", 0.0)),
+            "edge_population": float(sim_metrics.get("edge_population_term", 0.0)),
             "duration": float(sim_metrics.get("duration_metric", 0.0)),
             "gate_count": float(sim_metrics.get("gate_count_metric", 0.0)),
             "pulse_power": float(sim_metrics.get("pulse_power_metric", 0.0)),
@@ -1402,6 +1988,7 @@ def _evaluate_objective_vector(
             payload,
             return_simulation=return_simulation,
         )
+    selected_metrics = _selected_metric_summary(tuple(payload.get("metric_specs", ())), _with_canonical_metric_aliases(simulation_metrics))
     robust_samples: list[dict[str, Any]] = []
     robust_penalty = 0.0
     robust_aggregate = float(simulation_metrics.get("objective", np.nan))
@@ -1426,6 +2013,7 @@ def _evaluate_objective_vector(
                     "objective": sample_objective,
                     "fidelity": float(sample_metrics.get("fidelity", np.nan)),
                     "fidelity_loss": float(sample_metrics.get("fidelity_loss", np.nan)),
+                    "selected_metric_value": float(sample_metrics.get("selected_metric_value", np.nan)),
                     "leakage_average": float(sample_metrics.get("leakage_average", 0.0)),
                     "leakage_worst": float(sample_metrics.get("leakage_worst", 0.0)),
                 }
@@ -1446,6 +2034,10 @@ def _evaluate_objective_vector(
         float(payload["leakage_weight"]),
     )
     checkpoint_leakage_term = float(simulation_metrics.get("checkpoint_leakage_term", 0.0))
+    raw_edge_population, edge_population_term = _edge_population_cost(
+        simulation_metrics,
+        payload.get("leakage_penalty"),
+    )
 
     active_times = sequence.get_time_vector(active_only=True)
     t0_ref = np.asarray(payload["t0_ref"], dtype=float)
@@ -1471,6 +2063,7 @@ def _evaluate_objective_vector(
             float(task_weight) * float(simulation_metrics.get("fidelity_loss", np.inf))
             + float(leakage_term)
             + float(checkpoint_leakage_term)
+            + float(edge_population_term)
             + float(objectives.duration_weight) * float(duration_metric)
             + float(objectives.gate_count_weight) * float(gate_count_metric)
             + float(objectives.pulse_power_weight) * float(pulse_power_metric)
@@ -1493,6 +2086,10 @@ def _evaluate_objective_vector(
             total += float(phase2_eval["total_penalty"])
 
     truncation = _truncation_metrics_for_simulation(simulation, payload)
+    leakage_diagnostics = {
+        "path_profile": _path_leakage_profile(sequence, payload) if return_simulation else [],
+        "edge_projector": None if payload.get("leakage_penalty") is None else payload["leakage_penalty"].to_record().get("edge_projector"),
+    }
 
     details = {
         "grid": grid,
@@ -1506,6 +2103,8 @@ def _evaluate_objective_vector(
             "leakage_selected": float(raw_leakage),
             "leakage_term": float(leakage_term),
             "checkpoint_leakage_term": float(checkpoint_leakage_term),
+            "edge_population_selected": float(raw_edge_population),
+            "edge_population_term": float(edge_population_term),
             "duration_metric": float(duration_metric),
             "gate_count_metric": float(gate_count_metric),
             "pulse_power_metric": float(pulse_power_metric),
@@ -1513,6 +2112,8 @@ def _evaluate_objective_vector(
             "robustness_penalty": float(robust_penalty),
             "robustness_objective": float(robust_aggregate),
         },
+        "selected_metrics": selected_metrics,
+        "leakage_diagnostics": leakage_diagnostics,
         "robustness": {
             "enabled": bool(parameter_distribution is not None and robust_assignments),
             "aggregate": None if parameter_distribution is None else str(parameter_distribution.aggregate),
@@ -1774,6 +2375,9 @@ class UnitarySynthesizer:
         synthesis_constraints: SynthesisConstraints | Mapping[str, Any] | None = None,
         leakage_penalty: LeakagePenalty | Mapping[str, Any] | None = None,
         objectives: MultiObjective | Mapping[str, Any] | None = None,
+        objective: str | None = None,
+        metric: str | MetricSpec | None = None,
+        metrics: Sequence[str | MetricSpec] | None = None,
         parameter_distribution: ParameterDistribution | None = None,
         execution: ExecutionOptions | Mapping[str, Any] | None = None,
         warm_start: str | Path | Mapping[str, Any] | SynthesisResult | None = None,
@@ -1805,6 +2409,9 @@ class UnitarySynthesizer:
         self.synthesis_constraints = _coerce_synthesis_constraints(synthesis_constraints)
         self.leakage_penalty = _coerce_leakage_penalty(leakage_penalty)
         self.objectives = _coerce_multi_objective(objectives)
+        self.objective = None if objective is None else str(objective)
+        self.metric = metric
+        self.metrics = None if metrics is None else tuple(metrics)
         self.parameter_distribution = parameter_distribution
         self.execution = _coerce_execution_options(execution)
         resolved_leakage_weight = float(leakage_weight)
@@ -2136,6 +2743,14 @@ class UnitarySynthesizer:
             target_type = "trajectory"
         else:
             raise ValueError(f"Unsupported synthesis target type '{resolved_target.__class__.__name__}'.")
+        open_system_target = bool(_has_open_system(self.backend_settings))
+        metric_specs, objective_overrides = resolve_metric_specs(
+            target_type=target_type,
+            open_system=open_system_target,
+            metric=self.metric,
+            metrics=self.metrics,
+            objective=self.objective,
+        )
         if self.parameter_distribution is not None and self.system.runtime_model() is None:
             raise ValueError("ParameterDistribution requires a system with an underlying model so sampled parameters can be applied.")
 
@@ -2143,6 +2758,7 @@ class UnitarySynthesizer:
         state_mapping_payload: dict[str, Any] | None = None
         reduced_state_payload: dict[str, Any] | None = None
         channel_payload: dict[str, Any] | None = None
+        target_channel_view_payload: dict[str, Any] | None = None
         observable_payload: dict[str, Any] | None = None
         trajectory_payload: dict[str, Any] | None = None
         system_subsystem_dims: tuple[int, ...] | None = None
@@ -2154,6 +2770,15 @@ class UnitarySynthesizer:
             system_subsystem_dims = None
         if isinstance(resolved_target, TargetUnitary):
             target_sub = self._target_subspace(resolved_target.matrix)
+            if _metric_specs_require_channel_view(metric_specs):
+                target_channel_view_payload = resolved_target.as_channel_target(
+                    full_dim=self.subspace.full_dim,
+                    subspace=self.subspace,
+                ).resolved_data(
+                    full_dim=self.subspace.full_dim,
+                    subspace=self.subspace,
+                    system_subsystem_dims=system_subsystem_dims,
+                )
         elif isinstance(resolved_target, TargetStateMapping):
             initial_states, target_states, weights = resolved_target.resolved_pairs(
                 full_dim=self.subspace.full_dim,
@@ -2192,6 +2817,14 @@ class UnitarySynthesizer:
                 "target_states": target_states,
                 "weights": weights,
             }
+            target_channel_view_payload = resolved_target.as_channel_target(
+                full_dim=self.subspace.full_dim,
+                subspace=self.subspace,
+            ).resolved_data(
+                full_dim=self.subspace.full_dim,
+                subspace=self.subspace,
+                system_subsystem_dims=system_subsystem_dims,
+            )
         elif isinstance(resolved_target, TargetChannel):
             channel_payload = resolved_target.resolved_data(
                 full_dim=self.subspace.full_dim,
@@ -2248,8 +2881,9 @@ class UnitarySynthesizer:
         phase2_active = any(
             value is not None
             for value in (self.synthesis_constraints, self.leakage_penalty, self.objectives, self.parameter_distribution)
-        ) or open_system_unitary
-        objective_cfg = self.objectives if self.objectives is not None else (MultiObjective(leakage_weight=self.leakage_weight) if phase2_active else None)
+        ) or open_system_unitary or bool(objective_overrides)
+        objective_cfg = _merge_objective_defaults(self.objectives, objective_overrides)
+        objective_cfg = objective_cfg if objective_cfg is not None else (MultiObjective(leakage_weight=self.leakage_weight) if phase2_active else None)
         robust_assignments = []
         if self.parameter_distribution is not None:
             robust_rng = np.random.default_rng(self.seed + 4242)
@@ -2264,9 +2898,11 @@ class UnitarySynthesizer:
             "target_object": resolved_target,
             "target_subspace": target_sub,
             "target_blocks": target_blocks,
+            "metric_specs": metric_specs,
             "state_mapping": state_mapping_payload,
             "reduced_state_mapping": reduced_state_payload,
             "channel_target": channel_payload,
+            "target_channel_view": target_channel_view_payload,
             "observable_target": observable_payload,
             "trajectory_target": trajectory_payload,
             "system": self.system,
@@ -2394,6 +3030,7 @@ class UnitarySynthesizer:
             "synthesis_constraints": None if self.synthesis_constraints is None else self.synthesis_constraints.to_record(),
             "leakage_penalty": None if self.leakage_penalty is None else self.leakage_penalty.to_record(),
             "multi_objective": None if objective_cfg is None else objective_cfg.to_record(),
+            "metric_specs": [spec.to_record() for spec in metric_specs],
             "parameter_distribution": None if self.parameter_distribution is None else self.parameter_distribution.to_record(),
             "parallel": {
                 "enabled": bool(par_enabled),
@@ -2413,10 +3050,12 @@ class UnitarySynthesizer:
             },
             "objective": {
                 "total": float(final_objective),
+                "selected_metrics": dict(final_details.get("selected_metrics", {})),
                 "task_term": float(sim_metrics.get("fidelity_loss", 0.0)),
                 "fidelity_term": float(sim_metrics.get("fidelity_loss", 0.0)),
                 "leakage_term": float(sim_metrics.get("leakage_term", 0.0)),
                 "checkpoint_leakage_term": float(sim_metrics.get("checkpoint_leakage_term", 0.0)),
+                "edge_population_term": float(sim_metrics.get("edge_population_term", 0.0)),
                 "duration_term": float(sim_metrics.get("duration_metric", 0.0)),
                 "gate_count_term": float(sim_metrics.get("gate_count_metric", 0.0)),
                 "pulse_power_term": float(sim_metrics.get("pulse_power_metric", 0.0)),
@@ -2451,17 +3090,36 @@ class UnitarySynthesizer:
             },
             "metrics": {
                 "fidelity": float(sim_metrics.get("fidelity", np.nan)),
+                "selected_metric_value": float(sim_metrics.get("selected_metric_value", np.nan)),
+                "selected_metric_cost": float(sim_metrics.get("selected_metric_cost", np.nan)),
+                "subspace_unitary_overlap": float(sim_metrics.get("subspace_unitary_overlap", np.nan)),
+                "subspace_unitary_process_fidelity": float(sim_metrics.get("subspace_unitary_process_fidelity", np.nan)),
                 "leakage_average": float(sim_metrics.get("leakage_average", np.nan)),
                 "leakage_worst": float(sim_metrics.get("leakage_worst", np.nan)),
+                "logical_leakage_average": float(sim_metrics.get("logical_leakage_average", np.nan)),
+                "logical_leakage_worst": float(sim_metrics.get("logical_leakage_worst", np.nan)),
                 "leakage_selected": float(sim_metrics.get("leakage_selected", np.nan)),
                 "checkpoint_leakage_average": float(sim_metrics.get("checkpoint_leakage_average", np.nan)),
                 "checkpoint_leakage_worst": float(sim_metrics.get("checkpoint_leakage_worst", np.nan)),
+                "path_leakage_average": float(sim_metrics.get("path_leakage_average", np.nan)),
+                "path_leakage_worst": float(sim_metrics.get("path_leakage_worst", np.nan)),
+                "edge_population_average": float(sim_metrics.get("edge_population_average", np.nan)),
+                "edge_population_worst": float(sim_metrics.get("edge_population_worst", np.nan)),
+                "edge_population_selected": float(sim_metrics.get("edge_population_selected", np.nan)),
                 "state_error_mean": float(sim_metrics.get("state_error_mean", np.nan)),
                 "state_error_max": float(sim_metrics.get("state_error_max", np.nan)),
                 "state_fidelity_mean": float(sim_metrics.get("state_fidelity_mean", np.nan)),
                 "state_fidelity_min": float(sim_metrics.get("state_fidelity_min", np.nan)),
+                "state_average_fidelity": float(sim_metrics.get("state_average_fidelity", np.nan)),
+                "state_min_fidelity": float(sim_metrics.get("state_min_fidelity", np.nan)),
                 "reduced_state_fidelity_mean": float(sim_metrics.get("reduced_state_fidelity_mean", np.nan)),
                 "reduced_state_fidelity_min": float(sim_metrics.get("reduced_state_fidelity_min", np.nan)),
+                "isometry_coherent_fidelity": float(sim_metrics.get("isometry_coherent_fidelity", np.nan)),
+                "isometry_basis_fidelity": float(sim_metrics.get("isometry_basis_fidelity", np.nan)),
+                "isometry_retention": float(sim_metrics.get("isometry_retention", np.nan)),
+                "isometry_output_leakage": float(sim_metrics.get("isometry_output_leakage", np.nan)),
+                "isometry_random_state_fidelity_mean": float(sim_metrics.get("isometry_random_state_fidelity_mean", np.nan)),
+                "isometry_random_state_fidelity_min": float(sim_metrics.get("isometry_random_state_fidelity_min", np.nan)),
                 "observable_error_mean": float(sim_metrics.get("observable_error_mean", np.nan)),
                 "observable_error_max": float(sim_metrics.get("observable_error_max", np.nan)),
                 "weighted_observable_error": float(sim_metrics.get("weighted_observable_error", np.nan)),
@@ -2469,6 +3127,9 @@ class UnitarySynthesizer:
                 "trajectory_state_error_mean": float(sim_metrics.get("trajectory_state_error_mean", np.nan)),
                 "trajectory_observable_error_mean": float(sim_metrics.get("trajectory_observable_error_mean", np.nan)),
                 "channel_overlap": float(sim_metrics.get("channel_overlap", np.nan)),
+                "channel_process_fidelity": float(sim_metrics.get("channel_process_fidelity", np.nan)),
+                "channel_entanglement_fidelity": float(sim_metrics.get("channel_entanglement_fidelity", np.nan)),
+                "channel_average_gate_fidelity": float(sim_metrics.get("channel_average_gate_fidelity", np.nan)),
                 "channel_choi_error": float(sim_metrics.get("channel_choi_error", np.nan)),
                 "channel_superoperator_error": float(sim_metrics.get("channel_superoperator_error", np.nan)),
                 "trace_preservation_error_mean": float(sim_metrics.get("trace_preservation_error_mean", np.nan)),
@@ -2485,6 +3146,7 @@ class UnitarySynthesizer:
                 "robustness_objective": float(sim_metrics.get("robustness_objective", np.nan)),
             },
             "truncation": dict(final_details.get("truncation", {})),
+            "leakage_diagnostics": dict(final_details.get("leakage_diagnostics", {})),
             "robustness": dict(robustness_info),
             "parameters": {
                 "gates": self.sequence.serialize(),

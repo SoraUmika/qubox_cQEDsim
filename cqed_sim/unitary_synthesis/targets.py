@@ -244,9 +244,7 @@ def _validate_isometry_matrix(matrix: np.ndarray, *, atol: float = 1.0e-8) -> np
     arr = np.asarray(matrix, dtype=np.complex128)
     if arr.ndim != 2:
         raise ValueError("Isometry targets must be two-dimensional matrices.")
-    ident = np.eye(arr.shape[1], dtype=np.complex128)
-    if np.linalg.norm(arr.conj().T @ arr - ident, ord="fro") > atol:
-        raise ValueError("Target matrix is not an isometry within tolerance.")
+    arr = _validate_orthonormal_columns(arr, atol=atol, name="Target matrix")
     return arr
 
 
@@ -255,6 +253,261 @@ def _validate_square_matrix(matrix: np.ndarray, *, name: str) -> np.ndarray:
     if arr.ndim != 2 or arr.shape[0] != arr.shape[1]:
         raise ValueError(f"{name} must be a square matrix.")
     return arr
+
+
+def _validate_orthonormal_columns(
+    matrix: np.ndarray,
+    *,
+    atol: float = 1.0e-8,
+    name: str,
+) -> np.ndarray:
+    arr = np.asarray(matrix, dtype=np.complex128)
+    if arr.ndim != 2:
+        raise ValueError(f"{name} must be a two-dimensional matrix.")
+    ident = np.eye(arr.shape[1], dtype=np.complex128)
+    if np.linalg.norm(arr.conj().T @ arr - ident, ord="fro") > atol:
+        raise ValueError(f"{name} must have orthonormal columns within tolerance.")
+    return arr
+
+
+@dataclass(frozen=True)
+class SubspaceSpec:
+    basis_matrix: np.ndarray
+    labels: tuple[str, ...] = field(default_factory=tuple)
+    kind: str = "custom"
+    metadata: dict[str, Any] | None = None
+
+    def __post_init__(self) -> None:
+        basis = _validate_orthonormal_columns(
+            np.asarray(self.basis_matrix, dtype=np.complex128),
+            atol=1.0e-8,
+            name="SubspaceSpec.basis_matrix",
+        )
+        object.__setattr__(self, "basis_matrix", basis)
+        if self.labels:
+            labels = tuple(str(label) for label in self.labels)
+            if len(labels) != int(basis.shape[1]):
+                raise ValueError("SubspaceSpec.labels length must match the number of basis columns.")
+            object.__setattr__(self, "labels", labels)
+        else:
+            object.__setattr__(self, "labels", tuple(f"|phi_{idx}>" for idx in range(int(basis.shape[1]))))
+        object.__setattr__(self, "metadata", None if self.metadata is None else dict(self.metadata))
+
+    @property
+    def full_dim(self) -> int:
+        return int(self.basis_matrix.shape[0])
+
+    @property
+    def dim(self) -> int:
+        return int(self.basis_matrix.shape[1])
+
+    @classmethod
+    def from_basis_matrix(
+        cls,
+        basis_matrix: np.ndarray,
+        *,
+        labels: Sequence[str] | None = None,
+        kind: str = "basis_matrix",
+        metadata: dict[str, Any] | None = None,
+    ) -> "SubspaceSpec":
+        return cls(
+            basis_matrix=np.asarray(basis_matrix, dtype=np.complex128),
+            labels=tuple(labels or ()),
+            kind=str(kind),
+            metadata=metadata,
+        )
+
+    @classmethod
+    def from_indices(
+        cls,
+        full_dim: int,
+        indices: Sequence[int],
+        *,
+        labels: Sequence[str] | None = None,
+        kind: str = "index_subset",
+        metadata: dict[str, Any] | None = None,
+    ) -> "SubspaceSpec":
+        full_dim = int(full_dim)
+        idx = tuple(int(index) for index in indices)
+        if not idx:
+            raise ValueError("SubspaceSpec.from_indices requires at least one basis index.")
+        if min(idx) < 0 or max(idx) >= full_dim:
+            raise ValueError("SubspaceSpec indices must lie in [0, full_dim).")
+        if len(set(idx)) != len(idx):
+            raise ValueError("SubspaceSpec indices must be unique.")
+        basis = np.zeros((full_dim, len(idx)), dtype=np.complex128)
+        for col, row in enumerate(idx):
+            basis[int(row), col] = 1.0
+        return cls(
+            basis_matrix=basis,
+            labels=tuple(labels or tuple(f"|{row}>" for row in idx)),
+            kind=str(kind),
+            metadata={} if metadata is None else dict(metadata),
+        )
+
+    @classmethod
+    def from_basis_states(
+        cls,
+        basis_states: Sequence[qt.Qobj | np.ndarray],
+        *,
+        full_dim: int | None = None,
+        labels: Sequence[str] | None = None,
+        kind: str = "basis_states",
+        metadata: dict[str, Any] | None = None,
+    ) -> "SubspaceSpec":
+        if not basis_states:
+            raise ValueError("SubspaceSpec.from_basis_states requires at least one basis state.")
+        resolved_full_dim = int(full_dim) if full_dim is not None else _infer_dimension_from_object(basis_states[0])
+        columns: list[np.ndarray] = []
+        for state in basis_states:
+            obj = _as_state_qobj(state, full_dim=resolved_full_dim, subspace=None)
+            if obj.isoper:
+                raise ValueError("Subspace basis states must be state vectors, not density matrices.")
+            columns.append(np.asarray(obj.full(), dtype=np.complex128).reshape(-1))
+        basis = np.column_stack(columns)
+        return cls(
+            basis_matrix=basis,
+            labels=tuple(labels or ()),
+            kind=str(kind),
+            metadata=metadata,
+        )
+
+    @classmethod
+    def from_projector(
+        cls,
+        projector: np.ndarray,
+        *,
+        atol: float = 1.0e-8,
+        labels: Sequence[str] | None = None,
+        kind: str = "projector",
+        metadata: dict[str, Any] | None = None,
+    ) -> "SubspaceSpec":
+        proj = _validate_square_matrix(projector, name="Subspace projector")
+        herm = 0.5 * (proj + proj.conj().T)
+        if np.linalg.norm(proj - herm, ord="fro") > atol:
+            raise ValueError("Subspace projector must be Hermitian within tolerance.")
+        if np.linalg.norm(herm @ herm - herm, ord="fro") > max(atol, 1.0e-6):
+            raise ValueError("Subspace projector must be idempotent within tolerance.")
+        eigvals, eigvecs = np.linalg.eigh(herm)
+        mask = eigvals > 0.5
+        if not np.any(mask):
+            raise ValueError("Subspace projector has rank zero.")
+        basis = eigvecs[:, mask]
+        return cls(
+            basis_matrix=basis,
+            labels=tuple(labels or ()),
+            kind=str(kind),
+            metadata=metadata,
+        )
+
+    @classmethod
+    def from_subspace(cls, subspace: Subspace) -> "SubspaceSpec":
+        return cls.from_indices(
+            subspace.full_dim,
+            subspace.indices,
+            labels=subspace.labels,
+            kind=subspace.kind,
+            metadata={} if subspace.metadata is None else dict(subspace.metadata),
+        )
+
+    @classmethod
+    def qubit_cavity_branch(
+        cls,
+        *,
+        n_cav: int,
+        qubit: str = "g",
+        fock_levels: Sequence[int] | None = None,
+    ) -> "SubspaceSpec":
+        n_cav = int(n_cav)
+        if qubit not in {"g", "e"}:
+            raise ValueError("qubit must be 'g' or 'e'.")
+        levels = tuple(range(n_cav)) if fock_levels is None else tuple(int(level) for level in fock_levels)
+        if not levels:
+            raise ValueError("fock_levels must contain at least one level.")
+        q_idx = 0 if qubit == "g" else 1
+        indices = [qubit_cavity_block_indices(n_cav, level)[q_idx] for level in levels]
+        return cls.from_indices(
+            2 * n_cav,
+            indices,
+            labels=[f"|{qubit},{level}>" for level in levels],
+            kind="qubit_cavity_branch",
+            metadata={"n_cav": n_cav, "qubit": qubit, "levels": list(levels)},
+        )
+
+    def projector(self) -> np.ndarray:
+        return np.asarray(self.basis_matrix @ self.basis_matrix.conj().T, dtype=np.complex128)
+
+    def embed(self, coefficients: np.ndarray) -> np.ndarray:
+        coeff = np.asarray(coefficients, dtype=np.complex128).reshape(-1)
+        if coeff.size != self.dim:
+            raise ValueError(f"Subspace coefficients have length {coeff.size}, expected {self.dim}.")
+        return np.asarray(self.basis_matrix @ coeff, dtype=np.complex128)
+
+    def coordinates(self, vector: np.ndarray) -> np.ndarray:
+        vec = np.asarray(vector, dtype=np.complex128).reshape(-1)
+        if vec.size != self.full_dim:
+            raise ValueError(f"Full-space vector has length {vec.size}, expected {self.full_dim}.")
+        return np.asarray(self.basis_matrix.conj().T @ vec, dtype=np.complex128)
+
+    def restrict_operator(self, operator: np.ndarray) -> np.ndarray:
+        op = np.asarray(operator, dtype=np.complex128)
+        if op.shape != (self.full_dim, self.full_dim):
+            raise ValueError(f"Operator has shape {op.shape}, expected {(self.full_dim, self.full_dim)}.")
+        return np.asarray(self.basis_matrix.conj().T @ op @ self.basis_matrix, dtype=np.complex128)
+
+    def to_record(self) -> dict[str, Any]:
+        return {
+            "kind": str(self.kind),
+            "full_dim": int(self.full_dim),
+            "dim": int(self.dim),
+            "labels": [str(label) for label in self.labels],
+        }
+
+
+def coerce_subspace_spec(
+    spec: Any,
+    *,
+    full_dim: int | None = None,
+    expected_dim: int | None = None,
+    name: str = "subspace",
+) -> SubspaceSpec:
+    resolved: SubspaceSpec
+    if isinstance(spec, SubspaceSpec):
+        resolved = spec
+    elif isinstance(spec, Subspace):
+        resolved = SubspaceSpec.from_subspace(spec)
+    elif isinstance(spec, qt.Qobj):
+        arr = np.asarray(spec.full(), dtype=np.complex128)
+        if arr.ndim == 2 and arr.shape[0] == arr.shape[1]:
+            resolved = SubspaceSpec.from_projector(arr)
+        else:
+            resolved = SubspaceSpec.from_basis_states([spec], full_dim=full_dim)
+    elif isinstance(spec, np.ndarray):
+        arr = np.asarray(spec, dtype=np.complex128)
+        if arr.ndim == 2 and arr.shape[0] == arr.shape[1] and (full_dim is None or arr.shape[0] == int(full_dim)):
+            resolved = SubspaceSpec.from_projector(arr)
+        elif arr.ndim == 2:
+            resolved = SubspaceSpec.from_basis_matrix(arr)
+        elif arr.ndim == 1 and np.issubdtype(spec.dtype, np.integer):
+            if full_dim is None:
+                raise ValueError(f"{name} specified by indices requires full_dim.")
+            resolved = SubspaceSpec.from_indices(int(full_dim), [int(value) for value in spec.tolist()])
+        else:
+            resolved = SubspaceSpec.from_basis_states([arr], full_dim=full_dim)
+    elif isinstance(spec, Sequence) and spec and all(isinstance(value, (int, np.integer)) for value in spec):
+        if full_dim is None:
+            raise ValueError(f"{name} specified by indices requires full_dim.")
+        resolved = SubspaceSpec.from_indices(int(full_dim), [int(value) for value in spec])
+    elif isinstance(spec, Sequence):
+        resolved = SubspaceSpec.from_basis_states(list(spec), full_dim=full_dim)
+    else:
+        raise TypeError(f"Could not coerce {name} of type {type(spec).__name__} into a SubspaceSpec.")
+
+    if full_dim is not None and int(resolved.full_dim) != int(full_dim):
+        raise ValueError(f"{name} full_dim={resolved.full_dim} does not match expected full_dim={int(full_dim)}.")
+    if expected_dim is not None and int(resolved.dim) != int(expected_dim):
+        raise ValueError(f"{name} dim={resolved.dim} does not match expected dim={int(expected_dim)}.")
+    return resolved
 
 
 def _subsystem_dims(value: Sequence[int] | None) -> tuple[int, ...] | None:
@@ -273,29 +526,56 @@ def _state_dim_matches(state: qt.Qobj | np.ndarray, expected_dim: int) -> bool:
         return False
 
 
-def _channel_dimension_from_representation(
+def _coerce_operator_matrix(value: qt.Qobj | np.ndarray, *, name: str) -> np.ndarray:
+    if isinstance(value, qt.Qobj):
+        arr = np.asarray(value.full(), dtype=np.complex128)
+    else:
+        arr = np.asarray(value, dtype=np.complex128)
+    if arr.ndim != 2:
+        raise ValueError(f"{name} must be a matrix.")
+    return arr
+
+
+def _channel_dims_from_representation(
     *,
     choi: np.ndarray | None,
     superoperator: np.ndarray | None,
     kraus_operators: Sequence[np.ndarray] | None,
     unitary: np.ndarray | None,
-) -> int:
+    isometry: np.ndarray | None,
+    input_dim: int | None = None,
+    output_dim: int | None = None,
+) -> tuple[int, int]:
     if unitary is not None:
-        return int(unitary.shape[0])
+        return int(unitary.shape[1]), int(unitary.shape[0])
+    if isometry is not None:
+        return int(isometry.shape[1]), int(isometry.shape[0])
     if kraus_operators is not None:
-        return int(kraus_operators[0].shape[0])
+        return int(kraus_operators[0].shape[1]), int(kraus_operators[0].shape[0])
     if superoperator is not None:
-        dim_float = np.sqrt(float(superoperator.shape[0]))
-        dim = int(round(dim_float))
-        if dim * dim != superoperator.shape[0]:
-            raise ValueError("Target superoperator dimension must be a perfect square.")
-        return dim
+        if input_dim is None or output_dim is None:
+            if superoperator.shape[0] == superoperator.shape[1]:
+                dim_float = np.sqrt(float(superoperator.shape[0]))
+                dim = int(round(dim_float))
+                if dim * dim != superoperator.shape[0]:
+                    raise ValueError("Target superoperator dimension must be a perfect square when input_dim/output_dim are omitted.")
+                return dim, dim
+            raise ValueError("Rectangular target superoperators require explicit input_dim and output_dim.")
+        if int(output_dim) * int(output_dim) != int(superoperator.shape[0]):
+            raise ValueError("Target superoperator row dimension does not match output_dim^2.")
+        if int(input_dim) * int(input_dim) != int(superoperator.shape[1]):
+            raise ValueError("Target superoperator column dimension does not match input_dim^2.")
+        return int(input_dim), int(output_dim)
     assert choi is not None
-    dim_float = np.sqrt(float(choi.shape[0]))
-    dim = int(round(dim_float))
-    if dim * dim != choi.shape[0]:
-        raise ValueError("Target Choi matrix dimension must be a perfect square.")
-    return dim
+    if input_dim is None or output_dim is None:
+        dim_float = np.sqrt(float(choi.shape[0]))
+        dim = int(round(dim_float))
+        if dim * dim != choi.shape[0]:
+            raise ValueError("Rectangular target Choi matrices require explicit input_dim and output_dim.")
+        return dim, dim
+    if int(input_dim) * int(output_dim) != int(choi.shape[0]):
+        raise ValueError("Target Choi dimension does not match input_dim * output_dim.")
+    return int(input_dim), int(output_dim)
 
 
 def _embed_subsystem_operator_with_environment(
@@ -434,6 +714,22 @@ class TargetUnitary:
                 outputs.append(qt.Qobj(evolved.reshape(-1), dims=state.dims))
         return initial, outputs
 
+    def as_channel_target(
+        self,
+        *,
+        full_dim: int,
+        subspace: Subspace | None = None,
+    ) -> "TargetChannel":
+        matrix = np.asarray(self.matrix, dtype=np.complex128)
+        if matrix.shape == (full_dim, full_dim):
+            return TargetChannel(unitary=matrix)
+        if subspace is not None and matrix.shape == (subspace.dim, subspace.dim):
+            subspace_spec = SubspaceSpec.from_subspace(subspace)
+            return TargetChannel(unitary=matrix, input_subspace=subspace_spec, output_subspace=subspace_spec)
+        raise ValueError(
+            f"TargetUnitary matrix shape {matrix.shape} does not match full_dim={full_dim} or subspace dim."
+        )
+
 
 class TargetStateMapping:
     def __init__(
@@ -563,6 +859,7 @@ class TargetReducedStateMapping:
 @dataclass(frozen=True)
 class TargetIsometry:
     matrix: np.ndarray
+    input_subspace: Any | None = None
     input_states: tuple[qt.Qobj | np.ndarray, ...] = field(default_factory=tuple)
     weights: tuple[float, ...] = field(default_factory=tuple)
 
@@ -575,6 +872,30 @@ class TargetIsometry:
         if self.input_states and len(self.input_states) != int(self.matrix.shape[1]):
             raise ValueError("TargetIsometry input_states length must match the input dimension.")
 
+    @classmethod
+    def from_basis_map(
+        cls,
+        *,
+        target_states: Sequence[qt.Qobj | np.ndarray],
+        input_subspace: Any | None = None,
+        weights: Sequence[float] | None = None,
+    ) -> "TargetIsometry":
+        if not target_states:
+            raise ValueError("TargetIsometry.from_basis_map requires at least one target state.")
+        full_dim = _infer_dimension_from_object(target_states[0])
+        columns: list[np.ndarray] = []
+        for state in target_states:
+            obj = _as_state_qobj(state, full_dim=full_dim, subspace=None)
+            if obj.isoper:
+                raise ValueError("TargetIsometry.from_basis_map expects pure-state image vectors, not density matrices.")
+            columns.append(np.asarray(obj.full(), dtype=np.complex128).reshape(-1))
+        matrix = np.column_stack(columns)
+        return cls(
+            matrix=matrix,
+            input_subspace=input_subspace,
+            weights=tuple(() if weights is None else tuple(float(weight) for weight in weights)),
+        )
+
     @property
     def output_dim(self) -> int:
         return int(self.matrix.shape[0])
@@ -586,44 +907,86 @@ class TargetIsometry:
     def infer_dimension(self) -> int:
         return int(self.output_dim)
 
+    def resolved_input_subspace(
+        self,
+        *,
+        full_dim: int,
+        subspace: Subspace | None = None,
+    ) -> SubspaceSpec:
+        if self.input_subspace is not None:
+            return coerce_subspace_spec(
+                self.input_subspace,
+                full_dim=full_dim,
+                expected_dim=self.input_dim,
+                name="TargetIsometry.input_subspace",
+            )
+        if self.input_states:
+            return SubspaceSpec.from_basis_states(
+                self.input_states,
+                full_dim=full_dim,
+                kind="target_isometry_input_basis",
+            )
+        if subspace is not None:
+            subspace_spec = SubspaceSpec.from_subspace(subspace)
+            if self.input_dim == subspace_spec.dim:
+                return subspace_spec
+            if self.input_dim < subspace_spec.dim:
+                return SubspaceSpec.from_basis_matrix(
+                    subspace_spec.basis_matrix[:, : self.input_dim],
+                    labels=subspace_spec.labels[: self.input_dim],
+                    kind="target_isometry_input_prefix",
+                    metadata=subspace_spec.metadata,
+                )
+        if self.input_dim <= full_dim:
+            return SubspaceSpec.from_indices(full_dim, range(self.input_dim), kind="logical_prefix")
+        raise ValueError("TargetIsometry could not infer a default logical input basis for the requested input dimension.")
+
+    def resolved_output_matrix(
+        self,
+        *,
+        full_dim: int,
+        subspace: Subspace | None = None,
+    ) -> np.ndarray:
+        matrix = np.asarray(self.matrix, dtype=np.complex128)
+        if matrix.shape[0] == int(full_dim):
+            return matrix
+        if subspace is not None and matrix.shape[0] == int(subspace.dim):
+            return np.column_stack([subspace.embed(matrix[:, column]) for column in range(matrix.shape[1])])
+        raise ValueError(
+            f"TargetIsometry output dimension {matrix.shape[0]} does not match full_dim={full_dim} or the active subspace."
+        )
+
     def resolved_pairs(
         self,
         *,
         full_dim: int,
         subspace: Subspace | None = None,
     ) -> tuple[list[qt.Qobj], list[qt.Qobj], np.ndarray]:
-        if self.input_states:
-            initial = [_as_state_qobj(state, full_dim=full_dim, subspace=subspace) for state in self.input_states]
-        elif subspace is not None and self.input_dim <= subspace.dim:
-            initial = []
-            for column in range(self.input_dim):
-                vec = np.zeros(subspace.dim, dtype=np.complex128)
-                vec[column] = 1.0
-                initial.append(qt.Qobj(subspace.embed(vec), dims=[[full_dim], [1]]))
-        elif self.input_dim <= full_dim:
-            initial = []
-            for column in range(self.input_dim):
-                vec = np.zeros(full_dim, dtype=np.complex128)
-                vec[column] = 1.0
-                initial.append(qt.Qobj(vec, dims=[[full_dim], [1]]))
-        else:
-            raise ValueError("TargetIsometry could not infer a default logical input basis for the requested input dimension.")
+        input_spec = self.resolved_input_subspace(full_dim=full_dim, subspace=subspace)
+        initial = [
+            qt.Qobj(input_spec.basis_matrix[:, column].reshape(-1), dims=[[full_dim], [1]])
+            for column in range(input_spec.dim)
+        ]
 
+        output_matrix = self.resolved_output_matrix(full_dim=full_dim, subspace=subspace)
         targets: list[qt.Qobj] = []
         for column in range(self.input_dim):
-            state = np.asarray(self.matrix[:, column], dtype=np.complex128).reshape(-1)
-            if self.output_dim == full_dim:
-                vec = state
-            elif subspace is not None and self.output_dim == subspace.dim:
-                vec = subspace.embed(state)
-            else:
-                raise ValueError(
-                    f"TargetIsometry output dimension {self.output_dim} does not match full_dim={full_dim} or the active subspace."
-                )
+            vec = np.asarray(output_matrix[:, column], dtype=np.complex128).reshape(-1)
             targets.append(qt.Qobj(vec.reshape(-1), dims=[[full_dim], [1]]))
 
         weights = _normalize_weights(self.weights if self.weights else None, self.input_dim, name="TargetIsometry")
         return initial, targets, weights
+
+    def as_channel_target(
+        self,
+        *,
+        full_dim: int,
+        subspace: Subspace | None = None,
+    ) -> "TargetChannel":
+        return TargetChannel(
+            isometry=self.resolved_output_matrix(full_dim=full_dim, subspace=subspace),
+            input_subspace=self.resolved_input_subspace(full_dim=full_dim, subspace=subspace),
+        )
 
 
 class TargetChannel:
@@ -634,6 +997,11 @@ class TargetChannel:
         superoperator: qt.Qobj | np.ndarray | None = None,
         kraus_operators: Sequence[qt.Qobj | np.ndarray] | None = None,
         unitary: qt.Qobj | np.ndarray | None = None,
+        isometry: qt.Qobj | np.ndarray | None = None,
+        input_dim: int | None = None,
+        output_dim: int | None = None,
+        input_subspace: Any | None = None,
+        output_subspace: Any | None = None,
         retained_subsystems: Sequence[int] | None = None,
         subsystem_dims: Sequence[int] | None = None,
         environment_state: qt.Qobj | np.ndarray | None = None,
@@ -646,68 +1014,185 @@ class TargetChannel:
                 superoperator,
                 kraus_operators,
                 unitary,
+                isometry,
             )
         )
         if specified != 1:
-            raise ValueError("TargetChannel requires exactly one of choi, superoperator, kraus_operators, or unitary.")
+            raise ValueError(
+                "TargetChannel requires exactly one of choi, superoperator, kraus_operators, unitary, or isometry."
+            )
 
-        unitary_arr = None if unitary is None else _validate_unitary_matrix(np.asarray(qt.Qobj(unitary).full() if isinstance(unitary, qt.Qobj) else unitary, dtype=np.complex128))
+        unitary_arr = None if unitary is None else _validate_unitary_matrix(_coerce_operator_matrix(unitary, name="Target unitary"))
+        isometry_arr = None if isometry is None else _validate_isometry_matrix(_coerce_operator_matrix(isometry, name="Target isometry"))
         kraus_arr = None
         if kraus_operators is not None:
             if not kraus_operators:
                 raise ValueError("TargetChannel.kraus_operators requires at least one Kraus operator.")
-            kraus_arr = tuple(_validate_square_matrix(np.asarray(_as_operator_qobj(op, full_dim=_infer_dimension_from_object(op)).full(), dtype=np.complex128), name="Kraus operator") for op in kraus_operators)
-            dim = int(kraus_arr[0].shape[0])
-            if any(matrix.shape != (dim, dim) for matrix in kraus_arr):
+            kraus_arr = tuple(_coerce_operator_matrix(op, name="Kraus operator") for op in kraus_operators)
+            out_dim = int(kraus_arr[0].shape[0])
+            in_dim = int(kraus_arr[0].shape[1])
+            if any(matrix.shape != (out_dim, in_dim) for matrix in kraus_arr):
                 raise ValueError("All Kraus operators must have the same shape.")
 
-        super_arr = None if superoperator is None else _validate_square_matrix(
-            np.asarray(qt.Qobj(superoperator).full() if isinstance(superoperator, qt.Qobj) else superoperator, dtype=np.complex128),
-            name="Target superoperator",
-        )
+        super_arr = None if superoperator is None else _coerce_operator_matrix(superoperator, name="Target superoperator")
         choi_arr = None if choi is None else _validate_square_matrix(
             np.asarray(qt.Qobj(choi).full() if isinstance(choi, qt.Qobj) else choi, dtype=np.complex128),
             name="Target Choi matrix",
         )
 
+        resolved_input_dim, resolved_output_dim = _channel_dims_from_representation(
+            choi=choi_arr,
+            superoperator=super_arr,
+            kraus_operators=kraus_arr,
+            unitary=unitary_arr,
+            isometry=isometry_arr,
+            input_dim=input_dim,
+            output_dim=output_dim,
+        )
+
         self.unitary = unitary_arr
+        self.isometry = isometry_arr
         self.kraus_operators = kraus_arr
         self.superoperator = super_arr if super_arr is not None else (
-            superoperator_from_unitary(unitary_arr) if unitary_arr is not None else superoperator_from_kraus(kraus_arr) if kraus_arr is not None else superoperator_from_choi(choi_arr)
+            superoperator_from_unitary(unitary_arr if unitary_arr is not None else isometry_arr)
+            if unitary_arr is not None or isometry_arr is not None
+            else superoperator_from_kraus(kraus_arr)
+            if kraus_arr is not None
+            else superoperator_from_choi(choi_arr, input_dim=resolved_input_dim, output_dim=resolved_output_dim)
         )
-        self.choi = choi_arr if choi_arr is not None else choi_from_superoperator(self.superoperator)
-        self.channel_dim = _channel_dimension_from_representation(
-            choi=self.choi,
-            superoperator=self.superoperator,
-            kraus_operators=self.kraus_operators,
-            unitary=self.unitary,
+        self.choi = choi_arr if choi_arr is not None else choi_from_superoperator(
+            self.superoperator,
+            input_dim=resolved_input_dim,
+            output_dim=resolved_output_dim,
         )
+        self.input_dim = int(resolved_input_dim)
+        self.output_dim = int(resolved_output_dim)
+        self.channel_dim = int(self.input_dim)
+        self.input_subspace = input_subspace
+        self.output_subspace = output_subspace
         self.retained_subsystems = None if retained_subsystems is None else tuple(int(index) for index in retained_subsystems)
         self.subsystem_dims = _subsystem_dims(subsystem_dims)
         self.environment_state = environment_state
         self.enforce_cptp = bool(enforce_cptp)
 
+        if self.retained_subsystems is not None and (self.input_subspace is not None or self.output_subspace is not None):
+            raise ValueError("TargetChannel.retained_subsystems cannot be combined with input_subspace or output_subspace.")
+        if self.output_subspace is not None and self.retained_subsystems is not None:
+            raise ValueError("TargetChannel.output_subspace cannot be combined with retained_subsystems.")
         if self.retained_subsystems is not None and not self.retained_subsystems:
             raise ValueError("TargetChannel.retained_subsystems must contain at least one subsystem index when provided.")
         if self.subsystem_dims is not None and self.retained_subsystems is not None and max(self.retained_subsystems) >= len(self.subsystem_dims):
             raise ValueError("TargetChannel.retained_subsystems must index the provided subsystem_dims.")
         if self.retained_subsystems is not None and self.subsystem_dims is not None:
             retained_dim = int(prod(self.subsystem_dims[index] for index in self.retained_subsystems))
-            if retained_dim != self.channel_dim:
+            if retained_dim != self.input_dim or retained_dim != self.output_dim:
                 raise ValueError(
-                    f"TargetChannel retained subsystem dimension {retained_dim} does not match channel dimension {self.channel_dim}."
+                    f"TargetChannel retained subsystem dimension {retained_dim} does not match channel dimensions ({self.input_dim}, {self.output_dim})."
                 )
         if self.retained_subsystems is not None and environment_state is None:
             raise ValueError("TargetChannel requires environment_state when retained_subsystems are specified.")
 
+    @classmethod
+    def from_choi(
+        cls,
+        choi: qt.Qobj | np.ndarray,
+        *,
+        input_dim: int | None = None,
+        output_dim: int | None = None,
+        input_subspace: Any | None = None,
+        output_subspace: Any | None = None,
+        **kwargs: Any,
+    ) -> "TargetChannel":
+        return cls(
+            choi=choi,
+            input_dim=input_dim,
+            output_dim=output_dim,
+            input_subspace=input_subspace,
+            output_subspace=output_subspace,
+            **kwargs,
+        )
+
+    @classmethod
+    def from_superoperator(
+        cls,
+        superoperator: qt.Qobj | np.ndarray,
+        *,
+        input_dim: int | None = None,
+        output_dim: int | None = None,
+        input_subspace: Any | None = None,
+        output_subspace: Any | None = None,
+        **kwargs: Any,
+    ) -> "TargetChannel":
+        return cls(
+            superoperator=superoperator,
+            input_dim=input_dim,
+            output_dim=output_dim,
+            input_subspace=input_subspace,
+            output_subspace=output_subspace,
+            **kwargs,
+        )
+
+    @classmethod
+    def from_kraus(
+        cls,
+        kraus_operators: Sequence[qt.Qobj | np.ndarray],
+        *,
+        input_subspace: Any | None = None,
+        output_subspace: Any | None = None,
+        **kwargs: Any,
+    ) -> "TargetChannel":
+        return cls(
+            kraus_operators=kraus_operators,
+            input_subspace=input_subspace,
+            output_subspace=output_subspace,
+            **kwargs,
+        )
+
+    @classmethod
+    def from_unitary(
+        cls,
+        unitary: qt.Qobj | np.ndarray,
+        *,
+        input_subspace: Any | None = None,
+        output_subspace: Any | None = None,
+        **kwargs: Any,
+    ) -> "TargetChannel":
+        return cls(
+            unitary=unitary,
+            input_subspace=input_subspace,
+            output_subspace=output_subspace,
+            **kwargs,
+        )
+
+    @classmethod
+    def from_isometry(
+        cls,
+        isometry: qt.Qobj | np.ndarray,
+        *,
+        input_subspace: Any | None = None,
+        output_subspace: Any | None = None,
+        **kwargs: Any,
+    ) -> "TargetChannel":
+        return cls(
+            isometry=isometry,
+            input_subspace=input_subspace,
+            output_subspace=output_subspace,
+            **kwargs,
+        )
+
     def infer_dimension(self) -> int:
-        return int(self.channel_dim)
+        return int(max(self.input_dim, self.output_dim))
 
     def infer_full_dimension(self) -> int | None:
         if self.subsystem_dims is not None:
             return int(prod(self.subsystem_dims))
-        if self.retained_subsystems is None:
-            return int(self.channel_dim)
+        for spec in (self.input_subspace, self.output_subspace):
+            if isinstance(spec, SubspaceSpec):
+                return int(spec.full_dim)
+            if isinstance(spec, Subspace):
+                return int(spec.full_dim)
+        if self.retained_subsystems is None and self.input_dim == self.output_dim and self.input_subspace is None and self.output_subspace is None:
+            return int(self.input_dim)
         return None
 
     def resolved_data(
@@ -730,11 +1215,11 @@ class TargetChannel:
             env_dims = [dims[index] for index in env]
             env_dim = int(prod(env_dims)) if env_dims else 1
             environment_state = _as_state_qobj(self.environment_state, full_dim=env_dim, subspace=None, dims=env_dims if env_dims else None)
-            for col in range(self.channel_dim):
-                for row in range(self.channel_dim):
+            for col in range(self.input_dim):
+                for row in range(self.input_dim):
                     full_operator_inputs.append(
                         _embed_subsystem_operator_with_environment(
-                            matrix_unit(self.channel_dim, row, col),
+                            matrix_unit(self.input_dim, row, col),
                             retained_subsystems=self.retained_subsystems,
                             subsystem_dims=dims,
                             environment_state=environment_state,
@@ -745,23 +1230,53 @@ class TargetChannel:
                 "retained_subsystems": tuple(int(index) for index in self.retained_subsystems),
                 "subsystem_dims": tuple(int(dim) for dim in dims),
             }
-        elif subspace is not None and self.channel_dim == subspace.dim:
-            idx = np.asarray(subspace.indices, dtype=int)
-            for col in range(self.channel_dim):
-                for row in range(self.channel_dim):
-                    embedded = np.zeros((full_dim, full_dim), dtype=np.complex128)
-                    embedded[np.ix_(idx, idx)] = matrix_unit(self.channel_dim, row, col)
-                    full_operator_inputs.append(_as_state_qobj(embedded, full_dim=full_dim, dims=dims))
-            reduction = {"kind": "subspace", "subspace": subspace}
-        elif self.channel_dim == int(full_dim):
-            for col in range(self.channel_dim):
-                for row in range(self.channel_dim):
-                    full_operator_inputs.append(_as_state_qobj(matrix_unit(self.channel_dim, row, col), full_dim=full_dim, dims=dims))
-            reduction = {"kind": "none"}
         else:
-            raise ValueError(
-                f"TargetChannel dimension {self.channel_dim} does not match full_dim={int(full_dim)} or the active synthesis subspace."
-            )
+            if self.input_subspace is not None:
+                input_spec = coerce_subspace_spec(
+                    self.input_subspace,
+                    full_dim=full_dim,
+                    expected_dim=self.input_dim,
+                    name="TargetChannel.input_subspace",
+                )
+            elif subspace is not None and self.input_dim == subspace.dim:
+                input_spec = SubspaceSpec.from_subspace(subspace)
+            elif self.input_dim == int(full_dim):
+                input_spec = SubspaceSpec.from_indices(full_dim, range(full_dim), kind="full_space")
+            else:
+                raise ValueError(
+                    f"TargetChannel input dimension {self.input_dim} does not match full_dim={int(full_dim)} or the active synthesis subspace."
+                )
+
+            for col in range(self.input_dim):
+                for row in range(self.input_dim):
+                    embedded = input_spec.basis_matrix @ matrix_unit(self.input_dim, row, col) @ input_spec.basis_matrix.conj().T
+                    full_operator_inputs.append(_as_state_qobj(embedded, full_dim=full_dim, dims=dims))
+
+            if self.output_subspace is not None:
+                output_spec = coerce_subspace_spec(
+                    self.output_subspace,
+                    full_dim=full_dim,
+                    expected_dim=self.output_dim,
+                    name="TargetChannel.output_subspace",
+                )
+                reduction = {
+                    "kind": "basis",
+                    "basis_matrix": np.asarray(output_spec.basis_matrix, dtype=np.complex128),
+                    "labels": tuple(output_spec.labels),
+                }
+            elif subspace is not None and self.output_dim == subspace.dim:
+                output_spec = SubspaceSpec.from_subspace(subspace)
+                reduction = {
+                    "kind": "basis",
+                    "basis_matrix": np.asarray(output_spec.basis_matrix, dtype=np.complex128),
+                    "labels": tuple(output_spec.labels),
+                }
+            elif self.output_dim == int(full_dim):
+                reduction = {"kind": "none"}
+            else:
+                raise ValueError(
+                    f"TargetChannel output dimension {self.output_dim} does not match full_dim={int(full_dim)} or the active synthesis subspace."
+                )
 
         if self.enforce_cptp:
             hermitian_choi = 0.5 * (self.choi + self.choi.conj().T)
@@ -771,6 +1286,8 @@ class TargetChannel:
 
         return {
             "channel_dim": int(self.channel_dim),
+            "input_dim": int(self.input_dim),
+            "output_dim": int(self.output_dim),
             "target_choi": np.asarray(self.choi, dtype=np.complex128),
             "target_superoperator": np.asarray(self.superoperator, dtype=np.complex128),
             "probe_operators": full_operator_inputs,

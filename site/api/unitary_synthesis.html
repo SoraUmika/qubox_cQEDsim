@@ -3766,7 +3766,7 @@
 <p>Flexible gate-sequence synthesis for matrix-defined primitives, model-backed waveform primitives, unitary targets, state-mapping targets, reduced-state targets, isometry targets, channel/process targets, observable targets, trajectory/checkpoint targets, and relevance-aware multi-objective optimization.</p>
 <div class="admonition note">
 <p class="admonition-title">Convention</p>
-<p>The synthesis drift-phase layer matches the runtime dispersive/Kerr convention. Model-backed waveform primitives use the same <code>Pulse</code>, <code>SequenceCompiler</code>, and <code>cqed_sim.sim</code> stack as the rest of the library, including the waveform sign convention <code>Pulse.carrier = -omega_transition(frame)</code>.</p>
+<p>The synthesis drift-phase layer matches the runtime dispersive/Kerr convention. Model-backed waveform primitives use the same <code>Pulse</code>, <code>SequenceCompiler</code>, and <code>cqed_sim.sim</code> stack as the rest of the library. Public-facing frequency parameters should still stay in positive physical drive frequencies and be translated through the shared core frequency helpers only when assigning the raw low-level runtime field <code>Pulse.carrier = -omega_transition(frame)</code>.</p>
 </div>
 <hr />
 <h2 id="system-interface">System Interface<a class="headerlink" href="#system-interface" title="Permanent link">&para;</a></h2>

@@ -1237,10 +1237,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#carrier-sign-convention" class="md-nav__link">
+  <a href="#drive-frequency-carrier-convention" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Carrier Sign Convention
+        Drive-Frequency / Carrier Convention
       
     </span>
   </a>
@@ -3629,10 +3629,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#carrier-sign-convention" class="md-nav__link">
+  <a href="#drive-frequency-carrier-convention" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Carrier Sign Convention
+        Drive-Frequency / Carrier Convention
       
     </span>
   </a>
@@ -3798,7 +3798,11 @@
 <td>Defined by <code>FrameSpec(omega_c_frame, omega_q_frame)</code></td>
 </tr>
 <tr>
-<td>Pulse carrier</td>
+<td>Public drive tone</td>
+<td>Positive physical tone frequency via <code>drive_frequency_for_transition_frequency(...)</code></td>
+</tr>
+<tr>
+<td>Raw <code>Pulse.carrier</code></td>
 <td>Negative of the rotating-frame transition frequency</td>
 </tr>
 <tr>
@@ -3811,10 +3815,12 @@
 <p>With <span class="arithmatex">\(\chi &lt; 0\)</span> (the standard transmon-cavity convention), the qubit transition frequency <strong>decreases</strong> as cavity photon number grows:</p>
 <div class="arithmatex">\[\omega_{ge}(n) = \omega_{ge}(0) + n\chi, \qquad \chi &lt; 0\]</div>
 <p>With <span class="arithmatex">\(\chi &gt; 0\)</span> (which can arise in certain coupling configurations), the qubit frequency <strong>increases</strong> with photon number.</p>
-<h3 id="carrier-sign-convention">Carrier Sign Convention<a class="headerlink" href="#carrier-sign-convention" title="Permanent link">&para;</a></h3>
-<p>A drive pulse targeting a transition at angular frequency <span class="arithmatex">\(\omega_{\text{trans}}\)</span> in the rotating frame uses:</p>
+<h3 id="drive-frequency-carrier-convention">Drive-Frequency / Carrier Convention<a class="headerlink" href="#drive-frequency-carrier-convention" title="Permanent link">&para;</a></h3>
+<p>A user-facing physical drive tone in a frame with frequency <span class="arithmatex">\(\omega_{\text{frame}}\)</span> should be computed as:</p>
+<div class="arithmatex">\[\omega_{\text{drive}} = \omega_{\text{frame}} + \omega_{\text{trans}}\]</div>
+<p>The low-level compatibility field used by <code>Pulse</code> is still:</p>
 <div class="arithmatex">\[\text{carrier} = -\omega_{\text{trans}}\]</div>
-<p>For on-resonance qubit drives in a matched rotating frame (<span class="arithmatex">\(\omega_q^{\text{frame}} = \omega_q\)</span>), the residual transition frequency is zero, so <code>carrier = 0</code>.</p>
+<p>For on-resonance qubit drives in a matched rotating frame (<span class="arithmatex">\(\omega_q^{\text{frame}} = \omega_q\)</span>), the residual transition frequency is zero, so the positive physical tone is just the frame frequency and the raw low-level <code>carrier = 0</code>.</p>
 <hr />
 <h2 id="verifying-the-chi-sign">Verifying the <span class="arithmatex">\(\chi\)</span> Sign<a class="headerlink" href="#verifying-the-chi-sign" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -3857,7 +3863,7 @@
 <p class="admonition-title">Common Mistakes</p>
 <ul>
 <li>Confusing <span class="arithmatex">\(f\)</span> (Hz) with <span class="arithmatex">\(\omega\)</span> (rad/s) — all internal frequencies use rad/s</li>
-<li>Setting carrier to <span class="arithmatex">\(+\omega_{\text{trans}}\)</span> instead of <span class="arithmatex">\(-\omega_{\text{trans}}\)</span></li>
+<li>Treating the raw low-level <code>Pulse.carrier</code> as if it were the user-facing physical tone frequency</li>
 <li>Assuming <span class="arithmatex">\(\chi &gt; 0\)</span> when the transmon convention gives <span class="arithmatex">\(\chi &lt; 0\)</span></li>
 </ul>
 </div>

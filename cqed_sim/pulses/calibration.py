@@ -3,7 +3,11 @@ from __future__ import annotations
 import numpy as np
 
 from cqed_sim.core.frame import FrameSpec
-from cqed_sim.core.frequencies import carrier_for_transition_frequency, manifold_transition_frequency
+from cqed_sim.core.frequencies import (
+    drive_frequency_for_transition_frequency,
+    internal_carrier_from_drive_frequency,
+    manifold_transition_frequency,
+)
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.envelopes import MultitoneTone
 
@@ -96,8 +100,14 @@ def build_sqr_tone_specs(
             and abs(d_lambda_n) <= tone_cutoff
         ):
             continue
-        omega_waveform = carrier_for_transition_frequency(
-            _manifold_frequency_in_frame_rad_s(model, n, frame, fock_fqs_hz)
+        transition_frequency = _manifold_frequency_in_frame_rad_s(model, n, frame, fock_fqs_hz)
+        drive_frequency = drive_frequency_for_transition_frequency(
+            transition_frequency,
+            frame.omega_q_frame,
+        )
+        omega_waveform = internal_carrier_from_drive_frequency(
+            drive_frequency,
+            frame.omega_q_frame,
         )
         tone_specs.append(
             MultitoneTone(
@@ -105,6 +115,7 @@ def build_sqr_tone_specs(
                 omega_rad_s=omega_waveform,
                 amp_rad_s=float(amp_n),
                 phase_rad=float(phi_n),
+                drive_frequency_rad_s=float(drive_frequency),
             )
         )
     return tone_specs

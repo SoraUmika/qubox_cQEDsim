@@ -35,7 +35,9 @@ Every other module depends on `core` either directly or through the simulation r
 | `StatePreparationSpec` | Declarative spec for `prepare_state` |
 | `compute_energy_spectrum(model, frame, levels)` | Returns dressed energy levels |
 | `manifold_transition_frequency(model, n, frame)` | n-th Fock-sector qubit frequency |
-| `carrier_for_transition_frequency(...)` | Converts a transition frequency to a `Pulse.carrier` value |
+| `carrier_for_transition_frequency(...)` | Converts a rotating-frame transition frequency to the raw low-level `Pulse.carrier` value |
+| `drive_frequency_for_transition_frequency(...)` | Converts a rotating-frame transition frequency plus a chosen frame frequency into a positive physical drive tone |
+| `internal_carrier_from_drive_frequency(...)` | Converts a positive physical drive tone into the raw low-level `Pulse.carrier` |
 | `TransmonModeSpec`, `BosonicModeSpec`, `DispersiveCouplingSpec` | Components for building `UniversalCQEDModel` |
 
 ## Usage Guidance
@@ -86,7 +88,7 @@ psi0 = prepare_state(model, StatePreparationSpec(qubit=qubit_state("g"), storage
 - **Tensor ordering**: qubit first, storage/cavity second, readout third.
 - **Basis**: `|g> = |0>`, `|e> = |1>`.
 - **Frequencies**: all internal frequencies are in `rad/s`; times in `s`.
-- **Drive waveform sign**: `exp(+i*(omega*t + phase))`, so `Pulse.carrier = -omega_transition(frame)`.
+- **Drive waveform sign**: `exp(+i*(omega*t + phase))`, so the raw low-level `Pulse.carrier` satisfies `carrier = -omega_transition(frame)`. For user-facing code, prefer the positive physical tone-frequency helpers instead of carrying the raw sign yourself.
 - **chi convention**: `chi` is the per-photon shift of the qubit transition frequency. Negative `chi` lowers the frequency with photon number.
 - **`n_q` projector**: the transmon excitation projector is `b†b`; for a two-level qubit this equals `|e><e|`.
 - **Energy spectrum**: `compute_energy_spectrum` always shifts energies so the vacuum state has energy 0. Use `frame=FrameSpec()` (lab frame) for physically interpretable ladder diagrams.

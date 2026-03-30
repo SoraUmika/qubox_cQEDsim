@@ -48,7 +48,7 @@
       ]
     },
     "pulse_metadata": {
-      "mapping": "Piecewise-constant rotating-frame controls exported as square-envelope pulses. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly.",
+      "mapping": "Piecewise-constant rotating-frame controls exported as square-envelope pulses. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) + i Q(t). Model-backed Q quadratures are built as +i(raising - lowering), so replay through cqed_sim.sim.runner preserves the same Hermitian control Hamiltonian.",
       "time_grid_s": [
         7.5e-09,
         7.5e-09,
@@ -125,7 +125,7 @@
       ]
     },
     "pulse_metadata": {
-      "mapping": "Piecewise-constant rotating-frame controls exported as square-envelope pulses. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly.",
+      "mapping": "Piecewise-constant rotating-frame controls exported as square-envelope pulses. For repository drive targets, I/Q quadratures are combined into the complex channel coefficient c(t) = I(t) + i Q(t). Model-backed Q quadratures are built as +i(raising - lowering), so replay through cqed_sim.sim.runner preserves the same Hermitian control Hamiltonian.",
       "time_grid_s": [
         7.5e-09,
         7.5e-09,

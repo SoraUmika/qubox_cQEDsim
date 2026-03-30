@@ -15,7 +15,8 @@ Tomography is essential for diagnosing and benchmarking quantum gate operations 
 
 - **`run_all_xy(model, cal, device)`**: Runs the standard 21-point AllXY gate sequence on the simulated qubit and returns the per-sequence X/Y expectation values. AllXY is a coarse calibration diagnostic that indicates over/under-rotation and phase errors.
 - **`autocalibrate_all_xy(model, device)`**: Automatically calibrates a `QubitPulseCal` from the model and runs AllXY.
-- **`selective_pi_pulse(model, cal, n, device)`**: Constructs a π-pulse selective to Fock sector `n`, for use in Fock-resolved protocols.
+- **`selective_qubit_drive_frequency(model, n)`**: Returns the positive physical qubit drive frequency for the Fock-sector-selective tag tone.
+- **`selective_pi_pulse(model, cal, n, device)`**: Constructs a π-pulse selective to Fock sector `n`, translating that positive drive frequency into the raw internal carrier expected by the runtime.
 - **`run_fock_resolved_tomo(model, cal, device, n_sectors)`**: Runs Fock-resolved qubit tomography: measures the qubit Bloch vector conditioned on each Fock number sector up to `n_sectors`. Returns a `FockTomographyResult`.
 - **`true_fock_resolved_vectors(state, model)`**: Computes the exact conditioned Bloch vectors from a simulation state, without running additional simulations.
 - **`calibrate_leakage_matrix(model, cal, device)`**: Calibrates the leakage matrix relating population in higher transmon levels to readout outcomes.
@@ -32,6 +33,7 @@ Tomography is essential for diagnosing and benchmarking quantum gate operations 
 | `autocalibrate_all_xy(model, device)` | Auto-calibrated AllXY |
 | `run_fock_resolved_tomo(model, cal, device, n_sectors)` | Fock-resolved Bloch tomography |
 | `true_fock_resolved_vectors(state, model)` | Exact conditioned Bloch vectors from state |
+| `selective_qubit_drive_frequency(model, n)` | Positive physical tag-tone frequency for Fock sector `n` |
 | `selective_pi_pulse(model, cal, n, device)` | Fock-sector-selective π-pulse |
 | `calibrate_leakage_matrix(model, cal, device)` | Leakage matrix calibration |
 | `FockTomographyResult` | Result type for Fock-resolved tomo |

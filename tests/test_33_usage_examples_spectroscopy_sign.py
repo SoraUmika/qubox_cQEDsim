@@ -83,10 +83,10 @@ def test_qubit_spectroscopy_tutorial_uses_transition_detuning_mapping():
     nb = json.loads(notebook.read_text(encoding="utf-8"))
     content = "\n".join("".join(cell.get("source", [])) for cell in nb["cells"])
 
-    assert "carrier_for_transition_frequency(MHz(point_mhz))" in content
-    assert content.count("carrier_for_transition_frequency") >= 2
+    assert "drive_frequency_for_transition_frequency(transition_frequency, frame.omega_q_frame)" in content
+    assert "internal_carrier_from_drive_frequency(drive_frequency, frame.omega_q_frame)" in content
     assert "fit_lorentzian_peak" in content
-    assert "the simulator receives the internal raw carrier through `carrier_for_transition_frequency(...)`" in content
+    assert "the notebook first converts that quantity into a positive physical drive tone through `drive_frequency_for_transition_frequency(...)`" in content
 
 
 def test_number_splitting_tutorial_tracks_negative_chi_with_manifold_helper():
@@ -94,7 +94,8 @@ def test_number_splitting_tutorial_tracks_negative_chi_with_manifold_helper():
     nb = json.loads(notebook.read_text(encoding="utf-8"))
     content = "\n".join("".join(cell.get("source", [])) for cell in nb["cells"])
 
-    assert "carrier_for_transition_frequency(MHz(detuning_point_mhz))" in content
+    assert "drive_frequency_for_transition_frequency(transition_frequency, frame.omega_q_frame)" in content
+    assert "internal_carrier_from_drive_frequency(drive_frequency, frame.omega_q_frame)" in content
     assert "predicted_lines_mhz = [angular_to_mhz(manifold_transition_frequency(model, n, frame=frame)) for n in fock_levels]" in content
     assert "predicted_lines_mhz = np.arange(6) * chi_mhz" not in content
     assert "negative `chi` moves the `n`-resolved qubit lines to lower transition detuning" in content

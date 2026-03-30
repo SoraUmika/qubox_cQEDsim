@@ -3815,13 +3815,20 @@
 </span></code></pre></div>
 <hr />
 <h2 id="frame-and-pulse-carriers">Frame and Pulse Carriers<a class="headerlink" href="#frame-and-pulse-carriers" title="Permanent link">&para;</a></h2>
-<p>Pulse carriers are specified in the rotating frame. A pulse resonant with a transition at rotating-frame frequency <span class="arithmatex">\(\omega_{\text{transition}}\)</span> must have:</p>
+<p>For user-facing code, the preferred physical drive tone in a frame with frequency <span class="arithmatex">\(\omega_{\text{frame}}\)</span> is:</p>
+<div class="arithmatex">\[\omega_{\text{drive}} = \omega_{\text{frame}} + \omega_{\text{transition}}\]</div>
+<p>The raw low-level <code>Pulse.carrier</code> compatibility field is still specified in the rotating frame. A pulse resonant with a transition at rotating-frame frequency <span class="arithmatex">\(\omega_{\text{transition}}\)</span> must therefore have:</p>
 <div class="arithmatex">\[\text{Pulse.carrier} = -\omega_{\text{transition}}\]</div>
 <p>Use the helper functions:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">carrier_for_transition_frequency</span><span class="p">,</span> <span class="n">transition_frequency_from_carrier</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">carrier</span> <span class="o">=</span> <span class="n">carrier_for_transition_frequency</span><span class="p">(</span><span class="n">omega_transition</span><span class="p">)</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">omega_back</span> <span class="o">=</span> <span class="n">transition_frequency_from_carrier</span><span class="p">(</span><span class="n">carrier</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">drive_frequency_for_transition_frequency</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">internal_carrier_from_drive_frequency</span><span class="p">,</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">transition_frequency_from_drive_frequency</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">)</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="n">drive_frequency</span> <span class="o">=</span> <span class="n">drive_frequency_for_transition_frequency</span><span class="p">(</span><span class="n">omega_transition</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">omega_q_frame</span><span class="p">)</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="n">carrier</span> <span class="o">=</span> <span class="n">internal_carrier_from_drive_frequency</span><span class="p">(</span><span class="n">drive_frequency</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">omega_q_frame</span><span class="p">)</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">omega_back</span> <span class="o">=</span> <span class="n">transition_frequency_from_drive_frequency</span><span class="p">(</span><span class="n">drive_frequency</span><span class="p">,</span> <span class="n">frame</span><span class="o">.</span><span class="n">omega_q_frame</span><span class="p">)</span>
 </span></code></pre></div>
 
 

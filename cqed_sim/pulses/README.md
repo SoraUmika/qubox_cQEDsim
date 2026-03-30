@@ -74,7 +74,7 @@ p = Pulse(
 
 ## Important Assumptions / Conventions
 
-- **Carrier sign**: `Pulse.carrier` must equal `−omega_transition(frame)`. This follows from the `exp(+i*(omega*t+phase))` drive convention used throughout the library. Use `carrier_for_transition_frequency(...)` from `cqed_sim.core` to compute it correctly.
+- **Carrier sign**: the raw low-level `Pulse.carrier` must equal `−omega_transition(frame)`. This follows from the `exp(+i*(omega*t+phase))` drive convention used throughout the library. For user-facing positive drive-tone frequencies, prefer `drive_frequency_for_transition_frequency(...)`, `internal_carrier_from_drive_frequency(...)`, and `drive_frequency_from_internal_carrier(...)` from `cqed_sim.core`.
 - **Amplitude units**: amplitudes are in `rad/s` (matching the Hamiltonian units). Builders return physically calibrated amplitudes based on the supplied calibration dictionaries.
 - **Envelope normalization**: envelope arrays from the standard helpers are normalized (peak 1 or area-normalized depending on context); `Pulse.amplitude` scales the overall drive strength.
 - **Time units**: `t0` and `dt` are in seconds.

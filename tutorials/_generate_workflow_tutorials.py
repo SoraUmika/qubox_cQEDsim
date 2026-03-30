@@ -238,12 +238,13 @@ from functools import partial
 from cqed_sim import (
     DisplacementGate,
     DispersiveTransmonCavityModel,
+    drive_frequency_for_transition_frequency,
     FrameSpec,
+    internal_carrier_from_drive_frequency,
     Pulse,
     SequenceCompiler,
     SimulationConfig,
     build_displacement_pulse,
-    carrier_for_transition_frequency,
     reduced_cavity_state,
     simulate_sequence,
 )
@@ -291,13 +292,15 @@ dt_s = 2.0 * ns
 probe_envelope = partial(gaussian_envelope, sigma=probe_sigma_fraction)
 
 def final_excited_population_for_detuning(detuning_mhz: float) -> float:
+    transition_frequency = MHz(detuning_mhz)
+    drive_frequency = drive_frequency_for_transition_frequency(transition_frequency, frame.omega_q_frame)
     probe = Pulse(
         channel="qubit",
         t0=displacement_duration_s + probe_gap_s,
         duration=probe_duration_s,
         envelope=probe_envelope,
         amp=probe_amp_rad_s,
-        carrier=carrier_for_transition_frequency(MHz(detuning_mhz)),
+        carrier=internal_carrier_from_drive_frequency(drive_frequency, frame.omega_q_frame),
         label=f"probe_{detuning_mhz:+.2f}_MHz",
     )
     compiled = SequenceCompiler(dt=dt_s).compile(
@@ -746,7 +749,7 @@ plt.show()
         interpretation="""
 At the swap time, almost all amplitude has moved from `|f,0>` into `|g,1>`. This is the effective `gf` red-sideband primitive that many storage-control protocols build on.
 
-The notebook explicitly computes the rotating-frame sideband transition frequency and then feeds it through `carrier_for_transition_frequency(...)`, which keeps the carrier sign aligned with the project convention.
+The notebook explicitly computes the effective rotating-frame sideband transition frequency and then feeds that reduced quantity through `carrier_for_transition_frequency(...)`, which is appropriate here because the workflow is already formulated directly in the sideband rotating-frame language rather than in a single-mode positive physical drive frequency.
 """,
         next_steps="""
 - Shorten the pulse to observe under-rotation and Rabi-like oscillations.

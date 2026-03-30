@@ -6,6 +6,7 @@ import numpy as np
 
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.drive_targets import SidebandDriveSpec
+from cqed_sim.core.frequencies import drive_frequency_from_internal_carrier
 from cqed_sim.io.gates import DisplacementGate, RotationGate, SQRGate
 from cqed_sim.pulses.calibration import (
     build_sqr_tone_specs,
@@ -151,12 +152,16 @@ def build_sqr_multitone_pulse(
             tone_specs.append(spec)
             continue
         _d_lambda, d_alpha, d_omega_rad_s = calibration.correction_for_n(spec.manifold)
+        omega_rad_s = float(spec.omega_rad_s + d_omega_rad_s)
         tone_specs.append(
             MultitoneTone(
                 manifold=spec.manifold,
-                omega_rad_s=float(spec.omega_rad_s + d_omega_rad_s),
+                omega_rad_s=omega_rad_s,
                 amp_rad_s=float(spec.amp_rad_s),
                 phase_rad=float(spec.phase_rad + d_alpha),
+                drive_frequency_rad_s=float(
+                    drive_frequency_from_internal_carrier(omega_rad_s, frame.omega_q_frame)
+                ),
             )
         )
 

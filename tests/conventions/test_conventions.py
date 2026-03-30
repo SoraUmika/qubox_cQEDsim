@@ -2,7 +2,16 @@ from __future__ import annotations
 
 import numpy as np
 
-from cqed_sim.core import DispersiveReadoutTransmonStorageModel, DispersiveTransmonCavityModel, FrameSpec
+from cqed_sim.core import (
+    DispersiveReadoutTransmonStorageModel,
+    DispersiveTransmonCavityModel,
+    FrameSpec,
+    carrier_for_transition_frequency,
+    drive_frequency_for_transition_frequency,
+    drive_frequency_from_internal_carrier,
+    internal_carrier_from_drive_frequency,
+    transition_frequency_from_drive_frequency,
+)
 from physics_and_conventions.conventions import DetuningSign, from_internal_units, to_internal_units, validate_detuning
 
 
@@ -15,6 +24,27 @@ def test_validate_detuning_respects_declared_sign_convention():
     delta = 2.0 * np.pi * 1.5e6
     assert np.isclose(validate_detuning(delta, DetuningSign.SYSTEM_MINUS_DRIVE), delta, atol=1.0e-12)
     assert np.isclose(validate_detuning(delta, DetuningSign.DRIVE_MINUS_SYSTEM), -delta, atol=1.0e-12)
+
+
+def test_positive_drive_frequency_helpers_round_trip_through_internal_carrier():
+    frame_frequency = 2.0 * np.pi * 6.0e9
+    transition_frequency = -2.0 * np.pi * 2.5e6
+
+    drive_frequency = drive_frequency_for_transition_frequency(transition_frequency, frame_frequency)
+    carrier = internal_carrier_from_drive_frequency(drive_frequency, frame_frequency)
+
+    assert np.isclose(drive_frequency, frame_frequency + transition_frequency, atol=1.0e-12)
+    assert np.isclose(carrier, carrier_for_transition_frequency(transition_frequency), atol=1.0e-12)
+    assert np.isclose(
+        transition_frequency_from_drive_frequency(drive_frequency, frame_frequency),
+        transition_frequency,
+        atol=1.0e-12,
+    )
+    assert np.isclose(
+        drive_frequency_from_internal_carrier(carrier, frame_frequency),
+        drive_frequency,
+        atol=1.0e-12,
+    )
 
 
 def test_hamiltonian_builders_preserve_positive_single_excitation_energies():

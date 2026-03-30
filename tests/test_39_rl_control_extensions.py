@@ -109,6 +109,14 @@ def test_measurement_observation_aliases_proxy_reward_and_diagnostics_run() -> N
     assert len(diagnostics["pulse_summary"]) == 1
     assert diagnostics["regime"] == "reduced_dispersive"
     assert diagnostics["frame"]["omega_q_frame"] != 0.0
+    assert diagnostics["segment_metadata"]["internal_carrier"] == pytest.approx(
+        diagnostics["pulse_summary"][0]["carrier"],
+        abs=1.0e-12,
+    )
+    assert diagnostics["segment_metadata"]["drive_frequency"] == pytest.approx(
+        diagnostics["frame"]["omega_c_frame"] - diagnostics["pulse_summary"][0]["carrier"],
+        abs=1.0e-12,
+    )
 
     count_model = build_observation_model("measurement_counts")
     count_observation = count_model.encode(measurement=env._last_measurement, metrics=env.last_metrics)

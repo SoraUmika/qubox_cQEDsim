@@ -293,7 +293,7 @@ class FourierSeriesPulseFamily(StructuredPulseFamily):
         q_waveform = q_cos @ cosine
         if n_sin:
             q_waveform = q_waveform + q_sin @ sine
-        return np.asarray(i_waveform - 1j * q_waveform, dtype=np.complex128)
+        return np.asarray(i_waveform + 1j * q_waveform, dtype=np.complex128)
 
     def waveform_and_jacobian(
         self,
@@ -310,9 +310,9 @@ class FourierSeriesPulseFamily(StructuredPulseFamily):
         for mode in range(max(int(self.n_modes) - 1, 0)):
             jacobian_rows.append(np.asarray(sine[mode], dtype=np.complex128))
         for mode in range(int(self.n_modes)):
-            jacobian_rows.append(np.asarray(-1j * cosine[mode], dtype=np.complex128))
+            jacobian_rows.append(np.asarray(1j * cosine[mode], dtype=np.complex128))
         for mode in range(max(int(self.n_modes) - 1, 0)):
-            jacobian_rows.append(np.asarray(-1j * sine[mode], dtype=np.complex128))
+            jacobian_rows.append(np.asarray(1j * sine[mode], dtype=np.complex128))
         return waveform, np.asarray(jacobian_rows, dtype=np.complex128)
 
 
@@ -512,13 +512,13 @@ class StructuredPulseParameterization:
             if resolved_channel.mode == "iq_pair":
                 i_index, q_index = resolved_channel.control_indices
                 waveform[i_index, :] += np.asarray(channel_waveform.real, dtype=float)
-                waveform[q_index, :] += np.asarray(-channel_waveform.imag, dtype=float)
+                waveform[q_index, :] += np.asarray(channel_waveform.imag, dtype=float)
             elif resolved_channel.mode in {"i_only", "scalar"}:
                 (index,) = resolved_channel.control_indices
                 waveform[index, :] += np.asarray(channel_waveform.real, dtype=float)
             elif resolved_channel.mode == "q_only":
                 (index,) = resolved_channel.control_indices
-                waveform[index, :] += np.asarray(-channel_waveform.imag, dtype=float)
+                waveform[index, :] += np.asarray(channel_waveform.imag, dtype=float)
             else:
                 raise ValueError(f"Unsupported structured control mode '{resolved_channel.mode}'.")
         return waveform
@@ -543,7 +543,7 @@ class StructuredPulseParameterization:
             if resolved_channel.mode == "iq_pair":
                 i_index, q_index = resolved_channel.control_indices
                 gradient_real = np.asarray(gradient[i_index, :], dtype=float)
-                gradient_imag = np.asarray(-gradient[q_index, :], dtype=float)
+                gradient_imag = np.asarray(gradient[q_index, :], dtype=float)
             elif resolved_channel.mode in {"i_only", "scalar"}:
                 (index,) = resolved_channel.control_indices
                 gradient_real = np.asarray(gradient[index, :], dtype=float)
@@ -551,7 +551,7 @@ class StructuredPulseParameterization:
             elif resolved_channel.mode == "q_only":
                 (index,) = resolved_channel.control_indices
                 gradient_real = np.zeros(gradient.shape[1], dtype=float)
-                gradient_imag = np.asarray(-gradient[index, :], dtype=float)
+                gradient_imag = np.asarray(gradient[index, :], dtype=float)
             else:
                 raise ValueError(f"Unsupported structured control mode '{resolved_channel.mode}'.")
 
@@ -898,7 +898,7 @@ def _complex_export_channels(control_terms: tuple[Any, ...], waveform_values: np
             continue
         contribution = np.asarray(data[term_index, :], dtype=np.complex128)
         if str(term.quadrature).upper() == "Q":
-            contribution = -1j * contribution
+            contribution = 1j * contribution
         channels.setdefault(str(term.export_channel), np.zeros(data.shape[1], dtype=np.complex128))
         channels[str(term.export_channel)] += contribution
     return channels

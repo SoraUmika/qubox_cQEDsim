@@ -10,11 +10,15 @@ from .drive_targets import SidebandDriveSpec, TransmonTransitionDriveSpec
 from .frame import FrameSpec
 from .frequencies import (
     carrier_for_transition_frequency,
+    drive_frequency_for_transition_frequency,
+    drive_frequency_from_internal_carrier,
     effective_sideband_rabi_frequency,
     falling_factorial_scalar,
+    internal_carrier_from_drive_frequency,
     manifold_transition_frequency,
     sideband_transition_frequency,
     transmon_transition_frequency,
+    transition_frequency_from_drive_frequency,
     transition_frequency_from_carrier,
 )
 from .hamiltonian import CrossKerrSpec, ExchangeSpec, SelfKerrSpec
@@ -77,6 +81,10 @@ __all__ = [
     "effective_sideband_rabi_frequency",
     "carrier_for_transition_frequency",
     "transition_frequency_from_carrier",
+    "drive_frequency_for_transition_frequency",
+    "transition_frequency_from_drive_frequency",
+    "internal_carrier_from_drive_frequency",
+    "drive_frequency_from_internal_carrier",
     "qubit_rotation_xy",
     "qubit_rotation_axis",
     "cavity_block_phase_op",

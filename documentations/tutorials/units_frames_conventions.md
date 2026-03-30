@@ -15,7 +15,8 @@ Verify the three core conventions used throughout `cqed_sim`: angular-frequency 
 | Internal frequencies | Angular frequency $\omega$ in rad/s |
 | Time | Seconds |
 | Rotating frame | Defined by `FrameSpec(omega_c_frame, omega_q_frame)` |
-| Pulse carrier | Negative of the rotating-frame transition frequency |
+| Public drive tone | Positive physical tone frequency via `drive_frequency_for_transition_frequency(...)` |
+| Raw `Pulse.carrier` | Negative of the rotating-frame transition frequency |
 | Dispersive shift $\chi$ | Negative $\chi$ lowers qubit frequency with photon number |
 
 ### The $\chi$ Sign Convention
@@ -26,13 +27,17 @@ $$\omega_{ge}(n) = \omega_{ge}(0) + n\chi, \qquad \chi < 0$$
 
 With $\chi > 0$ (which can arise in certain coupling configurations), the qubit frequency **increases** with photon number.
 
-### Carrier Sign Convention
+### Drive-Frequency / Carrier Convention
 
-A drive pulse targeting a transition at angular frequency $\omega_{\text{trans}}$ in the rotating frame uses:
+A user-facing physical drive tone in a frame with frequency $\omega_{\text{frame}}$ should be computed as:
+
+$$\omega_{\text{drive}} = \omega_{\text{frame}} + \omega_{\text{trans}}$$
+
+The low-level compatibility field used by `Pulse` is still:
 
 $$\text{carrier} = -\omega_{\text{trans}}$$
 
-For on-resonance qubit drives in a matched rotating frame ($\omega_q^{\text{frame}} = \omega_q$), the residual transition frequency is zero, so `carrier = 0`.
+For on-resonance qubit drives in a matched rotating frame ($\omega_q^{\text{frame}} = \omega_q$), the residual transition frequency is zero, so the positive physical tone is just the frame frequency and the raw low-level `carrier = 0`.
 
 ---
 
@@ -84,7 +89,7 @@ This directly validates the dispersive shift sign convention used throughout the
 
 !!! warning "Common Mistakes"
     - Confusing $f$ (Hz) with $\omega$ (rad/s) — all internal frequencies use rad/s
-    - Setting carrier to $+\omega_{\text{trans}}$ instead of $-\omega_{\text{trans}}$
+    - Treating the raw low-level `Pulse.carrier` as if it were the user-facing physical tone frequency
     - Assuming $\chi > 0$ when the transmon convention gives $\chi < 0$
 
 See [Frame Sanity Checks](frame_sanity_checks.md) for a tutorial on debugging convention errors.

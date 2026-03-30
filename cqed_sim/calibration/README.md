@@ -91,7 +91,7 @@ print(result.fidelity)
 
 ## Important Assumptions / Conventions
 
-- The conditioned multitone validation uses the same carrier-sign and additive-amplitude conventions as the rest of the library.
+- The conditioned multitone validation uses the same additive-amplitude convention and the same hybrid frequency split as the rest of the library: user-facing boundaries should stay in positive physical drive frequencies, while emitted low-level `Pulse.carrier` values still satisfy `Pulse.carrier = -omega_transition(frame)`.
 - Chi convention: per-photon qubit-frequency shift, consistent with `cqed_sim.core`. The multitone tone frequencies are set relative to the qubit transition in each Fock sector using `manifold_transition_frequency(model, n, frame)`.
 - The targeted-subspace path enforces cavity-block structure: the joint unitary is required to preserve the cavity Fock-number sectors up to a specified tolerance.
 - SQR calibration optimizes over per-tone amplitudes and phases; the pulse duration is a fixed input parameter.

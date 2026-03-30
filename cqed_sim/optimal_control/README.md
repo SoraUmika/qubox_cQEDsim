@@ -63,7 +63,7 @@ The current built-in families are:
 - `FourierSeriesPulseFamily`
 
   $$
-  u(t; \theta) = I(t; \theta_I) - i Q(t; \theta_Q)
+  u(t; \theta) = I(t; \theta_I) + i Q(t; \theta_Q)
   $$
 
   with real Fourier bases for the I and Q quadratures:
@@ -103,8 +103,10 @@ This uses the existing `HardwareModel` stack. Useful built-in maps include:
 The repository drive convention is preserved throughout. Exported rotating-frame envelopes still satisfy
 
 $$
-c(t) = I(t) - i Q(t).
+c(t) = I(t) + i Q(t).
 $$
+
+For model-backed control problems, the `Q` quadrature is built as `+i(raising - lowering)`, so this defines the raw complex envelope presented to the runtime pulse stack while preserving the optimizer Hamiltonian under replay. Absolute positive drive frequencies remain a separate boundary translation handled through the `cqed_sim.core` frequency helpers before assigning any raw `Pulse.carrier` values.
 
 ## Solvers and Objectives
 

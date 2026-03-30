@@ -82,7 +82,7 @@ def embed_subspace_operator(target: np.ndarray, subspace: Subspace, *, outside_i
 
 def quadrature_operators(raising: qt.Qobj, lowering: qt.Qobj) -> tuple[np.ndarray, np.ndarray]:
     i_term = np.asarray((raising + lowering).full(), dtype=np.complex128)
-    q_term = np.asarray((-1j * (raising - lowering)).full(), dtype=np.complex128)
+    q_term = np.asarray((1j * (raising - lowering)).full(), dtype=np.complex128)
     return i_term, q_term
 
 

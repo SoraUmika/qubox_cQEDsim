@@ -28,6 +28,7 @@ from scipy.optimize import Bounds, minimize
 
 from cqed_sim.core.conventions import qubit_cavity_block_indices
 from cqed_sim.core.frame import FrameSpec
+from cqed_sim.core.frequencies import drive_frequency_from_internal_carrier
 from cqed_sim.core.ideal_gates import qubit_rotation_xy
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.io.gates import Gate, SQRGate
@@ -510,12 +511,16 @@ def _build_multitone_simulation(
     tone_specs: list[MultitoneTone] = []
     for tone in raw_tones:
         _d_lambda, d_alpha, d_omega = correction_map.get(int(tone.manifold), (0.0, 0.0, 0.0))
+        omega_rad_s = float(tone.omega_rad_s + d_omega)
         tone_specs.append(
             MultitoneTone(
                 manifold=int(tone.manifold),
-                omega_rad_s=float(tone.omega_rad_s + d_omega),
+                omega_rad_s=omega_rad_s,
                 amp_rad_s=float(tone.amp_rad_s),
                 phase_rad=float(tone.phase_rad + d_alpha),
+                drive_frequency_rad_s=float(
+                    drive_frequency_from_internal_carrier(omega_rad_s, frame.omega_q_frame)
+                ),
             )
         )
 

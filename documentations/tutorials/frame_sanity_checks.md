@@ -120,7 +120,7 @@ Before running any simulation, verify:
 
 - [ ] All model frequencies include $2\pi$ (angular frequency, rad/s)
 - [ ] `FrameSpec` frequencies match the corresponding model frequencies
-- [ ] Pulse carrier frequencies match the intended transition
+- [ ] User-facing drive frequencies, or the converted raw low-level carriers, match the intended transition
 - [ ] $dt$ is small enough to resolve the fastest dynamics
 - [ ] $\chi$ sign is consistent with the expected dispersive shift direction
 - [ ] Hilbert-space dimensions are sufficient (see [Truncation Convergence](truncation_convergence.md))

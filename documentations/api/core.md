@@ -328,6 +328,12 @@ class SidebandDriveSpec:
 | `falling_factorial_scalar(n, order)` | `-> float` | $n(n-1)(n-2)\cdots(n-\text{order}+1)$ |
 | `carrier_for_transition_frequency(transition_frequency)` | `-> float` | Rotating-frame transition → resonant `Pulse.carrier` |
 | `transition_frequency_from_carrier(carrier)` | `-> float` | `Pulse.carrier` → rotating-frame transition |
+| `drive_frequency_for_transition_frequency(transition_frequency, frame_frequency)` | `-> float` | Rotating-frame transition plus frame frequency → positive physical drive tone |
+| `transition_frequency_from_drive_frequency(drive_frequency, frame_frequency)` | `-> float` | Positive physical drive tone minus frame frequency → rotating-frame transition |
+| `internal_carrier_from_drive_frequency(drive_frequency, frame_frequency)` | `-> float` | Positive physical drive tone → raw low-level `Pulse.carrier` |
+| `drive_frequency_from_internal_carrier(carrier, frame_frequency)` | `-> float` | Raw low-level `Pulse.carrier` → positive physical drive tone |
+
+For user-facing code, prefer the positive physical drive-frequency helper layer and convert to the raw low-level carrier only when constructing a `Pulse`.
 
 ---
 

@@ -7,7 +7,11 @@ import numpy as np
 import qutip as qt
 
 from cqed_sim.core.frame import FrameSpec
-from cqed_sim.core.frequencies import carrier_for_transition_frequency, manifold_transition_frequency
+from cqed_sim.core.frequencies import (
+    drive_frequency_for_transition_frequency,
+    internal_carrier_from_drive_frequency,
+    manifold_transition_frequency,
+)
 from cqed_sim.core.ideal_gates import embed_qubit_op, qubit_rotation_axis
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.pulse import Pulse
@@ -168,18 +172,24 @@ def autocalibrate_all_xy(
     return best, best_res
 
 
-def selective_qubit_freq(model: DispersiveTransmonCavityModel, n: int) -> float:
+def selective_qubit_drive_frequency(model: DispersiveTransmonCavityModel, n: int) -> float:
     frame = FrameSpec(omega_q_frame=model.omega_q)
-    return carrier_for_transition_frequency(manifold_transition_frequency(model, n=n, frame=frame))
+    transition = manifold_transition_frequency(model, n=n, frame=frame)
+    return drive_frequency_for_transition_frequency(transition, frame.omega_q_frame)
+
+
+def selective_qubit_freq(model: DispersiveTransmonCavityModel, n: int) -> float:
+    return internal_carrier_from_drive_frequency(selective_qubit_drive_frequency(model, n), model.omega_q)
 
 
 def selective_pi_pulse(n: int, t0_ns: float, duration_ns: float, amp: float, model: DispersiveTransmonCavityModel, drag: float = 0.0) -> Pulse:
+    drive_frequency = selective_qubit_drive_frequency(model, n)
     return Pulse(
         channel="q",
         t0=t0_ns,
         duration=duration_ns,
         envelope=_gaussian_norm,
-        carrier=selective_qubit_freq(model, n),
+        carrier=internal_carrier_from_drive_frequency(drive_frequency, model.omega_q),
         phase=0.0,
         amp=amp,
         drag=drag,

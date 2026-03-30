@@ -143,7 +143,7 @@ For a full notebook walkthrough: `tutorials/30_advanced_protocols/03_unitary_syn
 - The synthesizer uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian in `cqed_sim.sim`.
 - Subspace fidelity is computed using the normalized Hilbert–Schmidt inner product on the specified logical subspace.
 - Drift phases between gates are tracked via `DriftPhaseModel` using the static Hamiltonian in the specified rotating frame.
-- The pulse waveform sign convention applies to output pulses: `Pulse.carrier = -omega_transition(frame)`.
+- The pulse waveform sign convention applies to output pulses, but public wrappers should still keep user-facing frequency parameters in positive physical drive frequencies and translate them through the core helpers only when assigning the raw runtime field `Pulse.carrier = -omega_transition(frame)`.
 - Leakage is defined relative to the retained logical subspace. Optional checkpoint/path leakage and edge-projector occupancy are separate regularizers layered on top of the same relevant-map objective rather than a redefinition of the task target.
 
 ## Relationships to Other Modules

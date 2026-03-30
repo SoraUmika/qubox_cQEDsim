@@ -38,8 +38,14 @@ Fields:
 `quadrature="I"` and `quadrature="Q"` follow the runtime drive convention used by `cqed_sim.sim.runner`:
 
 $$
-c(t) = I(t) - i Q(t).
+c(t) = I(t) + i Q(t).
 $$
+
+For model-backed control problems, `build_control_problem_from_model(...)` derives the Hermitian `Q`
+operator as `+i(raising - lowering)`, so this exported envelope replays through the runtime pulse
+stack with the same effective control Hamiltonian used during optimization.
+Absolute positive drive frequencies remain a separate boundary translation handled through the
+`cqed_sim.core` frequency helpers before any raw `Pulse.carrier` is assigned.
 
 ### `ControlSystem`
 
@@ -127,7 +133,7 @@ This is useful for hardware-realistic single-lobe qubit drives and DRAG-style co
 Represents a smooth complex envelope in a truncated real Fourier basis:
 
 $$
-u(t; \theta) = I(t; \theta_I) - i Q(t; \theta_Q)
+u(t; \theta) = I(t; \theta_I) + i Q(t; \theta_Q)
 $$
 
 with

@@ -114,6 +114,36 @@ def transition_frequency_from_carrier(carrier: float) -> float:
     return -float(carrier)
 
 
+def drive_frequency_for_transition_frequency(transition_frequency: float, frame_frequency: float) -> float:
+    """Return the positive physical drive frequency for a rotating-frame transition.
+
+    The input ``transition_frequency`` is the transition frequency in the chosen
+    rotating frame. The returned value is the corresponding positive lab-style
+    tone frequency.
+    """
+    return float(frame_frequency) + float(transition_frequency)
+
+
+def transition_frequency_from_drive_frequency(drive_frequency: float, frame_frequency: float) -> float:
+    """Return the rotating-frame transition frequency addressed by a positive drive tone."""
+    return float(drive_frequency) - float(frame_frequency)
+
+
+def internal_carrier_from_drive_frequency(drive_frequency: float, frame_frequency: float) -> float:
+    """Convert a positive physical drive frequency into cqed_sim's raw Pulse.carrier."""
+    return carrier_for_transition_frequency(
+        transition_frequency_from_drive_frequency(drive_frequency, frame_frequency)
+    )
+
+
+def drive_frequency_from_internal_carrier(carrier: float, frame_frequency: float) -> float:
+    """Convert cqed_sim's raw Pulse.carrier into a positive physical drive frequency."""
+    return drive_frequency_for_transition_frequency(
+        transition_frequency_from_carrier(carrier),
+        frame_frequency,
+    )
+
+
 __all__ = [
     "falling_factorial_scalar",
     "manifold_transition_frequency",
@@ -122,4 +152,8 @@ __all__ = [
     "effective_sideband_rabi_frequency",
     "carrier_for_transition_frequency",
     "transition_frequency_from_carrier",
+    "drive_frequency_for_transition_frequency",
+    "transition_frequency_from_drive_frequency",
+    "internal_carrier_from_drive_frequency",
+    "drive_frequency_from_internal_carrier",
 ]

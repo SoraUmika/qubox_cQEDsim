@@ -8,7 +8,7 @@ import qutip as qt
 from scipy.optimize import Bounds, minimize
 
 from cqed_sim.core.frame import FrameSpec
-from cqed_sim.core.frequencies import manifold_transition_frequency
+from cqed_sim.core.frequencies import drive_frequency_from_internal_carrier, manifold_transition_frequency
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.calibration import build_sqr_tone_specs, pad_parameter_array
 from cqed_sim.pulses.envelopes import MultitoneTone, multitone_envelope, normalized_gaussian
@@ -483,12 +483,16 @@ def build_conditioned_multitone_tones(
     tones: list[MultitoneTone] = []
     for tone in raw_tones:
         _d_lambda, d_alpha, d_omega = corr.correction_for_n(int(tone.manifold))
+        omega_rad_s = float(tone.omega_rad_s + d_omega)
         tones.append(
             MultitoneTone(
                 manifold=int(tone.manifold),
-                omega_rad_s=float(tone.omega_rad_s + d_omega),
+                omega_rad_s=omega_rad_s,
                 amp_rad_s=float(tone.amp_rad_s),
                 phase_rad=float(tone.phase_rad + d_alpha),
+                drive_frequency_rad_s=float(
+                    drive_frequency_from_internal_carrier(omega_rad_s, run_config.frame.omega_q_frame)
+                ),
             )
         )
     return tones

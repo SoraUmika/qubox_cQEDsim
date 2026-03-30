@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from cqed_sim.calibration.sqr import SQRCalibrationResult
+from cqed_sim.core.frequencies import drive_frequency_from_internal_carrier
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.io.gates import SQRGate
@@ -52,6 +53,12 @@ def test_sqr_tone_specs_include_zero_theta_correction_tone():
     assert int(tones[0].manifold) == 1
     expected = sqr_tone_amplitude_rad_s(theta=0.0, duration_s=1.0e-6, d_lambda_norm=0.2)
     assert np.isclose(float(tones[0].amp_rad_s), float(expected), atol=1.0e-9, rtol=0.0)
+    assert np.isclose(
+        float(tones[0].drive_frequency_rad_s),
+        drive_frequency_from_internal_carrier(float(tones[0].omega_rad_s), frame.omega_q_frame),
+        atol=1.0e-12,
+        rtol=0.0,
+    )
 
 
 def test_build_sqr_multitone_pulse_uses_additive_amplitude_correction():
@@ -77,3 +84,9 @@ def test_build_sqr_multitone_pulse_uses_additive_amplitude_correction():
     assert int(tones[0]["n"]) == 1
     expected_amp = float(sqr_lambda0_rad_s(1.0e-6) * 0.15)
     assert np.isclose(float(tones[0]["amp_rad_s"]), expected_amp, atol=1.0e-9, rtol=0.0)
+    assert np.isclose(
+        float(tones[0]["drive_frequency_rad_s"]),
+        drive_frequency_from_internal_carrier(float(tones[0]["omega_rad_s"]), 0.0),
+        atol=1.0e-12,
+        rtol=0.0,
+    )

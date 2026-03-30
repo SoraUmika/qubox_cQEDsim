@@ -122,6 +122,8 @@ pulses, drive_ops, meta = build_sideband_pulse(
 )
 ```
 
+Here the tutorial stays in the effective rotating-frame sideband language and converts the already-reduced sideband transition frequency directly into the raw low-level carrier. For qubit-only or cavity-only public tone frequencies, prefer the positive `drive_frequency_for_transition_frequency(...)` helper layer.
+
 ---
 
 ## Running the Simulation

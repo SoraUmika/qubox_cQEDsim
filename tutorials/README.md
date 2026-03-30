@@ -109,6 +109,6 @@ These notebooks follow the repository's documented conventions:
 - times are in `s`
 - tensor ordering is qubit first, then bosonic modes
 - `chi` is the per-photon qubit-transition shift
-- `Pulse.carrier` follows the repository waveform sign convention
+- user-facing tone frequencies should use the positive drive-frequency helpers, while raw `Pulse.carrier` remains a low-level compatibility field
 
 Use `physics_and_conventions/physics_conventions_report.tex` as the source of truth when a notebook touches sign, frame, or Hamiltonian interpretation.

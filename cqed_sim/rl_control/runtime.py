@@ -16,6 +16,8 @@ from cqed_sim.core import (
     TransmonModeSpec,
     UniversalCQEDModel,
     carrier_for_transition_frequency,
+    drive_frequency_for_transition_frequency,
+    internal_carrier_from_drive_frequency,
     sideband_transition_frequency,
     transmon_transition_frequency,
 )
@@ -279,12 +281,14 @@ class PulseGenerator:
         transition = transmon_transition_frequency(bundle.model, cavity_level=0, lower_level=0, upper_level=1, frame=bundle.frame)
         detuning = float(action.detuning) + _drift_value(bundle.drift_state, "qubit_detuning_offset", "detuning_offset", 0.0)
         amplitude_scale = _drift_value(bundle.drift_state, "qubit_amplitude_scale", "amplitude_scale", 1.0)
+        drive_frequency = drive_frequency_for_transition_frequency(transition + detuning, bundle.frame.omega_q_frame)
+        carrier = internal_carrier_from_drive_frequency(drive_frequency, bundle.frame.omega_q_frame)
         pulse = Pulse(
             "qubit",
             0.0,
             float(action.duration),
             _gaussian_envelope(),
-            carrier=carrier_for_transition_frequency(transition + detuning),
+            carrier=carrier,
             phase=float(action.phi),
             amp=float(amplitude_scale * rotation_gaussian_amplitude(float(action.theta), float(action.duration))),
             drag=float(action.drag),
@@ -294,7 +298,13 @@ class PulseGenerator:
             pulses=[pulse],
             drive_ops={"qubit": "qubit"},
             duration=float(action.duration),
-            metadata={"action_type": "qubit_gaussian", "duration": float(action.duration), "max_abs_amp": float(abs(pulse.amp))},
+            metadata={
+                "action_type": "qubit_gaussian",
+                "duration": float(action.duration),
+                "max_abs_amp": float(abs(pulse.amp)),
+                "drive_frequency": float(drive_frequency),
+                "internal_carrier": float(carrier),
+            },
         )
 
     def _cavity_segment(self, action: CavityDisplacementAction, bundle: EpisodeModelBundle) -> ControlSegment:
@@ -302,12 +312,14 @@ class PulseGenerator:
         detuning = float(action.detuning) + _drift_value(bundle.drift_state, "storage_detuning_offset", "detuning_offset", 0.0)
         amplitude_scale = _drift_value(bundle.drift_state, "storage_amplitude_scale", "amplitude_scale", 1.0)
         epsilon = amplitude_scale * displacement_square_amplitude(complex(action.alpha), float(action.duration))
+        drive_frequency = drive_frequency_for_transition_frequency(transition + detuning, bundle.frame.omega_c_frame)
+        carrier = internal_carrier_from_drive_frequency(drive_frequency, bundle.frame.omega_c_frame)
         pulse = Pulse(
             "storage",
             0.0,
             float(action.duration),
             square_envelope,
-            carrier=carrier_for_transition_frequency(transition + detuning),
+            carrier=carrier,
             phase=float(np.angle(epsilon)) if abs(epsilon) > 0.0 else 0.0,
             amp=float(abs(epsilon)),
             label="rl_storage_displacement",
@@ -316,7 +328,14 @@ class PulseGenerator:
             pulses=[pulse],
             drive_ops={"storage": "storage"},
             duration=float(action.duration),
-            metadata={"action_type": "cavity_displacement", "duration": float(action.duration), "max_abs_amp": float(abs(pulse.amp)), "target_alpha": complex(action.alpha)},
+            metadata={
+                "action_type": "cavity_displacement",
+                "duration": float(action.duration),
+                "max_abs_amp": float(abs(pulse.amp)),
+                "target_alpha": complex(action.alpha),
+                "drive_frequency": float(drive_frequency),
+                "internal_carrier": float(carrier),
+            },
         )
 
     def _sideband_segment(self, action: SidebandAction, bundle: EpisodeModelBundle) -> ControlSegment:
@@ -331,12 +350,14 @@ class PulseGenerator:
         )
         detuning = float(action.detuning) + _drift_value(bundle.drift_state, "sideband_detuning_offset", "detuning_offset", 0.0)
         amplitude_scale = _drift_value(bundle.drift_state, "sideband_amplitude_scale", "amplitude_scale", 1.0)
+        modulation_frequency = float(transition + detuning)
+        carrier = carrier_for_transition_frequency(modulation_frequency)
         pulse = Pulse(
             "sideband",
             0.0,
             float(action.duration),
             _gaussian_envelope(),
-            carrier=carrier_for_transition_frequency(transition + detuning),
+            carrier=carrier,
             phase=float(action.phase),
             amp=float(amplitude_scale * action.amplitude),
             label="rl_sideband",
@@ -353,7 +374,15 @@ class PulseGenerator:
             pulses=[pulse],
             drive_ops=drive_ops,
             duration=float(action.duration),
-            metadata={"action_type": "sideband", "duration": float(action.duration), "max_abs_amp": float(abs(pulse.amp)), "mode": str(action.mode), "sideband": str(action.sideband)},
+            metadata={
+                "action_type": "sideband",
+                "duration": float(action.duration),
+                "max_abs_amp": float(abs(pulse.amp)),
+                "mode": str(action.mode),
+                "sideband": str(action.sideband),
+                "modulation_frequency": modulation_frequency,
+                "internal_carrier": float(carrier),
+            },
         )
 
     def _hybrid_block_segment(self, action: HybridBlockAction, bundle: EpisodeModelBundle) -> ControlSegment:

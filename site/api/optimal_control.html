@@ -4174,8 +4174,13 @@
 </ul>
 <p><code>quadrature="I"</code> and <code>quadrature="Q"</code> follow the runtime drive convention used by <code>cqed_sim.sim.runner</code>:</p>
 <div class="arithmatex">\[
-c(t) = I(t) - i Q(t).
+c(t) = I(t) + i Q(t).
 \]</div>
+<p>For model-backed control problems, <code>build_control_problem_from_model(...)</code> derives the Hermitian <code>Q</code>
+operator as <code>+i(raising - lowering)</code>, so this exported envelope replays through the runtime pulse
+stack with the same effective control Hamiltonian used during optimization.
+Absolute positive drive frequencies remain a separate boundary translation handled through the
+<code>cqed_sim.core</code> frequency helpers before any raw <code>Pulse.carrier</code> is assigned.</p>
 <h3 id="controlsystem"><code>ControlSystem</code><a class="headerlink" href="#controlsystem" title="Permanent link">&para;</a></h3>
 <p>Represents one closed-system member of the control problem:</p>
 <ul>
@@ -4245,7 +4250,7 @@ u(t; \theta) = A \left[g(t; \sigma, c) + i\,\alpha\,\frac{dg}{d\tau}\right] e^{i
 <h3 id="fourierseriespulsefamily"><code>FourierSeriesPulseFamily</code><a class="headerlink" href="#fourierseriespulsefamily" title="Permanent link">&para;</a></h3>
 <p>Represents a smooth complex envelope in a truncated real Fourier basis:</p>
 <div class="arithmatex">\[
-u(t; \theta) = I(t; \theta_I) - i Q(t; \theta_Q)
+u(t; \theta) = I(t; \theta_I) + i Q(t; \theta_Q)
 \]</div>
 <p>with</p>
 <div class="arithmatex">\[

@@ -133,7 +133,7 @@ result = simulate_sequence(
 | Tensor ordering | **qubit first**, cavity second: `\|q, n⟩` |
 | Dispersive term | `+χ n_c n_q` in Hamiltonian (`χ < 0` is typical) |
 | Drive waveform | `amp × envelope(t_rel) × exp(+i(carrier·t + phase))` |
-| Carrier convention | `carrier = −ω_transition` in rotating frame |
+| Carrier convention | raw `Pulse.carrier = −ω_transition` in rotating frame; prefer positive drive-tone helpers for user-facing code |
 | Computational basis | `\|g⟩ = \|0⟩`, `\|e⟩ = \|1⟩` |
 
 !!! warning "Read the conventions page before writing pulses"

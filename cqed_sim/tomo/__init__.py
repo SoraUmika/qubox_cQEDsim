@@ -8,6 +8,7 @@ from .protocol import (
     run_all_xy,
     run_fock_resolved_tomo,
     selective_pi_pulse,
+    selective_qubit_drive_frequency,
     true_fock_resolved_vectors,
 )
 
@@ -18,6 +19,7 @@ __all__ = [
     "run_all_xy",
     "autocalibrate_all_xy",
     "selective_pi_pulse",
+    "selective_qubit_drive_frequency",
     "run_fock_resolved_tomo",
     "true_fock_resolved_vectors",
     "calibrate_leakage_matrix",

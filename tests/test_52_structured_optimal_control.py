@@ -146,6 +146,46 @@ def test_structured_parameterization_pullback_matches_finite_difference() -> Non
     assert np.allclose(analytic, finite_difference, atol=1.0e-4, rtol=2.0e-4)
 
 
+def test_structured_fourier_q_quadrature_uses_positive_imaginary_baseband() -> None:
+    time_grid = PiecewiseConstantTimeGrid.uniform(steps=4, dt_s=5.0e-9)
+    parameterization = StructuredPulseParameterization(
+        time_grid=time_grid,
+        control_terms=(
+            ControlTerm(
+                name="qubit_I",
+                operator=0.5 * np.array([[0.0, 1.0], [1.0, 0.0]], dtype=np.complex128),
+                amplitude_bounds=(-4.0e7, 4.0e7),
+                export_channel="qubit",
+                quadrature="I",
+            ),
+            ControlTerm(
+                name="qubit_Q",
+                operator=0.5 * np.array([[0.0, -1.0j], [1.0j, 0.0]], dtype=np.complex128),
+                amplitude_bounds=(-4.0e7, 4.0e7),
+                export_channel="qubit",
+                quadrature="Q",
+            ),
+        ),
+        channels=(
+            StructuredControlChannel(
+                name="fourier",
+                pulse_family=FourierSeriesPulseFamily(n_modes=1, coefficient_bound=4.0e7),
+                export_channel="qubit",
+            ),
+        ),
+    )
+
+    values = np.array([0.0, 2.5e7], dtype=float)
+    command = parameterization.command_values(values)
+    pulses, _drive_ops, metadata = parameterization.to_pulses(values, waveform_values=command)
+
+    assert np.allclose(command[0, :], 0.0)
+    assert np.allclose(command[1, :], 2.5e7)
+    assert "c(t) = I(t) + i Q(t)" in metadata["mapping"]
+    assert len(pulses) == time_grid.steps
+    assert np.isclose(pulses[0].phase, 0.5 * np.pi)
+
+
 def test_structured_solver_runs_hardware_aware_model_workflow_and_saves_artifacts(tmp_path: Path) -> None:
     model, frame = _qubit_only_model()
     problem = build_structured_control_problem_from_model(

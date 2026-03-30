@@ -116,7 +116,7 @@ disp_pulses, disp_ops, _ = build_displacement_pulse(
 Apply a long, weak, Gaussian qubit probe at each detuning and record the qubit excitation probability:
 
 ```python
-from cqed_sim.core import carrier_for_transition_frequency
+from cqed_sim.core import drive_frequency_for_transition_frequency, internal_carrier_from_drive_frequency
 from cqed_sim.pulses import Pulse
 from cqed_sim.pulses.envelopes import gaussian_envelope
 from cqed_sim.sequence import SequenceCompiler
@@ -128,7 +128,8 @@ pe_values = []
 
 for det_hz in detunings_hz:
     omega_probe = 2 * np.pi * det_hz
-    carrier = carrier_for_transition_frequency(omega_probe)
+    drive_frequency = drive_frequency_for_transition_frequency(omega_probe, frame.omega_q_frame)
+    carrier = internal_carrier_from_drive_frequency(drive_frequency, frame.omega_q_frame)
 
     probe_pulse = Pulse(
         "q", 160e-9, 2.5e-6,

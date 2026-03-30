@@ -25,6 +25,39 @@ state-preparation, measurement, and spectral primitives that remain inside the
 library, the cleaned package boundary versus \texttt{examples/}, and the tests
 that directly back the main conventions.
 
+\section{Canonical Public Frequency Convention}
+\texttt{cqed\_sim} uses a deliberate hybrid frequency convention:
+\begin{itemize}[leftmargin=1.5em]
+  \item Hamiltonian, rotating-frame, dispersive, Kerr, and tensor-ordering
+  semantics follow the repository's standard textbook-style cQED definitions.
+  \item Public and user-facing frequency parameters should be expressed as
+  positive physical drive frequencies in rad/s.
+  \item The low-level runtime field \texttt{Pulse.carrier} is not the public
+  lab-tone frequency. It is an internal compatibility quantity used by the
+  waveform convention
+  \[
+  \epsilon(t) \propto e^{+i(\omega t + \phi)}.
+  \]
+  \item Therefore, for a transition with rotating-frame frequency
+  \(\omega_{\mathrm{transition}}\) in a frame rotating at
+  \(\omega_{\mathrm{frame}}\), the public and internal quantities are related by
+  \[
+  \omega_{\mathrm{drive}} = \omega_{\mathrm{frame}} + \omega_{\mathrm{transition}},
+  \qquad
+  \texttt{Pulse.carrier} = \omega_{\mathrm{frame}} - \omega_{\mathrm{drive}} = -\omega_{\mathrm{transition}}.
+  \]
+  \item Public wrappers should therefore prefer the helper layer
+  \texttt{drive\_frequency\_for\_transition\_frequency(...)},
+  \texttt{transition\_frequency\_from\_drive\_frequency(...)},
+  \texttt{internal\_carrier\_from\_drive\_frequency(...)}, and
+  \texttt{drive\_frequency\_from\_internal\_carrier(...)} and only convert to
+  the raw carrier at the low-level pulse boundary.
+  \item The intentional exception is APIs that are already formulated in
+  effective sideband or modulation-frequency language. Those surfaces may stay
+  in modulation-frequency terms rather than pretending to expose a single
+  absolute lab-tone frequency.
+\end{itemize}
+
 \section{Overview of \texttt{cqed\_sim}}
 \texttt{cqed\_sim/} contains reusable simulator code rather than experiment-specific
 workflows:
@@ -267,11 +300,13 @@ tensor ordering, and drive-target semantics used elsewhere in the repository.
   exported back into the standard pulse stack, the complex rotating-frame baseband
   coefficient is defined by
   \[
-  c(t) = I(t) - i Q(t).
+  c(t) = I(t) + i Q(t).
   \]
-  This choice is what makes the exported \texttt{Pulse} objects reproduce the same
-  effective Hermitian control Hamiltonian used during optimization under the
-  repository's existing waveform sign convention.
+  For model-backed control problems, the \(Q\) quadrature is built as
+  \( +i(\mathrm{raising} - \mathrm{lowering}) \), so this choice makes the
+  exported \texttt{Pulse} objects reproduce the same effective Hermitian control
+  Hamiltonian used during optimization under the repository's existing waveform
+  sign convention.
   \item Leakage penalties are defined relative to a retained subspace in the same
   full Hilbert space used by the model and by the existing
   \texttt{unitary\_synthesis} subspace machinery.
@@ -501,11 +536,15 @@ The flexible synthesis API now also permits matrix-defined primitives and
 model-backed waveform-defined primitives. The waveform-defined path does not
 introduce a second pulse convention: it reuses the same \texttt{Pulse},
 \texttt{SequenceCompiler}, and runtime simulation stack as the rest of
-\texttt{cqed\_sim}. Therefore it inherits the same carrier-sign rule discussed
+\texttt{cqed\_sim}. Therefore it inherits the same low-level carrier rule discussed
 later in this document,
 \[
 \texttt{Pulse.carrier}=-\omega_{\mathrm{transition}}(\text{frame}).
 \]
+Public synthesis-side wrappers should still keep external frequency parameters
+in positive physical drive frequencies and only translate to the raw carrier at
+the low-level pulse boundary through the shared \texttt{cqed\_sim.core}
+frequency helpers.
 An explicit cavity-only logical block-phase layer is represented in the same
 transmon-first tensor convention as
 \[
@@ -1016,10 +1055,14 @@ higher Kerr & tuple \texttt{kerr\_higher} & \(K_m n_s^{\underline{m}} / m!\) & f
   \item Repository-specific: writing the transmon term in terms of \(n_q\), storing
   higher-order pulls and Kerr terms in falling-factorial form, and using complex
   envelopes with \(e^{+i(\omega t+\phi)}\).
-  \item Needs caution: raw \texttt{Pulse.carrier} remains the negative of the
-  rotating-frame transition frequency, so user-facing spectroscopy axes should use
-  \texttt{carrier\_for\_transition\_frequency(...)} or
-  \texttt{transition\_frequency\_from\_carrier(...)} rather than raw carriers.
+  \item Needs caution: public and user-facing boundaries should stay in
+  positive physical drive frequencies. Raw \texttt{Pulse.carrier} remains the
+  internal low-level representation
+  \(\texttt{Pulse.carrier}=-\omega_{\mathrm{transition}}(\mathrm{frame})\), so
+  wrappers should reach it through the positive-frequency helper layer rather
+  than by manually reasoning about the sign. Direct raw-carrier helpers remain
+  appropriate only when code is already formulated directly in rotating-frame or
+  effective modulation-frequency language.
 \end{itemize}
 
 \section{Frequency and Time Units}
@@ -1118,9 +1161,27 @@ Direct tests:
   \]
   The public helpers \texttt{carrier\_for\_transition\_frequency(...)} and
   \texttt{transition\_frequency\_from\_carrier(...)} make that mapping explicit.
+  \item For public lab-style frequency interfaces, the preferred positive
+  physical tone frequency in a frame rotating at
+  \(\omega_{\mathrm{frame}}\) is
+  \[
+  \omega_{\mathrm{drive}} = \omega_{\mathrm{frame}} + \omega_{\mathrm{transition}},
+  \qquad
+  \texttt{carrier} = \omega_{\mathrm{frame}} - \omega_{\mathrm{drive}}.
+  \]
+  The helpers
+  \texttt{drive\_frequency\_for\_transition\_frequency(...)},
+  \texttt{transition\_frequency\_from\_drive\_frequency(...)},
+  \texttt{internal\_carrier\_from\_drive\_frequency(...)}, and
+  \texttt{drive\_frequency\_from\_internal\_carrier(...)} expose that
+  public/internal translation without requiring users to reason directly about
+  the raw carrier sign.
   \item User-facing spectroscopy examples therefore plot physical transition
-  detuning on the x-axis and convert that value to the internal raw carrier with
-  \texttt{carrier\_for\_transition\_frequency(...)} before simulation.
+  detuning on the x-axis, translate that quantity into a positive physical drive
+  tone, and only convert to the internal raw carrier at the low-level pulse
+  boundary. Sideband and modulation-frequency workflows are the intentional
+  exception when the API is already expressed directly in effective rotating-frame
+  language.
   \item The two-mode path supports \texttt{"cavity"} or \texttt{"storage"},
   \texttt{"qubit"}, and the legacy \texttt{"sideband"} target, plus the structured
   targets \texttt{TransmonTransitionDriveSpec(lower\_level, upper\_level)} and
@@ -1143,10 +1204,13 @@ Direct tests:
 \subsection*{Carrier-sign warning}
 \textcolor{red}{\textbf{Warning:}} raw \texttt{Pulse.carrier} is an internal
 rotating-frame quantity. It is not the same thing as a user-facing physical
-detuning axis. External spectroscopy and plotting code should convert through
-\texttt{carrier\_for\_transition\_frequency(...)} or
-\texttt{transition\_frequency\_from\_carrier(...)} rather than interpreting the
-raw sign directly.
+detuning axis or physical tone frequency. External spectroscopy and plotting
+code should prefer the positive-frequency helper layer
+\texttt{drive\_frequency\_for\_transition\_frequency(...)},
+\texttt{transition\_frequency\_from\_drive\_frequency(...)},
+\texttt{internal\_carrier\_from\_drive\_frequency(...)}, and
+\texttt{drive\_frequency\_from\_internal\_carrier(...)} and only convert to the
+raw carrier when interacting with the low-level pulse runtime.
 
 \noindent
 Direct tests:

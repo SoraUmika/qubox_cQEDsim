@@ -3809,8 +3809,12 @@
 </thead>
 <tbody>
 <tr>
+<td><code>selective_qubit_drive_frequency(model, n)</code></td>
+<td>Positive physical qubit drive frequency for the Fock-selective manifold-<span class="arithmatex">\(n\)</span> tag tone</td>
+</tr>
+<tr>
 <td><code>selective_pi_pulse(n, t0_ns, duration_ns, amp, model, drag=0.0)</code></td>
-<td>Gaussian π-pulse targeting Fock manifold n. Carrier: <span class="arithmatex">\(-n \cdot \chi\)</span></td>
+<td>Gaussian π-pulse targeting Fock manifold n. Internally converts the positive drive frequency into the raw <code>Pulse.carrier</code> expected by the runtime</td>
 </tr>
 <tr>
 <td><code>true_fock_resolved_vectors(state, n_max)</code></td>

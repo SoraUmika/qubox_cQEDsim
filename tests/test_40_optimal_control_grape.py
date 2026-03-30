@@ -88,6 +88,24 @@ def test_grape_model_backed_unitary_rotation_reaches_high_fidelity() -> None:
     assert result.system_metrics[0]["objectives"][0]["exact_unitary_fidelity"] > 0.999
 
 
+def test_model_backed_q_quadrature_matches_standard_pauli_y() -> None:
+    _model, _frame, problem = _rotation_problem()
+
+    np.testing.assert_allclose(problem.control_terms[0].operator, qt.sigmay().full(), atol=1.0e-12)
+
+
+def test_q_only_pulse_export_uses_positive_imaginary_baseband() -> None:
+    _model, _frame, problem = _rotation_problem()
+
+    pulses, drive_ops, metadata = problem.parameterization.to_pulses(np.array([[2.5e7]], dtype=float))
+
+    assert drive_ops["qubit"] == "qubit"
+    assert "c(t) = I(t) + i Q(t)" in metadata["mapping"]
+    assert len(pulses) == 1
+    assert np.isclose(pulses[0].amp, 2.5e7)
+    assert np.isclose(pulses[0].phase, 0.5 * np.pi)
+
+
 def test_grape_exported_pulses_replay_through_runtime_simulation() -> None:
     model, frame, problem = _rotation_problem()
     solver = GrapeSolver(GrapeConfig(maxiter=80, seed=11, random_scale=0.25))

@@ -41,13 +41,13 @@ This simultaneously creates (or destroys) excitations in both qubit and cavity.
 ```python
 import numpy as np
 from cqed_sim.core import (
-    DispersiveTransmonCavityModel, FrameSpec,
+    DispersiveTransmonCavityModel, FrameSpec, SidebandDriveSpec,
     StatePreparationSpec, qubit_state, fock_state, prepare_state,
+    carrier_for_transition_frequency,
 )
 from cqed_sim.sim import SimulationConfig, simulate_sequence, reduced_qubit_state
 from cqed_sim.sequence import SequenceCompiler
-from cqed_sim.pulses import Pulse
-from cqed_sim.pulses.envelopes import square_envelope
+from cqed_sim.pulses import build_sideband_pulse
 
 model = DispersiveTransmonCavityModel(
     omega_c=2*np.pi*5e9, omega_q=2*np.pi*6e9,
@@ -61,20 +61,28 @@ psi_e0 = prepare_state(model, StatePreparationSpec(
     qubit=qubit_state("e"), storage=fock_state(0),
 ))
 
-# Red-sideband frequency: ω_q - ω_c (in the dispersive limit)
-omega_red = model.omega_q - model.omega_c
+omega_red = model.sideband_transition_frequency(
+    cavity_level=0,
+    lower_level=0,
+    upper_level=1,
+    sideband="red",
+    frame=frame,
+)
 
-sb_pulse = Pulse(
-    channel="qubit", t0=0.0, duration=500e-9,
-    envelope=square_envelope,
-    carrier=-omega_red, amp=2*np.pi*5e6, phase=0.0,
+pulses, drive_ops, _ = build_sideband_pulse(
+    SidebandDriveSpec(mode="storage", lower_level=0, upper_level=1, sideband="red"),
+    duration_s=500e-9,
+    amplitude_rad_s=2*np.pi*5e6,
+    channel="sideband",
+    carrier=carrier_for_transition_frequency(omega_red),
+    label="red_sideband",
 )
 
 compiler = SequenceCompiler(dt=2e-9)
-compiled = compiler.compile([sb_pulse])
+compiled = compiler.compile(pulses)
 config = SimulationConfig(frame=frame)
 
-result = simulate_sequence(model, compiled, psi_e0, {}, config=config)
+result = simulate_sequence(model, compiled, psi_e0, drive_ops, config=config)
 a = model.cavity_annihilation()
 nbar = float(np.real((a.dag() * a * result.final_state).tr()))
 rho_q = reduced_qubit_state(result.final_state)
@@ -82,6 +90,8 @@ pe = float(np.real(rho_q[1, 1]))
 print(f"⟨n⟩ = {nbar:.3f}, P(e) = {pe:.3f}")
 # If red sideband works: P(e) decreases, ⟨n⟩ increases
 ```
+
+This example intentionally stays in the effective sideband-transition language. Because that boundary is already an effective rotating-frame sideband API rather than an ordinary single-mode physical-tone API, `carrier_for_transition_frequency(...)` remains the correct helper here.
 
 ---
 

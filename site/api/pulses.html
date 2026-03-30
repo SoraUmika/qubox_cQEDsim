@@ -3895,7 +3895,7 @@
 <h3 id="waveform-formula">Waveform Formula<a class="headerlink" href="#waveform-formula" title="Permanent link">&para;</a></h3>
 <div class="arithmatex">\[\varepsilon(t) = \text{amp} \cdot \text{envelope}(t_{\text{rel}}) \cdot e^{i(\text{carrier} \cdot t + \text{phase})}\]</div>
 <p>where <span class="arithmatex">\(t_{\text{rel}} = (t - t_0) / \text{duration}\)</span>.</p>
-<p><strong>Sign convention:</strong> exp(+iωt) throughout the repository. The resonant rotating-frame transition frequency is <code>-carrier</code>. Use <code>carrier_for_transition_frequency(...)</code> when you want the detuning axis to match the physical transition.</p>
+<p><strong>Sign convention:</strong> exp(+iωt) throughout the repository. The resonant rotating-frame transition frequency is <code>-carrier</code>, so <code>carrier</code> remains a raw low-level compatibility field. For user-facing code, prefer <code>drive_frequency_for_transition_frequency(...)</code> and <code>internal_carrier_from_drive_frequency(...)</code> and convert to the raw carrier only at the pulse boundary.</p>
 <p>If <code>drag ≠ 0</code>, a quadrature correction is added: the envelope derivative scaled by <code>drag</code> is added in the imaginary channel.</p>
 <hr />
 <h2 id="envelopes">Envelopes<a class="headerlink" href="#envelopes" title="Permanent link">&para;</a></h2>
@@ -3945,12 +3945,16 @@
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">MultitoneTone</span><span class="p">:</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">manifold</span><span class="p">:</span> <span class="nb">int</span>          <span class="c1"># Fock level n</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">omega_rad_s</span><span class="p">:</span> <span class="nb">float</span>     <span class="c1"># Tone frequency (rad/s)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">omega_rad_s</span><span class="p">:</span> <span class="nb">float</span>     <span class="c1"># Raw internal waveform carrier used by exp(+i*omega*t)</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">amp_rad_s</span><span class="p">:</span> <span class="nb">float</span>       <span class="c1"># Tone amplitude (rad/s)</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">phase_rad</span><span class="p">:</span> <span class="nb">float</span>       <span class="c1"># Tone phase (rad)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">drive_frequency_rad_s</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Positive physical drive frequency</span>
 </span></code></pre></div>
 <p>Multitone envelope formula:</p>
 <div class="arithmatex">\[w(t) = \text{env}(t_{\text{rel}}) \cdot \sum_n a_n \, e^{i(\phi_n + \omega_n \cdot t)}\]</div>
+<p><code>omega_rad_s</code> remains the low-level runtime carrier used inside the envelope builder. When available,
+<code>drive_frequency_rad_s</code> records the corresponding positive physical tone frequency so callers do not
+need to reconstruct it from the raw internal sign convention.</p>
 <hr />
 <h2 id="pulse-builders">Pulse Builders<a class="headerlink" href="#pulse-builders" title="Permanent link">&para;</a></h2>
 <p><strong>Module path:</strong> <code>cqed_sim.pulses.builders</code></p>
@@ -4041,11 +4045,11 @@
 <tr>
 <td><code>build_sqr_tone_specs(model, frame, thetas, phis, duration_s, ...)</code></td>
 <td><code>-&gt; list[MultitoneTone]</code></td>
-<td>Build tone specs per active manifold</td>
+<td>Build tone specs per active manifold, including raw waveform carriers and positive drive-frequency metadata</td>
 </tr>
 </tbody>
 </table>
-<p><strong>SQR frequency convention:</strong> tone frequencies are the <strong>negative</strong> of the manifold transition frequency in the rotating frame, aligning with the exp(+iωt) waveform convention.</p>
+<p><strong>SQR frequency convention:</strong> the low-level emitted <code>Pulse.carrier</code> values are the <strong>negative</strong> of the manifold transition frequency in the rotating frame, aligning with the exp(+iωt) waveform convention. For user-facing positive physical tone frequencies, convert through <code>drive_frequency_for_transition_frequency(...)</code> and <code>internal_carrier_from_drive_frequency(...)</code> at the pulse boundary.</p>
 <hr />
 <h2 id="hardwareconfig">HardwareConfig<a class="headerlink" href="#hardwareconfig" title="Permanent link">&para;</a></h2>
 <p><strong>Module path:</strong> <code>cqed_sim.pulses.hardware.HardwareConfig</code></p>

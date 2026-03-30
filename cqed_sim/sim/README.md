@@ -139,7 +139,7 @@ result = simulate_sequence(model, compiled, psi0, drive_ops,
 
 - The solver backend is QuTiP by default. Dense NumPy and JAX backends are available via `SimulationConfig(backend=NumPyBackend())` for small systems.
 - The time-dependent Hamiltonian is assembled in piecewise-constant form from the compiled channel schedule.
-- Frame and carrier conventions follow `cqed_sim.core`: `Pulse.carrier = -omega_transition(frame)`.
+- Frame and carrier conventions follow `cqed_sim.core`: public wrappers should translate positive physical drive frequencies through the core helpers before assigning the raw low-level `Pulse.carrier = -omega_transition(frame)` expected by the runtime.
 - Extractors that take `state` accept either a `qt.Qobj` density matrix or a ket; they trace out subsystems in the canonical tensor order (qubit first, then bosonic modes).
 - `store_states=False` (default) omits the full trajectory from `SimulationResult` to reduce memory; set `True` only when you need time-resolved states.
 

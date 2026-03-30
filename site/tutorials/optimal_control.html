@@ -4005,6 +4005,11 @@ H(t) = H_0 + \sum_j u_j(t) H_j,
 <li>boundary smoothing,</li>
 <li>I/Q distortions.</li>
 </ul>
+<p>For model-backed I/Q controls, the exported rotating-frame envelope uses</p>
+<div class="arithmatex">\[
+c(t) = I(t) + i Q(t)
+\]</div>
+<p>and the model builder derives the Hermitian <code>Q</code> quadrature as <code>+i(raising - lowering)</code>, so replay through the standard runtime stays consistent with the optimizer Hamiltonian.</p>
 <h3 id="built-in-pulse-families">Built-in pulse families<a class="headerlink" href="#built-in-pulse-families" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>GaussianDragPulseFamily</code></li>
@@ -4016,7 +4021,7 @@ H(t) = H_0 + \sum_j u_j(t) H_j,
 <li><code>FourierSeriesPulseFamily</code></li>
 </ul>
 <p>$$
-  u(t; \theta) = I(t; \theta_I) - i Q(t; \theta_Q)
+    u(t; \theta) = I(t; \theta_I) + i Q(t; \theta_Q)
   $$</p>
 <p>with truncated cosine and sine bases on each quadrature.</p>
 <h3 id="minimal-structured-example">Minimal structured example<a class="headerlink" href="#minimal-structured-example" title="Permanent link">&para;</a></h3>

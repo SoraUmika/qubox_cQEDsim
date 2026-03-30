@@ -48,7 +48,7 @@ def waveform_values_to_pulses(
             continue
         contribution = np.asarray(data[term_index, :], dtype=np.complex128)
         if term.quadrature.upper() == "Q":
-            contribution = -1j * contribution
+            contribution = 1j * contribution
         channels[str(term.export_channel)]["coefficients"] += contribution
 
     pulses: list[Pulse] = []
@@ -81,7 +81,10 @@ def waveform_values_to_pulses(
         "mapping": (
             "Rotating-frame controls exported as square-envelope pulses on the propagation grid. "
             "For repository drive targets, I/Q quadratures are combined into the complex channel coefficient "
-            "c(t) = I(t) - i Q(t), which matches cqed_sim.sim.runner Hamiltonian assembly."
+            "c(t) = I(t) + i Q(t). Model-backed Q quadratures are built as +i(raising - lowering), "
+            "so replay through cqed_sim.sim.runner preserves the same Hermitian control Hamiltonian. "
+            "Absolute positive drive frequencies remain a separate boundary translation handled through "
+            "cqed_sim.core frequency helpers before setting raw Pulse.carrier values."
         ),
         "parameterization": str(parameterization_name),
         "time_grid_s": [float(value) for value in time_grid.step_durations_s],
@@ -244,7 +247,7 @@ class ControlParameterization(ABC):
                 continue
             contribution = np.asarray(data[term_index, :], dtype=np.complex128)
             if term.quadrature.upper() == "Q":
-                contribution = -1j * contribution
+                contribution = 1j * contribution
             channels[str(term.export_channel)]["coefficients"] += contribution
         return channels, boundaries
 

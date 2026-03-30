@@ -34,7 +34,7 @@ $$\varepsilon(t) = \text{amp} \cdot \text{envelope}(t_{\text{rel}}) \cdot e^{i(\
 
 where $t_{\text{rel}} = (t - t_0) / \text{duration}$.
 
-**Sign convention:** exp(+iωt) throughout the repository. The resonant rotating-frame transition frequency is `-carrier`. Use `carrier_for_transition_frequency(...)` when you want the detuning axis to match the physical transition.
+**Sign convention:** exp(+iωt) throughout the repository. The resonant rotating-frame transition frequency is `-carrier`, so `carrier` remains a raw low-level compatibility field. For user-facing code, prefer `drive_frequency_for_transition_frequency(...)` and `internal_carrier_from_drive_frequency(...)` and convert to the raw carrier only at the pulse boundary.
 
 If `drag ≠ 0`, a quadrature correction is added: the envelope derivative scaled by `drag` is added in the imaginary channel.
 
@@ -59,14 +59,19 @@ If `drag ≠ 0`, a quadrature correction is added: the envelope derivative scale
 @dataclass(frozen=True)
 class MultitoneTone:
     manifold: int          # Fock level n
-    omega_rad_s: float     # Tone frequency (rad/s)
+    omega_rad_s: float     # Raw internal waveform carrier used by exp(+i*omega*t)
     amp_rad_s: float       # Tone amplitude (rad/s)
     phase_rad: float       # Tone phase (rad)
+    drive_frequency_rad_s: float | None = None  # Positive physical drive frequency
 ```
 
 Multitone envelope formula:
 
 $$w(t) = \text{env}(t_{\text{rel}}) \cdot \sum_n a_n \, e^{i(\phi_n + \omega_n \cdot t)}$$
+
+`omega_rad_s` remains the low-level runtime carrier used inside the envelope builder. When available,
+`drive_frequency_rad_s` records the corresponding positive physical tone frequency so callers do not
+need to reconstruct it from the raw internal sign convention.
 
 ---
 
@@ -149,9 +154,9 @@ def build_sqr_multitone_pulse(
 | `sqr_rotation_coefficient(theta, d_lambda_norm)` | `-> float` | $s = \theta/\pi + d_\lambda$ |
 | `sqr_tone_amplitude_rad_s(theta, duration_s, d_lambda_norm)` | `-> float` | $a = \lambda_0 \cdot s$ |
 | `pad_parameter_array(values, n_cav)` | `-> ndarray` | Pad/truncate to n_cav |
-| `build_sqr_tone_specs(model, frame, thetas, phis, duration_s, ...)` | `-> list[MultitoneTone]` | Build tone specs per active manifold |
+| `build_sqr_tone_specs(model, frame, thetas, phis, duration_s, ...)` | `-> list[MultitoneTone]` | Build tone specs per active manifold, including raw waveform carriers and positive drive-frequency metadata |
 
-**SQR frequency convention:** tone frequencies are the **negative** of the manifold transition frequency in the rotating frame, aligning with the exp(+iωt) waveform convention.
+**SQR frequency convention:** the low-level emitted `Pulse.carrier` values are the **negative** of the manifold transition frequency in the rotating frame, aligning with the exp(+iωt) waveform convention. For user-facing positive physical tone frequencies, convert through `drive_frequency_for_transition_frequency(...)` and `internal_carrier_from_drive_frequency(...)` at the pulse boundary.
 
 ---
 

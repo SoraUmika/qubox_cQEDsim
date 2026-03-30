@@ -173,17 +173,18 @@ drive_ops = {
 
 ## Carrier Frequency Convention
 
-Because the waveform convention is $e^{+i\omega t}$, a transition at rotating-frame frequency $\omega_{\text{tr}}$ requires:
+For user-facing code, prefer a positive physical drive tone and convert to the raw low-level carrier only when constructing the pulse. Because the waveform convention is $e^{+i\omega t}$, a transition at rotating-frame frequency $\omega_{\text{tr}}$ still requires:
 
 $$\text{carrier} = -\omega_{\text{tr}}$$
 
 Use the helpers:
 
 ```python
-from cqed_sim.core import carrier_for_transition_frequency
+from cqed_sim.core import drive_frequency_for_transition_frequency, internal_carrier_from_drive_frequency
 
 omega_tr = model.manifold_transition_frequency(n=3, frame=frame)
-carrier = carrier_for_transition_frequency(omega_tr)
+drive_frequency = drive_frequency_for_transition_frequency(omega_tr, frame.omega_q_frame)
+carrier = internal_carrier_from_drive_frequency(drive_frequency, frame.omega_q_frame)
 
 pulse = Pulse("q", 0.0, 100e-9, gaussian_envelope, carrier=carrier, amp=0.5)
 ```

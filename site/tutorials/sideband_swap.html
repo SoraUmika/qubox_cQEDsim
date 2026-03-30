@@ -4089,6 +4089,7 @@
 </span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    <span class="n">carrier</span>           <span class="o">=</span> <span class="n">carrier_for_transition_frequency</span><span class="p">(</span><span class="n">omega_sb</span><span class="p">),</span>
 </span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="p">)</span>
 </span></code></pre></div>
+<p>Here the tutorial stays in the effective rotating-frame sideband language and converts the already-reduced sideband transition frequency directly into the raw low-level carrier. For qubit-only or cavity-only public tone frequencies, prefer the positive <code>drive_frequency_for_transition_frequency(...)</code> helper layer.</p>
 <hr />
 <h2 id="running-the-simulation">Running the Simulation<a class="headerlink" href="#running-the-simulation" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.core</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>

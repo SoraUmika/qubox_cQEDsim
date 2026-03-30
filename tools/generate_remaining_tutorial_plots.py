@@ -708,12 +708,13 @@ def plot_readout_resonator():
 def plot_sideband_interactions():
     print("[10] Sideband interactions ...")
     from cqed_sim.core import (
-        DispersiveTransmonCavityModel, FrameSpec,
+        DispersiveTransmonCavityModel, FrameSpec, SidebandDriveSpec,
         StatePreparationSpec, qubit_state, fock_state, prepare_state,
+        carrier_for_transition_frequency,
     )
     from cqed_sim.sim import SimulationConfig, simulate_sequence, reduced_qubit_state
     from cqed_sim.sequence import SequenceCompiler
-    from cqed_sim.pulses import Pulse, square_envelope
+    from cqed_sim.pulses import build_sideband_pulse
 
     model = DispersiveTransmonCavityModel(
         omega_c=_angular(5e9), omega_q=_angular(6e9),
@@ -728,8 +729,16 @@ def plot_sideband_interactions():
     config = SimulationConfig(frame=frame)
     compiler = SequenceCompiler(dt=2e-9)
 
-    # Red-sideband carrier in rotating frame: difference frequency
-    omega_red_carrier = model.omega_q - model.omega_c - model.omega_q  # offset from qubit frame
+    # Stay in effective sideband-transition language and convert explicitly to the raw carrier.
+    target = SidebandDriveSpec(mode="storage", lower_level=0, upper_level=1, sideband="red")
+    omega_red_transition = model.sideband_transition_frequency(
+        cavity_level=0,
+        lower_level=0,
+        upper_level=1,
+        sideband="red",
+        frame=frame,
+    )
+    omega_red_carrier = carrier_for_transition_frequency(omega_red_transition)
 
     durations_ns = np.linspace(10, 800, 30)
     pe_vals = []
@@ -737,11 +746,16 @@ def plot_sideband_interactions():
 
     for dur_ns in durations_ns:
         dur_s = dur_ns * 1e-9
-        sb_pulse = Pulse("qubit", 0.0, dur_s, square_envelope,
-                         carrier=omega_red_carrier, amp=_angular(5e6))
-        compiled = compiler.compile([sb_pulse])
-        result = simulate_sequence(model, compiled, psi_e0, {"qubit": "qubit"},
-                                   config=config)
+        pulses, drive_ops, _ = build_sideband_pulse(
+            target,
+            duration_s=dur_s,
+            amplitude_rad_s=_angular(5e6),
+            channel="sideband",
+            carrier=omega_red_carrier,
+            label="red_sideband_drive",
+        )
+        compiled = compiler.compile(pulses)
+        result = simulate_sequence(model, compiled, psi_e0, drive_ops, config=config)
         rho_q = reduced_qubit_state(result.final_state)
         pe_vals.append(float(np.real(rho_q[1, 1])))
         a = model.cavity_annihilation()

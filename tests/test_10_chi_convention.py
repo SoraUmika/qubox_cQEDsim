@@ -7,7 +7,14 @@ import pytest
 import qutip as qt
 
 from cqed_sim.core.frame import FrameSpec
-from cqed_sim.core.frequencies import carrier_for_transition_frequency, transition_frequency_from_carrier
+from cqed_sim.core.frequencies import (
+    carrier_for_transition_frequency,
+    drive_frequency_for_transition_frequency,
+    drive_frequency_from_internal_carrier,
+    internal_carrier_from_drive_frequency,
+    transition_frequency_from_drive_frequency,
+    transition_frequency_from_carrier,
+)
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.pulses.pulse import Pulse
 from cqed_sim.sequence.scheduler import SequenceCompiler
@@ -83,6 +90,30 @@ def test_peak_carrier_is_negative_of_transition_frequency():
     expected_transition = model.manifold_transition_frequency(1, frame=FrameSpec(omega_q_frame=model.omega_q))
     assert np.isclose(peak_carrier, -expected_transition, rtol=0.15, atol=0.02)
     assert np.isclose(transition_frequency_from_carrier(peak_carrier), expected_transition, rtol=0.15, atol=0.02)
+
+
+def test_positive_drive_frequency_helpers_match_frame_offset_transition():
+    chi = -2 * np.pi * 0.03
+    model = DispersiveTransmonCavityModel(
+        omega_c=2 * np.pi * 5.0,
+        omega_q=2 * np.pi * 6.0,
+        alpha=0.0,
+        chi=chi,
+        chi_higher=(),
+        kerr=0.0,
+        n_cav=6,
+        n_tr=2,
+    )
+    frame = FrameSpec(omega_q_frame=model.omega_q)
+    transition = model.manifold_transition_frequency(1, frame=frame)
+
+    drive_frequency = drive_frequency_for_transition_frequency(transition, frame.omega_q_frame)
+    carrier = internal_carrier_from_drive_frequency(drive_frequency, frame.omega_q_frame)
+
+    assert np.isclose(drive_frequency, model.omega_q + transition, atol=1.0e-12)
+    assert np.isclose(carrier, carrier_for_transition_frequency(transition), atol=1.0e-12)
+    assert np.isclose(drive_frequency_from_internal_carrier(carrier, frame.omega_q_frame), drive_frequency, atol=1.0e-12)
+    assert np.isclose(transition_frequency_from_drive_frequency(drive_frequency, frame.omega_q_frame), transition, atol=1.0e-12)
 
 
 def test_chi_ramsey_phase_slope_equals_n_times_chi():

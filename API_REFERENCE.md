@@ -452,6 +452,12 @@ These specs let `simulate_sequence(...)` and the pulse builders target an explic
 | `falling_factorial_scalar(n, order)` | `(int, int) -> float` | n(n−1)(n−2)···(n−order+1) |
 | `carrier_for_transition_frequency(transition_frequency)` | `(float) -> float` | Convert a rotating-frame transition frequency into the resonant `Pulse.carrier` value |
 | `transition_frequency_from_carrier(carrier)` | `(float) -> float` | Convert a `Pulse.carrier` back into the rotating-frame transition frequency it addresses |
+| `drive_frequency_for_transition_frequency(transition_frequency, frame_frequency)` | `(float, float) -> float` | Convert a rotating-frame transition frequency plus a chosen frame frequency into a positive physical drive tone |
+| `transition_frequency_from_drive_frequency(drive_frequency, frame_frequency)` | `(float, float) -> float` | Convert a positive physical drive tone into the rotating-frame transition frequency it addresses |
+| `internal_carrier_from_drive_frequency(drive_frequency, frame_frequency)` | `(float, float) -> float` | Convert a positive physical drive tone into the raw low-level `Pulse.carrier` representation |
+| `drive_frequency_from_internal_carrier(carrier, frame_frequency)` | `(float, float) -> float` | Convert a raw low-level `Pulse.carrier` back into a positive physical drive tone |
+
+Low-level `Pulse.carrier` remains an internal rotating-frame quantity. For user-facing positive physical tone frequencies, prefer the `drive_frequency_*` and `*_from_drive_frequency(...)` helpers and convert to the raw carrier only at the low-level pulse boundary.
 
 ---
 
@@ -848,14 +854,19 @@ If `drag ≠ 0`, a quadrature correction is added: the envelope derivative scale
 @dataclass(frozen=True)
 class MultitoneTone:
     manifold: int          # Fock level n
-    omega_rad_s: float     # Tone frequency (rad/s)
+    omega_rad_s: float     # Raw internal waveform carrier used by exp(+i*omega*t)
     amp_rad_s: float       # Tone amplitude (rad/s)
     phase_rad: float       # Tone phase (rad)
+    drive_frequency_rad_s: float | None = None  # Positive physical drive frequency
 ```
 
 The multitone envelope formula is:
 
 $$w(t) = \text{env}(t_\text{rel}) \cdot \sum_n a_n \, e^{i(\phi_n + \omega_n \cdot t)}$$
+
+`omega_rad_s` remains the low-level runtime carrier used inside the envelope builder. When available,
+`drive_frequency_rad_s` records the corresponding positive physical tone frequency so callers can stay
+in lab-style frequency conventions without manually undoing the raw internal sign.
 
 ---
 
@@ -947,7 +958,7 @@ per-manifold corrections (d_lambda, d_alpha, d_omega) are applied.
 | `sqr_tone_amplitude_rad_s(theta, duration_s, d_lambda_norm)` | `(float, float, float) -> float` | a = λ₀·s = θ/(2T) + λ₀·d_lambda_norm |
 | `pad_parameter_array(values, n_cav)` | `-> ndarray` | Pad/truncate to n_cav |
 | `pad_sqr_angles(thetas, phis, n_cav)` | `-> tuple[ndarray, ndarray]` | Pad both arrays |
-| `build_sqr_tone_specs(model, frame, thetas, phis, duration_s, ...)` | `-> list[MultitoneTone]` | Build tone specs with frequencies and amplitudes for each active manifold |
+| `build_sqr_tone_specs(model, frame, thetas, phis, duration_s, ...)` | `-> list[MultitoneTone]` | Build tone specs with raw waveform carriers, amplitudes, and positive drive-frequency metadata for each active manifold |
 
 **`build_sqr_tone_specs` additional parameters:**
 - `d_lambda_values: list[float] | None` — per-manifold corrections
@@ -955,9 +966,11 @@ per-manifold corrections (d_lambda, d_alpha, d_omega) are applied.
 - `include_all_levels: bool = False` — include zero-amplitude tones
 - `tone_cutoff: float = 1e-10` — amplitude threshold
 
-**SQR frequency convention:** tone frequencies are the **negative** of the manifold
-transition frequency in the rotating frame, aligning with the exp(+iωt) waveform
-convention. The implementation uses `carrier_for_transition_frequency(...)` for this mapping.
+**SQR frequency convention:** the low-level emitted `Pulse.carrier` values are the
+**negative** of the manifold transition frequency in the rotating frame, aligning with the
+exp(+iωt) waveform convention. For user-facing positive physical tone frequencies,
+convert through `drive_frequency_for_transition_frequency(...)` and
+`internal_carrier_from_drive_frequency(...)` at the pulse boundary.
 
 ---
 
@@ -2247,11 +2260,14 @@ def run_fock_resolved_tomo(
 | `v_rec` | `dict[str, ndarray] \| None` | Leakage-corrected vectors |
 
 ```python
+def selective_qubit_drive_frequency(model, n) -> float
+
 def selective_pi_pulse(n, t0_ns, duration_ns, amp, model, drag=0.0) -> Pulse
 ```
 
-Creates Gaussian π-pulse targeting Fock manifold n. Carrier frequency:
-`−n·chi` (selective detuning).
+`selective_qubit_drive_frequency(...)` returns the positive physical qubit drive frequency for the
+manifold-`n` selective tag tone. `selective_pi_pulse(...)` converts that value into the raw internal
+`Pulse.carrier` required by the runtime.
 
 ```python
 def true_fock_resolved_vectors(state, n_max) -> dict[str, ndarray]
@@ -2437,8 +2453,10 @@ constraint-aware/robust optimization.
 
 > **Convention note:** The synthesis drift-phase layer matches the runtime
 > dispersive/Kerr convention. Model-backed waveform primitives reuse the same
-> `Pulse`, `SequenceCompiler`, and `cqed_sim.sim` runtime stack, including the
-> waveform sign convention `Pulse.carrier = -omega_transition(frame)`.
+> `Pulse`, `SequenceCompiler`, and `cqed_sim.sim` runtime stack. Public-facing
+> frequency parameters should still stay in positive physical drive frequencies
+> and be translated through the shared core frequency helpers only when
+> assigning the raw low-level runtime field `Pulse.carrier = -omega_transition(frame)`.
 
 ---
 
@@ -3611,10 +3629,10 @@ Structured pulse families now sit on top of this same command-to-physical pipeli
 For exported rotating-frame pulses, the complex baseband coefficient follows the same runtime convention as the rest of `cqed_sim`:
 
 \[
-c(t) = I(t) - i Q(t).
+c(t) = I(t) + i Q(t).
 \]
 
-This is the compatibility bridge between the real-valued Hermitian quadrature Hamiltonians used inside the optimizer and the complex envelope convention used by the runtime pulse stack.
+For model-backed control problems, the `Q` quadrature is built as `+i(raising - lowering)`, so this is the compatibility bridge between the real-valued Hermitian quadrature Hamiltonians used inside the optimizer and the complex envelope convention used by the runtime pulse stack. Absolute positive drive frequencies remain a separate boundary translation handled through the `cqed_sim.core` frequency helpers before setting raw `Pulse.carrier` values.
 
 ### Objectives
 
@@ -4067,8 +4085,10 @@ the same projector-based dispersive convention:
 | χ mapping | χ_runtime | χ_synth = χ_runtime |
 | Kerr mapping | kerr_runtime | kerr_synth = kerr_runtime |
 
-The remaining sign convention users must track is the pulse waveform convention:
-`Pulse.carrier = -omega_transition(frame)`.
+The remaining low-level sign convention is the pulse waveform rule
+`Pulse.carrier = -omega_transition(frame)`. Public-facing workflows should stay
+in positive physical drive frequencies and convert to that raw runtime field
+only at the low-level pulse boundary.
 
 ### MODERATE: FrameSpec Legacy Field Names
 

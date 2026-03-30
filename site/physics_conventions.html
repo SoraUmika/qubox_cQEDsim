@@ -580,6 +580,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#canonical-frequency-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canonical Frequency Convention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#units" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3911,6 +3922,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#canonical-frequency-convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canonical Frequency Convention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#units" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4379,6 +4401,23 @@
 <p>Do not assume sign conventions from other cQED packages. This simulator uses specific conventions for the dispersive shift, Kerr terms, and drive waveforms that must be respected for correct results.</p>
 </div>
 <hr />
+<h2 id="canonical-frequency-convention">Canonical Frequency Convention<a class="headerlink" href="#canonical-frequency-convention" title="Permanent link">&para;</a></h2>
+<p><code>cqed_sim</code> uses a deliberate hybrid convention:</p>
+<ul>
+<li>Hamiltonian, rotating-frame, <code>chi</code>, Kerr, and tensor-ordering semantics follow the repository's standard textbook-style cQED definitions.</li>
+<li>Public and user-facing frequency parameters should be expressed as <strong>positive physical drive frequencies</strong> in <code>rad/s</code>.</li>
+<li>The low-level runtime field <code>Pulse.carrier</code> is <strong>not</strong> the public lab-tone frequency. It is an internal compatibility quantity used by the waveform convention</li>
+</ul>
+<div class="arithmatex">\[\varepsilon(t) \propto e^{+i(\omega t + \phi)}\]</div>
+<ul>
+<li>Because of that low-level waveform sign, a transition with rotating-frame frequency <span class="arithmatex">\(\omega_{\text{transition}}\)</span> in a frame <span class="arithmatex">\(\omega_{\text{frame}}\)</span> maps as</li>
+</ul>
+<div class="arithmatex">\[\omega_{\text{drive}} = \omega_{\text{frame}} + \omega_{\text{transition}}, \qquad \text{Pulse.carrier} = \omega_{\text{frame}} - \omega_{\text{drive}} = -\omega_{\text{transition}}\]</div>
+<ul>
+<li>Public code should therefore prefer <code>drive_frequency_for_transition_frequency(...)</code>, <code>transition_frequency_from_drive_frequency(...)</code>, <code>internal_carrier_from_drive_frequency(...)</code>, and <code>drive_frequency_from_internal_carrier(...)</code>.</li>
+<li>The intentional exception is APIs that are already formulated in effective sideband or modulation-frequency language. Those surfaces may stay in modulation-frequency terms rather than pretending to expose a single absolute lab-tone frequency.</li>
+</ul>
+<hr />
 <h2 id="units">Units<a class="headerlink" href="#units" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -4393,6 +4432,10 @@
 <td>rad/s</td>
 </tr>
 <tr>
+<td>User-facing drive frequency</td>
+<td>positive physical tone frequency in rad/s</td>
+</tr>
+<tr>
 <td>Time (t₀, duration, dt, delays)</td>
 <td>seconds</td>
 </tr>
@@ -4405,8 +4448,8 @@
 <td>1/s</td>
 </tr>
 <tr>
-<td>Pulse carrier frequency</td>
-<td>rad/s</td>
+<td>Raw low-level <code>Pulse.carrier</code></td>
+<td>rotating-frame runtime carrier in rad/s</td>
 </tr>
 <tr>
 <td>Pulse phase</td>
@@ -4549,9 +4592,9 @@ performed on the physical register.</p>
 <li>Model-backed control problems are built from the existing static Hamiltonian and drive-operator helpers rather than from a separate tensor-ordering or Hamiltonian-assembly path.</li>
 <li>Exported rotating-frame controls use the same complex baseband convention as the pulse runtime:</li>
 </ul>
-<div class="arithmatex">\[c(t) = I(t) - i Q(t)\]</div>
+<div class="arithmatex">\[c(t) = I(t) + i Q(t)\]</div>
 <ul>
-<li>That export rule is what makes the optimized real-valued Hermitian <code>I/Q</code> control channels replay correctly through standard <code>Pulse</code>, <code>SequenceCompiler</code>, and <code>simulate_sequence(...)</code> workflows.</li>
+<li>For model-backed controls, the <code>Q</code> quadrature is built as <code>+i(raising - lowering)</code>, so that export rule replayed through the runtime reproduces the same Hermitian control Hamiltonian used during optimization.</li>
 <li>Optional hardware maps such as first-order low-pass filters, radial I/Q limits, and boundary windows modify the physical waveform seen by GRAPE without changing the underlying Hamiltonian sign, frame, or tensor-ordering conventions.</li>
 <li>Leakage penalties are defined relative to retained logical subspaces in the same truncated Hilbert space used by the rest of the simulator.</li>
 <li>Simulator-backed replay through <code>evaluate_control_with_simulator(...)</code> or <code>ControlResult.evaluate_with_simulator(...)</code> is an evaluation path only. It can replay either the command waveform or the physical post-hardware waveform through the standard runtime with optional <code>NoiseSpec</code> Lindblad terms and reports the resulting objective probe-state fidelities.</li>
@@ -4583,9 +4626,13 @@ useful, but the resulting energies must be interpreted in that frame.</p>
 <h3 id="drive-hamiltonian">Drive Hamiltonian<a class="headerlink" href="#drive-hamiltonian" title="Permanent link">&para;</a></h3>
 <div class="arithmatex">\[H_{\text{drive}} = \varepsilon(t) \, b^\dagger + \varepsilon^*(t) \, b\]</div>
 <h3 id="carriertransition-relationship">Carrier–Transition Relationship<a class="headerlink" href="#carriertransition-relationship" title="Permanent link">&para;</a></h3>
-<p>Because of the <span class="arithmatex">\(e^{+i\omega t}\)</span> sign convention, a transition at rotating-frame frequency <span class="arithmatex">\(\omega_{\text{transition}}\)</span> is resonantly addressed by:</p>
+<p>Because of the <span class="arithmatex">\(e^{+i\omega t}\)</span> sign convention, the raw low-level <code>Pulse.carrier</code> field resonantly addresses a transition at rotating-frame frequency <span class="arithmatex">\(\omega_{\text{transition}}\)</span> when:</p>
 <div class="arithmatex">\[\text{Pulse.carrier} = -\omega_{\text{transition}}\]</div>
-<p>Use <code>carrier_for_transition_frequency(...)</code> and <code>transition_frequency_from_carrier(...)</code> to convert between these.</p>
+<p>For user-facing positive physical drive-tone frequencies in a frame with frequency <span class="arithmatex">\(\omega_{\text{frame}}\)</span>, the preferred translation is:</p>
+<div class="arithmatex">\[\omega_{\text{drive}} = \omega_{\text{frame}} + \omega_{\text{transition}}\]</div>
+<p>and therefore</p>
+<div class="arithmatex">\[\text{Pulse.carrier} = \omega_{\text{frame}} - \omega_{\text{drive}}\]</div>
+<p>Use <code>carrier_for_transition_frequency(...)</code> and <code>transition_frequency_from_carrier(...)</code> only when you intentionally need the raw low-level carrier directly. For normal public-facing code, use <code>drive_frequency_for_transition_frequency(...)</code>, <code>transition_frequency_from_drive_frequency(...)</code>, <code>internal_carrier_from_drive_frequency(...)</code>, and <code>drive_frequency_from_internal_carrier(...)</code> so the boundary stays in positive physical tone frequencies. Sideband and modulation-frequency workflows are the deliberate exception when the API is already expressed directly in effective rotating-frame language.</p>
 <hr />
 <h2 id="floquet-analysis-and-periodic-drives">Floquet Analysis And Periodic Drives<a class="headerlink" href="#floquet-analysis-and-periodic-drives" title="Permanent link">&para;</a></h2>
 <p>The Floquet layer in <code>cqed_sim.floquet</code> assumes a strictly periodic Hamiltonian,</p>

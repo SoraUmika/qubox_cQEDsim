@@ -58,7 +58,10 @@ from cqed_sim import (
     carrier_for_transition_frequency,
     coherent_state,
     compute_energy_spectrum,
+    drive_frequency_for_transition_frequency,
+    drive_frequency_from_internal_carrier,
     fock_state,
+    internal_carrier_from_drive_frequency,
     manifold_transition_frequency,
     measure_qubit,
     prepare_simulation,
@@ -73,6 +76,7 @@ from cqed_sim import (
     sideband_transition_frequency,
     simulate_batch,
     simulate_sequence,
+    transition_frequency_from_drive_frequency,
 )
 from cqed_sim.plotting import plot_energy_levels
 from cqed_sim.pulses import gaussian_envelope, square_envelope
@@ -254,7 +258,7 @@ def generate_batch_1() -> None:
         - internal frequencies are in `rad/s`
         - time is in `s`
         - tensor ordering is qubit first, then bosonic modes
-        - `Pulse.carrier` is the negative of the rotating-frame transition frequency it addresses
+        - raw `Pulse.carrier` is the negative of the rotating-frame transition frequency it addresses, but user-facing code should prefer the positive drive-frequency helpers
         - negative runtime `chi` lowers the qubit transition frequency with photon number
         """
             ),
@@ -439,7 +443,7 @@ def generate_batch_1() -> None:
             title_cell(
                 2,
                 "Units, Frames, and Conventions",
-                "Check the conventions that matter most for cQED users: SI-style internal units, rotating-frame interpretation, `Pulse.carrier` sign, and the meaning of the dispersive `chi` sign.",
+                "Check the conventions that matter most for cQED users: SI-style internal units, rotating-frame interpretation, positive drive-frequency translation, and the meaning of the dispersive `chi` sign.",
                 "Tutorial 01 is recommended first.",
             ),
             md(
@@ -457,7 +461,7 @@ def generate_batch_1() -> None:
 
         1. internal angular frequencies are in `rad/s`, not in `Hz`
         2. rotating-frame frequencies are specified through `FrameSpec`
-        3. `Pulse.carrier` uses the waveform convention `exp(+i (omega t + phase))`, so the resonant carrier is the negative of the rotating-frame transition frequency
+        3. user-facing code should work with positive physical drive tones, while the low-level `Pulse.carrier` compatibility field still uses the waveform convention `exp(+i (omega t + phase))`, so the resonant raw carrier is the negative of the rotating-frame transition frequency
 
         A fourth convention is the repository-wide interpretation of runtime `chi`: negative `chi` lowers the qubit transition as bosonic occupation increases.
         """
@@ -489,11 +493,16 @@ def generate_batch_1() -> None:
         }
         frame = FrameSpec(omega_c_frame=GHz(5.0), omega_q_frame=GHz(6.2))
 
-        carrier_demo = carrier_for_transition_frequency(MHz(transition_detuning_demo_mhz[1]))
-        round_trip_demo = angular_to_mhz(-carrier_demo)
+        transition_demo = MHz(transition_detuning_demo_mhz[1])
+        drive_frequency_demo = drive_frequency_for_transition_frequency(transition_demo, frame.omega_q_frame)
+        carrier_demo = internal_carrier_from_drive_frequency(drive_frequency_demo, frame.omega_q_frame)
+        round_trip_demo = angular_to_mhz(
+            transition_frequency_from_drive_frequency(drive_frequency_demo, frame.omega_q_frame)
+        )
         print(f"Example transition detuning = {transition_detuning_demo_mhz[1]:+.3f} MHz")
-        print(f"carrier_for_transition_frequency(...) returns {angular_to_mhz(carrier_demo):+.3f} MHz as a raw carrier")
-        print(f"Negating that carrier returns the original transition detuning: {round_trip_demo:+.3f} MHz")
+        print(f"drive_frequency_for_transition_frequency(...) returns {angular_to_mhz(drive_frequency_demo):+.3f} MHz as a positive physical tone")
+        print(f"internal_carrier_from_drive_frequency(...) returns {angular_to_mhz(carrier_demo):+.3f} MHz as the raw carrier")
+        print(f"transition_frequency_from_drive_frequency(...) returns the original transition detuning: {round_trip_demo:+.3f} MHz")
         """
             ),
             md("## 6. Pulse / Sequence Construction"),
@@ -540,7 +549,7 @@ def generate_batch_1() -> None:
                 """
         ## 9. Physical Interpretation
 
-        A spectroscopy axis should be labeled by physical transition detuning, not by the raw carrier. The helper `carrier_for_transition_frequency(...)` is the safe way to map between those two languages. The frame comparison also shows why rotating-frame energies can cluster near zero even when the lab-frame spectrum still sits near several gigahertz.
+        A spectroscopy axis should be labeled by physical transition detuning, not by the raw carrier. The preferred user-facing path is to map that detuning into a positive physical drive tone with `drive_frequency_for_transition_frequency(...)` and only translate to the low-level raw carrier with `internal_carrier_from_drive_frequency(...)` at the pulse boundary. The frame comparison also shows why rotating-frame energies can cluster near zero even when the lab-frame spectrum still sits near several gigahertz.
         """
             ),
             md(
@@ -876,7 +885,7 @@ def generate_batch_1() -> None:
                 "Tutorials 01, 02, and 04 are recommended first.",
             ),
             md("## 1. Goal\n\nWe will sweep a weak qubit probe around the rotating-frame resonance, read out the final excited-state population, and fit the peak position."),
-            md("## 2. Physical Background\n\nA long, weak drive is the simplest spectroscopy experiment. In the matched rotating frame the bare qubit line appears near zero detuning, and the probe frequency is specified as a physical transition detuning before being converted to an internal waveform carrier."),
+            md("## 2. Physical Background\n\nA long, weak drive is the simplest spectroscopy experiment. In the matched rotating frame the bare qubit line appears near zero detuning, and the probe frequency is specified as a physical transition detuning before being converted into a positive physical drive tone and then into the low-level waveform carrier used by the runtime."),
             md("## 3. Imports"),
             code(COMMON_IMPORTS),
             md("## 4. Simulation Parameters"),
@@ -909,12 +918,14 @@ def generate_batch_1() -> None:
                 """
         responses = []
         for point_mhz in detuning_mhz:
+            transition_frequency = MHz(point_mhz)
+            drive_frequency = drive_frequency_for_transition_frequency(transition_frequency, frame.omega_q_frame)
             probe = Pulse(
                 "q",
                 t0=0.0,
                 duration=probe_duration,
                 envelope=square_envelope,
-                carrier=carrier_for_transition_frequency(MHz(point_mhz)),
+                carrier=internal_carrier_from_drive_frequency(drive_frequency, frame.omega_q_frame),
                 amp=probe_amplitude,
                 label="spectroscopy_probe",
             )
@@ -955,7 +966,7 @@ def generate_batch_1() -> None:
         plt.show()
         """
             ),
-            md("## 9. Physical Interpretation\n\nThe resonance appears near zero because the frame matches the bare qubit frequency. The key convention detail is that the x-axis is a physical transition detuning, while the simulator receives the internal raw carrier through `carrier_for_transition_frequency(...)`."),
+            md("## 9. Physical Interpretation\n\nThe resonance appears near zero because the frame matches the bare qubit frequency. The key convention detail is that the x-axis is a physical transition detuning, while the notebook first converts that quantity into a positive physical drive tone through `drive_frequency_for_transition_frequency(...)` and only then translates it into the internal raw carrier through `internal_carrier_from_drive_frequency(...)`."),
             md("## 10. Exercises / Next Steps\n\n- Repeat the scan with a deliberate frame offset and see how the fitted center moves.\n- Increase the probe amplitude until power broadening becomes obvious.\n- Continue to Tutorial 07 for photon-number-resolved spectroscopy."),
         ],
     )
@@ -1012,12 +1023,14 @@ def generate_batch_1() -> None:
         for n in fock_levels:
             trace = []
             for detuning_point_mhz in detuning_mhz:
+                transition_frequency = MHz(detuning_point_mhz)
+                drive_frequency = drive_frequency_for_transition_frequency(transition_frequency, frame.omega_q_frame)
                 probe = Pulse(
                     "q",
                     t0=0.0,
                     duration=probe_duration,
                     envelope=square_envelope,
-                    carrier=carrier_for_transition_frequency(MHz(detuning_point_mhz)),
+                    carrier=internal_carrier_from_drive_frequency(drive_frequency, frame.omega_q_frame),
                     amp=probe_amplitude,
                     label=f"probe_n{n}",
                 )
@@ -1056,7 +1069,7 @@ def generate_batch_1() -> None:
         plt.show()
         """
             ),
-            md("## 9. Physical Interpretation\n\nThe line ordering is the physics check: with negative `chi`, the `n = 2` peak lies to the left of the `n = 1` peak, which lies to the left of the `n = 0` peak. Using `manifold_transition_frequency(...)` keeps the overlay tied to the same sign convention as the Hamiltonian itself."),
+            md("## 9. Physical Interpretation\n\nThe line ordering is the physics check: with negative `chi`, the `n = 2` peak lies to the left of the `n = 1` peak, which lies to the left of the `n = 0` peak. Using `manifold_transition_frequency(...)` keeps the overlay tied to the same sign convention as the Hamiltonian itself. As in Tutorial 06, each plotted detuning is first mapped into a positive physical drive tone and only then translated into the raw low-level carrier used by `Pulse`."),
             md("## 10. Exercises / Next Steps\n\n- Replace the fixed Fock states with a displaced cavity state and think about how the Poisson weights would combine these lines.\n- Add a small cavity Kerr to see how higher-`n` manifolds drift away from perfect equal spacing.\n- Continue to Tutorial 08 for dressed energies and dispersive frequency bookkeeping."),
         ],
     )

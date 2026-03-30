@@ -146,7 +146,7 @@ Channel binding modes are:
 The runtime sign convention is preserved exactly:
 
 $$
-c(t) = I(t) - i Q(t).
+c(t) = I(t) + i Q(t).
 $$
 
 The example study attaches a `HardwareModel` with three maps on the exported `qubit` channel:

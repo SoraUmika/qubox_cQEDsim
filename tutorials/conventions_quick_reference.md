@@ -11,8 +11,9 @@ Use this checklist before trusting a new notebook result.
 ## Frames and Carriers
 
 - `FrameSpec` sets the rotating frame used by the Hamiltonian.
-- `Pulse.carrier` follows the repository waveform convention `exp(+i (omega t + phase))`.
-- Because of that sign convention, `carrier_for_transition_frequency(...)` should be preferred over manually guessing the carrier sign.
+- User-facing code should prefer positive physical tone frequencies through `drive_frequency_for_transition_frequency(...)`.
+- The low-level compatibility field `Pulse.carrier` still follows the repository waveform convention `exp(+i (omega t + phase))`.
+- Because of that low-level sign convention, `internal_carrier_from_drive_frequency(...)` should be preferred over manually guessing the raw carrier sign.
 
 ## Dispersive Shift
 

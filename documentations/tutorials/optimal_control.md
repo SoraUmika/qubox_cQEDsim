@@ -73,6 +73,14 @@ That separation matters because realistic hardware introduces:
 - boundary smoothing,
 - I/Q distortions.
 
+For model-backed I/Q controls, the exported rotating-frame envelope uses
+
+$$
+c(t) = I(t) + i Q(t)
+$$
+
+and the model builder derives the Hermitian `Q` quadrature as `+i(raising - lowering)`, so replay through the standard runtime stays consistent with the optimizer Hamiltonian.
+
 ### Built-in pulse families
 
 - `GaussianDragPulseFamily`
@@ -84,7 +92,7 @@ That separation matters because realistic hardware introduces:
 - `FourierSeriesPulseFamily`
 
   $$
-  u(t; \theta) = I(t; \theta_I) - i Q(t; \theta_Q)
+    u(t; \theta) = I(t; \theta_I) + i Q(t; \theta_Q)
   $$
 
   with truncated cosine and sine bases on each quadrature.

@@ -94,15 +94,24 @@ omega_rot = model.manifold_transition_frequency(n=0, frame=frame)
 
 ## Frame and Pulse Carriers
 
-Pulse carriers are specified in the rotating frame. A pulse resonant with a transition at rotating-frame frequency $\omega_{\text{transition}}$ must have:
+For user-facing code, the preferred physical drive tone in a frame with frequency $\omega_{\text{frame}}$ is:
+
+$$\omega_{\text{drive}} = \omega_{\text{frame}} + \omega_{\text{transition}}$$
+
+The raw low-level `Pulse.carrier` compatibility field is still specified in the rotating frame. A pulse resonant with a transition at rotating-frame frequency $\omega_{\text{transition}}$ must therefore have:
 
 $$\text{Pulse.carrier} = -\omega_{\text{transition}}$$
 
 Use the helper functions:
 
 ```python
-from cqed_sim.core import carrier_for_transition_frequency, transition_frequency_from_carrier
+from cqed_sim.core import (
+    drive_frequency_for_transition_frequency,
+    internal_carrier_from_drive_frequency,
+    transition_frequency_from_drive_frequency,
+)
 
-carrier = carrier_for_transition_frequency(omega_transition)
-omega_back = transition_frequency_from_carrier(carrier)
+drive_frequency = drive_frequency_for_transition_frequency(omega_transition, frame.omega_q_frame)
+carrier = internal_carrier_from_drive_frequency(drive_frequency, frame.omega_q_frame)
+omega_back = transition_frequency_from_drive_frequency(drive_frequency, frame.omega_q_frame)
 ```

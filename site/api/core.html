@@ -4534,8 +4534,29 @@
 <td><code>-&gt; float</code></td>
 <td><code>Pulse.carrier</code> → rotating-frame transition</td>
 </tr>
+<tr>
+<td><code>drive_frequency_for_transition_frequency(transition_frequency, frame_frequency)</code></td>
+<td><code>-&gt; float</code></td>
+<td>Rotating-frame transition plus frame frequency → positive physical drive tone</td>
+</tr>
+<tr>
+<td><code>transition_frequency_from_drive_frequency(drive_frequency, frame_frequency)</code></td>
+<td><code>-&gt; float</code></td>
+<td>Positive physical drive tone minus frame frequency → rotating-frame transition</td>
+</tr>
+<tr>
+<td><code>internal_carrier_from_drive_frequency(drive_frequency, frame_frequency)</code></td>
+<td><code>-&gt; float</code></td>
+<td>Positive physical drive tone → raw low-level <code>Pulse.carrier</code></td>
+</tr>
+<tr>
+<td><code>drive_frequency_from_internal_carrier(carrier, frame_frequency)</code></td>
+<td><code>-&gt; float</code></td>
+<td>Raw low-level <code>Pulse.carrier</code> → positive physical drive tone</td>
+</tr>
 </tbody>
 </table>
+<p>For user-facing code, prefer the positive physical drive-frequency helper layer and convert to the raw low-level carrier only when constructing a <code>Pulse</code>.</p>
 <hr />
 <h2 id="ideal-gate-operators">Ideal Gate Operators<a class="headerlink" href="#ideal-gate-operators" title="Permanent link">&para;</a></h2>
 <p><strong>Module path:</strong> <code>cqed_sim.core.ideal_gates</code></p>

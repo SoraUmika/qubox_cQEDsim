@@ -15,14 +15,18 @@ class MultitoneTone:
     omega_rad_s: float
     amp_rad_s: float
     phase_rad: float
+    drive_frequency_rad_s: float | None = None
 
     def as_dict(self) -> dict[str, float | int]:
-        return {
+        payload: dict[str, float | int] = {
             "n": int(self.manifold),
             "omega_rad_s": float(self.omega_rad_s),
             "amp_rad_s": float(self.amp_rad_s),
             "phase_rad": float(self.phase_rad),
         }
+        if self.drive_frequency_rad_s is not None:
+            payload["drive_frequency_rad_s"] = float(self.drive_frequency_rad_s)
+        return payload
 
 
 def square_envelope(t_rel: np.ndarray) -> np.ndarray:

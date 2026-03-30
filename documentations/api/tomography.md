@@ -97,6 +97,7 @@ def run_fock_resolved_tomo(
 
 | Function | Description |
 |---|---|
-| `selective_pi_pulse(n, t0_ns, duration_ns, amp, model, drag=0.0)` | Gaussian π-pulse targeting Fock manifold n. Carrier: $-n \cdot \chi$ |
+| `selective_qubit_drive_frequency(model, n)` | Positive physical qubit drive frequency for the Fock-selective manifold-$n$ tag tone |
+| `selective_pi_pulse(n, t0_ns, duration_ns, amp, model, drag=0.0)` | Gaussian π-pulse targeting Fock manifold n. Internally converts the positive drive frequency into the raw `Pulse.carrier` expected by the runtime |
 | `true_fock_resolved_vectors(state, n_max)` | Exact Bloch vectors by projecting onto each Fock manifold |
 | `calibrate_leakage_matrix(model, n_max, alphas, bloch_states, cal, ...)` | Returns (W matrix, bias dict, condition number) |

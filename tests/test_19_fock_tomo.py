@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 import qutip as qt
 
+from cqed_sim.core.frequencies import drive_frequency_from_internal_carrier
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.sim.noise import NoiseSpec
@@ -17,6 +18,8 @@ from cqed_sim.tomo.protocol import (
     run_all_xy,
     run_fock_resolved_tomo,
     selective_pi_pulse,
+    selective_qubit_drive_frequency,
+    selective_qubit_freq,
     true_fock_resolved_vectors,
 )
 from cqed_sim.sequence.scheduler import SequenceCompiler
@@ -172,6 +175,21 @@ def test_selective_pi_minimizes_offmanifold_action():
             )
             pe = float(np.real((qt.ptrace(res.final_state, 0) * (qt.basis(2, 1) * qt.basis(2, 1).dag())).tr()))
             assert pe < 0.12
+
+
+def test_selective_qubit_drive_frequency_round_trips_through_raw_carrier():
+    model = _toy_model(n_cav=6, n_tr=2)
+    for n in [0, 1, 2]:
+        drive_frequency = selective_qubit_drive_frequency(model, n)
+        carrier = selective_qubit_freq(model, n)
+        pulse = selective_pi_pulse(n=n, t0_ns=0.0, duration_ns=1200.0, amp=0.0014, model=model, drag=0.0)
+
+        assert np.isclose(pulse.carrier, carrier, atol=1.0e-12)
+        assert np.isclose(
+            drive_frequency_from_internal_carrier(carrier, model.omega_q),
+            drive_frequency,
+            atol=1.0e-12,
+        )
 
 
 def test_fock_tomo_runtime_budget():

@@ -85,8 +85,9 @@ Example-side code:
 - Three-mode tensor ordering is qubit first, storage second, readout third: `|q,n_s,n_r>`.
 - Computational basis is `|g> = |0>`, `|e> = |1>`.
 - The library is unit-coherent: it does not enforce specific physical units for frequencies or times. Any internally consistent unit system is valid (for example, rad/s with times in seconds, or rad/ns with times in nanoseconds). The recommended convention used in the main examples and calibration function naming is rad/s and seconds.
-- Complex drive envelopes use `exp(+i * (omega * t + phase))`.
-- Because of that waveform sign, `Pulse.carrier` is the negative of the rotating-frame transition frequency it addresses.
+- Low-level complex drive envelopes use `exp(+i * (omega * t + phase))`.
+- The low-level compatibility field `Pulse.carrier` is therefore the negative of the rotating-frame transition frequency it addresses.
+- User-facing positive drive-tone frequencies should be translated through `drive_frequency_for_transition_frequency(...)`, `transition_frequency_from_drive_frequency(...)`, `internal_carrier_from_drive_frequency(...)`, and `drive_frequency_from_internal_carrier(...)` rather than by reasoning directly about the raw carrier sign.
 - Runtime dispersive terms use the excitation projector `n_q = b^\dagger b`; for a two-level qubit, `n_q = |e><e| = (I - sigma_z) / 2`.
 - Runtime `chi` means the per-photon shift of the `|g,n> <-> |e,n>` transition frequency.
 - Negative `chi` lowers the qubit transition frequency with photon number; positive `chi` raises it.
@@ -639,7 +640,7 @@ Unitary-synthesis entry points:
 - `QuantumMapSynthesizer(...).fit(...)`
 - `QuantumMapSynthesizer(...).explore_pareto(...)`
 
-`cqed_sim/map_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. Matrix-defined primitives, target-state mappings, and model-backed waveform primitives all route through that same convention set. The synthesizer now talks to a backend `QuantumSystem` interface, with `CQEDSystemAdapter(...)` preserving the existing cQED model workflow while preparing the architecture for future non-cQED systems. Phase 2 adds constraint-aware objectives, leakage-aware/noisy synthesis, robust parameter-distribution sampling, Pareto exploration, warm starts, and result export on top of that same runtime model stack. The remaining sign distinction users need to track is the pulse waveform convention: `Pulse.carrier = -omega_transition(frame)`.
+`cqed_sim/map_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. Matrix-defined primitives, target-state mappings, and model-backed waveform primitives all route through that same convention set. The synthesizer now talks to a backend `QuantumSystem` interface, with `CQEDSystemAdapter(...)` preserving the existing cQED model workflow while preparing the architecture for future non-cQED systems. Phase 2 adds constraint-aware objectives, leakage-aware/noisy synthesis, robust parameter-distribution sampling, Pareto exploration, warm starts, and result export on top of that same runtime model stack. The remaining low-level sign distinction is the pulse waveform rule `Pulse.carrier = -omega_transition(frame)`, but user-facing workflows should stay in positive physical drive frequencies and convert only at the low-level pulse boundary through the shared core frequency helpers.
 
 ## RL-ready hybrid control
 

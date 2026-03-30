@@ -7,15 +7,35 @@ This page summarizes the canonical physics conventions used throughout `cqed_sim
 
 ---
 
+## Canonical Frequency Convention
+
+`cqed_sim` uses a deliberate hybrid convention:
+
+- Hamiltonian, rotating-frame, `chi`, Kerr, and tensor-ordering semantics follow the repository's standard textbook-style cQED definitions.
+- Public and user-facing frequency parameters should be expressed as **positive physical drive frequencies** in `rad/s`.
+- The low-level runtime field `Pulse.carrier` is **not** the public lab-tone frequency. It is an internal compatibility quantity used by the waveform convention
+
+$$\varepsilon(t) \propto e^{+i(\omega t + \phi)}$$
+
+- Because of that low-level waveform sign, a transition with rotating-frame frequency $\omega_{\text{transition}}$ in a frame $\omega_{\text{frame}}$ maps as
+
+$$\omega_{\text{drive}} = \omega_{\text{frame}} + \omega_{\text{transition}}, \qquad \text{Pulse.carrier} = \omega_{\text{frame}} - \omega_{\text{drive}} = -\omega_{\text{transition}}$$
+
+- Public code should therefore prefer `drive_frequency_for_transition_frequency(...)`, `transition_frequency_from_drive_frequency(...)`, `internal_carrier_from_drive_frequency(...)`, and `drive_frequency_from_internal_carrier(...)`.
+- The intentional exception is APIs that are already formulated in effective sideband or modulation-frequency language. Those surfaces may stay in modulation-frequency terms rather than pretending to expose a single absolute lab-tone frequency.
+
+---
+
 ## Units
 
 | Quantity | Unit |
 |---|---|
 | Hamiltonian coefficients (ω_c, ω_q, χ, K, α) | rad/s |
+| User-facing drive frequency | positive physical tone frequency in rad/s |
 | Time (t₀, duration, dt, delays) | seconds |
 | Noise parameters T₁, T_φ | seconds |
 | Decay rates κ | 1/s |
-| Pulse carrier frequency | rad/s |
+| Raw low-level `Pulse.carrier` | rotating-frame runtime carrier in rad/s |
 | Pulse phase | radians |
 
 ---
@@ -208,9 +228,9 @@ The direct optimal-control layer in `cqed_sim.optimal_control` does not introduc
 - Model-backed control problems are built from the existing static Hamiltonian and drive-operator helpers rather than from a separate tensor-ordering or Hamiltonian-assembly path.
 - Exported rotating-frame controls use the same complex baseband convention as the pulse runtime:
 
-$$c(t) = I(t) - i Q(t)$$
+$$c(t) = I(t) + i Q(t)$$
 
-- That export rule is what makes the optimized real-valued Hermitian `I/Q` control channels replay correctly through standard `Pulse`, `SequenceCompiler`, and `simulate_sequence(...)` workflows.
+- For model-backed controls, the `Q` quadrature is built as `+i(raising - lowering)`, so that export rule replayed through the runtime reproduces the same Hermitian control Hamiltonian used during optimization.
 - Optional hardware maps such as first-order low-pass filters, radial I/Q limits, and boundary windows modify the physical waveform seen by GRAPE without changing the underlying Hamiltonian sign, frame, or tensor-ordering conventions.
 - Leakage penalties are defined relative to retained logical subspaces in the same truncated Hilbert space used by the rest of the simulator.
 - Simulator-backed replay through `evaluate_control_with_simulator(...)` or `ControlResult.evaluate_with_simulator(...)` is an evaluation path only. It can replay either the command waveform or the physical post-hardware waveform through the standard runtime with optional `NoiseSpec` Lindblad terms and reports the resulting objective probe-state fidelities.
@@ -256,11 +276,19 @@ $$H_{\text{drive}} = \varepsilon(t) \, b^\dagger + \varepsilon^*(t) \, b$$
 
 ### Carrier–Transition Relationship
 
-Because of the $e^{+i\omega t}$ sign convention, a transition at rotating-frame frequency $\omega_{\text{transition}}$ is resonantly addressed by:
+Because of the $e^{+i\omega t}$ sign convention, the raw low-level `Pulse.carrier` field resonantly addresses a transition at rotating-frame frequency $\omega_{\text{transition}}$ when:
 
 $$\text{Pulse.carrier} = -\omega_{\text{transition}}$$
 
-Use `carrier_for_transition_frequency(...)` and `transition_frequency_from_carrier(...)` to convert between these.
+For user-facing positive physical drive-tone frequencies in a frame with frequency $\omega_{\text{frame}}$, the preferred translation is:
+
+$$\omega_{\text{drive}} = \omega_{\text{frame}} + \omega_{\text{transition}}$$
+
+and therefore
+
+$$\text{Pulse.carrier} = \omega_{\text{frame}} - \omega_{\text{drive}}$$
+
+Use `carrier_for_transition_frequency(...)` and `transition_frequency_from_carrier(...)` only when you intentionally need the raw low-level carrier directly. For normal public-facing code, use `drive_frequency_for_transition_frequency(...)`, `transition_frequency_from_drive_frequency(...)`, `internal_carrier_from_drive_frequency(...)`, and `drive_frequency_from_internal_carrier(...)` so the boundary stays in positive physical tone frequencies. Sideband and modulation-frequency workflows are the deliberate exception when the API is already expressed directly in effective rotating-frame language.
 
 ---
 

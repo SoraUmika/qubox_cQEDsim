@@ -47,10 +47,10 @@ The new package preserves existing repository conventions rather than introducin
 - exported runtime pulses follow
 
 $$
-c(t) = I(t) - i Q(t)
+c(t) = I(t) + i Q(t)
 $$
 
-so the optimized quadrature controls replay through the existing pulse/runtime stack with the same effective Hamiltonian meaning used during optimization
+with model-backed `Q` terms constructed as `+i(raising - lowering)`, so the optimized quadrature controls replay through the existing pulse/runtime stack with the same effective Hamiltonian meaning used during optimization
 
 ## Important Numerical Fix
 

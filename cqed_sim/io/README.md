@@ -65,4 +65,4 @@ external calibration tool → JSON gate file → load_gate_sequence() → gate o
 ```
 
 For ideal (unitary) gate operators, see `cqed_sim.core.ideal_gates`. For gate synthesis,
-see `cqed_sim.unitary_synthesis`.
+see `cqed_sim.map_synthesis`.

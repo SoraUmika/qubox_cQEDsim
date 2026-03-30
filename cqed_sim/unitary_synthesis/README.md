@@ -1,5 +1,7 @@
 # `cqed_sim.unitary_synthesis`
 
+`cqed_sim.unitary_synthesis` is now the legacy compatibility namespace for the synthesis stack. New code should import from `cqed_sim.map_synthesis` and use `QuantumMapSynthesizer` as the preferred entry point.
+
 The `unitary_synthesis` module provides a gate-sequence synthesis framework for cQED systems. Given a target unitary or state mapping and a set of primitive gates, it searches for a sequence of parametrized primitives that realizes the target on a specified logical subspace, subject to leakage penalties, physical constraints, and optional robustness objectives.
 
 ## Relevance in `cqed_sim`
@@ -16,7 +18,8 @@ The synthesizer uses the same dispersive Hamiltonian and Kerr conventions as `cq
 
 ### Synthesis engine
 
-- **`UnitarySynthesizer`**: The main synthesis class. Implements `.fit(target, constraints)` for single-run optimization and `.explore_pareto(...)` for multi-objective Pareto exploration over fidelity/duration trade-offs.
+- **`QuantumMapSynthesizer`**: Preferred synthesis class. Implements `.fit(target, constraints)` for single-run optimization and `.explore_pareto(...)` for multi-objective Pareto exploration over fidelity/duration trade-offs.
+- **`UnitarySynthesizer`**: Legacy compatibility alias for `QuantumMapSynthesizer`.
 - **`SynthesisResult`**: Result of `.fit(...)`: the optimized gate sequence, final fidelity, and per-objective values.
 - **`ParetoFrontResult`**: Result of `.explore_pareto(...)`: a set of Pareto-optimal solutions.
 
@@ -83,7 +86,8 @@ The synthesizer uses the same dispersive Hamiltonian and Kerr conventions as `cq
 
 | Symbol | Purpose |
 |---|---|
-| `UnitarySynthesizer` | Main synthesis class |
+| `QuantumMapSynthesizer` | Preferred synthesis class |
+| `UnitarySynthesizer` | Legacy compatibility alias |
 | `CQEDSystemAdapter(model)` | Connect a `cqed_sim` model to the synthesizer |
 | `QuantumSystem` | Abstract system interface |
 | `PrimitiveGate` | Elementary parametrized gate |
@@ -94,14 +98,14 @@ The synthesizer uses the same dispersive Hamiltonian and Kerr conventions as `cq
 | `LeakagePenalty` | Leakage penalty term |
 | `Subspace.qubit_cavity_block(...)` | Logical subspace definition |
 | `subspace_unitary_fidelity(...)` | Fidelity on a subspace |
-| `UnitarySynthesizer.fit(...)` | Single optimization run |
-| `UnitarySynthesizer.explore_pareto(...)` | Pareto-front exploration |
+| `QuantumMapSynthesizer.fit(...)` | Single optimization run |
+| `QuantumMapSynthesizer.explore_pareto(...)` | Pareto-front exploration |
 
 ## Usage Guidance
 
 ```python
-from cqed_sim.unitary_synthesis import (
-    CQEDSystemAdapter, UnitarySynthesizer,
+from cqed_sim.map_synthesis import (
+    CQEDSystemAdapter, QuantumMapSynthesizer,
     GateSequence, QubitRotation, SNAP, TargetUnitary,
     SynthesisConstraints, LeakagePenalty, Subspace,
 )
@@ -123,7 +127,7 @@ ansatz = GateSequence([
 ])
 
 # Run synthesis
-synthesizer = UnitarySynthesizer(system=adapter)
+synthesizer = QuantumMapSynthesizer(system=adapter)
 result = synthesizer.fit(
     target=target,
     sequence=ansatz,
@@ -160,6 +164,7 @@ For a full notebook walkthrough: `tutorials/30_advanced_protocols/03_unitary_syn
 
 ## References
 
+- Preferred namespace: `cqed_sim.map_synthesis`
 - Tutorial notebook: `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb`
 - Leakage-aware comparison example: `examples/unitary_synthesis_leakage_aware_visualization.py`
 - Root `README.md` — lists the full public API surface for synthesis.

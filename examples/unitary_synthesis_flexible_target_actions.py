@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import numpy as np
 
-from cqed_sim.unitary_synthesis import (
+from cqed_sim.map_synthesis import (
     ExecutionOptions,
     PrimitiveGate,
+    QuantumMapSynthesizer,
     Subspace,
     TargetChannel,
     TargetIsometry,
     TargetReducedStateMapping,
-    UnitarySynthesizer,
 )
 
 
@@ -48,7 +48,7 @@ def run_channel_demo() -> None:
         parameter_bounds={"theta": (-2.0 * np.pi, 2.0 * np.pi), "duration": (10.0e-9, 30.0e-9)},
         hilbert_dim=2,
     )
-    result = UnitarySynthesizer(
+    result = QuantumMapSynthesizer(
         subspace=Subspace.custom(2, range(2)),
         primitives=[primitive],
         target=TargetChannel(unitary=rotation_y(np.pi / 2.0), enforce_cptp=True),
@@ -69,7 +69,7 @@ def run_reduced_state_demo() -> None:
         matrix=np.kron(np.eye(2, dtype=np.complex128), np.array([[0.0, 1.0], [1.0, 0.0]], dtype=np.complex128)),
         hilbert_dim=4,
     )
-    result = UnitarySynthesizer(
+    result = QuantumMapSynthesizer(
         subspace=Subspace.custom(4, range(4)),
         primitives=[primitive],
         target=TargetReducedStateMapping(
@@ -99,7 +99,7 @@ def run_isometry_demo() -> None:
         matrix=encoder,
         hilbert_dim=4,
     )
-    result = UnitarySynthesizer(
+    result = QuantumMapSynthesizer(
         subspace=Subspace.custom(4, range(4)),
         primitives=[primitive],
         target=TargetIsometry(encoder[:, :2]),
@@ -119,14 +119,14 @@ def run_metric_selection_demo() -> None:
         hilbert_dim=4,
     )
     target = TargetIsometry(np.eye(4, dtype=np.complex128)[:, :2])
-    coherent = UnitarySynthesizer(
+    coherent = QuantumMapSynthesizer(
         subspace=Subspace.custom(4, range(4)),
         primitives=[primitive],
         target=target,
         optimize_times=False,
         seed=19,
     ).fit(maxiter=1)
-    basis = UnitarySynthesizer(
+    basis = QuantumMapSynthesizer(
         subspace=Subspace.custom(4, range(4)),
         primitives=[primitive],
         target=target,
@@ -154,7 +154,7 @@ def run_explicit_input_subspace_demo() -> None:
         ],
         input_subspace=Subspace.custom(4, [0, 2]),
     )
-    result = UnitarySynthesizer(
+    result = QuantumMapSynthesizer(
         subspace=Subspace.custom(4, range(4)),
         primitives=[primitive],
         target=target,

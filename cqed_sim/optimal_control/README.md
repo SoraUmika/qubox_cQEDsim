@@ -158,7 +158,7 @@ Each artifact bundle includes:
 - `CustomControlObjective` currently runs on the NumPy engine only; the JAX engine remains targeted at the built-in fidelity objectives.
 - `evaluate_control_with_simulator(...)` reports the built-in state-transfer and unitary objectives; custom objective replay reporting remains study-specific.# `cqed_sim.optimal_control`
 
-The `optimal_control` module provides a model-backed GRAPE (Gradient Ascent Pulse Engineering) implementation for optimizing quantum gate pulses directly against the `cqed_sim` physics stack. It is the direct optimal-control layer of the library, complementary to the gate-sequence synthesis in `cqed_sim.unitary_synthesis`.
+The `optimal_control` module provides a model-backed GRAPE (Gradient Ascent Pulse Engineering) implementation for optimizing quantum gate pulses directly against the `cqed_sim` physics stack. It is the direct optimal-control layer of the library, complementary to the gate-sequence synthesis in `cqed_sim.map_synthesis`.
 
 ## Relevance in `cqed_sim`
 
@@ -166,7 +166,7 @@ GRAPE-based optimal control is relevant when:
 
 - a gate target cannot be reached by the standard parametric pulse builders in `cqed_sim.pulses`,
 - fine-grained leakage suppression, robustness, or multi-objective trade-offs are needed,
-- or when unitary synthesis via `cqed_sim.unitary_synthesis` provides a pulse sequence that needs further refinement at the waveform level.
+- or when map synthesis via `cqed_sim.map_synthesis` provides a pulse sequence that needs further refinement at the waveform level.
 
 The module is simulator-backed: it uses the same Hamiltonian and physical conventions as `cqed_sim.sim` to compute gradients, so the optimized pulses are directly compatible with the rest of the runtime stack.
 
@@ -296,7 +296,7 @@ For a benchmarking harness covering larger optimization cases, see:
 ## Relationships to Other Modules
 
 - **`cqed_sim.sim`**: GRAPE uses the same Hamiltonian assembly and shares propagator logic; `evaluate_control_with_simulator(...)` validates results via the full QuTiP solver.
-- **`cqed_sim.unitary_synthesis`**: synthesis can produce a pulse sequence that is then refined at the waveform level by GRAPE; `objective_from_unitary_synthesis_target(...)` bridges the two.
+- **`cqed_sim.map_synthesis`**: synthesis can produce a pulse sequence that is then refined at the waveform level by GRAPE; `objective_from_unitary_synthesis_target(...)` bridges the two.
 - **`cqed_sim.core`**: provides the model and frame that the control problem is built from.
 
 ## Limitations / Non-Goals

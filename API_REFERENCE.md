@@ -55,14 +55,14 @@
 14. [Observables (`cqed_sim.observables`)](#14-observables)
 15. [Operators (`cqed_sim.operators`)](#15-operators)
 16. [Plotting (`cqed_sim.plotting`)](#16-plotting)
-17. [Unitary Synthesis (`cqed_sim.unitary_synthesis`)](#17-unitary-synthesis)
+17. [Map Synthesis (`cqed_sim.map_synthesis`)](#17-map-synthesis)
     - 17.1 [Subspace](#171-subspace)
     - 17.2 [System Backends](#172-system-backends)
     - 17.3 [Core Targets](#173-core-targets)
     - 17.4 [Gate Primitives and Sequences](#174-gate-primitives-and-sequences)
     - 17.5 [Waveform Bridge](#175-waveform-bridge)
     - 17.6 [Phase 2 Configuration Objects](#176-phase-2-configuration-objects)
-    - 17.7 [UnitarySynthesizer](#177-unitarysynthesizer)
+    - 17.7 [QuantumMapSynthesizer](#177-quantummapsynthesizer)
     - 17.8 [Results and Metrics](#178-results-and-metrics)
 17A. [Holographic Quantum Algorithms (`cqed_sim.quantum_algorithms.holographic_sim`)](#17a-holographic-quantum-algorithms-cqed_simquantum_algorithmsholographic_sim)
 17B. [RL Control And System Identification (`cqed_sim.rl_control`, `cqed_sim.system_id`)](#17b-rl-control-and-system-identification-cqed_simrl_control-cqed_simsystem_id)
@@ -1127,8 +1127,8 @@ class SimulationResult:
 
 Also importable directly as `cqed_sim.SimulationResult`.
 
-> **Disambiguation:** The unitary-synthesis package has a separate
-> `cqed_sim.unitary_synthesis.SimulationResult` with different fields;
+> **Disambiguation:** The map-synthesis package has a separate
+> `cqed_sim.map_synthesis.SimulationResult` with different fields;
 > see [§17.8](#178-results-and-metrics).
 
 ---
@@ -2425,9 +2425,11 @@ diagnostic visualization.
 
 ---
 
-## 17. Unitary Synthesis
+## 17. Map Synthesis
 
-**Module:** `cqed_sim.unitary_synthesis`
+**Module:** `cqed_sim.map_synthesis`
+
+`cqed_sim.map_synthesis` is the preferred namespace for this synthesis stack. `cqed_sim.unitary_synthesis` remains available as a backward-compatible compatibility facade during the transition, but direct imports from that namespace now emit a deprecation warning.
 
 Flexible gate-sequence synthesis for matrix-defined primitives, model-backed
 waveform primitives, unitary targets, state-mapping targets, and Phase 2
@@ -2442,7 +2444,7 @@ constraint-aware/robust optimization.
 
 ### 17.1 Subspace
 
-**Module path:** `cqed_sim.unitary_synthesis.subspace.Subspace`
+**Module path:** `cqed_sim.map_synthesis.subspace.Subspace`
 
 Frozen dataclass that selects a subspace of the full qubit-cavity Hilbert space.
 All synthesis targets, metrics, and leakage computations operate relative to a
@@ -2483,11 +2485,11 @@ class Subspace:
 
 ### 17.2 System Backends
 
-**Module path:** `cqed_sim.unitary_synthesis.systems`
+**Module path:** `cqed_sim.map_synthesis.systems`
 
 ```python
 class QuantumSystem:
-    """Abstract backend interface used by UnitarySynthesizer."""
+    """Abstract backend interface used by QuantumMapSynthesizer."""
     def hilbert_dimension(*, sequence, primitive, subspace, target) -> int | None
     def subsystem_dimensions(*, sequence, full_dim, subspace) -> tuple[int, ...]
     def infer_n_cav(*, sequence, full_dim, subspace) -> int | None
@@ -2514,12 +2516,12 @@ class GenericQuantumSystem(QuantumSystem):
 
 **Key points:**
 
-- `UnitarySynthesizer` talks to a `QuantumSystem` backend rather than directly
+- `QuantumMapSynthesizer` talks to a `QuantumSystem` backend rather than directly
   to a raw cQED model.
 - `CQEDSystemAdapter` wraps any cQED model and provides waveform primitive simulation
   via the standard `Pulse`/`SequenceCompiler`/`cqed_sim.sim` runtime stack.
   `simulate_primitive_unitary` caches per-parameter operator results.
-- `model=...` in `UnitarySynthesizer` is a compatibility shortcut auto-wrapped to
+- `model=...` in `QuantumMapSynthesizer` is a compatibility shortcut auto-wrapped to
   `CQEDSystemAdapter(model=...)`.
 - `GenericQuantumSystem` supports synthesis over any square-matrix gate set
   without a physical cQED model.
@@ -2673,7 +2675,7 @@ class TrajectoryTarget:
 |---|---|---|
 | `resolved_pairs(*, full_dim, subspace=None)` | `-> (list[Qobj], list[Qobj], ndarray)` | Returns `(initial, targets, weights)` with weights normalized to sum to 1 |
 
-**Convenience target builders** (`cqed_sim.unitary_synthesis.targets`):
+**Convenience target builders** (`cqed_sim.map_synthesis.targets`):
 
 | Function | Signature | Description |
 |---|---|---|
@@ -2688,7 +2690,7 @@ For `"cluster"` targets, `kwargs["which"]` selects `"u1"` (default) or `"u2"` (i
 
 ### 17.4 Gate Primitives and Sequences
 
-**Module path:** `cqed_sim.unitary_synthesis.sequence`
+**Module path:** `cqed_sim.map_synthesis.sequence`
 
 #### PrimitiveGate
 
@@ -2782,7 +2784,7 @@ class DriftPhaseModel:
 
 ### 17.5 Waveform Bridge
 
-**Module path:** `cqed_sim.unitary_synthesis.waveform_bridge`
+**Module path:** `cqed_sim.map_synthesis.waveform_bridge`
 
 Bridges the synthesis gate representation (`QubitRotation`, `Displacement`, `SQR`)
 to waveform-backed `PrimitiveGate` objects. This connects the synthesis optimizer
@@ -2846,11 +2848,11 @@ with the same `n_cav` and `full_dim`. `hilbert_dim` defaults to `sequence.full_d
 **Usage:**
 
 ```python
-from cqed_sim.unitary_synthesis import (
+from cqed_sim.map_synthesis import (
     GateSequence, QubitRotation, SQR, CQEDSystemAdapter, Subspace,
 )
-from cqed_sim.unitary_synthesis.backends import simulate_sequence
-from cqed_sim.unitary_synthesis.waveform_bridge import waveform_sequence_from_gates
+from cqed_sim.map_synthesis.backends import simulate_sequence
+from cqed_sim.map_synthesis.waveform_bridge import waveform_sequence_from_gates
 
 seq = GateSequence(gates=[...], n_cav=3)
 wf_seq = waveform_sequence_from_gates(seq, frame=frame)
@@ -2936,10 +2938,10 @@ ParameterDistribution(
 
 `LeakagePenalty.weight` penalizes final retained-subspace leakage. `checkpoint_weight` adds a soft path-leakage term evaluated at the requested partial products while still leaving path-leakage metrics visible in reports even when that penalty weight is zero. `edge_weight` penalizes occupancy of the user-specified `edge_projector` separately from logical leakage, which is useful for steering residual amplitude away from the truncation edge without changing the task target itself.
 
-### 17.7 UnitarySynthesizer
+### 17.7 QuantumMapSynthesizer
 
 ```python
-class UnitarySynthesizer:
+class QuantumMapSynthesizer:
     def __init__(
         self,
         ...,
@@ -2968,6 +2970,7 @@ Important behavior:
 - Closed-system unitary targets still use direct subspace-unitary fidelity.
 - Open-system unitary targets automatically switch to probe-state fidelity.
 - `ObservableTarget`, `TrajectoryTarget`, `TargetReducedStateMapping`, `TargetIsometry`, and `TargetChannel` let the task be defined directly on relevant outputs, reduced states, logical columns, checkpointed trajectories, or full process actions.
+- `UnitarySynthesizer` remains available as a legacy compatibility alias under `cqed_sim.unitary_synthesis`.
 - Relevant-map objectives can be regularized with final logical leakage, checkpoint/path leakage, and edge-projector occupancy without turning the problem into a full-Hilbert-space unitary match.
 - `system=...` is the preferred future-facing entry point for backend integration.
 - `model=...` remains supported for cQED workflows and is auto-wrapped.
@@ -2980,7 +2983,7 @@ Important behavior:
 
 #### Synthesis SimulationResult
 
-**Module path:** `cqed_sim.unitary_synthesis.backends`
+**Module path:** `cqed_sim.map_synthesis.backends`
 
 > **Not the same class** as `cqed_sim.sim.runner.SimulationResult` documented
 > in [§6.3](#63-simulationresult). This dataclass holds the propagated operator
@@ -2999,7 +3002,7 @@ class SimulationResult:
 
 #### simulate_sequence (synthesis)
 
-**Module path:** `cqed_sim.unitary_synthesis.backends`
+**Module path:** `cqed_sim.map_synthesis.backends`
 
 ```python
 def simulate_sequence(
@@ -3024,7 +3027,7 @@ the `"cqed"` backend delegates to the full cQED pulse simulator via a
 
 #### make_run_report
 
-**Module path:** `cqed_sim.unitary_synthesis.reporting`
+**Module path:** `cqed_sim.map_synthesis.reporting`
 
 ```python
 def make_run_report(
@@ -3075,7 +3078,7 @@ class ParetoFrontResult:
 
 #### Metric Functions
 
-**Module path:** `cqed_sim.unitary_synthesis.metrics`
+**Module path:** `cqed_sim.map_synthesis.metrics`
 
 ```python
 @dataclass(frozen=True)
@@ -3129,7 +3132,7 @@ for cutoff sanity checks.
 
 #### Visualization Helpers
 
-**Module path:** `cqed_sim.unitary_synthesis.visualization`
+**Module path:** `cqed_sim.map_synthesis.visualization`
 
 These plotting helpers are intended for post-fit leakage analysis and tutorial/example reporting:
 
@@ -3144,7 +3147,7 @@ These plotting helpers are intended for post-fit leakage analysis and tutorial/e
 
 #### Progress Reporting
 
-**Module path:** `cqed_sim.unitary_synthesis.progress`
+**Module path:** `cqed_sim.map_synthesis.progress`
 
 | Class / Function | Description |
 |---|---|
@@ -3162,7 +3165,7 @@ These plotting helpers are intended for post-fit leakage analysis and tutorial/e
 
 ### 17.9 User-Defined Gate Factories
 
-**Module path:** `cqed_sim.unitary_synthesis.sequence`
+**Module path:** `cqed_sim.map_synthesis.sequence`
 
 Three factory helpers create `PrimitiveGate` instances from user-supplied
 objects, making it easy to inject custom gates into the synthesis optimizer.
@@ -3224,10 +3227,10 @@ Waveform primitives are evaluated through the full `Pulse`/`SequenceCompiler`/
 
 ### 17.10 Gate Registry
 
-**Module path:** `cqed_sim.unitary_synthesis.systems`
+**Module path:** `cqed_sim.map_synthesis.systems`
 
 The gate registry maps custom gate names to factory callables so they can be
-referenced by name in the `gateset` argument of `UnitarySynthesizer`.
+referenced by name in the `gateset` argument of `QuantumMapSynthesizer`.
 
 ```python
 class GateRegistry:
@@ -3238,11 +3241,11 @@ class GateRegistry:
 ```
 
 A pre-constructed singleton `gate_registry` is exported from
-`cqed_sim.unitary_synthesis`.  Register a factory, then use the name in
-`UnitarySynthesizer(gateset=[...])`:
+`cqed_sim.map_synthesis`.  Register a factory, then use the name in
+`QuantumMapSynthesizer(gateset=[...])`:
 
 ```python
-from cqed_sim.unitary_synthesis import gate_registry, make_gate_from_callable
+from cqed_sim.map_synthesis import QuantumMapSynthesizer, gate_registry, make_gate_from_callable
 
 gate_registry.register(
     "MyCZ",
@@ -3250,16 +3253,16 @@ gate_registry.register(
         name, my_cz_fn, parameters={}, duration=duration, **kw
     ),
 )
-synth = UnitarySynthesizer(gateset=["QubitRotation", "MyCZ"], ...)
+synth = QuantumMapSynthesizer(gateset=["QubitRotation", "MyCZ"], ...)
 ```
 
 ---
 
 ### 17.11 Gate-Order Search
 
-**Module path:** `cqed_sim.unitary_synthesis.order_search`
+**Module path:** `cqed_sim.map_synthesis.order_search`
 
-`GateOrderOptimizer` wraps `UnitarySynthesizer` and searches over gate
+`GateOrderOptimizer` wraps `QuantumMapSynthesizer` and searches over gate
 orderings drawn from a pool.  For each candidate ordering, a fresh synthesizer
 is instantiated and run to convergence; the ordering that achieves the lowest
 objective is returned.
@@ -3634,7 +3637,7 @@ Supported task styles:
 - multi-state transfer
 - retained-subspace gate synthesis
 - full truncated-space unitary synthesis
-- phase-tolerant subspace objectives compatible with the logical-gauge ideas already used by `cqed_sim.unitary_synthesis`
+- phase-tolerant subspace objectives compatible with the logical-gauge ideas already used by `cqed_sim.map_synthesis`
 - custom control metrics with explicit physical-waveform gradients through `CustomControlObjective`
 
 `UnitaryObjective` evaluates unitary targets through weighted probe-state transfer pairs so the same machinery can represent direct full-space targets and restricted logical-subspace targets.
@@ -3826,7 +3829,7 @@ from cqed_sim import (
     UnitaryObjective,
     build_control_problem_from_model,
 )
-from cqed_sim.unitary_synthesis import Subspace
+from cqed_sim.map_synthesis import Subspace
 
 model = DispersiveTransmonCavityModel(
     omega_c=2.0 * np.pi * 5.0e9,
@@ -3962,11 +3965,11 @@ measurement = measure_qubit(result.final_state, QubitMeasurementSpec(shots=2048,
 ### Workflow D: Unitary synthesis
 
 ```python
-from cqed_sim.unitary_synthesis import Subspace, make_target, UnitarySynthesizer
+from cqed_sim.map_synthesis import QuantumMapSynthesizer, Subspace, make_target
 
 sub = Subspace.qubit_cavity_block(n_match=3)
 target = make_target("easy", n_match=3)
-synth = UnitarySynthesizer(sub, backend="ideal", leakage_weight=0.01)
+synth = QuantumMapSynthesizer(sub, backend="ideal", leakage_weight=0.01)
 result = synth.fit(target, multistart=4, maxiter=300)
 ```
 

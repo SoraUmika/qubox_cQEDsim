@@ -2,9 +2,9 @@
 
 This script shows how to use the generalized optimizer interfaces added to cqed_sim:
 
-  A. Unitary synthesis with built-in gates (baseline)
-  B. Unitary synthesis with a user-defined ideal gate (make_gate_from_callable)
-  C. Unitary synthesis with a user-defined fixed matrix gate (make_gate_from_matrix)
+    A. Map synthesis with built-in gates (baseline)
+    B. Map synthesis with a user-defined ideal gate (make_gate_from_callable)
+    C. Map synthesis with a user-defined fixed matrix gate (make_gate_from_matrix)
   D. Gate-order optimization (GateOrderOptimizer)
   E. GRAPE starting from the default random initialization
   F. GRAPE starting from a Gaussian pulse ansatz
@@ -33,13 +33,13 @@ def print_section(label: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# A. Baseline: Unitary synthesis with built-in gates
+# A. Baseline: Map synthesis with built-in gates
 # ---------------------------------------------------------------------------
 
-print_section("A. Unitary synthesis with built-in gates (baseline)")
+print_section("A. Map synthesis with built-in gates (baseline)")
 
-from cqed_sim.unitary_synthesis import (
-    UnitarySynthesizer,
+from cqed_sim.map_synthesis import (
+    QuantumMapSynthesizer,
     Subspace,
     TargetUnitary,
 )
@@ -51,7 +51,7 @@ target_unitary = TargetUnitary(H_mat)
 # Use built-in QubitRotation gate to synthesize a Hadamard.
 # (This works because a Hadamard is an XY rotation.)
 subspace = Subspace.custom(2, [0, 1])
-synth_a = UnitarySynthesizer(
+synth_a = QuantumMapSynthesizer(
     gateset=["QubitRotation"],
     subspace=subspace,
     optimizer="L-BFGS-B",
@@ -62,12 +62,12 @@ print(f"Built-in gates: infidelity = {result_a.objective:.6f}")
 print(f"  Gates used: {[g.name for g in result_a.sequence.gates]}")
 
 # ---------------------------------------------------------------------------
-# B. Unitary synthesis with a user-defined callable gate
+# B. Map synthesis with a user-defined callable gate
 # ---------------------------------------------------------------------------
 
-print_section("B. Unitary synthesis with a user-defined callable gate")
+print_section("B. Map synthesis with a user-defined callable gate")
 
-from cqed_sim.unitary_synthesis import make_gate_from_callable
+from cqed_sim.map_synthesis import make_gate_from_callable
 
 # Define a general single-qubit unitary parameterized by Euler angles (ZYZ).
 def euler_zyz(params: dict, model) -> np.ndarray:
@@ -102,7 +102,7 @@ euler_gate = make_gate_from_callable(
     optimize_time=False,
 )
 
-synth_b = UnitarySynthesizer(
+synth_b = QuantumMapSynthesizer(
     primitives=[euler_gate],
     subspace=subspace,
     optimizer="L-BFGS-B",
@@ -112,12 +112,12 @@ result_b = synth_b.fit(target=target_unitary)
 print(f"User callable gate (EulerZYZ): infidelity = {result_b.objective:.6f}")
 
 # ---------------------------------------------------------------------------
-# C. Unitary synthesis with a user-defined matrix gate
+# C. Map synthesis with a user-defined matrix gate
 # ---------------------------------------------------------------------------
 
-print_section("C. Unitary synthesis with a user-defined matrix gate")
+print_section("C. Map synthesis with a user-defined matrix gate")
 
-from cqed_sim.unitary_synthesis import make_gate_from_matrix
+from cqed_sim.map_synthesis import make_gate_from_matrix
 
 # S gate (phase gate): diag(1, i)
 S_mat = np.diag([1.0, 1j]).astype(complex)
@@ -143,7 +143,7 @@ euler_t = make_gate_from_callable(
     duration=50e-9,
     optimize_time=False,
 )
-synth_c = UnitarySynthesizer(
+synth_c = QuantumMapSynthesizer(
     primitives=[euler_t],
     subspace=subspace,
     optimizer="L-BFGS-B",
@@ -158,7 +158,7 @@ print(f"User matrix gate (H, S) applied to T-gate: infidelity = {result_c.object
 
 print_section("D. Gate-order optimization (GateOrderOptimizer)")
 
-from cqed_sim.unitary_synthesis import GateOrderConfig, GateOrderOptimizer
+from cqed_sim.map_synthesis import GateOrderConfig, GateOrderOptimizer
 
 # Pool of user-defined single-qubit gates
 X_mat = np.array([[0, 1], [1, 0]], dtype=complex)

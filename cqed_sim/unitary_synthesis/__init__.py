@@ -1,3 +1,5 @@
+import warnings
+
 from .backends import SimulationResult, simulate_sequence
 from .config import ExecutionOptions, LeakagePenalty, MultiObjective, Normal, ParameterDistribution, SynthesisConstraints, Uniform
 from .constraints import (
@@ -40,7 +42,8 @@ from .objectives import (
     objective_preset_defaults,
     resolve_metric_specs,
 )
-from .optim import ParetoFrontResult, SynthesisResult, TimeMapper, UnitarySynthesizer
+from .optim import ParetoFrontResult, SynthesisResult, TimeMapper
+from .optim import UnitarySynthesizer as QuantumMapSynthesizer
 from .progress import (
     PROGRESS_SCHEMA_VERSION,
     HistoryReporter,
@@ -102,6 +105,22 @@ from .visualization import (
 from .waveform_bridge import waveform_primitive_from_gate, waveform_sequence_from_gates
 from .order_search import GateOrderConfig, GateOrderOptimizer, GateOrderSearchResult
 
+
+_LEGACY_SYNTH_WARNING_EMITTED = False
+
+
+class UnitarySynthesizer(QuantumMapSynthesizer):
+    def __init__(self, *args, **kwargs):
+        global _LEGACY_SYNTH_WARNING_EMITTED
+        if not _LEGACY_SYNTH_WARNING_EMITTED:
+            warnings.warn(
+                "UnitarySynthesizer from cqed_sim.unitary_synthesis is deprecated and will be removed in a future release; use cqed_sim.map_synthesis.QuantumMapSynthesizer instead.",
+                FutureWarning,
+                stacklevel=1,
+            )
+            _LEGACY_SYNTH_WARNING_EMITTED = True
+        super().__init__(*args, **kwargs)
+
 __all__ = [
     "Subspace",
     "QuantumSystem",
@@ -123,6 +142,7 @@ __all__ = [
     "SynthesisResult",
     "ParetoFrontResult",
     "UnitarySynthesizer",
+    "QuantumMapSynthesizer",
     "SynthesisConstraints",
     "LeakagePenalty",
     "MultiObjective",

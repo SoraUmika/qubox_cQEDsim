@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tutorial-unitary-synthesis" class="md-skip">
+        <a href="#tutorial-map-synthesis" class="md-skip">
           Skip to content
         </a>
       
@@ -3737,7 +3737,7 @@
 
 
 
-<h1 id="tutorial-unitary-synthesis">Tutorial: Unitary Synthesis<a class="headerlink" href="#tutorial-unitary-synthesis" title="Permanent link">&para;</a></h1>
+<h1 id="tutorial-map-synthesis">Tutorial: Map Synthesis<a class="headerlink" href="#tutorial-map-synthesis" title="Permanent link">&para;</a></h1>
 <p>The main workflow notebook is:</p>
 <ul>
 <li><code>tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb</code></li>
@@ -3754,12 +3754,12 @@
 <p>The separate <code>examples/unitary_synthesis_relevance_aware_optimizer.py</code> script still covers observable and trajectory objectives with accelerated ideal evaluation.</p>
 <hr />
 <h2 id="workflow-1-constraint-limited-unitary-synthesis">Workflow 1: Constraint-Limited Unitary Synthesis<a class="headerlink" href="#workflow-1-constraint-limited-unitary-synthesis" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.map_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">MultiObjective</span><span class="p">,</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">PrimitiveGate</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">SynthesisConstraints</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">TargetUnitary</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">UnitarySynthesizer</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">QuantumMapSynthesizer</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">SynthesisConstraints</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">TargetUnitary</span><span class="p">,</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">)</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">primitive</span> <span class="o">=</span> <span class="n">PrimitiveGate</span><span class="p">(</span>
@@ -3771,7 +3771,7 @@
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">hilbert_dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 </span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="p">)</span>
 </span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">UnitarySynthesizer</span><span class="p">(</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span>
 </span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    <span class="n">primitives</span><span class="o">=</span><span class="p">[</span><span class="n">primitive</span><span class="p">],</span>
 </span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    <span class="n">target</span><span class="o">=</span><span class="n">TargetUnitary</span><span class="p">(</span><span class="n">U_target</span><span class="p">,</span> <span class="n">ignore_global_phase</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
 </span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    <span class="n">synthesis_constraints</span><span class="o">=</span><span class="n">SynthesisConstraints</span><span class="p">(</span><span class="n">max_duration</span><span class="o">=</span><span class="mf">60e-9</span><span class="p">),</span>
@@ -3784,18 +3784,18 @@
 <hr />
 <h2 id="workflow-2-leakage-aware-and-open-system-state-mapping">Workflow 2: Leakage-Aware and Open-System State Mapping<a class="headerlink" href="#workflow-2-leakage-aware-and-open-system-state-mapping" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.sim</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoiseSpec</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.map_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">CQEDSystemAdapter</span><span class="p">,</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">LeakagePenalty</span><span class="p">,</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">MultiObjective</span><span class="p">,</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">PrimitiveGate</span><span class="p">,</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">TargetStateMapping</span><span class="p">,</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">UnitarySynthesizer</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">QuantumMapSynthesizer</span><span class="p">,</span>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">)</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">system</span> <span class="o">=</span> <span class="n">CQEDSystemAdapter</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">my_cqed_model</span><span class="p">)</span>
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">UnitarySynthesizer</span><span class="p">(</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span>
 </span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
 </span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;pulse&quot;</span><span class="p">,</span>
 </span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="n">primitives</span><span class="o">=</span><span class="p">[</span><span class="n">waveform_primitive</span><span class="p">],</span>
@@ -3810,17 +3810,17 @@
 <p>This path is the recommended notebook interface for dissipative state preparation and leakage-sensitive bosonic control problems.</p>
 <hr />
 <h2 id="workflow-3-robust-optimization-under-parameter-uncertainty">Workflow 3: Robust Optimization Under Parameter Uncertainty<a class="headerlink" href="#workflow-3-robust-optimization-under-parameter-uncertainty" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.map_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">CQEDSystemAdapter</span><span class="p">,</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">MultiObjective</span><span class="p">,</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">Normal</span><span class="p">,</span>
 </span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">ParameterDistribution</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">UnitarySynthesizer</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">QuantumMapSynthesizer</span><span class="p">,</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">system</span> <span class="o">=</span> <span class="n">CQEDSystemAdapter</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">my_cqed_model</span><span class="p">)</span>
 </span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">UnitarySynthesizer</span><span class="p">(</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span>
 </span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="n">system</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
 </span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;pulse&quot;</span><span class="p">,</span>
 </span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="n">primitives</span><span class="o">=</span><span class="p">[</span><span class="n">waveform_primitive</span><span class="p">],</span>
@@ -3850,22 +3850,22 @@
 <p><code>ParetoFrontResult.results</code> contains every weighted run, and <code>ParetoFrontResult.nondominated()</code> returns the nondominated subset.</p>
 <hr />
 <h2 id="workflow-5-flexible-target-action-matching">Workflow 5: Flexible Target-Action Matching<a class="headerlink" href="#workflow-5-flexible-target-action-matching" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.map_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="n">ExecutionOptions</span><span class="p">,</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">PrimitiveGate</span><span class="p">,</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">TargetChannel</span><span class="p">,</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">TargetIsometry</span><span class="p">,</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">TargetReducedStateMapping</span><span class="p">,</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">UnitarySynthesizer</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">QuantumMapSynthesizer</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">TargetChannel</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">TargetIsometry</span><span class="p">,</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">TargetReducedStateMapping</span><span class="p">,</span>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">)</span>
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">channel_synth</span> <span class="o">=</span> <span class="n">UnitarySynthesizer</span><span class="p">(</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">channel_synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span>
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="n">primitives</span><span class="o">=</span><span class="p">[</span><span class="n">rotation_primitive</span><span class="p">],</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="n">target</span><span class="o">=</span><span class="n">TargetChannel</span><span class="p">(</span><span class="n">unitary</span><span class="o">=</span><span class="n">target_qubit_gate</span><span class="p">,</span> <span class="n">enforce_cptp</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    <span class="n">execution</span><span class="o">=</span><span class="n">ExecutionOptions</span><span class="p">(</span><span class="n">engine</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">),</span>
 </span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">)</span>
 </span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="n">reduced_state_synth</span> <span class="o">=</span> <span class="n">UnitarySynthesizer</span><span class="p">(</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="n">reduced_state_synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span>
 </span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>    <span class="n">primitives</span><span class="o">=</span><span class="p">[</span><span class="n">two_qubit_primitive</span><span class="p">],</span>
 </span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>    <span class="n">target</span><span class="o">=</span><span class="n">TargetReducedStateMapping</span><span class="p">(</span>
 </span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19" href="#__codelineno-4-19"></a>        <span class="n">initial_states</span><span class="o">=</span><span class="p">[</span><span class="n">psi00</span><span class="p">,</span> <span class="n">psi10</span><span class="p">],</span>
@@ -3875,7 +3875,7 @@
 </span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>    <span class="p">),</span>
 </span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a><span class="p">)</span>
 </span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>
-</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="n">isometry_synth</span> <span class="o">=</span> <span class="n">UnitarySynthesizer</span><span class="p">(</span>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a><span class="n">isometry_synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span>
 </span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>    <span class="n">primitives</span><span class="o">=</span><span class="p">[</span><span class="n">encoding_primitive</span><span class="p">],</span>
 </span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>    <span class="n">target</span><span class="o">=</span><span class="n">TargetIsometry</span><span class="p">(</span><span class="n">encoding_columns</span><span class="p">),</span>
 </span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a><span class="p">)</span>

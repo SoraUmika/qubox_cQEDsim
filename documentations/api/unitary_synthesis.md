@@ -1,4 +1,6 @@
-# API Reference: Unitary Synthesis (`cqed_sim.unitary_synthesis`)
+# API Reference: Map Synthesis (`cqed_sim.map_synthesis`)
+
+`cqed_sim.map_synthesis` is the preferred namespace for this synthesis stack. `cqed_sim.unitary_synthesis` remains available for backward compatibility during the transition, but direct imports from that namespace now emit a deprecation warning.
 
 Flexible gate-sequence synthesis for matrix-defined primitives, model-backed waveform primitives, unitary targets, state-mapping targets, reduced-state targets, isometry targets, channel/process targets, observable targets, trajectory/checkpoint targets, and relevance-aware multi-objective optimization.
 
@@ -23,9 +25,9 @@ CQEDSystemAdapter(model=my_cqed_model)
 
 Highlights:
 
-- `UnitarySynthesizer` now depends on a `QuantumSystem` backend rather than directly on a raw cQED model.
+- `QuantumMapSynthesizer` is now the preferred entry point and depends on a `QuantumSystem` backend rather than directly on a raw cQED model.
 - `CQEDSystemAdapter` preserves the current cQED workflow by wrapping existing `cqed_sim.core` model objects.
-- `model=...` is still accepted by `UnitarySynthesizer` and is automatically wrapped into `CQEDSystemAdapter(...)` for backward compatibility.
+- `model=...` is still accepted by `QuantumMapSynthesizer` and is automatically wrapped into `CQEDSystemAdapter(...)` for backward compatibility.
 - The synthesizer is now architecturally system-agnostic even though only cQED adapters are implemented today.
 
 ---
@@ -170,7 +172,7 @@ Waveform primitives may return:
 - `(pulses, drive_ops, meta)`
 - `{"pulses": ..., "drive_ops": ..., "meta": ...}`
 
-Common cQED gate dataclasses exposed by `cqed_sim.unitary_synthesis.sequence`:
+Common cQED gate dataclasses exposed by `cqed_sim.map_synthesis.sequence`:
 
 | Class | Gate-specific fields | Physics |
 |---|---|---|
@@ -251,10 +253,10 @@ These objects lift the older low-level `hardware_limits`, `constraints`, and lea
 
 ---
 
-## UnitarySynthesizer
+## QuantumMapSynthesizer
 
 ```python
-class UnitarySynthesizer:
+class QuantumMapSynthesizer:
     def __init__(
         self,
         ...,
@@ -321,7 +323,7 @@ payload = result.to_payload()
 
 ## Metrics
 
-Key metrics in `cqed_sim.unitary_synthesis.metrics`:
+Key metrics in `cqed_sim.map_synthesis.metrics`:
 
 - `subspace_unitary_fidelity(...)`
 - `leakage_metrics(...)`
@@ -342,7 +344,7 @@ Key metrics in `cqed_sim.unitary_synthesis.metrics`:
 
 Phase handling now supports `none`, `global`, `diagonal`, and `block` gauges.
 
-Visualization helpers in `cqed_sim.unitary_synthesis.visualization` include:
+Visualization helpers in `cqed_sim.map_synthesis.visualization` include:
 
 - `plot_operator_magnitude_heatmap(...)`
 - `plot_leakage_block_heatmap(...)`
@@ -395,7 +397,7 @@ primitives go through the full runtime stack.
 ## Gate Registry
 
 The gate registry maps custom gate names to factory callables so they can be
-referenced by name in `UnitarySynthesizer(gateset=[...])`.
+referenced by name in `QuantumMapSynthesizer(gateset=[...])`.
 
 ```python
 class GateRegistry:
@@ -406,10 +408,10 @@ class GateRegistry:
 ```
 
 A pre-constructed singleton `gate_registry` is exported from
-`cqed_sim.unitary_synthesis`:
+`cqed_sim.map_synthesis`:
 
 ```python
-from cqed_sim.unitary_synthesis import gate_registry, make_gate_from_callable
+from cqed_sim.map_synthesis import QuantumMapSynthesizer, gate_registry, make_gate_from_callable
 
 gate_registry.register(
     "MyCZ",
@@ -417,14 +419,14 @@ gate_registry.register(
         name, my_cz_fn, parameters={}, duration=duration, **kw
     ),
 )
-synth = UnitarySynthesizer(gateset=["QubitRotation", "MyCZ"], ...)
+synth = QuantumMapSynthesizer(gateset=["QubitRotation", "MyCZ"], ...)
 ```
 
 ---
 
 ## Gate-Order Search
 
-`GateOrderOptimizer` wraps `UnitarySynthesizer` and searches over gate
+`GateOrderOptimizer` wraps `QuantumMapSynthesizer` and searches over gate
 orderings drawn from a pool.
 
 ```python

@@ -5,17 +5,17 @@ from dataclasses import asdict, dataclass
 
 import numpy as np
 
-from cqed_sim.unitary_synthesis import (
+from cqed_sim.map_synthesis import (
     ExecutionOptions,
     LeakagePenalty,
     MultiObjective,
     ObservableTarget,
     PrimitiveGate,
+    QuantumMapSynthesizer,
     Subspace,
     TargetStateMapping,
     TrajectoryCheckpoint,
     TrajectoryTarget,
-    UnitarySynthesizer,
 )
 
 
@@ -64,7 +64,7 @@ def relevant_state_ensemble_demo() -> DemoSummary:
     psi_x = np.array([1.0, 1.0], dtype=np.complex128) / np.sqrt(2.0)
     phi_e = np.array([0.0, 1.0], dtype=np.complex128)
     phi_y = np.array([1.0j, 1.0], dtype=np.complex128) / np.sqrt(2.0)
-    synth = UnitarySynthesizer(
+    synth = QuantumMapSynthesizer(
         subspace=Subspace.custom(2, range(2)),
         primitives=[primitive],
         target=TargetStateMapping(
@@ -90,7 +90,7 @@ def observable_task_demo() -> DemoSummary:
         parameter_bounds={"theta": (-2.0 * np.pi, 2.0 * np.pi), "duration": (10.0e-9, 30.0e-9)},
         hilbert_dim=2,
     )
-    synth = UnitarySynthesizer(
+    synth = QuantumMapSynthesizer(
         subspace=Subspace.custom(2, range(2)),
         primitives=[primitive],
         target=ObservableTarget(
@@ -132,7 +132,7 @@ def trajectory_and_leakage_demo() -> DemoSummary:
             )
         ],
     )
-    synth = UnitarySynthesizer(
+    synth = QuantumMapSynthesizer(
         subspace=Subspace.custom(3, [0, 1]),
         primitives=primitives,
         target=trajectory,

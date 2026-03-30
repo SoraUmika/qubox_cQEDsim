@@ -154,6 +154,6 @@ result = simulate_sequence(model, compiled, psi0, drive_ops,
 
 ## Limitations / Non-Goals
 
-- Does not perform gate synthesis or pulse optimization — see `cqed_sim.unitary_synthesis` and `cqed_sim.optimal_control`.
+- Does not perform gate synthesis or pulse optimization — see `cqed_sim.map_synthesis` and `cqed_sim.optimal_control`.
 - The QuTiP solver path does not currently exploit GPU acceleration or batch parallelism at the ODE level; speedup comes from session reuse and coarse CPU parallelism.
 - Extractors assume the standard tensor ordering from `cqed_sim.core`; they will produce incorrect results if a non-standard ordering is used.

@@ -18,7 +18,7 @@ from cqed_sim import (
     build_control_problem_from_model,
     simulate_sequence,
 )
-from cqed_sim.unitary_synthesis import Subspace
+from cqed_sim.map_synthesis import Subspace
 
 
 def rotation_y(theta: float) -> np.ndarray:

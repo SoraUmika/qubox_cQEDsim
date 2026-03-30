@@ -5,13 +5,13 @@ import numpy as np
 import qutip as qt
 from typing import Any
 
-from cqed_sim.unitary_synthesis import (
+from cqed_sim.map_synthesis import (
     ExecutionOptions,
     LeakagePenalty,
     PrimitiveGate,
+    QuantumMapSynthesizer,
     Subspace,
     TargetReducedStateMapping,
-    UnitarySynthesizer,
     plot_density_matrix_heatmap,
     plot_edge_population_summary,
     plot_leakage_block_heatmap,
@@ -74,7 +74,7 @@ def _result_operator(result: Any) -> np.ndarray:
     )
 
 
-def _make_synth(*, leakage_penalty: LeakagePenalty | None, seed: int) -> UnitarySynthesizer:
+def _make_synth(*, leakage_penalty: LeakagePenalty | None, seed: int) -> QuantumMapSynthesizer:
     primitive = PrimitiveGate(
         name="relevant_x_with_ancilla_leakage",
         duration=20.0e-9,
@@ -83,7 +83,7 @@ def _make_synth(*, leakage_penalty: LeakagePenalty | None, seed: int) -> Unitary
         parameter_bounds={"theta_raw": (-6.0, 6.0), "phi_raw": (-6.0, 6.0)},
         hilbert_dim=6,
     )
-    return UnitarySynthesizer(
+    return QuantumMapSynthesizer(
         subspace=LOGICAL_SUBSPACE,
         primitives=[primitive],
         target=TargetReducedStateMapping(

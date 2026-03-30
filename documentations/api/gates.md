@@ -76,7 +76,7 @@ Gates are **targets**, not implementations. The pulse-level workflow is:
 3. Simulate the pulses (`simulate_sequence`)
 4. Compare the simulated unitary against the target gate
 
-For systematic gate synthesis, see `cqed_sim.unitary_synthesis`.
+For systematic gate synthesis, see `cqed_sim.map_synthesis`.
 For GRAPE optimization toward a target, see `cqed_sim.optimal_control`.
 
 ## Key Entry Points
@@ -93,5 +93,5 @@ For GRAPE optimization toward a target, see `cqed_sim.optimal_control`.
 
 - `cqed_sim.core.ideal_gates` — canonical ideal gate implementations
 - `cqed_sim.pulses` — pulse builders for physical gate implementation
-- `cqed_sim.unitary_synthesis` — automated gate synthesis
+- `cqed_sim.map_synthesis` — automated gate and quantum-map synthesis
 - `cqed_sim.io` — gate I/O (loading gates from external calibration files)

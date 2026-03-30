@@ -48,8 +48,8 @@ Core library:
   - Reusable qubit measurement primitives and readout-chain modeling.
 - `cqed_sim/analysis`, `cqed_sim/calibration_targets`, `cqed_sim/backends`
   - Parameter translation, calibration-target surrogates, and optional dense NumPy/JAX backend support.
-- `cqed_sim/calibration`, `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`, `cqed_sim/unitary_synthesis`, `cqed_sim/optimal_control`
-  - Reusable calibration, diagnostics, tomography, gate I/O, plotting, gate-synthesis, and direct optimal-control helpers that remain part of the library surface, including reduced conditioned-qubit multitone reachability checks, full targeted-subspace multitone audits for dispersive SQR-style studies, model-backed GRAPE optimization, and structured hardware-aware pulse-family optimization with pulse export back into the standard runtime stack.
+- `cqed_sim/calibration`, `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`, `cqed_sim/map_synthesis`, `cqed_sim/unitary_synthesis`, `cqed_sim/optimal_control`
+  - Reusable calibration, diagnostics, tomography, gate I/O, plotting, map-synthesis, and direct optimal-control helpers that remain part of the library surface, including reduced conditioned-qubit multitone reachability checks, full targeted-subspace multitone audits for dispersive SQR-style studies, model-backed GRAPE optimization, and structured hardware-aware pulse-family optimization with pulse export back into the standard runtime stack. `cqed_sim.map_synthesis` is now the preferred synthesis namespace, while `cqed_sim.unitary_synthesis` remains as a backward-compatible compatibility facade during the transition.
 - `cqed_sim/rl_control`, `cqed_sim/system_id`
   - RL-facing hybrid control environments, action/observation/reward abstractions, benchmark tasks, domain randomization, diagnostics, and calibration-informed prior hooks for future fit-then-randomize workflows.
 
@@ -636,10 +636,10 @@ Unitary-synthesis entry points:
 - `MultiObjective(...)`
 - `ParameterDistribution(...)`
 - `make_target(...)`
-- `UnitarySynthesizer(...).fit(...)`
-- `UnitarySynthesizer(...).explore_pareto(...)`
+- `QuantumMapSynthesizer(...).fit(...)`
+- `QuantumMapSynthesizer(...).explore_pareto(...)`
 
-`cqed_sim/unitary_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. Matrix-defined primitives, target-state mappings, and model-backed waveform primitives all route through that same convention set. The synthesizer now talks to a backend `QuantumSystem` interface, with `CQEDSystemAdapter(...)` preserving the existing cQED model workflow while preparing the architecture for future non-cQED systems. Phase 2 adds constraint-aware objectives, leakage-aware/noisy synthesis, robust parameter-distribution sampling, Pareto exploration, warm starts, and result export on top of that same runtime model stack. The remaining sign distinction users need to track is the pulse waveform convention: `Pulse.carrier = -omega_transition(frame)`.
+`cqed_sim/map_synthesis` now uses the same projector-based dispersive and Kerr semantics as the runtime Hamiltonian. Matrix-defined primitives, target-state mappings, and model-backed waveform primitives all route through that same convention set. The synthesizer now talks to a backend `QuantumSystem` interface, with `CQEDSystemAdapter(...)` preserving the existing cQED model workflow while preparing the architecture for future non-cQED systems. Phase 2 adds constraint-aware objectives, leakage-aware/noisy synthesis, robust parameter-distribution sampling, Pareto exploration, warm starts, and result export on top of that same runtime model stack. The remaining sign distinction users need to track is the pulse waveform convention: `Pulse.carrier = -omega_transition(frame)`.
 
 ## RL-ready hybrid control
 

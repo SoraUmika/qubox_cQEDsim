@@ -12,5 +12,6 @@
   "tests/test_44_rl_sanity_and_regression.py::test_fock_1_state_task_metrics_are_bounded": true,
   "tests/test_51_optimal_control_hardware_constraints.py::test_smooth_iq_radius_below_limit_is_identity": true,
   "tests/test_45_performance_multistart_and_sweep.py::TestGrapeMultistartConfig::test_defaults": true,
-  "tests/test_42_gates.py::TestCoupledGates::test_beam_splitter_unitarity": true
+  "tests/test_42_gates.py::TestCoupledGates::test_beam_splitter_unitarity": true,
+  "tests/unitary_synthesis/test_namespace_compatibility.py::test_unitary_synthesis_package_import_emits_deprecation_warning": true
 }

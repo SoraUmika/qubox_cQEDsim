@@ -144,22 +144,23 @@ plt.tight_layout()
 
 ## Setting Up the Unitary Synthesis Problem
 
-We use the `UnitarySynthesizer` with a gate sequence of the form $D(\alpha_1) \to \text{SNAP}(\vec{\theta}) \to D(\alpha_2)$. For each target Fock state, the synthesizer finds the optimal parameters.
+We use the `QuantumMapSynthesizer` with a gate sequence of the form $D(\alpha_1) \to \text{SNAP}(\vec{\theta}) \to D(\alpha_2)$. For each target Fock state, the synthesizer finds the optimal parameters.
 
 ### Defining the DSD Primitive Set
 
 ```python
-from cqed_sim.unitary_synthesis import (
-    UnitarySynthesizer,
+from cqed_sim.map_synthesis import (
+    QuantumMapSynthesizer,
     Displacement,
     SNAP,
     ExecutionOptions,
+    MultiObjective,
     TargetReducedStateMapping,
 )
 
 n_cav = model.n_cav  # 10
 
-def make_dsd_synthesizer(n_fock_target: int) -> UnitarySynthesizer:
+def make_dsd_synthesizer(n_fock_target: int) -> QuantumMapSynthesizer:
     """Set up a DSD synthesizer for preparing Fock state |n_fock_target⟩."""
 
     # Initial state: qubit ground, cavity vacuum
@@ -170,7 +171,7 @@ def make_dsd_synthesizer(n_fock_target: int) -> UnitarySynthesizer:
 
     # Gate sequence: D - SNAP - D
     # The synthesizer optimizes all gate parameters jointly
-    synth = UnitarySynthesizer(
+    synth = QuantumMapSynthesizer(
         primitives=[
             Displacement(
                 name     = "D1",
@@ -204,7 +205,7 @@ def make_dsd_synthesizer(n_fock_target: int) -> UnitarySynthesizer:
 ### Running Synthesis for |1⟩, |2⟩, |3⟩
 
 ```python
-from cqed_sim.unitary_synthesis import MultiObjective
+from cqed_sim.map_synthesis import MultiObjective
 
 results = {}
 
@@ -355,13 +356,13 @@ The high-fidelity result (F > 0.99 for a single DSD round with optimized paramet
 A single $D$-SNAP-$D$ round typically achieves $F \approx 0.95$–$0.99$ for $|1\rangle$–$|3\rangle$. A second round brings this above $0.999$:
 
 ```python
-def make_double_dsd_synthesizer(n_fock_target: int) -> UnitarySynthesizer:
+def make_double_dsd_synthesizer(n_fock_target: int) -> QuantumMapSynthesizer:
     """Two-round DSD: D-SNAP-D-SNAP-D for higher-fidelity Fock preparation."""
     psi_initial = qt.tensor(qt.basis(2, 0), qt.basis(n_cav, 0))
     psi_target  = qt.tensor(qt.basis(2, 0), qt.basis(n_cav, n_fock_target))
     alpha0 = np.sqrt(n_fock_target)
 
-    return UnitarySynthesizer(
+    return QuantumMapSynthesizer(
         primitives=[
             Displacement(name="D1",    duration=120e-9, alpha= alpha0),
             SNAP(        name="SNAP1", duration=200e-9, phases=[0.0]*n_cav),
@@ -442,7 +443,7 @@ print(f"Converged: {opt.converged}")
 print(f"Error:     {opt.history_error[-1]:.5f}")
 ```
 
-This bridges the ideal-synthesis level (UnitarySynthesizer) and the physical pulse level (multitone drive optimization), both targeting the same gate operation.
+This bridges the ideal-synthesis level (`QuantumMapSynthesizer`) and the physical pulse level (multitone drive optimization), both targeting the same gate operation.
 
 ---
 
@@ -452,7 +453,7 @@ This bridges the ideal-synthesis level (UnitarySynthesizer) and the physical pul
 |---|---|---|
 | Understand target | `cavity_wigner(fock_state(n))` | Wigner function plots |
 | Build gateset | `Displacement`, `SNAP` primitives | DSD sequence template |
-| Optimize parameters | `UnitarySynthesizer` | Optimized $\alpha_1, \vec{\theta}, \alpha_2$ |
+| Optimize parameters | `QuantumMapSynthesizer` | Optimized $\alpha_1, \vec{\theta}, \alpha_2$ |
 | Verify in simulation | `simulate_sequence` + `cavity_wigner` | Wigner comparison |
 | Physical-pulse level | `optimize_snap_parameters` | Multitone pulse parameters |
 

@@ -1,7 +1,7 @@
 """End-to-end synthesis → GRAPE → validate pipeline.
 
 Demonstrates the full gate design workflow:
-  1. Synthesize a target unitary via UnitarySynthesizer (high-level sequence)
+    1. Synthesize a target unitary via QuantumMapSynthesizer (high-level sequence)
   2. Refine the resulting control schedule with GRAPE (pulse-level optimisation)
   3. Validate the refined pulses through the full cqed_sim.sim runtime
 
@@ -32,10 +32,10 @@ from cqed_sim import (
     build_control_problem_from_model,
     simulate_sequence,
 )
-from cqed_sim.unitary_synthesis import (
+from cqed_sim.map_synthesis import (
     CQEDSystemAdapter,
+    QuantumMapSynthesizer,
     Subspace,
-    UnitarySynthesizer,
     make_run_report,
 )
 
@@ -71,13 +71,13 @@ def main() -> None:
     )
     target_matrix = rotation_y(np.pi / 2.0)
 
-    # ── 2.  Unitary synthesis (high-level sequence search) ────────
+    # ── 2.  Map synthesis (high-level sequence search) ────────────
     print("=" * 60)
-    print("Step 1: Unitary synthesis")
+    print("Step 1: Map synthesis")
     print("=" * 60)
 
     system = CQEDSystemAdapter(model=model)
-    synth = UnitarySynthesizer(
+    synth = QuantumMapSynthesizer(
         subspace=storage_logical,
         backend="pulse",
         gateset=["QubitRotation", "SQR", "Displacement"],
@@ -88,7 +88,7 @@ def main() -> None:
         seed=42,
     )
 
-    from cqed_sim.unitary_synthesis import TargetUnitary
+    from cqed_sim.map_synthesis import TargetUnitary
 
     target = TargetUnitary(
         matrix=target_matrix,

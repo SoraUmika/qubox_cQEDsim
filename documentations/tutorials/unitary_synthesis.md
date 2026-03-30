@@ -1,4 +1,4 @@
-# Tutorial: Unitary Synthesis
+# Tutorial: Map Synthesis
 
 The main workflow notebook is:
 
@@ -20,12 +20,12 @@ The separate `examples/unitary_synthesis_relevance_aware_optimizer.py` script st
 ## Workflow 1: Constraint-Limited Unitary Synthesis
 
 ```python
-from cqed_sim.unitary_synthesis import (
+from cqed_sim.map_synthesis import (
     MultiObjective,
     PrimitiveGate,
+    QuantumMapSynthesizer,
     SynthesisConstraints,
     TargetUnitary,
-    UnitarySynthesizer,
 )
 
 primitive = PrimitiveGate(
@@ -37,7 +37,7 @@ primitive = PrimitiveGate(
     hilbert_dim=2,
 )
 
-synth = UnitarySynthesizer(
+synth = QuantumMapSynthesizer(
     primitives=[primitive],
     target=TargetUnitary(U_target, ignore_global_phase=True),
     synthesis_constraints=SynthesisConstraints(max_duration=60e-9),
@@ -55,18 +55,18 @@ This is the right entry point when you want a hard or penalized bound on total d
 
 ```python
 from cqed_sim.sim import NoiseSpec
-from cqed_sim.unitary_synthesis import (
+from cqed_sim.map_synthesis import (
     CQEDSystemAdapter,
     LeakagePenalty,
     MultiObjective,
     PrimitiveGate,
     TargetStateMapping,
-    UnitarySynthesizer,
+    QuantumMapSynthesizer,
 )
 
 system = CQEDSystemAdapter(model=my_cqed_model)
 
-synth = UnitarySynthesizer(
+synth = QuantumMapSynthesizer(
     system=system,
     backend="pulse",
     primitives=[waveform_primitive],
@@ -86,17 +86,17 @@ This path is the recommended notebook interface for dissipative state preparatio
 ## Workflow 3: Robust Optimization Under Parameter Uncertainty
 
 ```python
-from cqed_sim.unitary_synthesis import (
+from cqed_sim.map_synthesis import (
     CQEDSystemAdapter,
     MultiObjective,
     Normal,
     ParameterDistribution,
-    UnitarySynthesizer,
+    QuantumMapSynthesizer,
 )
 
 system = CQEDSystemAdapter(model=my_cqed_model)
 
-synth = UnitarySynthesizer(
+synth = QuantumMapSynthesizer(
     system=system,
     backend="pulse",
     primitives=[waveform_primitive],
@@ -136,22 +136,22 @@ front = synth.explore_pareto(
 ## Workflow 5: Flexible Target-Action Matching
 
 ```python
-from cqed_sim.unitary_synthesis import (
+from cqed_sim.map_synthesis import (
     ExecutionOptions,
     PrimitiveGate,
+    QuantumMapSynthesizer,
     TargetChannel,
     TargetIsometry,
     TargetReducedStateMapping,
-    UnitarySynthesizer,
 )
 
-channel_synth = UnitarySynthesizer(
+channel_synth = QuantumMapSynthesizer(
     primitives=[rotation_primitive],
     target=TargetChannel(unitary=target_qubit_gate, enforce_cptp=True),
     execution=ExecutionOptions(engine="numpy"),
 )
 
-reduced_state_synth = UnitarySynthesizer(
+reduced_state_synth = QuantumMapSynthesizer(
     primitives=[two_qubit_primitive],
     target=TargetReducedStateMapping(
         initial_states=[psi00, psi10],
@@ -161,7 +161,7 @@ reduced_state_synth = UnitarySynthesizer(
     ),
 )
 
-isometry_synth = UnitarySynthesizer(
+isometry_synth = QuantumMapSynthesizer(
     primitives=[encoding_primitive],
     target=TargetIsometry(encoding_columns),
 )

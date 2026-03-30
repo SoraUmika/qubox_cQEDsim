@@ -111,7 +111,7 @@ U_ef = r_ef(np.pi, 0)     # π-pulse on e-f
 ## Relationships to Other Modules
 
 - **`cqed_sim.core`**: exports a subset of the same ideal gates (`qubit_rotation_xy`, `displacement_op`, `snap_op`, `sqr_op`) as convenience functions directly on the model. The `gates` module provides a broader and more explicit gate library.
-- **`cqed_sim.unitary_synthesis`**: uses gates from `cqed_sim.core` and this module as synthesis primitives and targets.
+- **`cqed_sim.map_synthesis`**: uses gates from `cqed_sim.core` and this module as synthesis primitives and targets.
 - **`cqed_sim.tomo`**: uses ideal rotation gates as reference operations for tomography protocols.
 - **`cqed_sim.optimal_control`**: ideal gates from this module are used as `UnitaryObjective` targets.
 

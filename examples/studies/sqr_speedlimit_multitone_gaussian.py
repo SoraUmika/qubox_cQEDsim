@@ -20,8 +20,8 @@ from cqed_sim.calibration.sqr import (
 )
 from cqed_sim.core.ideal_gates import qubit_rotation_xy
 from cqed_sim.pulses.envelopes import gaussian_envelope
-from cqed_sim.unitary_synthesis.metrics import subspace_unitary_fidelity
-from cqed_sim.unitary_synthesis.progress import (
+from cqed_sim.map_synthesis.metrics import subspace_unitary_fidelity
+from cqed_sim.map_synthesis.progress import (
     CompositeReporter,
     HistoryReporter,
     JupyterLiveReporter,

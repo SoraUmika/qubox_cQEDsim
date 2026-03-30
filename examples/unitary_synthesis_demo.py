@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from cqed_sim.unitary_synthesis import Subspace, UnitarySynthesizer, make_target
-from cqed_sim.unitary_synthesis.reporting import make_run_report
+from cqed_sim.map_synthesis import QuantumMapSynthesizer, Subspace, make_target
+from cqed_sim.map_synthesis.reporting import make_run_report
 
 
 if __name__ == "__main__":
@@ -10,7 +10,7 @@ if __name__ == "__main__":
     target_name = "cluster"  # try "ghz" or "easy"
     u_target = make_target(target_name, n_match=3, variant="mps")
 
-    synth = UnitarySynthesizer(
+    synth = QuantumMapSynthesizer(
         subspace=subspace,
         backend="pulse",
         gateset=["QubitRotation", "SQR", "SNAP", "Displacement"],

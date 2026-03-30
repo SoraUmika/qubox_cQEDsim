@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-reference-unitary-synthesis-cqed_simunitary_synthesis" class="md-skip">
+        <a href="#api-reference-map-synthesis-cqed_simmap_synthesis" class="md-skip">
           Skip to content
         </a>
       
@@ -2990,10 +2990,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#unitarysynthesizer" class="md-nav__link">
+  <a href="#quantummapsynthesizer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        UnitarySynthesizer
+        QuantumMapSynthesizer
       
     </span>
   </a>
@@ -3631,10 +3631,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#unitarysynthesizer" class="md-nav__link">
+  <a href="#quantummapsynthesizer" class="md-nav__link">
     <span class="md-ellipsis">
       
-        UnitarySynthesizer
+        QuantumMapSynthesizer
       
     </span>
   </a>
@@ -3761,7 +3761,8 @@
 
 
 
-<h1 id="api-reference-unitary-synthesis-cqed_simunitary_synthesis">API Reference: Unitary Synthesis (<code>cqed_sim.unitary_synthesis</code>)<a class="headerlink" href="#api-reference-unitary-synthesis-cqed_simunitary_synthesis" title="Permanent link">&para;</a></h1>
+<h1 id="api-reference-map-synthesis-cqed_simmap_synthesis">API Reference: Map Synthesis (<code>cqed_sim.map_synthesis</code>)<a class="headerlink" href="#api-reference-map-synthesis-cqed_simmap_synthesis" title="Permanent link">&para;</a></h1>
+<p><code>cqed_sim.map_synthesis</code> is the preferred namespace for this synthesis stack. <code>cqed_sim.unitary_synthesis</code> remains available for backward compatibility during the transition, but direct imports from that namespace now emit a deprecation warning.</p>
 <p>Flexible gate-sequence synthesis for matrix-defined primitives, model-backed waveform primitives, unitary targets, state-mapping targets, reduced-state targets, isometry targets, channel/process targets, observable targets, trajectory/checkpoint targets, and relevance-aware multi-objective optimization.</p>
 <div class="admonition note">
 <p class="admonition-title">Convention</p>
@@ -3779,9 +3780,9 @@
 </span></code></pre></div>
 <p>Highlights:</p>
 <ul>
-<li><code>UnitarySynthesizer</code> now depends on a <code>QuantumSystem</code> backend rather than directly on a raw cQED model.</li>
+<li><code>QuantumMapSynthesizer</code> is now the preferred entry point and depends on a <code>QuantumSystem</code> backend rather than directly on a raw cQED model.</li>
 <li><code>CQEDSystemAdapter</code> preserves the current cQED workflow by wrapping existing <code>cqed_sim.core</code> model objects.</li>
-<li><code>model=...</code> is still accepted by <code>UnitarySynthesizer</code> and is automatically wrapped into <code>CQEDSystemAdapter(...)</code> for backward compatibility.</li>
+<li><code>model=...</code> is still accepted by <code>QuantumMapSynthesizer</code> and is automatically wrapped into <code>CQEDSystemAdapter(...)</code> for backward compatibility.</li>
 <li>The synthesizer is now architecturally system-agnostic even though only cQED adapters are implemented today.</li>
 </ul>
 <hr />
@@ -3904,7 +3905,7 @@
 <li><code>(pulses, drive_ops, meta)</code></li>
 <li><code>{"pulses": ..., "drive_ops": ..., "meta": ...}</code></li>
 </ul>
-<p>Common cQED gate dataclasses exposed by <code>cqed_sim.unitary_synthesis.sequence</code>:</p>
+<p>Common cQED gate dataclasses exposed by <code>cqed_sim.map_synthesis.sequence</code>:</p>
 <table>
 <thead>
 <tr>
@@ -4002,8 +4003,8 @@
 </span></code></pre></div>
 <p>These objects lift the older low-level <code>hardware_limits</code>, <code>constraints</code>, and leakage knobs into a notebook-facing API. <code>LeakagePenalty.weight</code> penalizes final retained-subspace leakage, <code>LeakagePenalty.checkpoint_weight</code> adds a soft path-leakage cost at selected checkpoints while still reporting path metrics when the weight is zero, and <code>LeakagePenalty.edge_weight</code> penalizes occupancy of a user-defined <code>edge_projector</code> separately from logical leakage. <code>MultiObjective.gate_count_weight</code> measures effective active-gate count for fixed-structure sequences, and <code>ExecutionOptions</code> selects the legacy versus accelerated evaluation backend.</p>
 <hr />
-<h2 id="unitarysynthesizer">UnitarySynthesizer<a class="headerlink" href="#unitarysynthesizer" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">UnitarySynthesizer</span><span class="p">:</span>
+<h2 id="quantummapsynthesizer">QuantumMapSynthesizer<a class="headerlink" href="#quantummapsynthesizer" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">QuantumMapSynthesizer</span><span class="p">:</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>        <span class="bp">self</span><span class="p">,</span>
 </span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>        <span class="o">...</span><span class="p">,</span>
@@ -4058,7 +4059,7 @@
 <p><code>ParetoFrontResult</code> stores the full set of weighted runs plus the nondominated subset.</p>
 <hr />
 <h2 id="metrics">Metrics<a class="headerlink" href="#metrics" title="Permanent link">&para;</a></h2>
-<p>Key metrics in <code>cqed_sim.unitary_synthesis.metrics</code>:</p>
+<p>Key metrics in <code>cqed_sim.map_synthesis.metrics</code>:</p>
 <ul>
 <li><code>subspace_unitary_fidelity(...)</code></li>
 <li><code>leakage_metrics(...)</code></li>
@@ -4077,7 +4078,7 @@
 </ul>
 <p><code>logical_block_phase_diagnostics(...)</code> extracts gauge-fixed block-overlap phases from a restricted operator, reports the best-fit ideal cavity-only block-phase correction, and returns the residual RMS after an optional applied correction.</p>
 <p>Phase handling now supports <code>none</code>, <code>global</code>, <code>diagonal</code>, and <code>block</code> gauges.</p>
-<p>Visualization helpers in <code>cqed_sim.unitary_synthesis.visualization</code> include:</p>
+<p>Visualization helpers in <code>cqed_sim.map_synthesis.visualization</code> include:</p>
 <ul>
 <li><code>plot_operator_magnitude_heatmap(...)</code></li>
 <li><code>plot_leakage_block_heatmap(...)</code></li>
@@ -4116,7 +4117,7 @@ primitives go through the full runtime stack.</p>
 <hr />
 <h2 id="gate-registry">Gate Registry<a class="headerlink" href="#gate-registry" title="Permanent link">&para;</a></h2>
 <p>The gate registry maps custom gate names to factory callables so they can be
-referenced by name in <code>UnitarySynthesizer(gateset=[...])</code>.</p>
+referenced by name in <code>QuantumMapSynthesizer(gateset=[...])</code>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">GateRegistry</span><span class="p">:</span>
 </span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span> <span class="o">...</span>
 </span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">100e-9</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="o">...</span>
@@ -4124,8 +4125,8 @@ referenced by name in <code>UnitarySynthesizer(gateset=[...])</code>.</p>
 </span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">registered_names</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
 </span></code></pre></div>
 <p>A pre-constructed singleton <code>gate_registry</code> is exported from
-<code>cqed_sim.unitary_synthesis</code>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.unitary_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="n">gate_registry</span><span class="p">,</span> <span class="n">make_gate_from_callable</span>
+<code>cqed_sim.map_synthesis</code>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.map_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantumMapSynthesizer</span><span class="p">,</span> <span class="n">gate_registry</span><span class="p">,</span> <span class="n">make_gate_from_callable</span>
 </span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
 </span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">gate_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
 </span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    <span class="s2">&quot;MyCZ&quot;</span><span class="p">,</span>
@@ -4133,11 +4134,11 @@ referenced by name in <code>UnitarySynthesizer(gateset=[...])</code>.</p>
 </span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>        <span class="n">name</span><span class="p">,</span> <span class="n">my_cz_fn</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{},</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span>
 </span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>    <span class="p">),</span>
 </span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="p">)</span>
-</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">UnitarySynthesizer</span><span class="p">(</span><span class="n">gateset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;QubitRotation&quot;</span><span class="p">,</span> <span class="s2">&quot;MyCZ&quot;</span><span class="p">],</span> <span class="o">...</span><span class="p">)</span>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span><span class="n">gateset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;QubitRotation&quot;</span><span class="p">,</span> <span class="s2">&quot;MyCZ&quot;</span><span class="p">],</span> <span class="o">...</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="gate-order-search">Gate-Order Search<a class="headerlink" href="#gate-order-search" title="Permanent link">&para;</a></h2>
-<p><code>GateOrderOptimizer</code> wraps <code>UnitarySynthesizer</code> and searches over gate
+<p><code>GateOrderOptimizer</code> wraps <code>QuantumMapSynthesizer</code> and searches over gate
 orderings drawn from a pool.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">GateOrderConfig</span><span class="p">:</span>

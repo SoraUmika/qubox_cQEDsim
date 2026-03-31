@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\states.py
+# hypothesis_version: 6.151.10
+
+[-1.0, 0.5, 1.0, 2.0, '+', '-', '00', '01', '10', '11', 'H', 'V', 'analytic', 'basis', 'bell_state', 'bra', 'coherent', 'coherent_dm', 'd', 'dense', 'diagonal', 'dm', 'e', 'fock', 'fock_dm', 'g', 'ghz_state', 'ket', 'ket2dm', 'maximally_mixed_dm', 'operator', 'phase_basis', 'projection', 'qstate', 'qutrit_basis', 'singlet_state', 'sparse', 'spin_coherent', 'spin_state', 'state_index_number', 'state_number_index', 'state_number_qobj', 'thermal_dm', 'triplet_states', 'u', 'w_state', 'zero_ket']

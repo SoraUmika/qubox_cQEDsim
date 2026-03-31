@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\data\solve.py
+# hypothesis_version: 6.151.10
+
+['CSR', 'Matrix is singular', 'csc', 'error', 'lstsq', 'matrix', 'method', 'mkl is not available', 'mkl_spsolve', 'options', 'rcond', 'solve', 'solve_csr_dense', 'solve_dense', 'solve_dia_dense', 'splu', 'spsolve', 'target']

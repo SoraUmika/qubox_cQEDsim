@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\mesolve.py
+# hypothesis_version: 6.151.10
+
+['MESolver', 'adams', 'args', 'chunk_size', 'e_ops', 'mesolve', 'method', 'normalize_output', 'num_collapse', 'options', 'progress_bar', 'progress_kwargs', 'solver', 'store_final_state', 'store_states']

@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\unitary_synthesis\visualization.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.04, 0.046, 0.25, 0.5, 1.0, 1.1, 1.2, 1.8, 2.6, 3.8, 4.0, 4.6, 4.8, 5.0, 5.5, 6.0, 7.0, '#2f6f4f', '#3d6a9d', '#4c956c', '#8f2d56', '#bc4b51', '#e76f51', '#f4a259', '--', 'Leakage vs step', 'Leakage vs time', 'auto', 'average', 'average leakage', 'basis index', 'center', 'column', 'edge projector avg', 'edge projector worst', 'leakage', 'leakage output index', 'logical column', 'logical input index', 'logical row', 'magma', 'o', 'outside tail avg', 'outside tail worst', 'plot_leakage_profile', 'population', 'retained edge avg', 'retained edge worst', 'right', 'row', 's', 'step', 'time', 'upper', 'white', 'worst', 'worst leakage', 'y', '|P_leak U P_logical|']

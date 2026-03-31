@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\gates\coupled.py
+# hypothesis_version: 6.151.10
+
+[2.0, 'beam_splitter', 'blue_sideband', 'conditional_rotation', 'controlled_parity', 'controlled_snap', 'dispersive_phase', 'e', 'g', 'jaynes_cummings', 'multi_sqr', 'n_e', 'sqr', 'z']

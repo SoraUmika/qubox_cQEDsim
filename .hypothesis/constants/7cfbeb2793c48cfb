@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\unitary_synthesis\reporting.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.01, 0.2, 'block', 'det_phase', 'leakage_worst', 'metrics', 'n', 'per_fock_blocks', 'phase_decomposition', 'truncation', 'warnings']

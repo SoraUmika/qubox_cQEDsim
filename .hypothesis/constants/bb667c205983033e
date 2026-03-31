@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\core\universal_model.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-12, 0.5, 1.0, 'BosonicModeSpec', 'TransmonModeSpec', 'UniversalCQEDModel', 'a', 'a_r', 'a_s', 'adag', 'adag_r', 'adag_s', 'aliases', 'b', 'bdag', 'blue', 'c', 'cavity', 'chi_higher', 'kerr_higher', 'lab', 'n_c', 'n_q', 'n_r', 'n_s', 'none', 'omega_c_frame', 'omega_q_frame', 'omega_r_frame', 'omega_s_frame', 'q', 'qubit', 'r', 'readout', 'red', 'sideband', 'storage', 'transmon']

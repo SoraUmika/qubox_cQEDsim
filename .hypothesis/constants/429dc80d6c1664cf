@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\rl_control\metrics.py
+# hypothesis_version: 6.151.10
+
+[-1.0, 0.0, 1.0, 5.0, 50.0, 95.0, 'ancilla_return', 'ancilla_return_mean', 'block', 'leakage_average', 'leakage_worst', 'max', 'mean', 'min', 'nan', 'p05', 'p50', 'p95', 'parity_expectation', 'process_fidelity', 'state_fidelity', 'state_fidelity_mean', 'std', 'success', 'transmon']

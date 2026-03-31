@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\core\environment.py
+# hypothesis_version: 6.151.10
+
+[-2.0, 0.0, 1e-10, 1e-07, 5e-06, 1e-05, 2e-05, 0.1, 0.5, 1.0, -100, 100, 500, '+', '-', 'BosonicEnvironment', 'CF Fit', 'CFExponent', 'ExponentType', 'FFT', 'FermionicEnvironment', 'I', 'Matsubara Truncation', 'N', 'Ni', 'Nk', 'Nr', 'OhmicEnvironment', 'Pade Truncation', 'R', 'RI', 'SD Fit', 'a', 'b', 'c', 'correlation function', 'd', 'fit_time', 'fit_time_imag', 'fit_time_real', 'params', 'params_imag', 'params_real', 'power spectrum', 'rmse', 'rmse_imag', 'rmse_real', 'spectral density', 'summary', 'system_terminator', 'the spectral density']

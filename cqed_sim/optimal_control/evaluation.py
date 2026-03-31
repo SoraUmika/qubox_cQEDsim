@@ -136,8 +136,8 @@ class ControlEvaluationResult:
         return output_path
 
 
-def _default_compiler_dt(problem: "ControlProblem") -> float:
-    min_step = float(min(problem.time_grid.step_durations_s))
+def _default_compiler_dt(step_durations_s: np.ndarray) -> float:
+    min_step = float(np.min(np.asarray(step_durations_s, dtype=float)))
     return float(min(1.0e-9, max(min_step / 8.0, 1.0e-10)))
 
 
@@ -313,6 +313,8 @@ def evaluate_control_with_simulator(
         )
 
     resolved = resolve_control_schedule(problem, control_schedule, apply_hardware=True)
+    resolved_step_durations_s = np.diff(np.asarray(resolved.time_boundaries_s, dtype=float))
+    resolved_duration_s = float(np.sum(resolved_step_durations_s))
     resolved_waveform_mode = str(waveform_mode).lower()
     if resolved_waveform_mode == "problem_default":
         resolved_waveform_mode = "physical" if problem.hardware_model is not None else "command"
@@ -330,7 +332,7 @@ def evaluate_control_with_simulator(
         "parameterization_metrics": dict(resolved.parameterization_metrics),
         "hardware_metrics": dict(resolved.hardware_metrics),
     }
-    default_dt = _default_compiler_dt(problem) if compiler_dt_s is None else float(compiler_dt_s)
+    default_dt = _default_compiler_dt(resolved_step_durations_s) if compiler_dt_s is None else float(compiler_dt_s)
     compiled_cache: dict[float, Any] = {}
     member_reports: list[ControlMemberEvaluation] = []
 
@@ -338,7 +340,7 @@ def evaluate_control_with_simulator(
         case_dt = float(default_dt if case.compiler_dt_s is None else case.compiler_dt_s)
         compiled = compiled_cache.get(case_dt)
         if compiled is None:
-            compiled = SequenceCompiler(dt=case_dt).compile(pulses, t_end=problem.time_grid.duration_s)
+            compiled = SequenceCompiler(dt=case_dt).compile(pulses, t_end=resolved_duration_s)
             compiled_cache[case_dt] = compiled
         resolved_case = case
         if case.max_step_s is None and max_step_s is not None:
@@ -408,7 +410,7 @@ def evaluate_control_with_simulator(
         metrics=metrics,
         pulse_metadata=dict(pulse_meta),
         compiler_dt_s=float(default_dt),
-        duration_s=float(problem.time_grid.duration_s),
+        duration_s=float(resolved_duration_s),
         waveform_mode=str(resolved_waveform_mode),
         parameterization_metrics=dict(resolved.parameterization_metrics),
         hardware_metrics=dict(resolved.hardware_metrics),

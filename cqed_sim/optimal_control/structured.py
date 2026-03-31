@@ -534,6 +534,10 @@ class StructuredPulseParameterization:
             for spec, value in zip(self._parameter_specs, clipped, strict=True)
         )
 
+    def resolved_time_grid(self, values: Sequence[float] | np.ndarray) -> PiecewiseConstantTimeGrid:
+        _ = values
+        return self.time_grid
+
     def zero_array(self) -> np.ndarray:
         return np.asarray([spec.default for spec in self._parameter_specs], dtype=float)
 

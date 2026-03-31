@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\sode\sode.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-10, 0.001, 0.5, 'PlatenSODE', 'PredCorr_SODE', 'SIntegrator', 'alpha', 'dt', 'eta', 'measurement_noise', 'platen', 'pred_corr', 'solve_method', 'solve_options', 'tol']

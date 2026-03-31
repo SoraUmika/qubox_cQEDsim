@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\wcwidth\__init__.py
+# hypothesis_version: 6.151.10
+
+['0.6.0', 'center', 'clip', 'iter_graphemes', 'iter_sequences', 'list_versions', 'ljust', 'propagate_sgr', 'rjust', 'strip_sequences', 'wcswidth', 'wcwidth', 'width', 'wrap']

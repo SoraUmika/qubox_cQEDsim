@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\core\qobj.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.001, 0.5, 1000, 100000, 100000000, '\nQobj data =\n', ' & ', ' and ', ' cannot act on ', '(', '+', ', ', ', isherm=', ', superrep=', '-', '0', 'C', 'F', 'Qobj', '\\\\', '\\cdots', '\\ddots', '\\end{array}\\right)$$', '\\times10^{{ {:d} }}', '\\vdots', 'atol', 'auto_real_casting', 'auto_tidyup_atol', 'bra', 'chi', 'choi', 'clip', 'dtype=', 'e', 'fro', 'high', 'j', 'j)', 'ket', 'l2', 'low', 'max', 'one', 'oper', 'operator-bra', 'operator-ket', 'ptrace', 'qutip_version', 'scalar', 'sgs', 'shape=', 'super', 'tr', 'type=', '{:.3e}', '{:.3f}', '{:d}']

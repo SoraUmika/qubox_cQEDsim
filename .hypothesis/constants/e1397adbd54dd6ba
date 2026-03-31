@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\unitary_synthesis\objectives.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.1, 1.0, '-', 'MetricSpec', '_', 'channel', 'channel_choi_error', 'channel_overlap', 'default_metric_specs', 'duration_weight', 'edge_population', 'isometry', 'isometry_basis', 'isometry_coherent', 'isometry_retention', 'logical_leakage', 'maximize', 'metric_cost', 'metric_sense', 'minimize', 'name', 'observable', 'observable_mismatch', 'options', 'path_leakage', 'path_leakage_average', 'path_leakage_worst', 'resolve_metric_specs', 'robust_gate', 'robustness_weight', 'sense', 'smoothness_weight', 'state_mapping', 'state_min_fidelity', 'state_transfer', 'trajectory', 'trajectory_task_loss', 'unitary', 'unitary_coherent', 'unitary_subspace', 'weight']

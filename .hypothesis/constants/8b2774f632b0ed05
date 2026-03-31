@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\solver\integrator\scipy_integrator.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-15, 1e-08, 1e-06, 0.3, 6.0, 100, 2500, 'IntegratorScipyAdams', 'IntegratorScipyBDF', 'IntegratorScipylsoda', 'adams', 'atol', 'bdf', 'beta', 'dfactor', 'dop853', 'first_step', 'ifactor', 'lsoda', 'max_order_ns', 'max_order_s', 'max_step', 'min_step', 'nsteps', 'order', 'rtol', 'scipy lsoda', 'scipy ode dop853', 'scipy zvode ', 'zvode']

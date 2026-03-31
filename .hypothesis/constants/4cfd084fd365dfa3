@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\properties.py
+# hypothesis_version: 6.151.10
+
+['bra', 'isbra', 'isherm', 'isket', 'isoper', 'isoperbra', 'isoperket', 'issuper', 'ket', 'oper', 'operator-bra', 'operator-ket', 'scalar', 'super']

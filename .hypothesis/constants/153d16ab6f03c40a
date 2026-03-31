@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\rl_control\action_spaces.py
+# hypothesis_version: 6.151.10
+
+[-2.0, 0.0, 1.6e-08, 1.6e-07, 4e-07, 0.5, 1.0, 2.0, 6000000.0, 10000000.0, 'HybridBlockAction', 'MeasurementAction', 'PrimitiveAction', 'PrimitiveActionSpace', 'QubitGaussianAction', 'ResetAction', 'SidebandAction', 'WaitAction', 'WaveformAction', 'WaveformActionSpace', 'alpha', 'alpha_im', 'alpha_re', 'amplitude', 'cavity_detuning', 'cavity_displacement', 'cavity_duration', 'cavity_im', 'cavity_re', 'collapse', 'detuning', 'drag', 'duration', 'hybrid_block', 'lower_level', 'measure', 'mode', 'phase', 'phi', 'primitive', 'qubit', 'qubit_detuning', 'qubit_drag', 'qubit_duration', 'qubit_gaussian', 'qubit_phi', 'qubit_theta', 'red', 'reset', 'sideband', 'sideband_amplitude', 'sideband_detuning', 'sideband_duration', 'sideband_phase', 'storage', 'theta', 'upper_level', 'wait', 'wait_duration']

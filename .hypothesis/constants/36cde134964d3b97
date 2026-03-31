@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\measurement\stochastic.py
+# hypothesis_version: 6.151.10
+
+[1e-08, 1e-07, 1.0, 'cavity', 'dt', 'end', 'keep_runs_results', 'measurement', 'progress_bar', 'runs_expect', 'runs_final_states', 'runs_states', 'states', 'store_final_state', 'store_measurement', 'store_states', 'tol']

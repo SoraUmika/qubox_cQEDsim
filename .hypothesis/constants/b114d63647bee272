@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\calibration_targets\drag_tuning.py
+# hypothesis_version: 6.151.10
+
+[-1.0, -0.5, 0.0, 1e-15, 0.001, 0.25, 'baseline_leakage', 'curvature', 'drag_optimal', 'drag_values', 'leakage', 'run_drag_tuning']

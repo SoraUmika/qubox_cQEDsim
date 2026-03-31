@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\traitlets\utils\descriptions.py
+# hypothesis_version: 6.151.10
+
+["''", '.', '[\\W_]+', 'a', 'a ', 'aeiou', 'an', 'an ', "at '%s'", 'builtins', 'the', 'the ']

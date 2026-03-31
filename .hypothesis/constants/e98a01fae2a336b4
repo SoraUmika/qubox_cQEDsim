@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\semidefinite.py
+# hypothesis_version: 6.151.10
+
+['C', 'Complex', 'X', '_im', '_re', 'dnorm_problem', 'dnorm_sparse_problem', 'im', 're', 'rho0', 'rho1']

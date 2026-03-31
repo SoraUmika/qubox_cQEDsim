@@ -42,6 +42,32 @@ Key points:
 
 ---
 
+## Gymnasium Wrapper and SB3 Integration
+
+```python
+from cqed_sim.rl_control import GymnasiumCQEDEnv, action_space_to_gymnasium
+
+env = GymnasiumCQEDEnv(config)
+```
+
+`GymnasiumCQEDEnv` is a thin `gymnasium.Env` subclass that delegates all physics to `HybridCQEDEnv`. It adds the `action_space` and `observation_space` attributes required by Gymnasium-compatible RL frameworks (Stable-Baselines3, RLlib, CleanRL, etc.).
+
+| Parameter | Type | Description |
+|---|---|---|
+| `config` | `HybridEnvConfig` | Full environment configuration (same as `HybridCQEDEnv`). |
+| `obs_low` | `float` | Lower bound for observation space (default: `-inf`). |
+| `obs_high` | `float` | Upper bound for observation space (default: `+inf`). |
+
+Key behaviors:
+
+- `action_space` is a `gymnasium.spaces.Box` derived from the cqed_sim action space's `.low` / `.high` arrays.
+- `observation_space` is inferred from a single dry reset.
+- `reset()`, `step()`, `render()` delegate to the inner `HybridCQEDEnv`, casting observations to `float32`.
+- `.inner` property provides direct access to the underlying `HybridCQEDEnv`.
+- Requires the `gym` or `sb3` optional dependency group.
+
+---
+
 ## Physics Regimes
 
 ```python

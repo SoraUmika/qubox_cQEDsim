@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\rl_control\runtime.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-15, 1e-12, 0.18, 1.0, 'ClassicalProcessor', 'ControlSegment', 'DistortionModel', 'EpisodeModelBundle', 'MeasurementModel', 'OpenSystemEngine', 'PulseGenerator', 'action_type', 'amplitude_scale', 'as_universal_model', 'bosonic_modes', 'c', 'cavity', 'cavity_displacement', 'classifier_logits', 'classifier_probs', 'collapse', 'counts', 'detuning_offset', 'drive_frequency', 'duration', 'e', 'full_pulse', 'g', 'hybrid_block', 'internal_carrier', 'iq_mean', 'max_abs_amp', 'measure', 'mode', 'modulation_frequency', 'num_pulses', 'omega_c', 'omega_q', 'outcome_onehot', 'q', 'qubit', 'qubit_gaussian', 'reduced_dispersive', 'reset', 'rl_qubit_gaussian', 'rl_sideband', 'sideband', 'storage', 'target_alpha', 'transmon', 'wait', 'waveform']

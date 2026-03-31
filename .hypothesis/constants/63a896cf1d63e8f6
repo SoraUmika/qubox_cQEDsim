@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\scipy\signal\_spectral_py.py
+# hypothesis_version: 6.151.10
+
+[1e-10, 0.25, 1.0, 256, 'Unknown scaling: %r', '__call__', 'angle', 'boxcar', 'check_COLA', 'check_NOLA', 'coherence', 'complex', 'constant', 'csd', 'density', 'even', 'hann', 'istft', 'lombscargle', 'magnitude', 'mean', 'median', 'odd', 'onesided', 'periodogram', 'phase', 'psd', 'size', 'spectrogram', 'spectrum', 'stft', 'tukey', 'twosided', 'welch', 'window must be 1-D', 'zeros']

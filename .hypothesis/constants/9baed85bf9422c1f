@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\scipy\signal\_savitzky_golay.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.5, 1.0, 'constant', 'conv', 'dot', 'interp', 'mirror', 'nearest', 'wrap']

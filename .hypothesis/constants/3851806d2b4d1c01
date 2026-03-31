@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\environment.py
+# hypothesis_version: 6.151.10
+
+[-2.0, -1.5, 0.0, 1e-13, 1e-10, 1e-07, 5e-06, 1e-05, 2e-05, 0.01, 0.1, 0.5, 1.0, 1.5, -100, 100, 500, '+', '-', 'BosonicEnvironment', 'CFExponent', 'Correlation Function', 'ExponentType', 'FFT', 'FermionicEnvironment', 'I', 'Matsubara Truncation', 'N', 'Ni', 'Nk', 'Nr', 'OhmicEnvironment', 'Pade Truncation', 'Power Spectrum NLSQ', 'Power spectrum AAA', 'R', 'RI', 'a', 'aaa', 'b', 'c', 'cf', 'cki', 'ckr', 'correlation function', 'd', 'espira-I', 'espira-II', 'espira-i', 'espira-ii', 'esprit', 'fit_time', 'fit_time_imag', 'fit_time_real', 'matsubara', 'pade', 'params', 'params_imag', 'params_real', 'poles', 'power spectrum', 'prony', 'ps', 'residues', 'rmse', 'rmse_imag', 'rmse_real', 'sd', 'spectral density', 'summary', 'system_terminator', 'the power spectrum', 'the spectral density', 'vki', 'vkr']

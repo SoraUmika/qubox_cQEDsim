@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\optimal_control\hardware.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-18, 1e-15, 1e-12, 1e-09, 0.5, 1.0, 2.0, 'ControlProblem', 'ControlSchedule', 'ControlTerm', 'DelayHardwareMap', 'FIRHardwareMap', 'GainHardwareMap', 'HardwareMap', 'HardwareMapReport', 'HardwareModel', 'I', 'Q', 'amplitude_max', 'apply_end', 'apply_start', 'boundary_end_max_abs', 'clipping_fraction', 'command', 'cutoff_hz', 'dc_gain', 'delay_samples', 'dt_s', 'frequencies_hz', 'gain', 'hardware_active', 'hardware_map_count', 'i_values', 'kernel', 'kernel_length', 'maps', 'max_abs_delta', 'max_command_radius', 'max_physical_radius', 'n_bits', 'n_freq_points', 'n_levels', 'n_taps', 'physical', 'q_values', 'radius', 'ramp_slices', 'response', 'scale', 'selected_channels', 'selected_controls', 'selected_iq_pairs']

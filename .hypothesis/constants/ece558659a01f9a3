@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\sim\runner.py
+# hypothesis_version: 6.151.10
+
+[1e-08, 1e-07, 1e-06, 'P_e', 'P_f', 'P_g', 'Simulating states', 'SimulationSession', 'Sweep', 'a', 'a_r', 'a_s', 'adag', 'adag_r', 'adag_s', 'atol', 'b', 'bdag', 'cavity', 'final_state', 'has_transmon', 'max_step', 'n_c', 'n_q', 'n_r', 'n_s', 'p_c', 'p_r', 'p_s', 'point', 'qubit', 'qutip_hamiltonian', 'rtol', 'sideband', 'spawn', 'state', 'storage', 'store_final_state', 'store_states', 'subsystem_dims', 'x_c', 'x_r', 'x_s']

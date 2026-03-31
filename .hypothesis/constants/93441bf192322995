@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\animation.py
+# hypothesis_version: 6.151.10
+
+['2d', 'anim_hinton', 'anim_qfunc', 'anim_qubism', 'anim_schmidt', 'anim_sphereplot', 'anim_wigner', 'anim_wigner_sphere', 'clenshaw', 'green', 'light', 'pairs', 'real', 'scaled']

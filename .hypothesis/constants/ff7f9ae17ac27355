@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\core\frequencies.py
+# hypothesis_version: 6.151.10
+
+[0.5, 1.0, 4.0, 'cavity', 'cavity_level', 'frame', 'lower_level', 'mode', 'mode_levels', 'readout', 'readout_level', 'red', 'sideband', 'storage', 'storage_level', 'upper_level']

@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\wcwidth\escape_sequences.py
+# hypothesis_version: 6.151.10
+
+['\\x1b8', '\\x1bD', '\\x1bM', '\\x1b\\[(\\d*)C', '\\x1b\\[(\\d*)D', '\\x1b\\[\\?1049[hl]', '\\x1b\\[\\?47[hl]', '\\x1b\\[\\d*@', '\\x1b\\[\\d*A', '\\x1b\\[\\d*B', '\\x1b\\[\\d*G', '\\x1b\\[\\d*H', '\\x1b\\[\\d*J', '\\x1b\\[\\d*K', '\\x1b\\[\\d*L', '\\x1b\\[\\d*M', '\\x1b\\[\\d*P', '\\x1b\\[\\d*S', '\\x1b\\[\\d*T', '\\x1b\\[\\d*d', '\\x1b\\[\\d+;\\d+H', '\\x1b\\[\\d+;\\d+r', '\\x1b\\[\\d+X', '|']

@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\core\tensor.py
+# hypothesis_version: 6.151.10
+
+[', ', 'QobjOrQobjEvo', '__iter__', 'composite', 'default_dtype', 'expand_operator', 'super', 'super_tensor', 'tensor', 'tensor_contract', 'tensor_swap']

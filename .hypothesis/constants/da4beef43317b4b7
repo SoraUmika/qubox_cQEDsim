@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\optimal_control\result.py
+# hypothesis_version: 6.151.10
+
+['ControlResult', 'GrapeIterationRecord', 'GrapeResult', 'backend', 'command', 'command_values', 'control_terms', 'elapsed_s', 'evaluation', 'gradient_norm', 'grape', 'hardware_metrics', 'hardware_reports', 'history', 'message', 'metrics', 'objective', 'objective_value', 'optimizer_summary', 'parameter_values', 'physical', 'physical_values', 'success', 'system_metrics', 'time_boundaries_s', 'time_grid_s', 'unknown', 'utf-8']

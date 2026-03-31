@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\solver\floquet.py
+# hypothesis_version: 6.151.10
+
+[-0.5, 0.0, 1.0, 100, 101, 'Dense', 'FMESolver', 'FloquetBasis', 'FloquetResult', 'adams', 'chunk_size', 'floquet_tensor', 'fmmesolve', 'fsesolve', 'method', 'normalize_output', 'num_collapse', 'preparation time', 'progress_bar', 'progress_kwargs', 'run time', 'solver', 'store_final_state', 'store_floquet_states', 'store_states', 'super', 'text', 'w_th']

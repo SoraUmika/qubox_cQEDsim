@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\data\expm.py
+# hypothesis_version: 6.151.10
+
+[1.0, 'auto_tidyup', 'expm', 'expm_csr', 'expm_csr_dense', 'expm_dense', 'expm_dia', 'logm', 'logm_dense', 'matrix', 'sqrtm', 'sqrtm_dense']

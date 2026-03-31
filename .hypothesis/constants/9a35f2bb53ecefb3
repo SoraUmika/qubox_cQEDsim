@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\control\__init__.py
+# hypothesis_version: 6.151.10
+
+[1e-12, 1e-09, 1.0, '1.0', 'CalibrationMap', 'ControlLine', 'DelayHardwareMap', 'FIRHardwareMap', 'GainHardwareMap', 'HardwareContext', 'LinearCalibrationMap', 'SCALAR', 'amplitude_max', 'apply_end', 'apply_start', 'calibration_gain', 'calibration_map', 'coefficient_unit', 'control_names', 'cutoff_hz', 'delay_samples', 'device_unit', 'dt_s', 'epsilon', 'export_channels', 'frame', 'frequencies_hz', 'gain', 'hardware_map_to_dict', 'inf', 'kernel', 'lines', 'metadata', 'n_bits', 'n_taps', 'name', 'operator_label', 'programmed_unit', 'ramp_slices', 'response_imag', 'response_real', 'transfer_maps', 'type', 'utf-8', 'version']

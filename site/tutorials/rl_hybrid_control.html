@@ -3956,15 +3956,23 @@
 <p><img alt="Hybrid RL control rollout" src="../assets/images/tutorials/rl_hybrid_rollout.png" /></p>
 <hr />
 <h2 id="integration-with-rl-libraries">Integration with RL Libraries<a class="headerlink" href="#integration-with-rl-libraries" title="Permanent link">&para;</a></h2>
-<p><code>HybridCQEDEnv</code> follows the Gymnasium API:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Stable-Baselines3 example (requires sb3 installed)</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">stable_baselines3</span><span class="w"> </span><span class="kn">import</span> <span class="n">PPO</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">env</span> <span class="o">=</span> <span class="n">HybridCQEDEnv</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span><span class="s2">&quot;MlpPolicy&quot;</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">total_timesteps</span><span class="o">=</span><span class="mi">50000</span><span class="p">)</span>
+<p><code>HybridCQEDEnv</code> follows the Gymnasium API. For direct compatibility with frameworks
+that require a <code>gymnasium.Env</code> subclass (SB3, RLlib, CleanRL), use the
+<code>GymnasiumCQEDEnv</code> wrapper:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.rl_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">GymnasiumCQEDEnv</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">env</span> <span class="o">=</span> <span class="n">GymnasiumCQEDEnv</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Stable-Baselines3 example (requires sb3 optional dependency group)</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">stable_baselines3</span><span class="w"> </span><span class="kn">import</span> <span class="n">PPO</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">model</span> <span class="o">=</span> <span class="n">PPO</span><span class="p">(</span><span class="s2">&quot;MlpPolicy&quot;</span><span class="p">,</span> <span class="n">env</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="n">model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">total_timesteps</span><span class="o">=</span><span class="mi">50000</span><span class="p">)</span>
 </span></code></pre></div>
-<p>Any library that supports the Gymnasium <code>Env</code> interface (SB3, RLlib, CleanRL, etc.) can be used.</p>
+<p><code>GymnasiumCQEDEnv</code> adds <code>action_space</code> and <code>observation_space</code> as <code>gymnasium.spaces.Box</code>
+objects derived from the cqed_sim action-space bounds. The <code>.inner</code> property provides
+access to the underlying <code>HybridCQEDEnv</code> for diagnostics and rollouts.</p>
+<p>Any library that supports the Gymnasium <code>Env</code> interface can be used.</p>
 <hr />
 <h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>

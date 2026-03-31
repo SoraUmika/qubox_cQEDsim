@@ -63,6 +63,13 @@ from .tasks import (
 )
 
 
+try:
+    from .gymnasium_env import GymnasiumCQEDEnv
+    from .gym_spaces import action_space_to_gymnasium
+except ImportError:
+    pass
+
+
 __all__ = [
     "CavityDisplacementAction",
     "HybridBlockAction",
@@ -134,4 +141,6 @@ __all__ = [
     "odd_cat_preparation_task",
     "storage_superposition_task",
     "vacuum_preservation_task",
+    "GymnasiumCQEDEnv",
+    "action_space_to_gymnasium",
 ]

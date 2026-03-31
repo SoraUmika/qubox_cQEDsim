@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\scipy\fftpack\_pseudo_diffs.py
+# hypothesis_version: 6.151.10
+
+[-1.0, 0.0, 1.0, 'cc_diff', 'cs_diff', 'diff', 'hilbert', 'ihilbert', 'itilbert', 'sc_diff', 'shift', 'ss_diff', 'tilbert']

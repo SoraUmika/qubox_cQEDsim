@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\floquet\core.py
+# hypothesis_version: 6.151.10
+
+[-1.0, 0.0, 1e-10, 1e-08, 1e-07, 0.001, 0.5, 1.0, 401, 'FloquetConfig', 'FloquetProblem', 'FloquetResult', 'PeriodicDriveTerm', 'amplitude', 'atol', 'boundary_populations', 'complex', 'complex_exp', 'constant', 'cos', 'cosine', 'cw', 'dc', 'exp', 'fourier_components', 'frequency', 'harmonic', 'max_step', 'options', 'period', 'periodic_terms', 'phase', 'precompute', 'precompute_times', 'quadrature', 'rtol', 'sin', 'sine', 'solve_floquet', 'sort', 'sparse', 'square', 'static_hamiltonian', 'x', 'zone_center']

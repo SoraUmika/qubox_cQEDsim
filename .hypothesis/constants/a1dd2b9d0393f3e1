@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\energy_restricted.py
+# hypothesis_version: 6.151.10
+
+[1.0, ', ', 'Not an ENR operator', 'complex128', 'csr', 'dense', 'diagonal', 'enr_destroy', 'enr_fock', 'enr_identity', 'enr_nstates', 'enr_ptrace', 'enr_tensor', 'enr_thermal_dm', 'n_excitations', 'sparse', 'state ', 'state tuple ']

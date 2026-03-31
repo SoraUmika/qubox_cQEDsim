@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\IPython\core\magic_arguments.py
+# hypothesis_version: 6.151.10
+
+['%s %s', ', ', '-', '::\n\n  %', '<%s>', '__doc__', 'add_argument', 'argcmd_kwds', 'argcmd_name', 'argument', 'argument_group', 'description', 'error', 'has_arguments', 'kwds', 'magic_', 'magic_arguments', 'parse_argstring', 'set_defaults']

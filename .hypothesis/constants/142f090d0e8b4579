@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\calibration_targets\t2_echo.py
+# hypothesis_version: 6.151.10
+
+[4e-05, 0.5, 1.0, 'delays', 'excited_population', 'omega_q', 'run_t2_echo', 't2_echo']

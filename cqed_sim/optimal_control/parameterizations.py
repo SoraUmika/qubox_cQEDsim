@@ -740,7 +740,9 @@ class ControlSchedule:
         return self.parameterization.command_values(self.values)
 
     def resolved_time_grid(self) -> PiecewiseConstantTimeGrid:
-        return self.parameterization.resolved_time_grid(self.values)
+        if hasattr(self.parameterization, "resolved_time_grid"):
+            return self.parameterization.resolved_time_grid(self.values)
+        return self.parameterization.time_grid
 
     def to_pulses(self, *, waveform_values: np.ndarray | None = None) -> tuple[list[Pulse], dict[str, Any], dict[str, Any]]:
         return self.parameterization.to_pulses(self.values, waveform_values=waveform_values)

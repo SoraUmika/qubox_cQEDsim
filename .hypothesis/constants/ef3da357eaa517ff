@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\optimal_control\evaluation.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-10, 1e-09, 1.0, 8.0, 'ControlProblem', 'active_case', 'aggregate_fidelity', 'aggregate_infidelity', 'aggregate_leakage', 'aggregate_mode', 'case_weights', 'command', 'compiler_dt_s', 'duration_s', 'fidelities', 'fidelity_max', 'fidelity_mean', 'fidelity_min', 'fidelity_weighted', 'hardware_metrics', 'hardware_reports', 'kind', 'label', 'leakage_max', 'leakage_mean', 'leakage_values', 'leakage_weighted', 'max_step_s', 'mean', 'member_reports', 'metadata', 'metrics', 'model_type', 'name', 'noise', 'nominal', 'objectives', 'pair_labels', 'physical', 'problem_default', 'pulse_metadata', 'state_transfer', 'subsystem_dims', 'unitary', 'utf-8', 'waveform_mode', 'weight', 'worst']

@@ -5,6 +5,8 @@ The `cqed_sim.optimal_control` package provides the direct-control layer of the 
 - GRAPE on a piecewise-constant propagation grid,
 - structured, hardware-aware parameter-space optimization over smooth pulse families.
 
+It also exposes first-class extension points for user-defined waveform maps and pulse families, plus high-level workflow helpers for outer-loop gate-time search and structured-to-GRAPE refinement.
+
 !!! note "Current scope"
     Both backends currently use closed-system dense propagation. The structured backend changes the optimization variable from raw slice amplitudes to a named parameter vector, but it preserves the same Hamiltonian, frame, and pulse-export conventions as the rest of `cqed_sim`.
 
@@ -76,10 +78,65 @@ Supported aggregation modes:
 
 ---
 
+## General Parameterizations
+
+```python
+from cqed_sim.optimal_control import (
+    CallableParameterization,
+    ControlParameterSpec,
+    FourierParameterization,
+    HeldSampleParameterization,
+    LinearInterpolatedParameterization,
+    PiecewiseConstantParameterization,
+)
+```
+
+### `ControlParameterSpec`
+
+Describes one named optimizer variable for a callable waveform parameterization:
+
+- `name`
+- `lower_bound`
+- `upper_bound`
+- `default`
+- `description`
+- `units`
+
+### `CallableParameterization`
+
+Exposes an arbitrary parameter vector-to-waveform map without requiring a new parameterization subclass.
+
+Required callable:
+
+- `evaluator(values, time_grid, control_terms) -> waveform`
+
+Optional callables:
+
+- `pullback_evaluator(gradient_command, values, time_grid, control_terms, waveform) -> reduced_gradient`
+- `metrics_evaluator(values, time_grid, control_terms, waveform) -> dict`
+
+This is the direct extension point for ansatzes such as amplitude/phase maps, compressed Fourier or spline schedules, or other analytic waveform families that are easier to describe as a pure function than as a custom class.
+
+`CallableParameterization` still resolves onto the standard command-waveform shape `(n_controls, n_time_slices)`, so the same objectives, penalties, hardware maps, pulse export, and replay path continue to work.
+
+### Built-in rectangular and basis parameterizations
+
+- `PiecewiseConstantParameterization`
+- `HeldSampleParameterization`
+- `FourierParameterization`
+- `LinearInterpolatedParameterization`
+
+These remain the standard choices when the optimizer variables are still fundamentally waveform samples or fixed linear basis coefficients.
+
+Gate-duration changes are intentionally handled at the workflow level through `optimize_gate_time_with_grape(...)` or `optimize_gate_time_with_structured_control(...)`, rather than by assuming a differentiable free-final-time inner solver.
+
+---
+
 ## Structured Pulse Families
 
 ```python
 from cqed_sim.optimal_control import (
+    CallablePulseFamily,
     PulseParameterSpec,
     StructuredPulseFamily,
     GaussianDragPulseFamily,
@@ -109,6 +166,20 @@ Required behavior:
 - return a Jacobian with respect to the pulse parameters
 
 The built-in families are:
+
+### `CallablePulseFamily`
+
+Lets users define a smooth complex envelope directly from callables instead of subclassing `StructuredPulseFamily`.
+
+Required callable:
+
+- `evaluator(time_rel_s, duration_s, values) -> complex_envelope`
+
+Optional callable:
+
+- `jacobian_evaluator(time_rel_s, duration_s, values) -> jacobian`
+
+When `jacobian_evaluator` is omitted, the family falls back to a finite-difference Jacobian through the existing `StructuredPulseFamily.waveform_and_jacobian(...)` path.
 
 ### `GaussianDragPulseFamily`
 
@@ -329,6 +400,15 @@ from cqed_sim.optimal_control import (
 
 The slice-level backend. Best suited for waveform-level refinement when you truly want one optimization variable per slice or one of the older command parameterizations such as `HeldSampleParameterization`.
 
+Key `GrapeConfig` fields:
+
+- `optimizer_method` — SciPy method name (`"L-BFGS-B"`, etc.) or Optax method (`"adam"`, `"adagrad"`, `"sgd"`, `"adamw"`).
+- `engine` — `"numpy"` (default) or `"jax"`.
+- `optax_learning_rate` — step size for Optax optimizers (default `1e-3`). Only used when `engine="jax"` and `optimizer_method` is an Optax name.
+- `optax_grad_clip` — optional global L2 gradient clip for Optax optimizers.
+
+Optax methods are activated when `engine="jax"` **and** `optimizer_method` is one of `"adam"`, `"adagrad"`, `"sgd"`, or `"adamw"`. Requires the `optax` optional dependency group.
+
 ### `StructuredControlSolver`
 
 The smooth parameter-space backend. It optimizes the parameter vector exposed by `StructuredPulseParameterization` instead of raw sample amplitudes.
@@ -344,6 +424,45 @@ Key configuration fields:
 - `engine`
 
 `use_gradients=False` enables derivative-free SciPy methods on the same public problem surface.
+
+---
+
+## Workflow Extensions
+
+```python
+from cqed_sim.optimal_control import (
+    GateTimeCandidate,
+    GateTimeOptimizationConfig,
+    GateTimeOptimizationResult,
+    StructuredToGrapeResult,
+    build_grape_refinement_problem,
+    optimize_gate_time_with_grape,
+    optimize_gate_time_with_structured_control,
+    solve_structured_then_grape,
+)
+```
+
+### Gate-time optimization
+
+`optimize_gate_time_with_grape(...)` and `optimize_gate_time_with_structured_control(...)` perform an explicit outer-loop duration sweep:
+
+1. scale the problem time grid to each candidate duration,
+2. clone the parameterization on that scaled grid,
+3. solve each candidate problem,
+4. return a `GateTimeOptimizationResult` with all candidates and the best result.
+
+`GateTimeOptimizationConfig(max_workers=N)` runs independent duration candidates in parallel on CPU threads. For JAX-backed inner solves, combine this with `GrapeConfig(engine="jax", jax_device="gpu")` to keep the propagation and gradient evaluation on GPU while the outer duration search is orchestrated from Python.
+
+### Structured-to-GRAPE refinement
+
+`build_grape_refinement_problem(...)` converts an existing control problem onto a piecewise-constant GRAPE parameterization while preserving the same systems, objectives, penalties, hardware model, and metadata.
+
+`solve_structured_then_grape(...)` then:
+
+1. solves the structured problem,
+2. lifts the structured command waveform into the piecewise GRAPE parameterization,
+3. runs GRAPE from that warm start,
+4. returns a `StructuredToGrapeResult` containing both stages plus before/after metrics.
 
 ---
 

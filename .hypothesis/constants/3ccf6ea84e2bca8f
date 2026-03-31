@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\control\cqed_device.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-15, 1e-09, 1.0, 'calibration_gain', 'delay_s', 'delay_samples', 'description', 'dt_s', 'gain', 'lowpass_hz', 'qubit', 'readout', 'storage']

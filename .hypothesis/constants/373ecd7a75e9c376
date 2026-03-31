@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\multitraj.py
+# hypothesis_version: 6.151.10
+
+['MultiTrajSolver', 'bitgenerator', 'chunk_size', 'generator', 'keep_runs_results', 'map', 'method', 'mpi_options', 'normalize_output', 'num_cpus', 'preparation time', 'progress_bar', 'progress_kwargs', 'random', 'rhs', 'run time', 'serial', 'store_final_state', 'store_states', 'text', 'timeout']

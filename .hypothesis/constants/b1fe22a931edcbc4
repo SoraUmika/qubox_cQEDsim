@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\scipy\stats\_mannwhitneyu.py
+# hypothesis_version: 6.151.10
+
+[0.5, 1.0, 'MannwhitneyuResult', 'asymptotic', 'auto', 'average', 'exact', 'greater', 'ignore', 'less', 'pvalue', 'statistic', 'two-sided']

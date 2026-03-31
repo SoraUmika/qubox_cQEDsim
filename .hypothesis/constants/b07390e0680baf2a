@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\parallel.py
+# hypothesis_version: 6.151.10
+
+['FALSE', 'QUTIP_IN_PARALLEL', 'QUTIP_NUM_PROCESSES', 'TRUE', 'darwin', 'fail_fast', 'fork', 'linux', 'loky', 'loky_pmap', 'map', 'mp_context', 'mpi', 'mpi_options', 'mpi_pmap', 'num_cpus', 'parallel', 'parallel_map', 'resource_tracker', 'serial', 'serial_map', 'timeout']

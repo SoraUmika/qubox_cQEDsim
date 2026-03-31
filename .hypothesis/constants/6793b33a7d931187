@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\core\operators.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.5, 1.0, '+', '-', 'anti', 'atol', 'charge', 'commutator', 'create', 'creation', 'default_dtype', 'destroy', 'destruction', 'displace', 'fcreate', 'fdestroy', 'identity', 'jmat', 'momentum', 'normal', 'num', 'phase', 'position', 'qdiags', 'qeye', 'qeye_like', 'qft', 'qutrit_ops', 'qzero', 'qzero_like', 'sigmam', 'sigmap', 'sigmax', 'sigmay', 'sigmaz', 'spin_J_set', 'spin_Jm', 'spin_Jp', 'spin_Jx', 'spin_Jy', 'spin_Jz', 'squeeze', 'squeezing', 'swap', 'tunneling', 'x', 'y', 'z']

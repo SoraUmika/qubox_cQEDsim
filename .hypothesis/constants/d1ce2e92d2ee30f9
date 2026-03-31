@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\unitary_synthesis\subspace.py
+# hypothesis_version: 6.151.10
+
+[1.0, 'Subspace', 'cavity_only', 'custom', 'e', 'g', 'n_cav', 'n_match', 'qubit', 'qubit_cavity_block']

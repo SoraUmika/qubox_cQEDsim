@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\scipy\_lib\array_api_compat\common\_helpers.py
+# hypothesis_version: 6.151.10
+
+['2021.12', '2022.12', 'DASK_DEVICE', '__array_namespace__', 'array_namespace', 'cpu', 'cupy', 'dask.array', 'device', 'get_namespace', 'inspect', 'is_array_api_obj', 'is_cupy_array', 'is_dask_array', 'is_jax_array', 'is_numpy_array', 'is_torch_array', 'jax', 'math', 'numpy', 'size', 'sys', 'to_device', 'torch', 'warnings']

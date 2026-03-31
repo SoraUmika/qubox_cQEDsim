@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\prompt_toolkit\completion\fuzzy_completer.py
+# hypothesis_version: 6.151.10
+
+['.*?', '.character', 'FuzzyCompleter', 'FuzzyWordCompleter', '[^\\s]+', '^', '^[a-zA-Z0-9_]*']

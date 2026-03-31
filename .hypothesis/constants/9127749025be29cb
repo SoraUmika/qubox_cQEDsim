@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\core\gates.py
+# hypothesis_version: 6.151.10
+
+[0.5, 2.0, 'atol', 'berkeley', 'cnot', 'cphase', 'cs_gate', 'csign', 'ct_gate', 'cy_gate', 'cz_gate', 'default_dtype', 'fredkin', 'globalphase', 'hadamard_transform', 'iswap', 'molmer_sorensen', 'phasegate', 'qrot', 'qubit_clifford_group', 'rx', 'ry', 'rz', 's_gate', 'snot', 'sqrtiswap', 'sqrtnot', 'sqrtswap', 'swap', 'swapalpha', 't_gate', 'toffoli']

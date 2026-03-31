@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\solver\nm_mcsolve.py
+# hypothesis_version: 6.151.10
+
+[1e-10, 1e-08, 1e-06, 1e-05, 0.0001, 100, 500, 'NonMarkovianMCSolver', '__martingale', 'adams', 'bitgenerator', 'chunk_size', 'clear', 'completeness_atol', 'completeness_rtol', 'e_ops', 'improved_sampling', 'keep', 'keep_runs_results', 'map', 'mc_corr_eps', 'method', 'mpi_options', 'nm_mcsolve', 'norm_steps', 'norm_t_tol', 'norm_tol', 'ntraj', 'num_cpus', 'progress_bar', 'progress_kwargs', 'serial', 'store_final_state', 'store_states', 'text']

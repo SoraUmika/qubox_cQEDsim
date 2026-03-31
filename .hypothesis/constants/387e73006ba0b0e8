@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\sim\extractors.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-15, 0.5, 1.0, 2.0, 4.0, 128, 'a', 'adag_a', 'alpha', 'cavity', 'coherent', 'complex_amplitude', 'n', 'nan', 'phase_space', 'probability', 'quadrature', 'qubit', 'readout', 'storage', 'transmon', 'valid', 'x-p', 'xp', 'zero']

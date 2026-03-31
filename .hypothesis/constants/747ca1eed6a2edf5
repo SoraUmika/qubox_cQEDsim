@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\settings.py
+# hypothesis_version: 6.151.10
+
+['-Wl,Accelerate', '.', '.dll', '.dylib', '.qutip', '.so', '/ext/lib', '/lib/*', '1.5', 'Accelerate', 'Build Dependencies', 'Darwin', 'Generic', 'INTEL MKL', 'OPENBLAS', 'QUTIP_NUM_PROCESSES', 'Qutip settings:', 'SLURM_CPUS_PER_TASK', 'Unknown platfrom.', '\\Library\\bin\\*', '\\ext\\lib', '_', 'blas', 'blas_ilp64_opt_info', 'blas_opt_info', 'compile', 'core', 'cpu_affinity', 'darwin', 'default', 'dicts', 'emscripten', 'extra_link_args', 'lapack', 'lib directory', 'libraries', 'linux', 'linux2', 'mkl', 'mkl_cspblas_zcsrgemv', 'mkl_info', 'mkl_rt.', 'name', 'openblas', 'openblas_info', 'pardiso', 'sched_getaffinity', 'settings', 'unknown', 'win', 'win32', '~']

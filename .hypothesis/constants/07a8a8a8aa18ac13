@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\result.py
+# hypothesis_version: 6.151.10
+
+['  Final state saved.', '  Solver stats:', '  State not saved.', '  States saved.', '>', 'Result', '_feedback', 'adams', 'bdf', 'diag', 'dop853', 'euler', 'explicit1.5', 'lsoda', 'method', 'milstein', 'milstein_imp', 'platen', 'pred_corr', 'rouchon', 'store_final_state', 'store_states', 'taylor1.5', 'taylor1.5_imp']

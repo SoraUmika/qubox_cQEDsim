@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\core\metrics.py
+# hypothesis_version: 6.151.10
+
+[0.5, 1.0, 2.0, 'CVXOPT', 'bures_angle', 'bures_dist', 'chi', 'choi', 'csr', 'dnorm', 'fidelity', 'fro', 'hellinger_dist', 'hilbert_dist', 'oper', 'process_fidelity', 'super', 'tracedist', 'unitarity']

@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\correlation.py
+# hypothesis_version: 6.151.10
+
+['correlation_2op_1t', 'correlation_2op_2t', 'correlation_3op', 'correlation_3op_1t', 'correlation_3op_2t', 'diag', 'es', 'mc', 'me', 'method', 'normalize_output', 'progress_bar', 'progress_kwargs']

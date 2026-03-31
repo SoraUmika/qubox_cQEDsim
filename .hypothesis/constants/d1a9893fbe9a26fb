@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\wcwidth\wcwidth.py
+# hypothesis_version: 6.151.10
+
+[127, 128, 160, 1024, 2381, 2509, 2637, 2765, 2893, 3021, 3149, 3277, 3405, 3530, 6980, 8205, 43014, 43204, 43456, 65039, 65535, 69702, 69817, 70080, 70197, 70477, 70722, 70850, 71103, 71231, 71350, 71737, 72160, 72767, 127995, 127999, '\x08', '\x1b', '\x1b[0m', '.', '9.0.0', 'AMBIGUOUS_EASTASIAN', 'VS16_NARROW_TO_WIDE', 'WIDE_EASTASIAN', 'ZERO_WIDTH', '_wcmatch_version', '_wcversion_value', 'auto', 'center', 'clip', 'ignore', 'iter_sequences', 'list_versions', 'ljust', 'parse', 'rjust', 'strict', 'strip_sequences', 'wcswidth', 'wcwidth', 'width', '\x7f', '\u200d']

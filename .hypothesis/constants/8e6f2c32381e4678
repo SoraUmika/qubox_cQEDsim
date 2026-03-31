@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\rl_control\configs.py
+# hypothesis_version: 6.151.10
+
+[0.0, 4e-09, 'FullPulseModelConfig', 'HybridEnvConfig', 'HybridSystemConfig', 'ModelRegime', 'RandomizationMode', 'TaskKind', 'eval', 'full_pulse', 'reduced_dispersive', 'state_preparation', 'train', 'unitary_synthesis']

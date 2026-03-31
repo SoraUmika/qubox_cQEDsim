@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\entropy.py
+# hypothesis_version: 6.151.10
+
+[1e-17, 1e-12, 1.0, 2.0, 5.0, 'Base must be 2 or e.', 'Unknown method %s', 'bra', 'concurrence', 'eigenvalues', 'entangling_power', 'entropy_conditional', 'entropy_linear', 'entropy_mutual', 'entropy_relative', 'entropy_vn', 'ket', 'negativity', 'oper', 'total number.', 'tracenorm']

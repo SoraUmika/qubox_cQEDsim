@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\solver\integrator\qutip_integrator.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-08, 1e-06, 1000, 'IntegratorDiag', 'IntegratorVern7', 'IntegratorVern9', 'atol', 'dense', 'diag', 'eigensolver_dtype', 'first_step', 'interpolate', 'max_step', 'min_step', 'nsteps', 'qutip diagonalized', 'rtol', 'vern7', 'vern9']

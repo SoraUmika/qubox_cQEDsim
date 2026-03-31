@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\heom\bofin_baths.py
+# hypothesis_version: 6.151.10
+
+['+', '-', 'Bath', 'BathExponent', 'BosonicBath', 'DrudeLorentzBath', 'DrudeLorentzPadeBath', 'FermionicBath', 'LorentzianBath', 'LorentzianPadeBath', 'RI', 'UnderDampedBath', 'dims', 'matsubara', 'pade']

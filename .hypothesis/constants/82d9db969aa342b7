@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\sode\_noise.py
+# hypothesis_version: 6.151.10
+
+[0.5, 'C', 'PreSetWiener', 'Wiener', 'ijk,j->ik']

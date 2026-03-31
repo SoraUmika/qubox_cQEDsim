@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\pyparsing\actions.py
+# hypothesis_version: 6.151.10
+
+['class', 'matchOnlyAtCol', 'removeQuotes', 'replaceWith', 'withAttribute', 'withClass']

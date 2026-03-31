@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\calibration_targets\ramsey.py
+# hypothesis_version: 6.151.10
+
+[2e-05, 0.5, 1.0, 'delays', 'delta_omega', 'excited_population', 'omega_q', 'run_ramsey', 't2_star']

@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\piqs\piqs.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.5, 1.0, '+', '-', 'Dicke', 'Invalid type', 'N = {}', 'Pim', 'am', 'ap', 'block_matrix', 'cartesian', 'collapse_uncoupled', 'css', 'degeneracy', 'dephasing = {}', 'dicke', 'dicke_basis', 'dicke_blocks', 'dicke_blocks_full', 'dicke_function_trace', 'emission = {}', 'energy_degeneracy', 'entropy_vn_dicke', 'excited', 'ghz', 'ground', 'identity_uncoupled', 'isdiagonal', 'jspin', 'm_degeneracy', 'num_dicke_ladders', 'num_dicke_states', 'num_tls', 'ones', 'pisolve', 'polar', 'pumping = {}', 'purity_dicke', 'spin_algebra', 'state_degeneracy', 'superradiant', 'tau1', 'tau2', 'tau3', 'tau4', 'tau5', 'tau6', 'tau7', 'tau8', 'tau9', 'tau_column', 'uncoupled', 'x', 'y', 'z']

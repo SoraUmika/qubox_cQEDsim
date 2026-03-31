@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\scipy\signal\_lti_conversion.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.5, 1.0, 'abcd_normalize', 'backward_diff', 'bilinear', 'cont2discrete', 'euler', 'foh', 'forward_diff', 'gbt', 'impulse', 'ss2tf', 'ss2zpk', 'tf2ss', 'tustin', 'zoh', 'zpk2ss']

@@ -92,6 +92,11 @@ matplotlib ≥ 3.8 and pandas ≥ 2.0 because progress-reporting utilities are p
 the public import surface. The packaged runtime also includes the local
 `physics_and_conventions` module because several public APIs import it directly.
 
+**Optional dependency groups** (install with `pip install -e ".[group]"`): `dynamiqs`
+(JAX/diffrax GPU-accelerated ODE solver), `optax` (first-order JAX optimizers for
+GRAPE), `gym` (Gymnasium environment wrapper), `sb3` (Gymnasium + Stable-Baselines3
+for RL training), `dev` (pytest-benchmark, Hypothesis property-based testing).
+
 **Units:** The library is unit-coherent: it does not enforce specific physical units
 for frequencies or times. Any internally consistent unit system is valid (for example,
 rad/s with times in seconds, or rad/ns with times in nanoseconds). The recommended
@@ -1106,9 +1111,10 @@ def simulate_sequence(
 | `noise` | `NoiseSpec \| None` | Lindblad noise specification |
 | `e_ops` | `dict[str, qt.Qobj] \| None` | Custom observables; defaults to `default_observables(model)` |
 
-**Solver selection:** If `config.backend` is set, uses the dense piecewise-constant
-solver. Otherwise, uses QuTiP's `sesolve` (pure state) or `mesolve` (density matrix /
-open system).
+**Solver selection:** If `config.dynamiqs_solver` is set, uses the dynamiqs
+JAX/diffrax solver (requires the `dynamiqs` optional dependency group). Else if
+`config.backend` is set, uses the dense piecewise-constant solver. Otherwise, uses
+QuTiP's `sesolve` (pure state) or `mesolve` (density matrix / open system).
 
 ---
 
@@ -1123,7 +1129,21 @@ class SimulationConfig:
     max_step: float | None = None
     store_states: bool = False
     backend: BaseBackend | None = None   # None = use QuTiP path
+    # dynamiqs GPU-accelerated ODE solver (optional)
+    dynamiqs_solver: str | None = None   # e.g. "Tsit5", "Dopri5", "Expm"
+    dynamiqs_atol: float = 1e-8
+    dynamiqs_rtol: float = 1e-6
+    dynamiqs_device: str | None = None   # "cpu" or "gpu"; None = default
 ```
+
+**dynamiqs solver fields** (all default to disabled):
+
+| Field | Type | Description |
+|---|---|---|
+| `dynamiqs_solver` | `str \| None` | Solver name: `"Tsit5"`, `"Dopri5"`, `"Dopri8"`, `"Kvaerno3"`, `"Kvaerno5"`, `"Expm"`. `None` disables dynamiqs. |
+| `dynamiqs_atol` | `float` | Absolute tolerance for adaptive-step solvers. |
+| `dynamiqs_rtol` | `float` | Relative tolerance for adaptive-step solvers. |
+| `dynamiqs_device` | `str \| None` | JAX device placement (`"cpu"` or `"gpu"`). `None` uses JAX default. |
 
 ---
 
@@ -3532,6 +3552,31 @@ Highlights:
 - `DomainRandomizer` separates train and eval priors and records the sampled per-episode metadata.
 - `cqed_sim.system_id` intentionally provides lightweight fit-then-randomize scaffolding rather than a full inference engine.
 
+### Gymnasium Wrapper and SB3 Integration
+
+```python
+from cqed_sim.rl_control import GymnasiumCQEDEnv, action_space_to_gymnasium
+
+env = GymnasiumCQEDEnv(config)
+```
+
+`GymnasiumCQEDEnv` is a thin `gymnasium.Env` subclass that delegates all physics to `HybridCQEDEnv`. It adds the `action_space` and `observation_space` attributes required by Gymnasium-compatible RL frameworks (Stable-Baselines3, RLlib, CleanRL, etc.).
+
+| Parameter | Type | Description |
+|---|---|---|
+| `config` | `HybridEnvConfig` | Full environment configuration (same as `HybridCQEDEnv`). |
+| `obs_low` | `float` | Lower bound for observation space (default: `-inf`). |
+| `obs_high` | `float` | Upper bound for observation space (default: `+inf`). |
+
+Key behaviors:
+
+- `action_space` is a `gymnasium.spaces.Box` derived from the cqed_sim action space's `.low` / `.high` arrays via `action_space_to_gymnasium()`.
+- `observation_space` is inferred from a single dry reset.
+- `reset()`, `step()`, `render()` delegate to the inner `HybridCQEDEnv`, casting observations to `float32`.
+- `.inner` property provides direct access to the underlying `HybridCQEDEnv`.
+- `.rollout()` and `.diagnostics()` are delegated to the inner environment.
+- Requires the `gym` or `sb3` optional dependency group.
+
 Approximation boundary:
 
 - The reduced regime is intended for faster RL iteration with dispersive/Kerr structure.
@@ -3546,6 +3591,8 @@ The optimal-control package adds a solver-agnostic direct-control layer on top o
 
 - `GrapeSolver` / `solve_grape(...)` for slice-level GRAPE on the propagation grid,
 - `StructuredControlSolver` / `solve_structured_control(...)` for structured, hardware-aware parameter-space optimization over smooth pulse families.
+
+In addition, the package now includes first-class callable extension points plus high-level workflow helpers for gate-time sweeps and structured-to-GRAPE refinement.
 
 The intended workflow is:
 
@@ -3578,8 +3625,12 @@ Highlights:
 
 ```python
 PiecewiseConstantTimeGrid.uniform(steps=16, dt_s=4.0e-9)
+ControlParameterSpec(...)
+CallableParameterization(...)
 PiecewiseConstantParameterization(...)
 HeldSampleParameterization(...)
+FourierParameterization(...)
+LinearInterpolatedParameterization(...)
 ControlSchedule(...)
 HardwareModel(...)
 ```
@@ -3588,11 +3639,16 @@ Key behaviors:
 
 - the propagation grid is always `PiecewiseConstantTimeGrid`
 - parameter-space values can be distinct from the command waveform seen on that propagation grid
+- `ControlParameterSpec` describes named variables for user-defined callable ansatzes
+- `CallableParameterization` maps an arbitrary parameter vector into the standard `(n_controls, n_time_slices)` command waveform shape
 - `PiecewiseConstantParameterization` is the identity map from parameters to command waveform
 - `HeldSampleParameterization` stores coarse AWG-like samples and applies sample-and-hold onto the propagation grid
+- `FourierParameterization` and `LinearInterpolatedParameterization` provide built-in low-dimensional waveform bases
 - hard control bounds are tracked in the parameterization
 - schedules can be flattened/unflattened for optimizers
 - schedules can be exported into standard repository `Pulse` objects using either command or physical waveforms
+
+Gate-duration changes are intentionally handled through explicit workflow helpers such as `optimize_gate_time_with_grape(...)` and `optimize_gate_time_with_structured_control(...)`, rather than by assuming a differentiable free-final-time inner solver.
 
 The explicit control pipeline is:
 
@@ -3619,6 +3675,7 @@ Structured pulse families now sit on top of this same command-to-physical pipeli
 
 - `PulseParameterSpec`
 - `StructuredPulseFamily`
+- `CallablePulseFamily`
 - `GaussianDragPulseFamily`
 - `FourierSeriesPulseFamily`
 - `StructuredControlChannel`
@@ -3726,10 +3783,33 @@ The current built-in structured families are:
 - `GaussianDragPulseFamily`
 - `FourierSeriesPulseFamily`
 
+`CallablePulseFamily` is the boilerplate-free extension point for user-defined structured envelopes. It accepts an `evaluator(time_rel_s, duration_s, values)` callable plus an optional analytic `jacobian_evaluator(...)`.
+
 and study artifact export is handled by:
 
 - `save_structured_control_artifacts(...)`
 - `StructuredControlArtifacts`
+
+### Workflow Extensions
+
+```python
+GateTimeOptimizationConfig(...)
+GateTimeCandidate(...)
+GateTimeOptimizationResult(...)
+StructuredToGrapeResult(...)
+
+optimize_gate_time_with_grape(...)
+optimize_gate_time_with_structured_control(...)
+build_grape_refinement_problem(...)
+solve_structured_then_grape(...)
+```
+
+These helpers add two common higher-level workflows on top of the existing solver surfaces:
+
+- explicit outer-loop duration search over scaled time grids, with optional CPU-thread parallelism through `GateTimeOptimizationConfig(max_workers=...)`
+- structured pulse-family search followed by warm-started piecewise GRAPE refinement through `solve_structured_then_grape(...)`
+
+For gate-time studies, CPU parallelism in the outer loop can be combined with JAX-backed inner solves via `GrapeConfig(engine="jax", jax_device="gpu")` when GPU acceleration is available.
 
 ### GRAPE Solver
 
@@ -3746,12 +3826,23 @@ Solver behavior:
 - ensemble aggregation with `"mean"` or `"worst"`,
 - optional hardware-aware forward propagation through `GrapeConfig(apply_hardware_in_forward_model=True)`,
 - support for explicit initial schedules or built-in zero/random initialization,
-- optional JAX-accelerated engine with JIT compilation and GPU support via `GrapeConfig(engine="jax")`.
+- optional JAX-accelerated engine with JIT compilation and GPU support via `GrapeConfig(engine="jax")`,
+- optional Optax first-order optimizers (`"adam"`, `"adagrad"`, `"sgd"`, `"adamw"`) when using the JAX engine via `GrapeConfig(engine="jax", optimizer_method="adam")`.
 
 **Engine selection:**
 
 - `GrapeConfig(engine="numpy")` (default): NumPy + SciPy propagator with manual `expm_frechet` gradients.
 - `GrapeConfig(engine="jax")`: JAX-accelerated propagator with `jax.value_and_grad` automatic differentiation.  Supports GPU via `GrapeConfig(engine="jax", jax_device="gpu")`.
+
+**Optimizer selection:**
+
+- SciPy methods (`"L-BFGS-B"`, `"BFGS"`, `"CG"`, etc.): default. Works with both engines.
+- Optax methods (`"adam"`, `"adagrad"`, `"sgd"`, `"adamw"`): activated when `engine="jax"` **and** `optimizer_method` is one of those names. Requires the `optax` optional dependency group.
+
+| Optax-specific field | Type | Default | Description |
+|---|---|---|---|
+| `optax_learning_rate` | `float` | `1e-3` | Step size for the Optax optimizer. |
+| `optax_grad_clip` | `float \| None` | `None` | If set, clip gradients to this global L2 norm. |
 
 Implementation note:
 

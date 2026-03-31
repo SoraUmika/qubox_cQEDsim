@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\wcwidth\sgr_state.py
+# hypothesis_version: 6.151.10
+
+[100, 107, '\x1b[0m', '1', '2', '21', '3', '4', '5', '6', '7', '8', '9', ':', ';', '\\x1b\\[([\\d;:]*)m', '\\x1b\\[[\\d;:]*m']

@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\pulses\builders.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1.0, 'active_tones', 'amplitude_rad_s', 'build_rotation_pulse', 'build_sideband_pulse', 'calibration_applied', 'calibration_summary', 'carrier', 'cavity', 'drive_amp', 'drive_phase', 'duration_rotation_s', 'duration_s', 'duration_sqr_s', 'envelope', 'fock_fqs_hz', 'lower_level', 'mapping', 'mode', 'normalized_gaussian', 'phase', 'qubit', 'sideband', 'sideband_target', 'sigma_fraction', 'sqr_sigma_fraction', 'sqr_theta_cutoff', 'square', 'storage', 'target_alpha', 'upper_level', 'use_rotating_frame']

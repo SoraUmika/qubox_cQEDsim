@@ -55,8 +55,13 @@ class GrapeConfig:
     engine: str = "numpy"
     jax_device: str | None = None
     show_progress: bool = False
+    # Optax-specific fields — only used when engine="jax" and optimizer_method
+    # is an Optax name (e.g. "adam", "adagrad", "sgd", "adamw").
+    optax_learning_rate: float = 1e-3
+    optax_grad_clip: float | None = None
 
     def __post_init__(self) -> None:
+        from .optax_loop import _OPTAX_METHODS  # avoid circular at import time
         if isinstance(self.initial_guess, str):
             if self.initial_guess.lower() not in {"random", "zeros"}:
                 raise ValueError(
@@ -71,6 +76,13 @@ class GrapeConfig:
             raise ValueError("GrapeConfig.history_every must be positive.")
         if str(self.engine).lower() not in {"numpy", "jax"}:
             raise ValueError("GrapeConfig.engine must be 'numpy' or 'jax'.")
+        if str(self.optimizer_method).lower() in _OPTAX_METHODS and str(self.engine).lower() != "jax":
+            raise ValueError(
+                f"optimizer_method='{self.optimizer_method}' is an Optax optimizer "
+                "and requires engine='jax'."
+            )
+        if self.optax_grad_clip is not None and float(self.optax_grad_clip) <= 0.0:
+            raise ValueError("optax_grad_clip must be positive (or None to disable).")
 
 
 @dataclass(frozen=True)
@@ -551,6 +563,7 @@ def _evaluate_schedule(
     applied = apply_control_pipeline(problem, schedule, apply_hardware=apply_hardware)
     resolved = applied.resolved
     physical_values = np.asarray(resolved.physical_values, dtype=float)
+    step_durations_s = np.diff(np.asarray(resolved.time_boundaries_s, dtype=float))
     system_objectives: list[float] = []
     system_gradients: list[np.ndarray] = []
     system_metrics: list[dict[str, Any]] = []
@@ -560,7 +573,6 @@ def _evaluate_schedule(
         # ----- JAX engine: single autodiff call per system -----
         if engine == "jax":
             cached_eval = _jax_cache.get(system_index) if _jax_cache is not None else None
-            step_durations_s = np.asarray(problem.time_grid.step_durations_s, dtype=float)
             obj_total, grad_phys, sys_metrics, final_U, evaluator = _evaluate_system_jax(
                 system, physical_values, step_durations_s,
                 prepared_objectives, prepared_leakage_penalties, problem,
@@ -581,7 +593,7 @@ def _evaluate_schedule(
             drift_hamiltonian=system.drift_hamiltonian,
             control_operators=system.control_operators,
             control_values=physical_values,
-            step_durations_s=np.asarray(problem.time_grid.step_durations_s, dtype=float),
+            step_durations_s=step_durations_s,
         )
         if system_index == 0:
             nominal_final_unitary = propagation.final_unitary
@@ -857,15 +869,47 @@ class GrapeSolver:
             except Exception:
                 pass
 
-        optimizer_result = minimize(
-            objective_function,
-            schedule0.flattened() / scale_vector,
-            method=str(self.config.optimizer_method),
-            jac=gradient_function,
-            bounds=scaled_bounds,
-            options=options,
-            callback=_callback,
-        )
+        from .optax_loop import is_optax_method, run_optax_loop
+
+        if str(_engine).lower() == "jax" and is_optax_method(str(self.config.optimizer_method)):
+            # --- Optax gradient-descent loop (JAX engine only) ---
+            def _optax_eval(vector: np.ndarray) -> tuple[float, np.ndarray]:
+                ev = evaluate(vector)
+                return float(ev.objective), ev.gradient.reshape(-1) * scale_vector
+
+            _optax_x, _optax_ok, _optax_msg, _optax_nit = run_optax_loop(
+                _optax_eval,
+                schedule0.flattened() / scale_vector,
+                method=str(self.config.optimizer_method),
+                maxiter=int(self.config.maxiter),
+                learning_rate=float(self.config.optax_learning_rate),
+                grad_clip=self.config.optax_grad_clip,
+                bounds=scaled_bounds,
+                history_callback=lambda _i, _c, _g: None,
+                show_progress=bool(self.config.show_progress),
+            )
+
+            class _OptaxResult:
+                x = _optax_x
+                success = _optax_ok
+                message = _optax_msg
+                nit = _optax_nit
+                nfev = _optax_nit
+                njev = _optax_nit
+                status = 0
+
+            optimizer_result = _OptaxResult()
+        else:
+            # --- Default scipy minimize path (L-BFGS-B or any scipy method) ---
+            optimizer_result = minimize(
+                objective_function,
+                schedule0.flattened() / scale_vector,
+                method=str(self.config.optimizer_method),
+                jac=gradient_function,
+                bounds=scaled_bounds,
+                options=options,
+                callback=_callback,
+            )
 
         if _pbar is not None:
             _pbar.close()

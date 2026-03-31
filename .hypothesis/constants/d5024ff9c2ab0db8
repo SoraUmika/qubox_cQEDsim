@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\numpy_backend.py
+# hypothesis_version: 6.151.10
+
+['_qt_np', 'abs', 'angle', 'arccos', 'array', 'ceil', 'conj', 'cos', 'cumsum', 'diff', 'e', 'histogram', 'imag', 'inf', 'inner', 'linalg', 'log', 'log2', 'max', 'maximum', 'ones', 'pi', 'prod', 'real', 'searchsorted', 'sin', 'sort', 'sqrt', 'sum', 'where', 'zeros', 'zeros_like']

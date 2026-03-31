@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\rl_control\domain_randomization.py
+# hypothesis_version: 6.151.10
+
+['ChoicePrior', 'DomainRandomizer', 'FixedPrior', 'NormalPrior', 'ParameterPrior', 'RandomizationSample', 'UniformPrior', 'drift', 'eval', 'hardware', 'measurement', 'model', 'noise', 'train']

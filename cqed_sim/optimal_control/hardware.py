@@ -173,6 +173,7 @@ def apply_control_pipeline(
     apply_hardware: bool = True,
 ) -> AppliedControlWaveforms:
     parameter_values = np.asarray(schedule.values, dtype=float)
+    resolved_time_grid = schedule.resolved_time_grid()
     command_values = np.asarray(problem.parameterization.command_values(parameter_values), dtype=float)
     parameterization_metrics = problem.parameterization.parameterization_metrics(parameter_values, command_values)
 
@@ -190,8 +191,8 @@ def apply_control_pipeline(
     hardware_metrics: dict[str, Any] = {
         "hardware_active": False,
         "hardware_map_count": 0,
-        **_waveform_metrics("command", command_values, problem.time_grid),
-        **_waveform_metrics("physical", command_values, problem.time_grid),
+        **_waveform_metrics("command", command_values, resolved_time_grid),
+        **_waveform_metrics("physical", command_values, resolved_time_grid),
     }
     physical_values = np.array(command_values, copy=True)
     pullback_physical = pullback_command
@@ -200,7 +201,7 @@ def apply_control_pipeline(
         physical_values, hardware_reports, hardware_metrics, hardware_pullback = problem.hardware_model.apply(
             command_values,
             control_terms=problem.control_terms,
-            time_grid=problem.time_grid,
+            time_grid=resolved_time_grid,
         )
 
         def pullback_physical(gradient_physical: np.ndarray) -> np.ndarray:
@@ -210,7 +211,7 @@ def apply_control_pipeline(
         parameter_values=np.asarray(parameter_values, dtype=float),
         command_values=np.asarray(command_values, dtype=float),
         physical_values=np.asarray(physical_values, dtype=float),
-        time_boundaries_s=np.asarray(problem.time_grid.boundaries_s(), dtype=float),
+        time_boundaries_s=np.asarray(resolved_time_grid.boundaries_s(), dtype=float),
         parameterization_metrics=dict(parameterization_metrics),
         hardware_reports=tuple(hardware_reports),
         hardware_metrics=dict(hardware_metrics),

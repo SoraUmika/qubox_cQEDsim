@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\solver\stochastic.py
+# hypothesis_version: 6.151.10
+
+[1e-06, 0.5, 500, 'SMESolver', 'SSESolver', 'StochasticResult', 'StochasticSolver', 'WienerFeedback', '_', 'bitgenerator', 'chunk_size', 'dW', 'derr_dt', 'dt', 'end', 'i,ij,j->ij', 'keep_runs_results', 'map', 'measurement', 'method', 'middle', 'mpi_options', 'normalize_output', 'num_cpus', 'platen', 'preparation time', 'progress_bar', 'progress_kwargs', 'run time', 'serial', 'smesolve', 'solver', 'ssesolve', 'start', 'stoc', 'stochastic solver', 'store_final_state', 'store_measurement', 'store_states', 'text', 'valid', 'wiener_process']

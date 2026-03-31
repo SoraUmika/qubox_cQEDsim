@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\brmesolve.py
+# hypothesis_version: 6.151.10
+
+[0.1, 'BRSolver', '__iter__', 'adams', 'br', 'brmesolve', 'chunk_size', 'init time', 'method', 'normalize_output', 'num_a_ops', 'num_collapse', 'progress_bar', 'progress_kwargs', 'solver', 'sparse', 'store_final_state', 'store_states', 'tensor_type', 'w']

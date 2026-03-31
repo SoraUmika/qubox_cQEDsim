@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\measurement.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.5, 'atol', 'measure', 'measure_observable', 'measure_povm', 'op must be a Qobj', 'state must be a Qobj']

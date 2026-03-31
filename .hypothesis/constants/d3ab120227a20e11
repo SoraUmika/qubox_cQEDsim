@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\optimal_control\problems.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1.0, 'ControlProblem', 'ControlSystem', 'ControlTerm', 'HardwareModel | None', 'I', 'ModelEnsembleMember', 'Q', 'SCALAR', 'amplitude_bounds', 'bounds', 'clip', 'command_values', 'control_operators', 'control_terms', 'drift_hamiltonian', 'inf', 'mean', 'model_type', 'n_slices', 'nominal', 'operator', 'pullback', 'quadrature', 'quadratures', 'source', 'time_grid', 'worst']

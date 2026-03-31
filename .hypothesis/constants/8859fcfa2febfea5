@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\optimal_control\objectives.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1.0, 'StateTransferPair', 'UnitaryObjective', 'basis_plus_uniform', 'block', 'cost', 'custom_objective', 'diagonal', 'global', 'gradient_physical', 'none', 'phase_blocks', 'state_preparation', 'state_transfer', 'target_operator', 'unitary']

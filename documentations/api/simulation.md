@@ -34,7 +34,7 @@ High-level entry point. Creates a `SimulationSession` and runs a single trajecto
 | `noise` | `NoiseSpec \| None` | Lindblad noise specification |
 | `e_ops` | `dict[str, qt.Qobj] \| None` | Custom observables; defaults to `default_observables(model)` |
 
-**Solver selection:** If `config.backend` is set, uses the dense piecewise-constant solver. Otherwise, uses QuTiP's `sesolve` (pure state) or `mesolve` (density matrix / open system).
+**Solver selection:** If `config.dynamiqs_solver` is set, uses the dynamiqs JAX/diffrax solver (requires the `dynamiqs` optional dependency group). Else if `config.backend` is set, uses the dense piecewise-constant solver. Otherwise, uses QuTiP's `sesolve` (pure state) or `mesolve` (density matrix / open system).
 
 ---
 
@@ -49,7 +49,21 @@ class SimulationConfig:
     max_step: float | None = None
     store_states: bool = False
     backend: BaseBackend | None = None   # None = use QuTiP path
+    # dynamiqs GPU-accelerated ODE solver (optional)
+    dynamiqs_solver: str | None = None   # e.g. "Tsit5", "Dopri5", "Expm"
+    dynamiqs_atol: float = 1e-8
+    dynamiqs_rtol: float = 1e-6
+    dynamiqs_device: str | None = None   # "cpu" or "gpu"; None = default
 ```
+
+**dynamiqs solver fields** (all default to disabled):
+
+| Field | Type | Description |
+|---|---|---|
+| `dynamiqs_solver` | `str \| None` | Solver name: `"Tsit5"`, `"Dopri5"`, `"Dopri8"`, `"Kvaerno3"`, `"Kvaerno5"`, `"Expm"`. `None` disables dynamiqs. |
+| `dynamiqs_atol` | `float` | Absolute tolerance for adaptive-step solvers. |
+| `dynamiqs_rtol` | `float` | Relative tolerance for adaptive-step solvers. |
+| `dynamiqs_device` | `str \| None` | JAX device placement (`"cpu"` or `"gpu"`). `None` uses JAX default. |
 
 ---
 

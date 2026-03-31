@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\unitary_synthesis\waveform_bridge.py
+# hypothesis_version: 6.151.10
+
+[-2.0, 1e-09, 1e-08, 4e-08, 0.18, 0.25, 2.0, 4.0, 'alpha', 'displacement_square', 'duration', 'duration_ref', 'duration_rotation_s', 'duration_sqr_s', 'fock_fqs_hz', 'frame', 'hilbert_dim', 'name', 'optimize_time', 'phi', 'rotation_gaussian', 'source_gate_type', 'sqr_sigma_fraction', 'sqr_theta_cutoff', 'theta', 'time_bounds', 'time_group', 'time_policy_locked', 'use_rotating_frame', 'waveform_family']

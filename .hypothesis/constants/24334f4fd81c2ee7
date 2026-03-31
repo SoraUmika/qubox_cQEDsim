@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\physics_and_conventions\conventions.py
+# hypothesis_version: 6.151.10
+
+[2.0, 'DetuningSign', 'Hz', 'TensorOrdering', 'UnitType', 'convention_scope', 'detuning_sign', 'drive_minus_system', 'enforce_conventions', 'from_internal_units', 'internal_units', 'qubit⊗storage', 'rad/s', 'system_minus_drive', 'to_internal_units', 'units', 'validate_detuning']

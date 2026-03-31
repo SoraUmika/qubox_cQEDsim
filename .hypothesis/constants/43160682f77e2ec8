@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\fileio.py
+# hypothesis_version: 6.151.10
+
+[0.0, '#', '%', '%.10e', '%.10e%.10ej', '%.10e+%.10ej', '%.10f', '%.10f%.10fj', '%.10f+%.10fj', "'complex' or 'real')", "'exp' or 'decimal')", ',', '.qu', ':', ';', 'E', 'complex', 'decimal', 'e', 'exp', 'file_data_read', 'file_data_store', 'float', 'i', 'j', 'latin1', 'np.real', 'qload', 'qsave', 'qutip_data', 'r', 'rb', 'real', 'w', 'wb', '|']

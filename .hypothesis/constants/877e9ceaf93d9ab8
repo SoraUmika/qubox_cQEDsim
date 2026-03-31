@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\rl_control\observations.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1.0, 'a', 'ancilla_return', 'ancilla_return_mean', 'classifier_logits', 'classifier_probs', 'constant', 'counts', 'gate_metrics', 'ideal_summary', 'iq', 'iq_mean', 'leakage_average', 'measurement_counts', 'measurement_iq', 'measurement_logits', 'measurement_outcome', 'n', 'outcome', 'outcome_onehot', 'process_fidelity', 'process_metrics', 'reduced_density', 'requires_measurement', 'state_fidelity', 'state_fidelity_mean', 'success']

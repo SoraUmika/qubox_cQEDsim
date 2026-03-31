@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\analysis\parameter_translation.py
+# hypothesis_version: 6.151.10
+
+[-2.0, 0.0, 1e-15, 1e-10, 0.5, 2.0, 8.0, 'HamiltonianParams', 'chi_perturbative', 'detuning_branch', 'dispersive', 'dispersive_ratio', 'ej_over_ec', 'from_measured', 'from_transmon_params', 'inf', 'input_chi', 'largest-magnitude', 'negative', 'positive']

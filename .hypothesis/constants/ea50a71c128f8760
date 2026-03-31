@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\core\superoperator.py
+# hypothesis_version: 6.151.10
+
+[-0.5, 0.5, 'AnyQobj', 'F', 'QobjOrArray', 'input ', 'lindblad_dissipator', 'liouvillian', 'operator-bra', 'operator-ket', 'operator_to_vector', 'reshuffle', 'spost', 'spre', 'sprepost', 'stack_columns', 'stacked_index', 'super', 'unstack_columns', 'unstacked_index', 'vector_to_operator']

@@ -44,6 +44,8 @@ from .objectives import (
     state_preparation_objective,
 )
 from .parameterizations import (
+    CallableParameterization,
+    ControlParameterSpec,
     ControlParameterization,
     ControlSchedule,
     FourierParameterization,
@@ -72,6 +74,7 @@ from .problems import (
 )
 from .result import ControlResult, GrapeIterationRecord, GrapeResult
 from .structured import (
+    CallablePulseFamily,
     FourierSeriesPulseFamily,
     GaussianDragPulseFamily,
     PulseParameterSpec,
@@ -85,6 +88,16 @@ from .structured import (
     save_structured_control_artifacts,
     solve_structured_control,
 )
+from .workflows import (
+    GateTimeCandidate,
+    GateTimeOptimizationConfig,
+    GateTimeOptimizationResult,
+    StructuredToGrapeResult,
+    build_grape_refinement_problem,
+    optimize_gate_time_with_grape,
+    optimize_gate_time_with_structured_control,
+    solve_structured_then_grape,
+)
 
 __all__ = [
     "ControlTerm",
@@ -93,11 +106,13 @@ __all__ = [
     "ModelControlChannelSpec",
     "ModelEnsembleMember",
     "PiecewiseConstantTimeGrid",
+    "ControlParameterSpec",
     "ControlParameterization",
     "PiecewiseConstantParameterization",
     "HeldSampleParameterization",
     "FourierParameterization",
     "LinearInterpolatedParameterization",
+    "CallableParameterization",
     "ControlSchedule",
     "HardwareMapReport",
     "ResolvedControlWaveforms",
@@ -154,6 +169,7 @@ __all__ = [
     "build_control_problem_from_model",
     "PulseParameterSpec",
     "StructuredPulseFamily",
+    "CallablePulseFamily",
     "GaussianDragPulseFamily",
     "FourierSeriesPulseFamily",
     "StructuredControlChannel",
@@ -164,4 +180,12 @@ __all__ = [
     "solve_structured_control",
     "save_structured_control_artifacts",
     "build_structured_control_problem_from_model",
+    "GateTimeOptimizationConfig",
+    "GateTimeCandidate",
+    "GateTimeOptimizationResult",
+    "optimize_gate_time_with_grape",
+    "optimize_gate_time_with_structured_control",
+    "build_grape_refinement_problem",
+    "StructuredToGrapeResult",
+    "solve_structured_then_grape",
 ]

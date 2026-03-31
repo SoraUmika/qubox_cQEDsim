@@ -35,6 +35,13 @@ class SimulationConfig:
     max_step: float | None = None
     store_states: bool = False
     backend: BaseBackend | None = None
+    # dynamiqs fields — set dynamiqs_solver to a solver name (e.g. "Tsit5")
+    # to use the JAX/diffrax path instead of QuTiP.  None (default) keeps the
+    # existing QuTiP path unchanged.
+    dynamiqs_solver: str | None = None
+    dynamiqs_atol: float = 1e-8
+    dynamiqs_rtol: float = 1e-6
+    dynamiqs_device: str | None = None
 
 
 @dataclass
@@ -213,6 +220,20 @@ class SimulationSession:
                 collapse_ops=list(self.effective_c_ops),
                 backend=self.config.backend,
                 store_states=self.config.store_states,
+            )
+        elif self.config.dynamiqs_solver is not None:
+            from cqed_sim.sim.dynamiqs_solver import solve_with_dynamiqs
+            result = solve_with_dynamiqs(
+                self.hamiltonian,
+                self.compiled.tlist,
+                initial_state,
+                observables=list(self.observable_ops),
+                collapse_ops=list(self.effective_c_ops),
+                store_states=self.config.store_states,
+                solver=self.config.dynamiqs_solver,
+                atol=self.config.dynamiqs_atol,
+                rtol=self.config.dynamiqs_rtol,
+                jax_device=self.config.dynamiqs_device,
             )
         else:
             qutip_hamiltonian = self.qutip_hamiltonian if self.qutip_hamiltonian is not None else self.hamiltonian

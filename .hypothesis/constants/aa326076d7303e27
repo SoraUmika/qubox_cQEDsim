@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\random_objects.py
+# hypothesis_version: 6.151.10
+
+[1e-15, 0.1, 0.3, 0.5, 0.666, 0.75, 0.95, 1.0, 2.0, 'chi', 'choi', 'csr', 'dense', 'eigen', 'exp', 'fill', 'ginibre', 'haar', 'herm', 'hs', 'ijik->jk', 'left', 'pos_def', 'pure', 'rand_dm', 'rand_herm', 'rand_ket', 'rand_kraus_map', 'rand_stochastic', 'rand_super', 'rand_super_bcsz', 'rand_unitary', 'right', 'sparse', 'super', 'uniform', 'z']

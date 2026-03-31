@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\tomo\protocol.py
+# hypothesis_version: 6.151.10
+
+[-0.5, 0.0, 1e-12, 0.0015, 0.01, 0.08, 0.17, 0.2, 0.25, 0.5, 0.65, 1.0, 3.0, 16.0, 1000.0, 'QubitPulseCal', 'expected_z', 'i', 'ideal', 'measured_z', 'pulse', 'q', 'qubit', 'rms_error', 'x', 'x180', 'x90', 'y', 'y180', 'y90', 'z']

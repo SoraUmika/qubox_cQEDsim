@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\optimal_control\initial_guesses.py
+# hypothesis_version: 6.151.10
+
+[-1.0, -0.5, 0.0, 1e-30, 1e-12, 0.15, 0.25, 0.3, 0.5, 1.0, 2.0, 'CustomAnsatz', 'DRAGAnsatz', 'GaussianAnsatz', 'MultitoneAnsatz', 'PulseAnsatz', 'warm_start_schedule']

@@ -134,18 +134,27 @@ diag = build_rollout_diagnostics(env)
 
 ## Integration with RL Libraries
 
-`HybridCQEDEnv` follows the Gymnasium API:
+`HybridCQEDEnv` follows the Gymnasium API. For direct compatibility with frameworks
+that require a `gymnasium.Env` subclass (SB3, RLlib, CleanRL), use the
+`GymnasiumCQEDEnv` wrapper:
 
 ```python
-# Stable-Baselines3 example (requires sb3 installed)
+from cqed_sim.rl_control import GymnasiumCQEDEnv
+
+env = GymnasiumCQEDEnv(config)
+
+# Stable-Baselines3 example (requires sb3 optional dependency group)
 from stable_baselines3 import PPO
 
-env = HybridCQEDEnv(config)
 model = PPO("MlpPolicy", env, verbose=1)
 model.learn(total_timesteps=50000)
 ```
 
-Any library that supports the Gymnasium `Env` interface (SB3, RLlib, CleanRL, etc.) can be used.
+`GymnasiumCQEDEnv` adds `action_space` and `observation_space` as `gymnasium.spaces.Box`
+objects derived from the cqed_sim action-space bounds. The `.inner` property provides
+access to the underlying `HybridCQEDEnv` for diagnostics and rollouts.
+
+Any library that supports the Gymnasium `Env` interface can be used.
 
 ---
 

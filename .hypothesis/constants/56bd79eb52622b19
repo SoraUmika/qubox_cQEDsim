@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\dimensions.py
+# hypothesis_version: 6.151.10
+
+[', ', 'Dimensions', 'Field()', 'Index out of range', 'No Dual, Ket, Bra...', 'Space', 'auto_tidyup_dims', 'bra', 'einsum', 'enumerate_flat', 'from_tensor_rep', 'ket', 'mixed', 'oper', 'operator-bra', 'operator-ket', 'scalar', 'super', 'to_tensor_rep']

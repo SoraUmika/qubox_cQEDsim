@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\unitary_synthesis\systems.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-09, 1e-07, 0.1, 0.3, 'BlockPhase', 'BlueSidebandExchange', 'CQEDIdealSystem', 'CQEDSystemAdapter', 'CavityBlockPhase', 'Displacement', 'FreeCondPhaseWait', 'FreeEvolveCondPhase', 'LogicalBlockPhase', 'QubitRotation', 'SNAP', 'SQR', 'c_ops', 'compiler_crosstalk', 'compiler_hardware', 'dt', 'duration', 'duration_ref', 'global', 'ideal', 'kind', 'model_class', 'n_cav', 'name', 'noise', 'optimize_time', 'shape', 'state_workers', 'subsystem_dims', 'system', 't_end', 'time_bounds']

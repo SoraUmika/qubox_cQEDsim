@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\rl_control\env.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1.0, 'HybridCQEDEnv', 'StepRecord', 'baseline_actions', 'collapse', 'counts', 'final_metrics', 'final_observation', 'initial_info', 'measurement', 'metrics', 'per_rollout', 'probabilities', 'randomization', 'randomization_mode', 'records', 'requires_measurement', 'reward', 'reward_breakdown', 'seed', 'state_preparation', 'step_index', 'success', 'summary', 'system_regime', 'task', 'task_kind', 'task_name', 'terminated', 'total_reward', 'truncated']

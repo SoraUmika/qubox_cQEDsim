@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\solver\solver_base.py
+# hypothesis_version: 6.151.10
+
+[0.0, ' integrator', ' with ', 'Solver', '_options', '_safe_mode', 'adams', 'atol', 'br', 'chunk_size', 'dW_factors', 'dims', 'init time', 'isherm', 'keep_runs_results', 'm_ops', 'map_func', 'map_kwargs', 'mc', 'me', 'method', 'normalize_output', 'nsubsteps', 'preparation time', 'progress_bar', 'progress_kwargs', 'run time', 'stoc', 'store_all_expect', 'store_final_state', 'store_measurement', 'store_states', 'text', 'tol', 'verbose']

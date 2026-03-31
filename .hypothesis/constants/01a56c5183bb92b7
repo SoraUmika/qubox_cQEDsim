@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\solver\sesolve.py
+# hypothesis_version: 6.151.10
+
+['SESolver', 'adams', 'args', 'chunk_size', 'e_ops', 'method', 'normalize_output', 'options', 'progress_bar', 'progress_kwargs', 'sesolve', 'solver', 'store_final_state', 'store_states']

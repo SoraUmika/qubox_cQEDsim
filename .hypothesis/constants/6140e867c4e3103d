@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\stack_data\formatting.py
+# hypothesis_version: 6.151.10
+
+['   {}\n', '(...)', '-->', ':', '^', 'bg:#005080', 'monokai', '{:4} | ', '{} = {}']

@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\heom\bofin_solvers.py
+# hypothesis_version: 6.151.10
+
+[0.0, 0.5, 1.0, 100, '+', '-', 'CSR', 'F', 'HEOMResult', 'HEOMSolver', 'HSolverDL', 'HierarchyADOs', 'HierarchyADOsState', 'adams', 'chunk_size', 'col', 'csr', 'dense', 'dim', 'heomsolve', 'heomsolver', 'init ados time', 'init rhs time', 'init time', 'max_depth', 'method', 'normalize_output', 'op', 'oper', 'progress_bar', 'progress_kwargs', 'row', 'shape', 'solver', 'state_data_type', 'store_ados', 'store_final_state', 'store_states', 'tag', 'text', 'type']

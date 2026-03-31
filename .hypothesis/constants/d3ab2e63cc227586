@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python313\site-packages\qutip\core\data\eigen.py
+# hypothesis_version: 6.151.10
+
+[1e-15, 1e-12, 0.5, 1.0, 100000, 'LA', 'LR', 'SA', 'SR', 'data', 'eigs', 'eigs_csr', 'eigs_dense', 'high', 'low', 'subset_by_index', 'svd', 'svd_csr', 'svd_dense', 'vecs']

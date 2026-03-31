@@ -24,8 +24,12 @@ REQUIRED_TOP_LEVEL_NAMES = [
     "ControlEvaluationCase",
     "ControlEvaluationResult",
     "PiecewiseConstantTimeGrid",
+    "CallableParameterization",
+    "CallablePulseFamily",
     "GrapeSolver",
     "solve_grape",
+    "optimize_gate_time_with_grape",
+    "solve_structured_then_grape",
     "evaluate_control_with_simulator",
     # simulation core
     "SimulationConfig",

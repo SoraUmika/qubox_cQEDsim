@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\integrator\krylov.py
+# hypothesis_version: 6.151.10
+
+[1e-14, 1e-07, 1e-05, 0.5, 1.0, 100000.0, 100, 'IntegratorKrylov', 'always_compute_step', 'atol', 'brentq', 'dense', 'krylov', 'krylov_dim', 'max_step', 'min_step', 'nsteps', 'sub_system_tol']

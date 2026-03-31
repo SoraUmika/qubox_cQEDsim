@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\scipy\_lib\_array_api.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-07, 0.5, 'A', 'C', 'F', 'K', 'SCIPY_ARRAY_API', 'SCIPY_DEVICE', '_asarray', 'array_namespace', 'clip', 'complex floating', 'cpu', 'cupy', 'device', 'gpu', 'jax.numpy', 'minimum', 'mps', 'numpy', 'real floating', 'size', 'torch', 'tpu']

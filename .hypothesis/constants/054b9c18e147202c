@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\core\spectrum.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-12, 'EnergyLevel', 'EnergySpectrum', 'as_universal_model', 'bosonic_modes', 'dominant_basis_label', 'e', 'energy', 'f', 'g', 'h', 'hamiltonian', 'i', 'index', 'j', 'k', 'l', 'low', 'm', 'n', 'raw_energy', 'transmon', '|>']

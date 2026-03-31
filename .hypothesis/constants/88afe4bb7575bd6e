@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\optimal_control\parameterizations.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-18, 1e-15, 1e-14, 1e-06, 0.5, 1.0, 2.0, 'ControlParameterSpec', 'ControlSchedule', 'ControlTerm', 'Q', 'channels', 'coefficients', 'default', 'description', 'duration_s', 'hold_ratio', 'inf', 'lower_bound', 'mapping', 'max_abs_amp', 'max_frequency_hz', 'n_control_points', 'n_modes', 'name', 'nonzero_slices', 'parameter_count', 'parameter_names', 'parameter_slices', 'parameterization', 'parameters', 'resolved_time_grid', 'right', 'sample_period_s', 'step_durations_s', 'target', 'time_grid_s', 'time_slices', 'units', 'upper_bound', 'upsampling_factor', 'value']

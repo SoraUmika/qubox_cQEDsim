@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\scipy\signal\bsplines.py
+# hypothesis_version: 6.151.10
+
+['_bsplines', 'bsplines', 'cspline1d', 'cspline1d_eval', 'cspline2d', 'gauss_spline', 'qspline1d', 'qspline1d_eval', 'sepfir2d', 'signal', 'spline_filter']

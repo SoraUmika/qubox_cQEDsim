@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\unitary_synthesis\metrics.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1e-18, 1e-12, 1e-08, 1e-06, 0.5, 1.0, 2.0, 'F', 'actual_expectations', 'average', 'block', 'block_gauge_fidelity', 'block_phases_rad', 'cavity_only', 'channel_choi_error', 'channel_error_max', 'channel_error_mean', 'channel_overlap', 'choi_min_eig', 'diagonal', 'fidelity', 'fidelity_loss', 'fro', 'g', 'global', 'label', 'leakage_average', 'leakage_term', 'leakage_worst', 'n_cav', 'n_match', 'nan', 'none', 'objective', 'observable_error_max', 'qubit', 'qubit_cavity_block', 'state_error_max', 'state_error_mean', 'state_fidelity_mean', 'state_fidelity_min', 'trace_loss_mean', 'trace_loss_worst', 'weighted_state_error', 'worst']

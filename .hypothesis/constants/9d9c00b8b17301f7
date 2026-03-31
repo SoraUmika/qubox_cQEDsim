@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\cqed_sim\optimal_control\workflows.py
+# hypothesis_version: 6.151.10
+
+[0.0, 'GateTimeCandidate', 'best_duration_s', 'candidate_count', 'duration_sweep', 'gate_time_duration_s', 'gate_time_solver', 'grape', 'grape_objective', 'metrics', 'nan', 'nominal_fidelity', 'none', 'objective_max', 'objective_min', 'objective_span', 'previous_best', 'searched_durations_s', 'structured-control', 'structured_objective']

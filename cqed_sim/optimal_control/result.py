@@ -62,12 +62,13 @@ class ControlResult:
     def to_payload(self) -> dict[str, Any]:
         command_values = self.schedule.command_values() if self.command_values is None else np.asarray(self.command_values, dtype=float)
         physical_values = command_values if self.physical_values is None else np.asarray(self.physical_values, dtype=float)
+        resolved_time_grid = self.schedule.resolved_time_grid()
         payload = {
             "backend": str(self.backend),
             "success": bool(self.success),
             "message": str(self.message),
             "objective_value": float(self.objective_value),
-            "time_grid_s": [float(value) for value in self.schedule.parameterization.time_grid.step_durations_s],
+            "time_grid_s": [float(value) for value in resolved_time_grid.step_durations_s],
             "time_boundaries_s": None if self.time_boundaries_s is None else np.asarray(self.time_boundaries_s, dtype=float),
             "control_terms": [term.name for term in self.schedule.parameterization.control_terms],
             "parameter_values": np.asarray(self.schedule.values, dtype=float),

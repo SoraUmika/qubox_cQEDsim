@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\solver\multitrajresult.py
+# hypothesis_version: 6.151.10
+
+[0.0, 1.0, '  Final state saved.', '  Solver stats:', '  State not saved.', '  States saved.', '>', 'McResult', 'Merged results', 'MultiTrajResult', 'NmmcResult', 'end_condition', 'keep_runs_results', 'ket', 'ntraj reached', 'num_collapse', 'run time', 'store_final_state', 'store_states', 'timeout', 'unknown']

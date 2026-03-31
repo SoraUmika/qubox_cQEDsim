@@ -1,0 +1,4 @@
+# file: C:\Users\jl82323\AppData\Roaming\Python\Python312\site-packages\qutip\core\data\constant.py
+# hypothesis_version: 6.151.10
+
+['cols', 'data', 'dimension', 'identity', 'identity_like', 'identity_like_data', 'identity_like_dense', 'rows', 'scale', 'zeros', 'zeros_like', 'zeros_like_data', 'zeros_like_dense']

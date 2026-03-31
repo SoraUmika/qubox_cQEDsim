@@ -70,6 +70,8 @@ Three action-space families:
 | Symbol | Purpose |
 |---|---|
 | `HybridCQEDEnv` | Main RL environment |
+| `GymnasiumCQEDEnv` | `gymnasium.Env` wrapper for SB3/RLlib compatibility (optional) |
+| `action_space_to_gymnasium` | Convert cqed_sim action space to `gymnasium.spaces.Box` (optional) |
 | `HybridEnvConfig` | Environment configuration |
 | `HybridSystemConfig` | Physics model selection |
 | `ReducedDispersiveModelConfig` | Fast reduced model |

@@ -20,10 +20,30 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
+  "pytest-benchmark>=5.2.3",
+  "hypothesis>=6.151.10",
 ]
 jax = [
-  "jax",
+  "jax>=0.6.2",
   "jaxlib",
+]
+dynamiqs = [
+  "jax>=0.6.2",
+  "jaxlib",
+  "diffrax>=0.7.2",
+  "dynamiqs>=0.3.4",
+]
+optax = [
+  "optax>=0.2.8",
+  "jax>=0.6.2",
+  "jaxlib",
+]
+gym = [
+  "gymnasium>=1.2.3",
+]
+sb3 = [
+  "gymnasium>=1.2.3",
+  "stable-baselines3>=2.7.1",
 ]
 
 [tool.setuptools.packages.find]

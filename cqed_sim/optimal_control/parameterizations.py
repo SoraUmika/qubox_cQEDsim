@@ -8,6 +8,8 @@ import numpy as np
 
 from cqed_sim.pulses import Pulse, square_envelope
 
+from .utils import finite_bound_scale
+
 if TYPE_CHECKING:
     from .problems import ControlTerm
 
@@ -96,6 +98,43 @@ def waveform_values_to_pulses(
 
 
 @dataclass(frozen=True)
+class ControlParameterSpec:
+    name: str
+    lower_bound: float
+    upper_bound: float
+    default: float = 0.0
+    description: str = ""
+    units: str | None = None
+
+    def __post_init__(self) -> None:
+        lower = float(self.lower_bound)
+        upper = float(self.upper_bound)
+        default = float(self.default)
+        if lower > upper:
+            raise ValueError("ControlParameterSpec requires lower_bound <= upper_bound.")
+        if default < lower - 1.0e-15 or default > upper + 1.0e-15:
+            raise ValueError(
+                f"ControlParameterSpec default {default} for '{self.name}' must lie within [{lower}, {upper}]."
+            )
+        object.__setattr__(self, "lower_bound", lower)
+        object.__setattr__(self, "upper_bound", upper)
+        object.__setattr__(self, "default", default)
+
+    def clip(self, value: float) -> float:
+        return float(np.clip(float(value), float(self.lower_bound), float(self.upper_bound)))
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "name": str(self.name),
+            "lower_bound": float(self.lower_bound),
+            "upper_bound": float(self.upper_bound),
+            "default": float(self.default),
+            "description": str(self.description),
+            "units": None if self.units is None else str(self.units),
+        }
+
+
+@dataclass(frozen=True)
 class PiecewiseConstantTimeGrid:
     step_durations_s: tuple[float, ...]
     t0_s: float = 0.0
@@ -129,6 +168,17 @@ class PiecewiseConstantTimeGrid:
     def midpoints_s(self) -> np.ndarray:
         boundaries = self.boundaries_s()
         return 0.5 * (boundaries[:-1] + boundaries[1:])
+
+    def scaled_to_duration(self, duration_s: float) -> "PiecewiseConstantTimeGrid":
+        duration = float(duration_s)
+        if duration <= 0.0:
+            raise ValueError("scaled_to_duration requires a positive total duration.")
+        base = np.asarray(self.step_durations_s, dtype=float)
+        fractions = base / float(np.sum(base))
+        return PiecewiseConstantTimeGrid(
+            step_durations_s=tuple(float(duration * fraction) for fraction in fractions),
+            t0_s=float(self.t0_s),
+        )
 
 
 @dataclass(frozen=True)
@@ -204,6 +254,10 @@ class ControlParameterization(ABC):
             clipped[term_index, :] = np.clip(clipped[term_index, :], float(lower), float(upper))
         return clipped
 
+    def resolved_time_grid(self, values: np.ndarray) -> PiecewiseConstantTimeGrid:
+        _ = values
+        return self.time_grid
+
     @abstractmethod
     def command_values(self, values: np.ndarray) -> np.ndarray:
         raise NotImplementedError
@@ -212,14 +266,31 @@ class ControlParameterization(ABC):
     def pullback(self, gradient_command: np.ndarray, values: np.ndarray, *, command_values: np.ndarray | None = None) -> np.ndarray:
         raise NotImplementedError
 
+    def pullback_time(
+        self,
+        gradient_step_durations: np.ndarray,
+        values: np.ndarray,
+        *,
+        resolved_time_grid: PiecewiseConstantTimeGrid | None = None,
+    ) -> np.ndarray:
+        _ = values
+        _ = resolved_time_grid
+        gradient = np.asarray(gradient_step_durations, dtype=float).reshape(-1)
+        expected = int(self.n_time_slices)
+        if gradient.size != expected:
+            raise ValueError(f"Expected time-grid gradient of length {expected}, received {gradient.size}.")
+        return np.zeros(self.parameter_shape, dtype=float)
+
     def parameterization_metrics(self, values: np.ndarray, command_values: np.ndarray | None = None) -> dict[str, Any]:
         _ = values
         _ = command_values
+        grid = self.resolved_time_grid(values)
         return {
             "parameterization": type(self).__name__,
             "parameter_slices": int(self.n_slices),
             "time_slices": int(self.n_time_slices),
-            "effective_update_period_s": float(self.time_grid.duration_s / max(self.n_slices, 1)),
+            "duration_s": float(grid.duration_s),
+            "effective_update_period_s": float(grid.duration_s / max(self.n_slices, 1)),
         }
 
     def _channel_coefficients(self, waveform_values: np.ndarray) -> tuple[dict[str, Any], np.ndarray]:
@@ -255,7 +326,7 @@ class ControlParameterization(ABC):
         waveform = self.command_values(values) if waveform_values is None else np.asarray(waveform_values, dtype=float)
         return waveform_values_to_pulses(
             control_terms=self.control_terms,
-            time_grid=self.time_grid,
+            time_grid=self.resolved_time_grid(values),
             waveform_values=waveform,
             parameterization_name=type(self).__name__,
             extra_metadata={"parameter_slices": int(self.n_slices)},
@@ -501,6 +572,143 @@ class LinearInterpolatedParameterization(ControlParameterization):
         return metrics
 
 
+@dataclass(frozen=True)
+class CallableParameterization(ControlParameterization):
+    parameter_specs: tuple[ControlParameterSpec, ...]
+    evaluator: Any
+    pullback_evaluator: Any | None = None
+    metrics_evaluator: Any | None = None
+    finite_difference_epsilon: float = 1.0e-6
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if not self.parameter_specs:
+            raise ValueError("CallableParameterization requires at least one ControlParameterSpec.")
+        if not callable(self.evaluator):
+            raise TypeError("CallableParameterization.evaluator must be callable.")
+        if self.pullback_evaluator is not None and not callable(self.pullback_evaluator):
+            raise TypeError("CallableParameterization.pullback_evaluator must be callable when provided.")
+        if self.metrics_evaluator is not None and not callable(self.metrics_evaluator):
+            raise TypeError("CallableParameterization.metrics_evaluator must be callable when provided.")
+        if float(self.finite_difference_epsilon) <= 0.0:
+            raise ValueError("CallableParameterization.finite_difference_epsilon must be positive.")
+
+    @property
+    def n_slices(self) -> int:
+        return len(self.parameter_specs)
+
+    @property
+    def parameter_shape(self) -> tuple[int]:
+        return (len(self.parameter_specs),)
+
+    def zero_array(self) -> np.ndarray:
+        return np.asarray([spec.default for spec in self.parameter_specs], dtype=float)
+
+    def bounds(self) -> tuple[tuple[float, float], ...]:
+        return tuple((float(spec.lower_bound), float(spec.upper_bound)) for spec in self.parameter_specs)
+
+    def flatten(self, values: np.ndarray) -> np.ndarray:
+        data = np.asarray(values, dtype=float)
+        if data.shape != self.parameter_shape:
+            raise ValueError(f"Callable parameters must have shape {self.parameter_shape}, received {data.shape}.")
+        return np.array(data.reshape(-1), copy=True)
+
+    def unflatten(self, vector: np.ndarray) -> np.ndarray:
+        data = np.asarray(vector, dtype=float).reshape(-1)
+        expected = int(self.n_slices)
+        if data.size != expected:
+            raise ValueError(f"Expected flattened callable parameter vector of length {expected}, received {data.size}.")
+        return np.asarray(data, dtype=float)
+
+    def clip(self, values: np.ndarray) -> np.ndarray:
+        data = np.asarray(values, dtype=float)
+        if data.shape != self.parameter_shape:
+            raise ValueError(f"Callable parameters must have shape {self.parameter_shape}, received {data.shape}.")
+        clipped = np.array(data, copy=True)
+        for index, spec in enumerate(self.parameter_specs):
+            clipped[index] = spec.clip(float(clipped[index]))
+        return clipped
+
+    def command_values(self, values: np.ndarray) -> np.ndarray:
+        clipped = self.clip(values)
+        waveform = np.asarray(
+            self.evaluator(clipped, self.resolved_time_grid(clipped), tuple(self.control_terms)),
+            dtype=float,
+        )
+        if waveform.shape != self.waveform_shape:
+            raise ValueError(
+                f"CallableParameterization.evaluator must return waveform shape {self.waveform_shape}, received {waveform.shape}."
+            )
+        return waveform
+
+    def pullback(self, gradient_command: np.ndarray, values: np.ndarray, *, command_values: np.ndarray | None = None) -> np.ndarray:
+        gradient = np.asarray(gradient_command, dtype=float)
+        if gradient.shape != self.waveform_shape:
+            raise ValueError(f"Command-waveform gradients must have shape {self.waveform_shape}, received {gradient.shape}.")
+        clipped = self.clip(values)
+        grid = self.resolved_time_grid(clipped)
+        waveform = self.command_values(clipped) if command_values is None else np.asarray(command_values, dtype=float)
+        if waveform.shape != self.waveform_shape:
+            raise ValueError(f"Callable command values must have shape {self.waveform_shape}, received {waveform.shape}.")
+
+        if self.pullback_evaluator is not None:
+            reduced = np.asarray(
+                self.pullback_evaluator(gradient, clipped, grid, tuple(self.control_terms), waveform),
+                dtype=float,
+            )
+            if reduced.shape != self.parameter_shape:
+                raise ValueError(
+                    f"CallableParameterization.pullback_evaluator must return shape {self.parameter_shape}, received {reduced.shape}."
+                )
+            return reduced
+
+        reduced = np.zeros(self.parameter_shape, dtype=float)
+        for index, spec in enumerate(self.parameter_specs):
+            scale = max(
+                abs(float(clipped[index])),
+                finite_bound_scale(float(spec.lower_bound), float(spec.upper_bound), fallback=1.0),
+            )
+            epsilon = float(self.finite_difference_epsilon) * max(scale, 1.0)
+            plus = np.array(clipped, copy=True)
+            minus = np.array(clipped, copy=True)
+            plus[index] = spec.clip(float(clipped[index]) + epsilon)
+            minus[index] = spec.clip(float(clipped[index]) - epsilon)
+            delta = float(plus[index] - minus[index])
+            if abs(delta) <= 1.0e-18:
+                continue
+            jacobian_row = (self.command_values(plus) - self.command_values(minus)) / delta
+            reduced[index] = float(np.sum(gradient * jacobian_row))
+        return reduced
+
+    def parameterization_metrics(self, values: np.ndarray, command_values: np.ndarray | None = None) -> dict[str, Any]:
+        metrics = super().parameterization_metrics(values, command_values)
+        clipped = self.clip(values)
+        metrics.update(
+            {
+                "parameterization": "CallableParameterization",
+                "parameter_count": int(self.n_slices),
+                "parameter_names": [str(spec.name) for spec in self.parameter_specs],
+                "parameters": [
+                    {
+                        **spec.as_dict(),
+                        "value": float(clipped[index]),
+                    }
+                    for index, spec in enumerate(self.parameter_specs)
+                ],
+            }
+        )
+        if self.metrics_evaluator is not None:
+            extra_metrics = self.metrics_evaluator(
+                clipped,
+                self.resolved_time_grid(clipped),
+                tuple(self.control_terms),
+                None if command_values is None else np.asarray(command_values, dtype=float),
+            )
+            if extra_metrics is not None:
+                metrics.update(dict(extra_metrics))
+        return metrics
+
+
 @dataclass
 class ControlSchedule:
     parameterization: ControlParameterization
@@ -531,6 +739,9 @@ class ControlSchedule:
     def command_values(self) -> np.ndarray:
         return self.parameterization.command_values(self.values)
 
+    def resolved_time_grid(self) -> PiecewiseConstantTimeGrid:
+        return self.parameterization.resolved_time_grid(self.values)
+
     def to_pulses(self, *, waveform_values: np.ndarray | None = None) -> tuple[list[Pulse], dict[str, Any], dict[str, Any]]:
         return self.parameterization.to_pulses(self.values, waveform_values=waveform_values)
 
@@ -542,12 +753,14 @@ class ControlSchedule:
 
 
 __all__ = [
+    "ControlParameterSpec",
     "PiecewiseConstantTimeGrid",
     "ControlParameterization",
     "PiecewiseConstantParameterization",
     "HeldSampleParameterization",
     "FourierParameterization",
     "LinearInterpolatedParameterization",
+    "CallableParameterization",
     "ControlSchedule",
     "waveform_values_to_pulses",
 ]

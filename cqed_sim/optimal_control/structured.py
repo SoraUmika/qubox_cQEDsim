@@ -135,6 +135,65 @@ class StructuredPulseFamily(ABC):
 
 
 @dataclass(frozen=True)
+class CallablePulseFamily(StructuredPulseFamily):
+    name: str
+    specs: tuple[PulseParameterSpec, ...]
+    evaluator: Any = field(repr=False)
+    jacobian_evaluator: Any | None = field(default=None, repr=False)
+
+    def __post_init__(self) -> None:
+        if not str(self.name):
+            raise ValueError("CallablePulseFamily.name must be non-empty.")
+        if not self.specs:
+            raise ValueError("CallablePulseFamily requires at least one PulseParameterSpec.")
+        if not callable(self.evaluator):
+            raise TypeError("CallablePulseFamily.evaluator must be callable.")
+        if self.jacobian_evaluator is not None and not callable(self.jacobian_evaluator):
+            raise TypeError("CallablePulseFamily.jacobian_evaluator must be callable when provided.")
+
+    @property
+    def family_name(self) -> str:
+        return str(self.name)
+
+    @property
+    def parameter_specs(self) -> tuple[PulseParameterSpec, ...]:
+        return tuple(self.specs)
+
+    def _evaluate_complex_envelope(self, time_rel_s: np.ndarray, duration_s: float, values: np.ndarray) -> np.ndarray:
+        waveform = np.asarray(
+            self.evaluator(np.asarray(time_rel_s, dtype=float), float(duration_s), np.asarray(values, dtype=float)),
+            dtype=np.complex128,
+        )
+        expected = np.asarray(time_rel_s, dtype=float).shape
+        if waveform.shape != expected:
+            raise ValueError(
+                f"CallablePulseFamily.evaluator must return waveform shape {expected}, received {waveform.shape}."
+            )
+        return waveform
+
+    def waveform_and_jacobian(
+        self,
+        time_rel_s: np.ndarray,
+        duration_s: float,
+        values: Sequence[float] | np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        clipped = self.clip(values)
+        waveform = self.evaluate(time_rel_s, duration_s, clipped)
+        if self.jacobian_evaluator is None:
+            return super().waveform_and_jacobian(time_rel_s, duration_s, clipped)
+        jacobian = np.asarray(
+            self.jacobian_evaluator(np.asarray(time_rel_s, dtype=float), float(duration_s), np.asarray(clipped, dtype=float)),
+            dtype=np.complex128,
+        )
+        expected = (len(self.parameter_specs), waveform.size)
+        if jacobian.shape != expected:
+            raise ValueError(
+                f"CallablePulseFamily.jacobian_evaluator must return shape {expected}, received {jacobian.shape}."
+            )
+        return waveform, jacobian
+
+
+@dataclass(frozen=True)
 class GaussianDragPulseFamily(StructuredPulseFamily):
     amplitude_bounds: tuple[float, float] = (0.0, 8.0e7)
     sigma_fraction_bounds: tuple[float, float] = (0.08, 0.35)
@@ -1055,6 +1114,7 @@ def save_structured_control_artifacts(
 __all__ = [
     "PulseParameterSpec",
     "StructuredPulseFamily",
+    "CallablePulseFamily",
     "GaussianDragPulseFamily",
     "FourierSeriesPulseFamily",
     "StructuredControlChannel",

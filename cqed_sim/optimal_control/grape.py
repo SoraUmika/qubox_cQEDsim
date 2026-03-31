@@ -768,20 +768,14 @@ class GrapeSolver:
         prepared_leakage_penalties = _prepare_leakage_penalties(problem)
         schedule0 = self._initial_schedule(problem, initial_schedule)
 
-        scale_matrix = np.asarray(
-            [
-                [
-                    finite_bound_scale(term.amplitude_bounds[0], term.amplitude_bounds[1], fallback=1.0)
-                    for _ in range(problem.n_slices)
-                ]
-                for term in problem.control_terms
-            ],
+        bounds = tuple(problem.parameterization.bounds())
+        scale_vector = np.asarray(
+            [finite_bound_scale(float(lower), float(upper), fallback=1.0) for lower, upper in bounds],
             dtype=float,
         )
-        scale_vector = scale_matrix.reshape(-1)
         scaled_bounds = tuple(
             (float(lower) / max(scale, 1.0e-18), float(upper) / max(scale, 1.0e-18))
-            for (lower, upper), scale in zip(problem.parameterization.bounds(), scale_vector, strict=True)
+            for (lower, upper), scale in zip(bounds, scale_vector, strict=True)
         )
 
         last_vector: np.ndarray | None = None

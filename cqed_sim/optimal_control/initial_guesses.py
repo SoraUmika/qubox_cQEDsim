@@ -16,19 +16,29 @@ def zero_control_schedule(problem) -> ControlSchedule:
 
 def random_control_schedule(problem, *, seed: int | None = None, scale: float = 0.15) -> ControlSchedule:
     rng = np.random.default_rng(seed)
-    values = np.zeros((problem.n_controls, problem.n_slices), dtype=float)
-    for index, term in enumerate(problem.control_terms):
-        lower, upper = term.amplitude_bounds
+    parameterization = problem.parameterization
+    defaults = np.asarray(parameterization.zero_array(), dtype=float).reshape(-1)
+    bounds = tuple(parameterization.bounds())
+    if defaults.size != len(bounds):
+        raise ValueError(
+            "random_control_schedule expected parameterization.zero_array() to match parameterization.bounds()."
+        )
+
+    values = np.array(defaults, copy=True)
+    for index, (lower, upper) in enumerate(bounds):
         if np.isfinite(lower) and np.isfinite(upper):
-            center = 0.5 * (float(lower) + float(upper))
             half_range = 0.5 * (float(upper) - float(lower))
             span = max(scale * half_range, 1.0e-12)
-            values[index, :] = rng.uniform(center - span, center + span, size=problem.n_slices)
+            values[index] = np.clip(
+                defaults[index] + rng.uniform(-span, span),
+                float(lower),
+                float(upper),
+            )
         else:
             sigma = scale * finite_bound_scale(lower, upper, fallback=1.0)
-            values[index, :] = rng.normal(loc=0.0, scale=sigma, size=problem.n_slices)
-    clipped = problem.parameterization.clip(values)
-    return ControlSchedule(problem.parameterization, clipped)
+            values[index] = defaults[index] + rng.normal(loc=0.0, scale=sigma)
+    clipped = parameterization.clip(parameterization.unflatten(values))
+    return ControlSchedule(parameterization, clipped)
 
 
 def warm_start_schedule(result, *, noise_scale: float = 0.0, seed: int | None = None) -> ControlSchedule:

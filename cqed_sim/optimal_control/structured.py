@@ -3,11 +3,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import csv
 from dataclasses import dataclass, field
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.figure import Figure
 from pathlib import Path
 import time
 from typing import Any, Sequence
 
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import minimize
 
@@ -17,6 +18,19 @@ from .parameterizations import ControlSchedule, PiecewiseConstantTimeGrid, wavef
 from .problems import ControlProblem, ModelControlChannelSpec, build_control_problem_from_model
 from .result import ControlResult
 from .utils import finite_bound_scale
+
+
+def _axes_list(axes: Any) -> list[Any]:
+    if isinstance(axes, np.ndarray):
+        return [axis for axis in axes.reshape(-1)]
+    return [axes]
+
+
+def _make_agg_subplots(nrows: int, *, figsize: tuple[float, float], sharex: bool = False) -> tuple[Figure, list[Any]]:
+    figure = Figure(figsize=figsize)
+    FigureCanvasAgg(figure)
+    axes = figure.subplots(nrows, 1, sharex=sharex)
+    return figure, _axes_list(axes)
 
 
 @dataclass(frozen=True)
@@ -979,9 +993,7 @@ def save_structured_control_artifacts(
             )
 
     boundaries = np.asarray(problem.time_grid.boundaries_s(), dtype=float)
-    figure, axes = plt.subplots(problem.n_controls, 1, figsize=(10, 2.6 * max(problem.n_controls, 1)), sharex=True)
-    if problem.n_controls == 1:
-        axes = [axes]
+    figure, axes = _make_agg_subplots(problem.n_controls, figsize=(10, 2.6 * max(problem.n_controls, 1)), sharex=True)
     for control_index, axis in enumerate(axes):
         axis.step(boundaries[:-1], command_values[control_index, :], where="post", label="command", linewidth=1.8)
         axis.step(boundaries[:-1], physical_values[control_index, :], where="post", label="physical", linewidth=1.8)
@@ -993,16 +1005,13 @@ def save_structured_control_artifacts(
     figure.suptitle("Structured-control waveforms")
     figure.tight_layout()
     figure.savefig(waveform_plot, dpi=180)
-    plt.close(figure)
 
     command_channels = _complex_export_channels(tuple(problem.control_terms), command_values)
     physical_channels = _complex_export_channels(tuple(problem.control_terms), physical_values)
     dt = float(np.mean(np.asarray(problem.time_grid.step_durations_s, dtype=float)))
     freq_axis = np.fft.fftfreq(problem.time_grid.steps, d=dt)
     positive = freq_axis >= 0.0
-    figure, axes = plt.subplots(max(len(command_channels), 1), 1, figsize=(10, 3.0 * max(len(command_channels), 1)), sharex=True)
-    if len(command_channels) <= 1:
-        axes = [axes]
+    figure, axes = _make_agg_subplots(max(len(command_channels), 1), figsize=(10, 3.0 * max(len(command_channels), 1)), sharex=True)
     for axis, channel_name in zip(axes, sorted(command_channels), strict=False):
         command_fft = np.fft.fft(command_channels[channel_name])
         physical_fft = np.fft.fft(physical_channels.get(channel_name, command_channels[channel_name]))
@@ -1015,9 +1024,8 @@ def save_structured_control_artifacts(
     figure.suptitle("Structured-control spectra")
     figure.tight_layout()
     figure.savefig(spectrum_plot, dpi=180)
-    plt.close(figure)
 
-    figure, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+    figure, axes = _make_agg_subplots(2, figsize=(10, 6), sharex=True)
     evaluations = [int(record.evaluation) for record in result.history]
     objectives = [float(record.objective) for record in result.history]
     fidelities = [float(record.metrics.get("nominal_fidelity", np.nan)) for record in result.history]
@@ -1031,7 +1039,6 @@ def save_structured_control_artifacts(
     figure.suptitle("Optimization progression")
     figure.tight_layout()
     figure.savefig(history_plot, dpi=180)
-    plt.close(figure)
 
     return StructuredControlArtifacts(
         directory=output_dir,

@@ -52,7 +52,6 @@
 
 ## Suspected / Follow-up Questions
 
-- `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` still contains stored output text from the historical `I - iQ` mapping. The code path is now fixed, but the notebook output itself would need a notebook-specific rerun/update pass if that stored output is meant to remain a canonical rendered artifact.
 - `cqed_sim.floquet.builders` uses a separate quadrature labeling surface (`x` / `y` rather than optimal-control `I` / `Q`). That sign choice was not changed here and should be treated as a separate convention audit if repo-wide quadrature semantics are later unified further.
 
 ## Status
@@ -60,6 +59,8 @@
 Fixed on 2026-03-30 for the optimal-control stack.
 
 The canonical optimal-control/public baseband convention is now `c(t) = I(t) + i Q(t)`. Model-backed `Q` controls are built as `+i(raising - lowering)`, and the structured backend now uses the same sign in waveform evaluation, command decomposition, pullback reconstruction, and export. Public docs, the physics report, and the related implementation reports were synchronized to the same rule.
+
+Re-audited on 2026-03-30 after the migration follow-up. No live `I - iQ` residues were found in the active optimal-control code, public docs, generated benchmark metadata, or the stored output text currently present in `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb`. The remaining `x` / `y` Floquet quadrature helper is a separate API surface rather than an unresolved optimal-control inconsistency.
 
 ## Fix Record
 
@@ -83,3 +84,4 @@ The canonical optimal-control/public baseband convention is now `c(t) = I(t) + i
 - Updated stale benchmark metadata artifacts in:
   - `outputs/tutorial_grape_benchmark.json`
   - `outputs/optimal_control_larger_benchmark.json`
+- Re-audited the migrated surfaces and confirmed that `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` now stores the `I + iQ` wording rather than the old `I - iQ` text.

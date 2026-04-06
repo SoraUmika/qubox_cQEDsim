@@ -1,0 +1,16 @@
+{
+  "best_duration_s": 3.2,
+  "best_objective_value": 0.0,
+  "best_nominal_fidelity": 1.0,
+  "searched_durations_s": [
+    2.0,
+    2.6,
+    3.2,
+    4.0
+  ],
+  "max_workers": 32,
+  "artifacts": {
+    "best_result_json": "outputs\\optimal_control_gate_time_sweep_demo\\best_result.json",
+    "duration_sweep_csv": "outputs\\optimal_control_gate_time_sweep_demo\\duration_sweep.csv"
+  }
+}

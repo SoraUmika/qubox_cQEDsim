@@ -1,0 +1,708 @@
+{
+  "backend": "grape",
+  "success": true,
+  "message": "CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL",
+  "objective_value": 0.0,
+  "time_grid_s": [
+    1.0
+  ],
+  "time_boundaries_s": [
+    0.0,
+    1.0
+  ],
+  "control_terms": [
+    "x_drive",
+    "y_drive"
+  ],
+  "parameter_values": [
+    3.1415926542139463,
+    0.7000000000000006
+  ],
+  "command_values": [
+    [
+      2.402822597205875
+    ],
+    [
+      2.0238695539406293
+    ]
+  ],
+  "physical_values": [
+    [
+      2.402822597205875
+    ],
+    [
+      2.0238695539406293
+    ]
+  ],
+  "metrics": {
+    "objective_total": 0.0,
+    "objective_system": 0.0,
+    "objective_control_penalty": 0.0,
+    "gradient_norm": 3.1207667379787103e-10,
+    "nominal_fidelity": 1.0,
+    "aggregate_mode": "mean",
+    "system_weights": [
+      1.0
+    ],
+    "amplitude_penalty": 0.0,
+    "slew_penalty": 0.0,
+    "bound_penalty": 0.0,
+    "boundary_penalty": 0.0,
+    "iq_radius_penalty": 0.0,
+    "control_penalty_total": 0.0,
+    "parameterization": "CallableParameterization",
+    "parameter_slices": 2,
+    "time_slices": 1,
+    "duration_s": 1.0,
+    "effective_update_period_s": 0.5,
+    "parameter_count": 2,
+    "parameter_names": [
+      "amplitude",
+      "phase"
+    ],
+    "parameters": [
+      {
+        "name": "amplitude",
+        "lower_bound": 0.0,
+        "upper_bound": 6.283185307179586,
+        "default": 1.0,
+        "description": "",
+        "units": null,
+        "value": 3.1415926542139463
+      },
+      {
+        "name": "phase",
+        "lower_bound": -3.141592653589793,
+        "upper_bound": 3.141592653589793,
+        "default": 0.0,
+        "description": "",
+        "units": "rad",
+        "value": 0.7000000000000006
+      }
+    ],
+    "hardware_active": false,
+    "hardware_map_count": 0,
+    "command_max_abs_amplitude": 2.402822597205875,
+    "command_rms_amplitude": 2.221441469520526,
+    "command_max_slew": 0.0,
+    "command_rms_slew": 0.0,
+    "physical_max_abs_amplitude": 2.402822597205875,
+    "physical_rms_amplitude": 2.221441469520526,
+    "physical_max_slew": 0.0,
+    "physical_rms_slew": 0.0,
+    "nominal_physical_fidelity": 1.0,
+    "nominal_command_fidelity": 1.0,
+    "objective_command_reference": 0.0,
+    "objective_physical_reference": 0.0,
+    "hardware_forward_model_applied": false
+  },
+  "system_metrics": [
+    {
+      "label": "callable_demo",
+      "weight": 1.0,
+      "objective": 0.0,
+      "objectives": [
+        {
+          "name": "flip",
+          "kind": "state_transfer",
+          "weight": 1.0,
+          "weighted_cost": 0.0,
+          "fidelity_weighted": 1.0,
+          "fidelity_mean": 1.0,
+          "fidelity_min": 1.0,
+          "fidelity_max": 1.0,
+          "infidelity": 0.0
+        }
+      ]
+    }
+  ],
+  "parameterization_metrics": {
+    "parameterization": "CallableParameterization",
+    "parameter_slices": 2,
+    "time_slices": 1,
+    "duration_s": 1.0,
+    "effective_update_period_s": 0.5,
+    "parameter_count": 2,
+    "parameter_names": [
+      "amplitude",
+      "phase"
+    ],
+    "parameters": [
+      {
+        "name": "amplitude",
+        "lower_bound": 0.0,
+        "upper_bound": 6.283185307179586,
+        "default": 1.0,
+        "description": "",
+        "units": null,
+        "value": 3.1415926542139463
+      },
+      {
+        "name": "phase",
+        "lower_bound": -3.141592653589793,
+        "upper_bound": 3.141592653589793,
+        "default": 0.0,
+        "description": "",
+        "units": "rad",
+        "value": 0.7000000000000006
+      }
+    ]
+  },
+  "hardware_metrics": {
+    "hardware_active": false,
+    "hardware_map_count": 0,
+    "command_max_abs_amplitude": 2.402822597205875,
+    "command_rms_amplitude": 2.221441469520526,
+    "command_max_slew": 0.0,
+    "command_rms_slew": 0.0,
+    "physical_max_abs_amplitude": 2.402822597205875,
+    "physical_rms_amplitude": 2.221441469520526,
+    "physical_max_slew": 0.0,
+    "physical_rms_slew": 0.0
+  },
+  "hardware_reports": [],
+  "history": [
+    {
+      "evaluation": 1,
+      "objective": 0.7267980607127887,
+      "gradient_norm": 0.44560368003071765,
+      "elapsed_s": 0.0017533000209368765,
+      "metrics": {
+        "objective_total": 0.7267980607127887,
+        "objective_system": 0.7267980607127887,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.44560368003071765,
+        "nominal_fidelity": 0.27320193928721126,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "CallableParameterization",
+        "parameter_slices": 2,
+        "time_slices": 1,
+        "duration_s": 1.0,
+        "effective_update_period_s": 0.5,
+        "parameter_count": 2,
+        "parameter_names": [
+          "amplitude",
+          "phase"
+        ],
+        "parameters": [
+          {
+            "name": "amplitude",
+            "lower_bound": 0.0,
+            "upper_bound": 6.283185307179586,
+            "default": 1.0,
+            "description": "",
+            "units": null,
+            "value": 1.1
+          },
+          {
+            "name": "phase",
+            "lower_bound": -3.141592653589793,
+            "upper_bound": 3.141592653589793,
+            "default": 0.0,
+            "description": "",
+            "units": "rad",
+            "value": 0.7
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 0.8413264060129374,
+        "command_rms_amplitude": 0.7778174593052023,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 0.8413264060129374,
+        "physical_rms_amplitude": 0.7778174593052023,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.27320193928721126
+      }
+    },
+    {
+      "evaluation": 2,
+      "objective": 1.0,
+      "gradient_norm": 1.5269510447359755e-16,
+      "elapsed_s": 0.003040499985218048,
+      "metrics": {
+        "objective_total": 1.0,
+        "objective_system": 1.0,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 1.5269510447359755e-16,
+        "nominal_fidelity": 2.331579493020287e-32,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "CallableParameterization",
+        "parameter_slices": 2,
+        "time_slices": 1,
+        "duration_s": 1.0,
+        "effective_update_period_s": 0.5,
+        "parameter_count": 2,
+        "parameter_names": [
+          "amplitude",
+          "phase"
+        ],
+        "parameters": [
+          {
+            "name": "amplitude",
+            "lower_bound": 0.0,
+            "upper_bound": 6.283185307179586,
+            "default": 1.0,
+            "description": "",
+            "units": null,
+            "value": 6.283185307179586
+          },
+          {
+            "name": "phase",
+            "lower_bound": -3.141592653589793,
+            "upper_bound": 3.141592653589793,
+            "default": 0.0,
+            "description": "",
+            "units": "rad",
+            "value": 0.7
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 4.8056451934569955,
+        "command_rms_amplitude": 4.442882938158366,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 4.8056451934569955,
+        "physical_rms_amplitude": 4.442882938158366,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 2.331579493020287e-32
+      }
+    },
+    {
+      "evaluation": 3,
+      "objective": 0.10027095317170664,
+      "gradient_norm": 0.3003609314170925,
+      "elapsed_s": 0.004018299980089068,
+      "metrics": {
+        "objective_total": 0.10027095317170664,
+        "objective_system": 0.10027095317170664,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.3003609314170925,
+        "nominal_fidelity": 0.8997290468282934,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "CallableParameterization",
+        "parameter_slices": 2,
+        "time_slices": 1,
+        "duration_s": 1.0,
+        "effective_update_period_s": 0.5,
+        "parameter_count": 2,
+        "parameter_names": [
+          "amplitude",
+          "phase"
+        ],
+        "parameters": [
+          {
+            "name": "amplitude",
+            "lower_bound": 0.0,
+            "upper_bound": 6.283185307179586,
+            "default": 1.0,
+            "description": "",
+            "units": null,
+            "value": 2.4971889106005434
+          },
+          {
+            "name": "phase",
+            "lower_bound": -3.141592653589793,
+            "upper_bound": 3.141592653589793,
+            "default": 0.0,
+            "description": "",
+            "units": "rad",
+            "value": 0.7
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 1.9099554284462885,
+        "command_rms_amplitude": 1.7657792125894913,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 1.9099554284462885,
+        "physical_rms_amplitude": 1.7657792125894913,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.8997290468282934
+      }
+    },
+    {
+      "evaluation": 4,
+      "objective": 0.8121270097134325,
+      "gradient_norm": 0.3906107138921701,
+      "elapsed_s": 0.005163799971342087,
+      "metrics": {
+        "objective_total": 0.8121270097134325,
+        "objective_system": 0.8121270097134325,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.3906107138921701,
+        "nominal_fidelity": 0.18787299028656748,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "CallableParameterization",
+        "parameter_slices": 2,
+        "time_slices": 1,
+        "duration_s": 1.0,
+        "effective_update_period_s": 0.5,
+        "parameter_count": 2,
+        "parameter_names": [
+          "amplitude",
+          "phase"
+        ],
+        "parameters": [
+          {
+            "name": "amplitude",
+            "lower_bound": 0.0,
+            "upper_bound": 6.283185307179586,
+            "default": 1.0,
+            "description": "",
+            "units": null,
+            "value": 5.3865652585378445
+          },
+          {
+            "name": "phase",
+            "lower_bound": -3.141592653589793,
+            "upper_bound": 3.141592653589793,
+            "default": 0.0,
+            "description": "",
+            "units": "rad",
+            "value": 0.7000000000000007
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 4.1198723542907185,
+        "command_rms_amplitude": 3.8088768216159785,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 4.1198723542907185,
+        "physical_rms_amplitude": 3.8088768216159785,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.18787299028656748
+      }
+    },
+    {
+      "evaluation": 5,
+      "objective": 0.004136859079639121,
+      "gradient_norm": 0.06418524344890007,
+      "elapsed_s": 0.006383600004483014,
+      "metrics": {
+        "objective_total": 0.004136859079639121,
+        "objective_system": 0.004136859079639121,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.06418524344890007,
+        "nominal_fidelity": 0.9958631409203609,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "CallableParameterization",
+        "parameter_slices": 2,
+        "time_slices": 1,
+        "duration_s": 1.0,
+        "effective_update_period_s": 0.5,
+        "parameter_count": 2,
+        "parameter_names": [
+          "amplitude",
+          "phase"
+        ],
+        "parameters": [
+          {
+            "name": "amplitude",
+            "lower_bound": 0.0,
+            "upper_bound": 6.283185307179586,
+            "default": 1.0,
+            "description": "",
+            "units": null,
+            "value": 3.0128669571090403
+          },
+          {
+            "name": "phase",
+            "lower_bound": -3.141592653589793,
+            "upper_bound": 3.141592653589793,
+            "default": 0.0,
+            "description": "",
+            "units": "rad",
+            "value": 0.7000000000000002
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 2.3043677534724387,
+        "command_rms_amplitude": 2.1304186561846814,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 2.3043677534724387,
+        "physical_rms_amplitude": 2.1304186561846814,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.9958631409203609
+      }
+    },
+    {
+      "evaluation": 6,
+      "objective": 3.260168282348541e-05,
+      "gradient_norm": 0.0057096952592881,
+      "elapsed_s": 0.007402300019748509,
+      "metrics": {
+        "objective_total": 3.260168282348541e-05,
+        "objective_system": 3.260168282348541e-05,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.0057096952592881,
+        "nominal_fidelity": 0.9999673983171765,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "CallableParameterization",
+        "parameter_slices": 2,
+        "time_slices": 1,
+        "duration_s": 1.0,
+        "effective_update_period_s": 0.5,
+        "parameter_count": 2,
+        "parameter_names": [
+          "amplitude",
+          "phase"
+        ],
+        "parameters": [
+          {
+            "name": "amplitude",
+            "lower_bound": 0.0,
+            "upper_bound": 6.283185307179586,
+            "default": 1.0,
+            "description": "",
+            "units": null,
+            "value": 3.153012292309075
+          },
+          {
+            "name": "phase",
+            "lower_bound": -3.141592653589793,
+            "upper_bound": 3.141592653589793,
+            "default": 0.0,
+            "description": "",
+            "units": "rad",
+            "value": 0.7000000000000004
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 2.411556818184551,
+        "command_rms_amplitude": 2.2295163730562875,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 2.411556818184551,
+        "physical_rms_amplitude": 2.2295163730562875,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.9999673983171765
+      }
+    },
+    {
+      "evaluation": 7,
+      "objective": 2.0720225535342252e-10,
+      "gradient_norm": 1.43945161556592e-05,
+      "elapsed_s": 0.008256700006313622,
+      "metrics": {
+        "objective_total": 2.0720225535342252e-10,
+        "objective_system": 2.0720225535342252e-10,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 1.43945161556592e-05,
+        "nominal_fidelity": 0.9999999997927977,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "CallableParameterization",
+        "parameter_slices": 2,
+        "time_slices": 1,
+        "duration_s": 1.0,
+        "effective_update_period_s": 0.5,
+        "parameter_count": 2,
+        "parameter_names": [
+          "amplitude",
+          "phase"
+        ],
+        "parameters": [
+          {
+            "name": "amplitude",
+            "lower_bound": 0.0,
+            "upper_bound": 6.283185307179586,
+            "default": 1.0,
+            "description": "",
+            "units": null,
+            "value": 3.141563864557478
+          },
+          {
+            "name": "phase",
+            "lower_bound": -3.141592653589793,
+            "upper_bound": 3.141592653589793,
+            "default": 0.0,
+            "description": "",
+            "units": "rad",
+            "value": 0.7000000000000004
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 2.402800577662051,
+        "command_rms_amplitude": 2.2214211121592093,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 2.402800577662051,
+        "physical_rms_amplitude": 2.2214211121592093,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.9999999997927977
+      }
+    },
+    {
+      "evaluation": 8,
+      "objective": 0.0,
+      "gradient_norm": 3.1207667379787103e-10,
+      "elapsed_s": 0.008824700023978949,
+      "metrics": {
+        "objective_total": 0.0,
+        "objective_system": 0.0,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 3.1207667379787103e-10,
+        "nominal_fidelity": 1.0,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "CallableParameterization",
+        "parameter_slices": 2,
+        "time_slices": 1,
+        "duration_s": 1.0,
+        "effective_update_period_s": 0.5,
+        "parameter_count": 2,
+        "parameter_names": [
+          "amplitude",
+          "phase"
+        ],
+        "parameters": [
+          {
+            "name": "amplitude",
+            "lower_bound": 0.0,
+            "upper_bound": 6.283185307179586,
+            "default": 1.0,
+            "description": "",
+            "units": null,
+            "value": 3.1415926542139463
+          },
+          {
+            "name": "phase",
+            "lower_bound": -3.141592653589793,
+            "upper_bound": 3.141592653589793,
+            "default": 0.0,
+            "description": "",
+            "units": "rad",
+            "value": 0.7000000000000006
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 2.402822597205875,
+        "command_rms_amplitude": 2.221441469520526,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 2.402822597205875,
+        "physical_rms_amplitude": 2.221441469520526,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 1.0
+      }
+    }
+  ],
+  "nominal_final_unitary": [
+    [
+      {
+        "real": -3.1207680883937883e-10,
+        "imag": -5.551115123125783e-17
+      },
+      {
+        "real": -0.6442176872376915,
+        "imag": -0.764842187284488
+      }
+    ],
+    [
+      {
+        "real": 0.6442176872376916,
+        "imag": -0.764842187284488
+      },
+      {
+        "real": -3.120765867947739e-10,
+        "imag": 1.1102230246251565e-16
+      }
+    ]
+  ],
+  "optimizer_summary": {
+    "method": "L-BFGS-B",
+    "nit": 5,
+    "nfev": 8,
+    "njev": 8,
+    "status": 0,
+    "variable_scaling": "bound_based"
+  }
+}

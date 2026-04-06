@@ -1,0 +1,12 @@
+{
+  "structured_objective": 2.6700124807765846e-06,
+  "grape_objective": 4.3876013933186186e-13,
+  "objective_improvement": 2.6700120420164453e-06,
+  "structured_nominal_fidelity": 0.9999973299875192,
+  "grape_nominal_fidelity": 0.9999999999995612,
+  "nominal_fidelity_gain": 2.6700120420164453e-06,
+  "artifacts": {
+    "structured_result_json": "outputs\\structured_to_grape_refinement_demo\\structured_result.json",
+    "grape_result_json": "outputs\\structured_to_grape_refinement_demo\\grape_result.json"
+  }
+}

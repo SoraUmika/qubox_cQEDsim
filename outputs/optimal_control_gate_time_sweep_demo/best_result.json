@@ -1,0 +1,335 @@
+{
+  "backend": "grape",
+  "success": true,
+  "message": "CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL",
+  "objective_value": 0.0,
+  "time_grid_s": [
+    3.2
+  ],
+  "time_boundaries_s": [
+    0.0,
+    3.2
+  ],
+  "control_terms": [
+    "x_drive"
+  ],
+  "parameter_values": [
+    [
+      0.9817477037837631
+    ]
+  ],
+  "command_values": [
+    [
+      0.9817477037837631
+    ]
+  ],
+  "physical_values": [
+    [
+      0.9817477037837631
+    ]
+  ],
+  "metrics": {
+    "objective_total": 0.0,
+    "objective_system": 0.0,
+    "objective_control_penalty": 0.0,
+    "gradient_norm": 2.3708022539267935e-09,
+    "nominal_fidelity": 1.0,
+    "aggregate_mode": "mean",
+    "system_weights": [
+      1.0
+    ],
+    "amplitude_penalty": 0.0,
+    "slew_penalty": 0.0,
+    "bound_penalty": 0.0,
+    "boundary_penalty": 0.0,
+    "iq_radius_penalty": 0.0,
+    "control_penalty_total": 0.0,
+    "parameterization": "PiecewiseConstantParameterization",
+    "parameter_slices": 1,
+    "time_slices": 1,
+    "duration_s": 3.2,
+    "effective_update_period_s": 3.2,
+    "hardware_active": false,
+    "hardware_map_count": 0,
+    "command_max_abs_amplitude": 0.9817477037837631,
+    "command_rms_amplitude": 0.9817477037837631,
+    "command_max_slew": 0.0,
+    "command_rms_slew": 0.0,
+    "physical_max_abs_amplitude": 0.9817477037837631,
+    "physical_rms_amplitude": 0.9817477037837631,
+    "physical_max_slew": 0.0,
+    "physical_rms_slew": 0.0,
+    "nominal_physical_fidelity": 1.0,
+    "nominal_command_fidelity": 1.0,
+    "objective_command_reference": 0.0,
+    "objective_physical_reference": 0.0,
+    "hardware_forward_model_applied": false
+  },
+  "system_metrics": [
+    {
+      "label": "gate_time_demo",
+      "weight": 1.0,
+      "objective": 0.0,
+      "objectives": [
+        {
+          "name": "flip",
+          "kind": "state_transfer",
+          "weight": 1.0,
+          "weighted_cost": 0.0,
+          "fidelity_weighted": 1.0,
+          "fidelity_mean": 1.0,
+          "fidelity_min": 1.0,
+          "fidelity_max": 1.0,
+          "infidelity": 0.0
+        }
+      ]
+    }
+  ],
+  "parameterization_metrics": {
+    "parameterization": "PiecewiseConstantParameterization",
+    "parameter_slices": 1,
+    "time_slices": 1,
+    "duration_s": 3.2,
+    "effective_update_period_s": 3.2
+  },
+  "hardware_metrics": {
+    "hardware_active": false,
+    "hardware_map_count": 0,
+    "command_max_abs_amplitude": 0.9817477037837631,
+    "command_rms_amplitude": 0.9817477037837631,
+    "command_max_slew": 0.0,
+    "command_rms_slew": 0.0,
+    "physical_max_abs_amplitude": 0.9817477037837631,
+    "physical_rms_amplitude": 0.9817477037837631,
+    "physical_max_slew": 0.0,
+    "physical_rms_slew": 0.0
+  },
+  "hardware_reports": [],
+  "history": [
+    {
+      "evaluation": 1,
+      "objective": 0.6433576048159777,
+      "gradient_norm": 1.5328253764627602,
+      "elapsed_s": 0.002500200003851205,
+      "metrics": {
+        "objective_total": 0.6433576048159777,
+        "objective_system": 0.6433576048159777,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 1.5328253764627602,
+        "nominal_fidelity": 0.3566423951840223,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "PiecewiseConstantParameterization",
+        "parameter_slices": 1,
+        "time_slices": 1,
+        "duration_s": 3.2,
+        "effective_update_period_s": 3.2,
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 0.4,
+        "command_rms_amplitude": 0.4,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 0.4,
+        "physical_rms_amplitude": 0.4,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.3566423951840223
+      }
+    },
+    {
+      "evaluation": 2,
+      "objective": 0.0008526121026235511,
+      "gradient_norm": 0.09339862948412865,
+      "elapsed_s": 0.0038523999974131584,
+      "metrics": {
+        "objective_total": 0.0008526121026235511,
+        "objective_system": 0.0008526121026235511,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.09339862948412865,
+        "nominal_fidelity": 0.9991473878973764,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "PiecewiseConstantParameterization",
+        "parameter_slices": 1,
+        "time_slices": 1,
+        "duration_s": 3.2,
+        "effective_update_period_s": 3.2,
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 1.0,
+        "command_rms_amplitude": 1.0,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 1.0,
+        "physical_rms_amplitude": 1.0,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.9991473878973764
+      }
+    },
+    {
+      "evaluation": 3,
+      "objective": 0.0006723092591428559,
+      "gradient_norm": 0.08294467033080663,
+      "elapsed_s": 0.004747400002088398,
+      "metrics": {
+        "objective_total": 0.0006723092591428559,
+        "objective_system": 0.0006723092591428559,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.08294467033080663,
+        "nominal_fidelity": 0.9993276907408571,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "PiecewiseConstantParameterization",
+        "parameter_slices": 1,
+        "time_slices": 1,
+        "duration_s": 3.2,
+        "effective_update_period_s": 3.2,
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 0.9655403084165839,
+        "command_rms_amplitude": 0.9655403084165839,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 0.9655403084165839,
+        "physical_rms_amplitude": 0.9655403084165839,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.9993276907408571
+      }
+    },
+    {
+      "evaluation": 4,
+      "objective": 2.72959432834341e-12,
+      "gradient_norm": 5.287024867310121e-06,
+      "elapsed_s": 0.00585529999807477,
+      "metrics": {
+        "objective_total": 2.72959432834341e-12,
+        "objective_system": 2.72959432834341e-12,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 5.287024867310121e-06,
+        "nominal_fidelity": 0.9999999999972704,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "PiecewiseConstantParameterization",
+        "parameter_slices": 1,
+        "time_slices": 1,
+        "duration_s": 3.2,
+        "effective_update_period_s": 3.2,
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 0.9817487368688547,
+        "command_rms_amplitude": 0.9817487368688547,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 0.9817487368688547,
+        "physical_rms_amplitude": 0.9817487368688547,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 0.9999999999972704
+      }
+    },
+    {
+      "evaluation": 5,
+      "objective": 0.0,
+      "gradient_norm": 2.3708022539267935e-09,
+      "elapsed_s": 0.0063319000182673335,
+      "metrics": {
+        "objective_total": 0.0,
+        "objective_system": 0.0,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 2.3708022539267935e-09,
+        "nominal_fidelity": 1.0,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "PiecewiseConstantParameterization",
+        "parameter_slices": 1,
+        "time_slices": 1,
+        "duration_s": 3.2,
+        "effective_update_period_s": 3.2,
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 0.9817477037837631,
+        "command_rms_amplitude": 0.9817477037837631,
+        "command_max_slew": 0.0,
+        "command_rms_slew": 0.0,
+        "physical_max_abs_amplitude": 0.9817477037837631,
+        "physical_rms_amplitude": 0.9817477037837631,
+        "physical_max_slew": 0.0,
+        "physical_rms_slew": 0.0,
+        "nominal_physical_fidelity": 1.0
+      }
+    }
+  ],
+  "nominal_final_unitary": [
+    [
+      {
+        "real": 7.408756941273964e-10,
+        "imag": 0.0
+      },
+      {
+        "real": 0.0,
+        "imag": -1.0
+      }
+    ],
+    [
+      {
+        "real": 0.0,
+        "imag": -1.0
+      },
+      {
+        "real": 7.408756941273964e-10,
+        "imag": 0.0
+      }
+    ]
+  ],
+  "optimizer_summary": {
+    "method": "L-BFGS-B",
+    "nit": 4,
+    "nfev": 5,
+    "njev": 5,
+    "status": 0,
+    "variable_scaling": "bound_based"
+  }
+}

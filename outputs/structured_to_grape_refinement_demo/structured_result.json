@@ -1,0 +1,862 @@
+{
+  "backend": "structured-control",
+  "success": true,
+  "message": "CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH",
+  "objective_value": 2.6700124807765846e-06,
+  "time_grid_s": [
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09,
+    4e-09
+  ],
+  "time_boundaries_s": [
+    0.0,
+    4e-09,
+    8e-09,
+    1.2000000000000002e-08,
+    1.6e-08,
+    2e-08,
+    2.4e-08,
+    2.8e-08,
+    3.2e-08,
+    3.6000000000000005e-08,
+    4.000000000000001e-08,
+    4.400000000000001e-08,
+    4.800000000000001e-08,
+    5.2000000000000016e-08,
+    5.600000000000002e-08,
+    6.000000000000002e-08,
+    6.400000000000002e-08,
+    6.800000000000001e-08,
+    7.200000000000001e-08,
+    7.6e-08,
+    8e-08,
+    8.4e-08,
+    8.8e-08,
+    9.199999999999999e-08,
+    9.599999999999999e-08
+  ],
+  "control_terms": [
+    "qubit_I",
+    "qubit_Q"
+  ],
+  "parameter_values": [
+    33783405.60267413,
+    0.19531918071190052,
+    0.5144405734179752,
+    -2.097533313986522,
+    0.004330151745877737
+  ],
+  "command_values": [
+    [
+      -629775.8171373074,
+      -1064949.8342358212,
+      -1720576.1468015893,
+      -2655955.723124575,
+      -3917153.058246533,
+      -5519803.363966084,
+      -7431570.274345734,
+      -9559650.955528567,
+      -11749204.972264767,
+      -13796865.932146138,
+      -15479553.669789689,
+      -16593688.982876087,
+      -16995520.18459711,
+      -16631577.84884512,
+      -15550357.565740421,
+      -13891709.42633465,
+      -11857136.620268712,
+      -9669704.614097595,
+      -7534531.617966162,
+      -5609309.305986231,
+      -3990000.8892091485,
+      -2711736.344791687,
+      -1760893.8538375779,
+      -1092522.8074216375
+    ],
+    [
+      -1237442.3049715727,
+      -2068325.5262588086,
+      -3303283.5484468215,
+      -5040873.865250505,
+      -7350194.022797146,
+      -10240584.746624922,
+      -13632756.304807635,
+      -17341055.677660972,
+      -21076588.781030133,
+      -24476990.69473828,
+      -27161178.935431335,
+      -28798647.11226038,
+      -29176178.91402954,
+      -28243439.263451368,
+      -26123993.631253473,
+      -23088427.81962124,
+      -19497635.081031956,
+      -15732664.475556524,
+      -12129848.342868222,
+      -8935959.45753554,
+      -6290131.398345743,
+      -4230687.388940265,
+      -2718909.9543372295,
+      -1669595.880936674
+    ]
+  ],
+  "physical_values": [
+    [
+      -629775.8171373074,
+      -1064949.8342358212,
+      -1720576.1468015893,
+      -2655955.723124575,
+      -3917153.058246533,
+      -5519803.363966084,
+      -7431570.274345734,
+      -9559650.955528567,
+      -11749204.972264767,
+      -13796865.932146138,
+      -15479553.669789689,
+      -16593688.982876087,
+      -16995520.18459711,
+      -16631577.84884512,
+      -15550357.565740421,
+      -13891709.42633465,
+      -11857136.620268712,
+      -9669704.614097595,
+      -7534531.617966162,
+      -5609309.305986231,
+      -3990000.8892091485,
+      -2711736.344791687,
+      -1760893.8538375779,
+      -1092522.8074216375
+    ],
+    [
+      -1237442.3049715727,
+      -2068325.5262588086,
+      -3303283.5484468215,
+      -5040873.865250505,
+      -7350194.022797146,
+      -10240584.746624922,
+      -13632756.304807635,
+      -17341055.677660972,
+      -21076588.781030133,
+      -24476990.69473828,
+      -27161178.935431335,
+      -28798647.11226038,
+      -29176178.91402954,
+      -28243439.263451368,
+      -26123993.631253473,
+      -23088427.81962124,
+      -19497635.081031956,
+      -15732664.475556524,
+      -12129848.342868222,
+      -8935959.45753554,
+      -6290131.398345743,
+      -4230687.388940265,
+      -2718909.9543372295,
+      -1669595.880936674
+    ]
+  ],
+  "metrics": {
+    "objective_total": 2.6700124807765846e-06,
+    "objective_system": 2.6700124807765846e-06,
+    "objective_control_penalty": 0.0,
+    "gradient_norm": 0.00010727353720299858,
+    "nominal_fidelity": 0.9999973299875192,
+    "aggregate_mode": "mean",
+    "system_weights": [
+      1.0
+    ],
+    "amplitude_penalty": 0.0,
+    "slew_penalty": 0.0,
+    "bound_penalty": 0.0,
+    "boundary_penalty": 0.0,
+    "iq_radius_penalty": 0.0,
+    "control_penalty_total": 0.0,
+    "parameterization": "StructuredPulseParameterization",
+    "parameter_count": 5,
+    "time_slices": 24,
+    "structured_channel_count": 1,
+    "parameter_names": [
+      "gaussian_drag.amplitude",
+      "gaussian_drag.sigma_fraction",
+      "gaussian_drag.center_fraction",
+      "gaussian_drag.phase_rad",
+      "gaussian_drag.drag_alpha"
+    ],
+    "structured_channels": [
+      {
+        "name": "gaussian_drag",
+        "family": "GaussianDragPulseFamily",
+        "mode": "iq_pair",
+        "control_terms": [
+          "qubit_I",
+          "qubit_Q"
+        ],
+        "parameters": {
+          "amplitude": 33783405.60267413,
+          "sigma_fraction": 0.19531918071190052,
+          "center_fraction": 0.5144405734179752,
+          "phase_rad": -2.097533313986522,
+          "drag_alpha": 0.004330151745877737
+        }
+      }
+    ],
+    "hardware_active": false,
+    "hardware_map_count": 0,
+    "command_max_abs_amplitude": 29176178.91402954,
+    "command_rms_amplitude": 14055170.380405452,
+    "command_max_slew": 941242651368855.6,
+    "command_rms_slew": 538072736488218.8,
+    "physical_max_abs_amplitude": 29176178.91402954,
+    "physical_rms_amplitude": 14055170.380405452,
+    "physical_max_slew": 941242651368855.6,
+    "physical_rms_slew": 538072736488218.8,
+    "nominal_physical_fidelity": 0.9999973299875192,
+    "nominal_command_fidelity": 0.9999973299875192,
+    "objective_command_reference": 2.6700124807765846e-06,
+    "objective_physical_reference": 2.6700124807765846e-06,
+    "hardware_forward_model_applied": false,
+    "optimizer_uses_gradients": true
+  },
+  "system_metrics": [
+    {
+      "label": "nominal",
+      "weight": 1.0,
+      "objective": 2.6700124807765846e-06,
+      "objectives": [
+        {
+          "name": "state_preparation",
+          "kind": "state_transfer",
+          "weight": 1.0,
+          "weighted_cost": 2.6700124807765846e-06,
+          "fidelity_weighted": 0.9999973299875192,
+          "fidelity_mean": 0.9999973299875192,
+          "fidelity_min": 0.9999973299875192,
+          "fidelity_max": 0.9999973299875192,
+          "infidelity": 2.6700124807765846e-06
+        }
+      ]
+    }
+  ],
+  "parameterization_metrics": {
+    "parameterization": "StructuredPulseParameterization",
+    "parameter_count": 5,
+    "time_slices": 24,
+    "structured_channel_count": 1,
+    "parameter_names": [
+      "gaussian_drag.amplitude",
+      "gaussian_drag.sigma_fraction",
+      "gaussian_drag.center_fraction",
+      "gaussian_drag.phase_rad",
+      "gaussian_drag.drag_alpha"
+    ],
+    "structured_channels": [
+      {
+        "name": "gaussian_drag",
+        "family": "GaussianDragPulseFamily",
+        "mode": "iq_pair",
+        "control_terms": [
+          "qubit_I",
+          "qubit_Q"
+        ],
+        "parameters": {
+          "amplitude": 33783405.60267413,
+          "sigma_fraction": 0.19531918071190052,
+          "center_fraction": 0.5144405734179752,
+          "phase_rad": -2.097533313986522,
+          "drag_alpha": 0.004330151745877737
+        }
+      }
+    ]
+  },
+  "hardware_metrics": {
+    "hardware_active": false,
+    "hardware_map_count": 0,
+    "command_max_abs_amplitude": 29176178.91402954,
+    "command_rms_amplitude": 14055170.380405452,
+    "command_max_slew": 941242651368855.6,
+    "command_rms_slew": 538072736488218.8,
+    "physical_max_abs_amplitude": 29176178.91402954,
+    "physical_rms_amplitude": 14055170.380405452,
+    "physical_max_slew": 941242651368855.6,
+    "physical_rms_slew": 538072736488218.8
+  },
+  "hardware_reports": [],
+  "history": [
+    {
+      "evaluation": 1,
+      "objective": 0.0512664472459321,
+      "gradient_norm": 3.1072884719922387,
+      "elapsed_s": 0.018672200036235154,
+      "metrics": {
+        "objective_total": 0.0512664472459321,
+        "objective_system": 0.0512664472459321,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 3.1072884719922387,
+        "nominal_fidelity": 0.9487335527540679,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "StructuredPulseParameterization",
+        "parameter_count": 5,
+        "time_slices": 24,
+        "structured_channel_count": 1,
+        "parameter_names": [
+          "gaussian_drag.amplitude",
+          "gaussian_drag.sigma_fraction",
+          "gaussian_drag.center_fraction",
+          "gaussian_drag.phase_rad",
+          "gaussian_drag.drag_alpha"
+        ],
+        "structured_channels": [
+          {
+            "name": "gaussian_drag",
+            "family": "GaussianDragPulseFamily",
+            "mode": "iq_pair",
+            "control_terms": [
+              "qubit_I",
+              "qubit_Q"
+            ],
+            "parameters": {
+              "amplitude": 31202785.478013147,
+              "sigma_fraction": 0.1803171714788021,
+              "center_fraction": 0.5152397985826466,
+              "phase_rad": -2.097533313986522,
+              "drag_alpha": 0.012882699839403558
+            }
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 26925589.04824105,
+        "command_rms_amplitude": 12488697.218702001,
+        "command_max_slew": 941380044525356.5,
+        "command_rms_slew": 519944316203486.44,
+        "physical_max_abs_amplitude": 26925589.04824105,
+        "physical_rms_amplitude": 12488697.218702001,
+        "physical_max_slew": 941380044525356.5,
+        "physical_rms_slew": 519944316203486.44,
+        "nominal_physical_fidelity": 0.9487335527540679
+      }
+    },
+    {
+      "evaluation": 2,
+      "objective": 0.7782955888645441,
+      "gradient_norm": 7.84658997734475,
+      "elapsed_s": 0.030943899997510016,
+      "metrics": {
+        "objective_total": 0.7782955888645441,
+        "objective_system": 0.7782955888645441,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 7.84658997734475,
+        "nominal_fidelity": 0.22170441113545594,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "StructuredPulseParameterization",
+        "parameter_count": 5,
+        "time_slices": 24,
+        "structured_channel_count": 1,
+        "parameter_names": [
+          "gaussian_drag.amplitude",
+          "gaussian_drag.sigma_fraction",
+          "gaussian_drag.center_fraction",
+          "gaussian_drag.phase_rad",
+          "gaussian_drag.drag_alpha"
+        ],
+        "structured_channels": [
+          {
+            "name": "gaussian_drag",
+            "family": "GaussianDragPulseFamily",
+            "mode": "iq_pair",
+            "control_terms": [
+              "qubit_I",
+              "qubit_Q"
+            ],
+            "parameters": {
+              "amplitude": 70000000.0,
+              "sigma_fraction": 0.24,
+              "center_fraction": 0.5026292586599117,
+              "phase_rad": -2.0975333139865198,
+              "drag_alpha": -0.3
+            }
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 72610577.56304991,
+        "command_rms_amplitude": 42731494.33342353,
+        "command_max_slew": 3386819470213743.5,
+        "command_rms_slew": 1764939319628065.2,
+        "physical_max_abs_amplitude": 72610577.56304991,
+        "physical_rms_amplitude": 42731494.33342353,
+        "physical_max_slew": 3386819470213743.5,
+        "physical_rms_slew": 1764939319628065.2,
+        "nominal_physical_fidelity": 0.22170441113545594
+      }
+    },
+    {
+      "evaluation": 3,
+      "objective": 0.7821558479222128,
+      "gradient_norm": 6.774305443920169,
+      "elapsed_s": 0.04213050001999363,
+      "metrics": {
+        "objective_total": 0.7821558479222128,
+        "objective_system": 0.7821558479222128,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 6.774305443920169,
+        "nominal_fidelity": 0.21784415207778715,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "StructuredPulseParameterization",
+        "parameter_count": 5,
+        "time_slices": 24,
+        "structured_channel_count": 1,
+        "parameter_names": [
+          "gaussian_drag.amplitude",
+          "gaussian_drag.sigma_fraction",
+          "gaussian_drag.center_fraction",
+          "gaussian_drag.phase_rad",
+          "gaussian_drag.drag_alpha"
+        ],
+        "structured_channels": [
+          {
+            "name": "gaussian_drag",
+            "family": "GaussianDragPulseFamily",
+            "mode": "iq_pair",
+            "control_terms": [
+              "qubit_I",
+              "qubit_Q"
+            ],
+            "parameters": {
+              "amplitude": 46253203.4328857,
+              "sigma_fraction": 0.2034696458262573,
+              "center_fraction": 0.5103478521165876,
+              "phase_rad": -2.097533313986521,
+              "drag_alpha": -0.10849239013679315
+            }
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 41766788.48298562,
+        "command_rms_amplitude": 20976841.60998939,
+        "command_max_slew": 1369672248847218.8,
+        "command_rms_slew": 856603474723715.6,
+        "physical_max_abs_amplitude": 41766788.48298562,
+        "physical_rms_amplitude": 20976841.60998939,
+        "physical_max_slew": 1369672248847218.8,
+        "physical_rms_slew": 856603474723715.6,
+        "nominal_physical_fidelity": 0.21784415207778715
+      }
+    },
+    {
+      "evaluation": 4,
+      "objective": 0.015884433680023013,
+      "gradient_norm": 1.8348496741131024,
+      "elapsed_s": 0.05039079999551177,
+      "metrics": {
+        "objective_total": 0.015884433680023013,
+        "objective_system": 0.015884433680023013,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 1.8348496741131024,
+        "nominal_fidelity": 0.984115566319977,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "StructuredPulseParameterization",
+        "parameter_count": 5,
+        "time_slices": 24,
+        "structured_channel_count": 1,
+        "parameter_names": [
+          "gaussian_drag.amplitude",
+          "gaussian_drag.sigma_fraction",
+          "gaussian_drag.center_fraction",
+          "gaussian_drag.phase_rad",
+          "gaussian_drag.drag_alpha"
+        ],
+        "structured_channels": [
+          {
+            "name": "gaussian_drag",
+            "family": "GaussianDragPulseFamily",
+            "mode": "iq_pair",
+            "control_terms": [
+              "qubit_I",
+              "qubit_Q"
+            ],
+            "parameters": {
+              "amplitude": 33083052.018658035,
+              "sigma_fraction": 0.18320963752055514,
+              "center_fraction": 0.5146286419166765,
+              "phase_rad": -2.097533313986522,
+              "drag_alpha": -0.002280833906589199
+            }
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 28589323.78953974,
+        "command_rms_amplitude": 13330411.424827863,
+        "command_max_slew": 982018782264165.6,
+        "command_rms_slew": 544798452443958.25,
+        "physical_max_abs_amplitude": 28589323.78953974,
+        "physical_rms_amplitude": 13330411.424827863,
+        "physical_max_slew": 982018782264165.6,
+        "physical_rms_slew": 544798452443958.25,
+        "nominal_physical_fidelity": 0.984115566319977
+      }
+    },
+    {
+      "evaluation": 5,
+      "objective": 0.00023108924785808505,
+      "gradient_norm": 0.2018111124610146,
+      "elapsed_s": 0.060641499992925674,
+      "metrics": {
+        "objective_total": 0.00023108924785808505,
+        "objective_system": 0.00023108924785808505,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.2018111124610146,
+        "nominal_fidelity": 0.9997689107521419,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "StructuredPulseParameterization",
+        "parameter_count": 5,
+        "time_slices": 24,
+        "structured_channel_count": 1,
+        "parameter_names": [
+          "gaussian_drag.amplitude",
+          "gaussian_drag.sigma_fraction",
+          "gaussian_drag.center_fraction",
+          "gaussian_drag.phase_rad",
+          "gaussian_drag.drag_alpha"
+        ],
+        "structured_channels": [
+          {
+            "name": "gaussian_drag",
+            "family": "GaussianDragPulseFamily",
+            "mode": "iq_pair",
+            "control_terms": [
+              "qubit_I",
+              "qubit_Q"
+            ],
+            "parameters": {
+              "amplitude": 33994696.85880674,
+              "sigma_fraction": 0.19556639354047978,
+              "center_fraction": 0.5143702348957923,
+              "phase_rad": -2.097533313986522,
+              "drag_alpha": 0.002505719484977636
+            }
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 29363509.135389198,
+        "command_rms_amplitude": 14150833.759628376,
+        "command_max_slew": 945842809018386.6,
+        "command_rms_slew": 540941992794912.7,
+        "physical_max_abs_amplitude": 29363509.135389198,
+        "physical_rms_amplitude": 14150833.759628376,
+        "physical_max_slew": 945842809018386.6,
+        "physical_rms_slew": 540941992794912.7,
+        "nominal_physical_fidelity": 0.9997689107521419
+      }
+    },
+    {
+      "evaluation": 6,
+      "objective": 3.3577882604385323e-06,
+      "gradient_norm": 0.010012875095984664,
+      "elapsed_s": 0.06988930003717542,
+      "metrics": {
+        "objective_total": 3.3577882604385323e-06,
+        "objective_system": 3.3577882604385323e-06,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.010012875095984664,
+        "nominal_fidelity": 0.9999966422117396,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "StructuredPulseParameterization",
+        "parameter_count": 5,
+        "time_slices": 24,
+        "structured_channel_count": 1,
+        "parameter_names": [
+          "gaussian_drag.amplitude",
+          "gaussian_drag.sigma_fraction",
+          "gaussian_drag.center_fraction",
+          "gaussian_drag.phase_rad",
+          "gaussian_drag.drag_alpha"
+        ],
+        "structured_channels": [
+          {
+            "name": "gaussian_drag",
+            "family": "GaussianDragPulseFamily",
+            "mode": "iq_pair",
+            "control_terms": [
+              "qubit_I",
+              "qubit_Q"
+            ],
+            "parameters": {
+              "amplitude": 33785909.319979854,
+              "sigma_fraction": 0.19523804923144394,
+              "center_fraction": 0.5144408943918818,
+              "phase_rad": -2.097533313986522,
+              "drag_alpha": 0.0042008437769216304
+            }
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 29178688.26318359,
+        "command_rms_amplitude": 14053204.81617665,
+        "command_max_slew": 941691267122036.5,
+        "command_rms_slew": 538221216604851.7,
+        "physical_max_abs_amplitude": 29178688.26318359,
+        "physical_rms_amplitude": 14053204.81617665,
+        "physical_max_slew": 941691267122036.5,
+        "physical_rms_slew": 538221216604851.7,
+        "nominal_physical_fidelity": 0.9999966422117396
+      }
+    },
+    {
+      "evaluation": 7,
+      "objective": 2.670418786987483e-06,
+      "gradient_norm": 0.00021677860051317406,
+      "elapsed_s": 0.07834260002709925,
+      "metrics": {
+        "objective_total": 2.670418786987483e-06,
+        "objective_system": 2.670418786987483e-06,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.00021677860051317406,
+        "nominal_fidelity": 0.999997329581213,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "StructuredPulseParameterization",
+        "parameter_count": 5,
+        "time_slices": 24,
+        "structured_channel_count": 1,
+        "parameter_names": [
+          "gaussian_drag.amplitude",
+          "gaussian_drag.sigma_fraction",
+          "gaussian_drag.center_fraction",
+          "gaussian_drag.phase_rad",
+          "gaussian_drag.drag_alpha"
+        ],
+        "structured_channels": [
+          {
+            "name": "gaussian_drag",
+            "family": "GaussianDragPulseFamily",
+            "mode": "iq_pair",
+            "control_terms": [
+              "qubit_I",
+              "qubit_Q"
+            ],
+            "parameters": {
+              "amplitude": 33783398.148249455,
+              "sigma_fraction": 0.19531845799317174,
+              "center_fraction": 0.5144414048378841,
+              "phase_rad": -2.097533313986522,
+              "drag_alpha": 0.004327337705889924
+            }
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 29176185.93921784,
+        "command_rms_amplitude": 14055139.14567434,
+        "command_max_slew": 941245759884999.8,
+        "command_rms_slew": 538073423287784.44,
+        "physical_max_abs_amplitude": 29176185.93921784,
+        "physical_rms_amplitude": 14055139.14567434,
+        "physical_max_slew": 941245759884999.8,
+        "physical_rms_slew": 538073423287784.44,
+        "nominal_physical_fidelity": 0.999997329581213
+      }
+    },
+    {
+      "evaluation": 8,
+      "objective": 2.6700124807765846e-06,
+      "gradient_norm": 0.00010727353720299858,
+      "elapsed_s": 0.08640550001291558,
+      "metrics": {
+        "objective_total": 2.6700124807765846e-06,
+        "objective_system": 2.6700124807765846e-06,
+        "objective_control_penalty": 0.0,
+        "gradient_norm": 0.00010727353720299858,
+        "nominal_fidelity": 0.9999973299875192,
+        "aggregate_mode": "mean",
+        "system_weights": [
+          1.0
+        ],
+        "amplitude_penalty": 0.0,
+        "slew_penalty": 0.0,
+        "bound_penalty": 0.0,
+        "boundary_penalty": 0.0,
+        "iq_radius_penalty": 0.0,
+        "control_penalty_total": 0.0,
+        "parameterization": "StructuredPulseParameterization",
+        "parameter_count": 5,
+        "time_slices": 24,
+        "structured_channel_count": 1,
+        "parameter_names": [
+          "gaussian_drag.amplitude",
+          "gaussian_drag.sigma_fraction",
+          "gaussian_drag.center_fraction",
+          "gaussian_drag.phase_rad",
+          "gaussian_drag.drag_alpha"
+        ],
+        "structured_channels": [
+          {
+            "name": "gaussian_drag",
+            "family": "GaussianDragPulseFamily",
+            "mode": "iq_pair",
+            "control_terms": [
+              "qubit_I",
+              "qubit_Q"
+            ],
+            "parameters": {
+              "amplitude": 33783405.60267413,
+              "sigma_fraction": 0.19531918071190052,
+              "center_fraction": 0.5144405734179752,
+              "phase_rad": -2.097533313986522,
+              "drag_alpha": 0.004330151745877737
+            }
+          }
+        ],
+        "hardware_active": false,
+        "hardware_map_count": 0,
+        "command_max_abs_amplitude": 29176178.91402954,
+        "command_rms_amplitude": 14055170.380405452,
+        "command_max_slew": 941242651368855.6,
+        "command_rms_slew": 538072736488218.8,
+        "physical_max_abs_amplitude": 29176178.91402954,
+        "physical_rms_amplitude": 14055170.380405452,
+        "physical_max_slew": 941242651368855.6,
+        "physical_rms_slew": 538072736488218.8,
+        "nominal_physical_fidelity": 0.9999973299875192
+      }
+    }
+  ],
+  "nominal_final_unitary": [
+    [
+      {
+        "real": 7.30089256317009e-06,
+        "imag": 5.48282574833886e-06
+      },
+      {
+        "real": 0.8791618503864886,
+        "imag": 0.47652196240500966
+      },
+      {
+        "real": -0.0006139541853079777,
+        "imag": 0.0009397593183236144
+      }
+    ],
+    [
+      {
+        "real": -0.8489641925345068,
+        "imag": 0.5284478496330086
+      },
+      {
+        "real": 5.933965323348667e-06,
+        "imag": -4.3898802250638864e-06
+      },
+      {
+        "real": 0.001276010120742028,
+        "imag": 0.0010206645728743661
+      }
+    ],
+    [
+      {
+        "real": 0.001628054782032722,
+        "imag": 0.00013916444890791572
+      },
+      {
+        "real": -0.0010597468034911732,
+        "imag": 0.00037020658008900573
+      },
+      {
+        "real": 0.2513564047897858,
+        "imag": 0.9678925703433358
+      }
+    ]
+  ],
+  "optimizer_summary": {
+    "method": "L-BFGS-B",
+    "nit": 5,
+    "nfev": 8,
+    "njev": 8,
+    "status": 0,
+    "variable_scaling": "bound_based"
+  }
+}

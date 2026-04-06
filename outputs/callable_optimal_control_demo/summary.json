@@ -1,0 +1,45 @@
+{
+  "success": true,
+  "objective_value": 0.0,
+  "nominal_fidelity": 1.0,
+  "parameter_values": [
+    3.1415926542139463,
+    0.7000000000000006
+  ],
+  "parameterization": {
+    "parameterization": "CallableParameterization",
+    "parameter_slices": 2,
+    "time_slices": 1,
+    "duration_s": 1.0,
+    "effective_update_period_s": 0.5,
+    "parameter_count": 2,
+    "parameter_names": [
+      "amplitude",
+      "phase"
+    ],
+    "parameters": [
+      {
+        "name": "amplitude",
+        "lower_bound": 0.0,
+        "upper_bound": 6.283185307179586,
+        "default": 1.0,
+        "description": "",
+        "units": null,
+        "value": 3.1415926542139463
+      },
+      {
+        "name": "phase",
+        "lower_bound": -3.141592653589793,
+        "upper_bound": 3.141592653589793,
+        "default": 0.0,
+        "description": "",
+        "units": "rad",
+        "value": 0.7000000000000006
+      }
+    ]
+  },
+  "artifacts": {
+    "result_json": "outputs\\callable_optimal_control_demo\\result.json",
+    "waveforms_csv": "outputs\\callable_optimal_control_demo\\waveforms.csv"
+  }
+}

@@ -192,18 +192,30 @@ def grape_problem():
 
 
 def test_grape_numpy_lbfgsb(benchmark, grape_problem):
-    """GRAPE with NumPy engine + L-BFGS-B (baseline)."""
+    """GRAPE with NumPy engine + L-BFGS-B (baseline).
+
+    On the small X-gate problem L-BFGS-B converges to machine precision
+    (<1e-6) in 30 iterations.  This is the fastest solver path for small
+    Hilbert spaces on CPU.
+    """
     config = GrapeConfig(engine="numpy", optimizer_method="L-BFGS-B", maxiter=30, seed=42)
 
     def _solve():
         return GrapeSolver(config=config).solve(grape_problem)
 
     result = benchmark.pedantic(_solve, rounds=3, warmup_rounds=0)
-    assert result.objective_value <= 1.0
+    assert result.objective_value < 1e-4, (
+        f"NumPy L-BFGS-B should converge to <1e-4 in 30 iters, got {result.objective_value:.6g}"
+    )
 
 
 def test_grape_jax_lbfgsb(benchmark, grape_problem):
-    """GRAPE with JAX engine + L-BFGS-B (JIT-compiled cost+gradient)."""
+    """GRAPE with JAX engine + L-BFGS-B (JIT-compiled cost+gradient).
+
+    Same convergence as NumPy but with JIT overhead.  On the small X-gate
+    problem L-BFGS-B converges to <1e-6 in 30 iterations through either
+    engine.
+    """
     pytest.importorskip("jax")
     config = GrapeConfig(engine="jax", optimizer_method="L-BFGS-B", maxiter=30, seed=42)
 
@@ -211,11 +223,18 @@ def test_grape_jax_lbfgsb(benchmark, grape_problem):
         return GrapeSolver(config=config).solve(grape_problem)
 
     result = benchmark.pedantic(_solve, rounds=3, warmup_rounds=1)
-    assert result.objective_value <= 1.0
+    assert result.objective_value < 1e-4, (
+        f"JAX L-BFGS-B should converge to <1e-4 in 30 iters, got {result.objective_value:.6g}"
+    )
 
 
 def test_grape_jax_adam(benchmark, grape_problem):
-    """GRAPE with JAX engine + Optax Adam (first-order, no line search)."""
+    """GRAPE with JAX engine + Optax Adam (first-order, no line search).
+
+    Adam needs more iterations than L-BFGS-B but is better suited for noisy
+    or stochastic objectives.  At 100 iterations on this problem it should
+    reach <1e-2 comfortably.
+    """
     pytest.importorskip("jax")
     pytest.importorskip("optax")
     config = GrapeConfig(
@@ -227,7 +246,9 @@ def test_grape_jax_adam(benchmark, grape_problem):
         return GrapeSolver(config=config).solve(grape_problem)
 
     result = benchmark.pedantic(_solve, rounds=3, warmup_rounds=1)
-    assert result.objective_value <= 1.0
+    assert result.objective_value < 1e-2, (
+        f"JAX Adam should reach <1e-2 in 100 iters, got {result.objective_value:.6g}"
+    )
 
 
 # ── Regression: dynamiqs matches QuTiP fidelity ──────────────────────────────
@@ -263,7 +284,7 @@ def test_dynamiqs_matches_qutip_fidelity():
 # ── Regression: Optax Adam reduces cost ──────────────────────────────────────
 
 def test_optax_adam_reduces_cost():
-    """Adam optimizer must reduce the GRAPE infidelity over 50 iterations."""
+    """Adam optimizer must reduce the GRAPE infidelity well below 0.1 in 50 iters."""
     pytest.importorskip("jax")
     pytest.importorskip("optax")
 
@@ -273,10 +294,10 @@ def test_optax_adam_reduces_cost():
         optax_learning_rate=5e-3, maxiter=50, seed=0,
     )
     result = GrapeSolver(config=config_adam).solve(problem)
-    # After 50 Adam steps from random init, cost must have dropped below 1.0
-    # (it starts at ~1.0 for random init, so any decrease suffices).
-    assert result.objective_value < 1.0, (
-        f"Adam did not reduce cost: final={result.objective_value:.4f}"
+    # At seed=0, 50 Adam steps on the X-gate problem reaches ~0.003.
+    # Use 0.05 as a safe upper bound that catches real failures.
+    assert result.objective_value < 0.05, (
+        f"Adam did not converge sufficiently: final={result.objective_value:.6f} (expect <0.05)"
     )
 
 
@@ -389,5 +410,89 @@ def test_speedup_summary(capsys):
             f"  Speedup : {speedup:.2f}x\n"
             f"{'─'*52}"
         )
-    # Soft assertion: dynamiqs should not be more than 100x slower than QuTiP
-    assert dq_wall < qt_wall * 100, "dynamiqs is unexpectedly slow vs QuTiP"
+    # On CPU with a small system, dynamiqs is ~3x slower than QuTiP due to
+    # JAX overhead.  Cap at 15x to catch regressions while tolerating CI jitter.
+    assert dq_wall < qt_wall * 15, (
+        f"dynamiqs is unexpectedly slow vs QuTiP: "
+        f"{dq_wall:.3f}s vs {qt_wall:.3f}s ({speedup:.1f}x)"
+    )
+
+
+# ── Cross-optimizer convergence comparison ────────────────────────────────────
+
+def test_optimizer_convergence_comparison(capsys):
+    """Compare all available GRAPE optimizers on the same X-gate problem.
+
+    This test is the primary reference for which optimizer to choose.
+    It prints a ranked table and enforces convergence bounds per method.
+
+    Expected ranking (small CPU problem, 2x2 qubit subspace):
+        1. L-BFGS-B (numpy) — fastest wall-clock, best convergence
+        2. L-BFGS-B (jax)   — same convergence, JIT overhead on small problems
+        3. Adam              — good first-order, needs ~100 iters
+        4. AdamW             — similar to Adam
+        5. SGD               — competitive with tuned LR
+        6. AdaGrad           — slowest convergence of the Optax set
+
+    On larger Hilbert spaces (n_cav >= 15) or GPU, the JAX paths are expected
+    to become faster than the NumPy path due to JIT and hardware acceleration.
+    """
+    jax = pytest.importorskip("jax")
+    optax = pytest.importorskip("optax")
+
+    problem = _grape_problem()
+
+    configs = {
+        "numpy L-BFGS-B": GrapeConfig(
+            engine="numpy", optimizer_method="L-BFGS-B", maxiter=30, seed=42),
+        "jax   L-BFGS-B": GrapeConfig(
+            engine="jax", optimizer_method="L-BFGS-B", maxiter=30, seed=42),
+        "jax   adam":      GrapeConfig(
+            engine="jax", optimizer_method="adam",
+            optax_learning_rate=5e-3, maxiter=100, seed=42),
+        "jax   adamw":     GrapeConfig(
+            engine="jax", optimizer_method="adamw",
+            optax_learning_rate=5e-3, maxiter=100, seed=42),
+        "jax   sgd":       GrapeConfig(
+            engine="jax", optimizer_method="sgd",
+            optax_learning_rate=5e-3, maxiter=100, seed=42),
+        "jax   adagrad":   GrapeConfig(
+            engine="jax", optimizer_method="adagrad",
+            optax_learning_rate=5e-3, maxiter=100, seed=42),
+    }
+
+    # Convergence thresholds — generous enough to tolerate CI variance,
+    # tight enough to catch real regressions.
+    thresholds = {
+        "numpy L-BFGS-B": 1e-4,
+        "jax   L-BFGS-B": 1e-4,
+        "jax   adam":      1e-2,
+        "jax   adamw":     1e-2,
+        "jax   sgd":       1e-2,
+        "jax   adagrad":   1e-2,
+    }
+
+    results = {}
+    for label, cfg in configs.items():
+        t0 = time.perf_counter()
+        res = GrapeSolver(config=cfg).solve(problem)
+        wall = time.perf_counter() - t0
+        results[label] = (res.objective_value, wall, cfg.maxiter)
+
+    # Print comparison table
+    with capsys.disabled():
+        header = f"\n{'='*72}\n  GRAPE Optimizer Comparison (X-gate, 2x2 qubit, 20 time slices)\n{'='*72}"
+        print(header)
+        print(f"  {'Method':<20s} {'Iters':>5s} {'Objective':>12s} {'Wall (ms)':>10s}")
+        print(f"  {'-'*20} {'-'*5} {'-'*12} {'-'*10}")
+        for label in configs:
+            obj, wall, iters = results[label]
+            print(f"  {label:<20s} {iters:>5d} {obj:>12.6g} {wall*1000:>10.1f}")
+        print(f"{'='*72}")
+
+    # Enforce convergence bounds
+    for label, threshold in thresholds.items():
+        obj = results[label][0]
+        assert obj < threshold, (
+            f"{label} did not converge: objective={obj:.6g} >= {threshold:.1g}"
+        )

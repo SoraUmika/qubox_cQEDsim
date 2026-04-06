@@ -3001,6 +3001,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#common-optimization-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Optimization Use Cases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#results-and-diagnostics" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3642,6 +3653,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#common-optimization-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Optimization Use Cases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#results-and-diagnostics" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4038,6 +4060,21 @@
 <li><code>warm_start</code> accepts a saved JSON payload, a mapping, or a previous <code>SynthesisResult</code>.</li>
 </ul>
 <hr />
+<h2 id="common-optimization-use-cases">Common Optimization Use Cases<a class="headerlink" href="#common-optimization-use-cases" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Duration-constrained gate synthesis: pair <code>TargetUnitary</code> or other ideal targets with <code>SynthesisConstraints(max_duration=...)</code>, <code>duration_mode</code>, and <code>MultiObjective(duration_weight=...)</code>.</li>
+<li>Logical subspace process fidelity: use <code>TargetUnitary</code> for square logical maps, with <code>ignore_global_phase</code>, <code>allow_diagonal_phase</code>, or <code>phase_blocks</code> when phase equivalence matters.</li>
+<li>State-transfer or state-ensemble optimization: use <code>TargetStateMapping</code> with one or many input/target pairs and optional state weights.</li>
+<li>Reduced-state or subsystem fidelity: use <code>TargetReducedStateMapping</code> when only retained subsystems matter after tracing out spectators or ancillas.</li>
+<li>Process or channel matching: use <code>TargetChannel</code> with a unitary, Kraus set, superoperator, or Choi matrix, including reduced-channel comparisons on selected subsystems.</li>
+<li>Encoding or state-injection maps: use <code>TargetIsometry</code> when only logical columns matter instead of a full square unitary.</li>
+<li>Observable fitting: use <code>ObservableTarget</code> to optimize directly against expectation values for weighted states and observables.</li>
+<li>Trajectory checkpoint objectives: use <code>TrajectoryTarget</code> with <code>TrajectoryCheckpoint</code> entries to constrain intermediate states or observables.</li>
+<li>Robust optimization: attach a <code>ParameterDistribution</code> and set <code>MultiObjective(robustness_weight=...)</code> to optimize over sampled uncertain model parameters.</li>
+<li>Leakage-aware relevant-map optimization: add <code>LeakagePenalty(weight=..., checkpoint_weight=..., edge_weight=...)</code> without changing the task target into a full-Hilbert-space unitary.</li>
+<li>Workflow helpers: reuse saved results with <code>warm_start</code>, scan tradeoffs with <code>explore_pareto(...)</code>, and search discrete primitive orderings with <code>GateOrderOptimizer</code>.</li>
+</ul>
+<hr />
 <h2 id="results-and-diagnostics">Results and Diagnostics<a class="headerlink" href="#results-and-diagnostics" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">result</span> <span class="o">=</span> <span class="n">synth</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">result</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;optimized_gate.json&quot;</span><span class="p">)</span>
@@ -4116,8 +4153,11 @@ Parameters are automatically included in the optimizer search space.</p>
 primitives go through the full runtime stack.</p>
 <hr />
 <h2 id="gate-registry">Gate Registry<a class="headerlink" href="#gate-registry" title="Permanent link">&para;</a></h2>
-<p>The gate registry maps custom gate names to factory callables so they can be
-referenced by name in <code>QuantumMapSynthesizer(gateset=[...])</code>.</p>
+<p>The gate registry maps custom gate names to factory callables. Adapters that
+know how to expand named gatesets can reference those names directly in
+<code>QuantumMapSynthesizer(gateset=[...])</code>. In the generic subspace-only path,
+instantiate the registered primitive with <code>gate_registry.build(...)</code> and pass it
+through <code>primitives=[...]</code>.</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">GateRegistry</span><span class="p">:</span>
 </span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">factory</span><span class="p">):</span> <span class="o">...</span>
 </span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">100e-9</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> <span class="o">...</span>
@@ -4126,16 +4166,35 @@ referenced by name in <code>QuantumMapSynthesizer(gateset=[...])</code>.</p>
 </span></code></pre></div>
 <p>A pre-constructed singleton <code>gate_registry</code> is exported from
 <code>cqed_sim.map_synthesis</code>:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.map_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantumMapSynthesizer</span><span class="p">,</span> <span class="n">gate_registry</span><span class="p">,</span> <span class="n">make_gate_from_callable</span>
-</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>
-</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a><span class="n">gate_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
-</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    <span class="s2">&quot;MyCZ&quot;</span><span class="p">,</span>
-</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>    <span class="k">lambda</span> <span class="n">name</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">make_gate_from_callable</span><span class="p">(</span>
-</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>        <span class="n">name</span><span class="p">,</span> <span class="n">my_cz_fn</span><span class="p">,</span> <span class="n">parameters</span><span class="o">=</span><span class="p">{},</span> <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span>
-</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>    <span class="p">),</span>
-</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="p">)</span>
-</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span><span class="n">gateset</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;QubitRotation&quot;</span><span class="p">,</span> <span class="s2">&quot;MyCZ&quot;</span><span class="p">],</span> <span class="o">...</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.map_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>    <span class="n">QuantumMapSynthesizer</span><span class="p">,</span>
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>    <span class="n">Subspace</span><span class="p">,</span>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a>    <span class="n">TargetUnitary</span><span class="p">,</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>    <span class="n">gate_registry</span><span class="p">,</span>
+</span><span id="__span-24-6"><a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>    <span class="n">make_gate_from_callable</span><span class="p">,</span>
+</span><span id="__span-24-7"><a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="p">)</span>
+</span><span id="__span-24-8"><a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>
+</span><span id="__span-24-9"><a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a><span class="n">gate_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+</span><span id="__span-24-10"><a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a>    <span class="s2">&quot;CustomXRotation&quot;</span><span class="p">,</span>
+</span><span id="__span-24-11"><a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>    <span class="k">lambda</span> <span class="n">name</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">make_gate_from_callable</span><span class="p">(</span>
+</span><span id="__span-24-12"><a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a>        <span class="n">name</span><span class="p">,</span>
+</span><span id="__span-24-13"><a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a>        <span class="n">custom_x_rotation</span><span class="p">,</span>
+</span><span id="__span-24-14"><a id="__codelineno-24-14" name="__codelineno-24-14" href="#__codelineno-24-14"></a>        <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;theta&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">},</span>
+</span><span id="__span-24-15"><a id="__codelineno-24-15" name="__codelineno-24-15" href="#__codelineno-24-15"></a>        <span class="n">parameter_bounds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;theta&quot;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)},</span>
+</span><span id="__span-24-16"><a id="__codelineno-24-16" name="__codelineno-24-16" href="#__codelineno-24-16"></a>        <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+</span><span id="__span-24-17"><a id="__codelineno-24-17" name="__codelineno-24-17" href="#__codelineno-24-17"></a>        <span class="n">optimize_time</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-24-18"><a id="__codelineno-24-18" name="__codelineno-24-18" href="#__codelineno-24-18"></a>        <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;optimize_time&quot;</span><span class="p">},</span>
+</span><span id="__span-24-19"><a id="__codelineno-24-19" name="__codelineno-24-19" href="#__codelineno-24-19"></a>    <span class="p">),</span>
+</span><span id="__span-24-20"><a id="__codelineno-24-20" name="__codelineno-24-20" href="#__codelineno-24-20"></a><span class="p">)</span>
+</span><span id="__span-24-21"><a id="__codelineno-24-21" name="__codelineno-24-21" href="#__codelineno-24-21"></a><span class="n">primitive</span> <span class="o">=</span> <span class="n">gate_registry</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s2">&quot;CustomXRotation&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">40e-9</span><span class="p">)</span>
+</span><span id="__span-24-22"><a id="__codelineno-24-22" name="__codelineno-24-22" href="#__codelineno-24-22"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span>
+</span><span id="__span-24-23"><a id="__codelineno-24-23" name="__codelineno-24-23" href="#__codelineno-24-23"></a>    <span class="n">primitives</span><span class="o">=</span><span class="p">[</span><span class="n">primitive</span><span class="p">],</span>
+</span><span id="__span-24-24"><a id="__codelineno-24-24" name="__codelineno-24-24" href="#__codelineno-24-24"></a>    <span class="n">subspace</span><span class="o">=</span><span class="n">Subspace</span><span class="o">.</span><span class="n">custom</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
+</span><span id="__span-24-25"><a id="__codelineno-24-25" name="__codelineno-24-25" href="#__codelineno-24-25"></a>    <span class="n">target</span><span class="o">=</span><span class="n">TargetUnitary</span><span class="p">(</span><span class="n">target_unitary</span><span class="p">),</span>
+</span><span id="__span-24-26"><a id="__codelineno-24-26" name="__codelineno-24-26" href="#__codelineno-24-26"></a><span class="p">)</span>
 </span></code></pre></div>
+<p>See <code>examples/custom_gate_primitives_demo.py</code> for a deterministic end-to-end
+smoke test that also validates the resulting observable with a saved plot.</p>
 <hr />
 <h2 id="gate-order-search">Gate-Order Search<a class="headerlink" href="#gate-order-search" title="Permanent link">&para;</a></h2>
 <p><code>GateOrderOptimizer</code> wraps <code>QuantumMapSynthesizer</code> and searches over gate

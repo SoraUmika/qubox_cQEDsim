@@ -2055,6 +2055,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#supported-optimization-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Optimization Use Cases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#workflow-1-constraint-limited-unitary-synthesis" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2114,6 +2125,28 @@
     <span class="md-ellipsis">
       
         Workflow 6: Leakage-Aware Relevant-Map Optimization and Visualization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workflow-7-registered-custom-callable-primitive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow 7: Registered Custom Callable Primitive
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validated-optimization-catalog-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validated Optimization Catalog Example
       
     </span>
   </a>
@@ -3578,6 +3611,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#supported-optimization-use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Supported Optimization Use Cases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#workflow-1-constraint-limited-unitary-synthesis" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3637,6 +3681,28 @@
     <span class="md-ellipsis">
       
         Workflow 6: Leakage-Aware Relevant-Map Optimization and Visualization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workflow-7-registered-custom-callable-primitive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow 7: Registered Custom Callable Primitive
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validated-optimization-catalog-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validated Optimization Catalog Example
       
     </span>
   </a>
@@ -3752,6 +3818,75 @@
 <li>leakage-aware relevant-map optimization and visualization</li>
 </ol>
 <p>The separate <code>examples/unitary_synthesis_relevance_aware_optimizer.py</code> script still covers observable and trajectory objectives with accelerated ideal evaluation.</p>
+<h2 id="supported-optimization-use-cases">Supported Optimization Use Cases<a class="headerlink" href="#supported-optimization-use-cases" title="Permanent link">&para;</a></h2>
+<p>The public <code>cqed_sim.map_synthesis</code> API supports the following optimization patterns out of the box:</p>
+<table>
+<thead>
+<tr>
+<th>Use case</th>
+<th>Primary API surface</th>
+<th>Typical optimization knobs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gate-duration or time-constrained synthesis</td>
+<td><code>TargetUnitary</code>, <code>TargetStateMapping</code>, <code>TargetIsometry</code>, <code>ObservableTarget</code>, <code>TrajectoryTarget</code></td>
+<td><code>SynthesisConstraints(max_duration=...)</code>, <code>duration_mode</code>, <code>MultiObjective(duration_weight=...)</code>, <code>optimize_times=True</code>, <code>time_bounds=...</code></td>
+</tr>
+<tr>
+<td>Logical subspace unitary fidelity</td>
+<td><code>TargetUnitary</code></td>
+<td><code>ignore_global_phase</code>, <code>allow_diagonal_phase</code>, <code>phase_blocks</code></td>
+</tr>
+<tr>
+<td>State-ensemble transfer</td>
+<td><code>TargetStateMapping</code></td>
+<td>state weights, leakage penalties, duration and robustness weights</td>
+</tr>
+<tr>
+<td>Reduced-state / subsystem matching</td>
+<td><code>TargetReducedStateMapping</code></td>
+<td><code>retained_subsystems</code>, <code>subsystem_dims</code>, relevant-map leakage regularization</td>
+</tr>
+<tr>
+<td>Process / channel matching</td>
+<td><code>TargetChannel</code></td>
+<td><code>unitary</code>, <code>kraus_operators</code>, <code>superoperator</code>, <code>choi</code>, subsystem reduction options</td>
+</tr>
+<tr>
+<td>Encoding and state-injection maps</td>
+<td><code>TargetIsometry</code></td>
+<td>logical-column weights, relevant-state diagnostics</td>
+</tr>
+<tr>
+<td>Observable fitting</td>
+<td><code>ObservableTarget</code></td>
+<td>state weights, observable weights, ideal fast path</td>
+</tr>
+<tr>
+<td>Trajectory checkpoint optimization</td>
+<td><code>TrajectoryTarget</code>, <code>TrajectoryCheckpoint</code></td>
+<td>checkpoint step placement, state and observable checkpoint weights</td>
+</tr>
+<tr>
+<td>Robust optimization under parameter uncertainty</td>
+<td>any target + <code>ParameterDistribution</code></td>
+<td>sampled uncertain parameters, <code>aggregate="mean"</code> or worst-case style aggregation</td>
+</tr>
+<tr>
+<td>Leakage-aware relevant-map optimization</td>
+<td>any target + <code>LeakagePenalty</code></td>
+<td>final logical leakage, checkpoint/path leakage, edge-projector penalties</td>
+</tr>
+<tr>
+<td>Warm starts, Pareto sweeps, and ordering search</td>
+<td><code>warm_start</code>, <code>explore_pareto(...)</code>, <code>GateOrderOptimizer</code></td>
+<td>saved payload reuse, weighted front exploration, discrete gate-order search</td>
+</tr>
+</tbody>
+</table>
+<p>For ideal closed-system problems, the accelerated evaluator currently covers unitary, state-mapping, isometry, observable, and trajectory targets. Reduced-state and channel targets remain supported, but they currently fall back to the legacy evaluator with the reason recorded in the result report.</p>
 <hr />
 <h2 id="workflow-1-constraint-limited-unitary-synthesis">Workflow 1: Constraint-Limited Unitary Synthesis<a class="headerlink" href="#workflow-1-constraint-limited-unitary-synthesis" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.map_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -3904,6 +4039,121 @@
 </ul>
 <p>The example is intentionally small and uses bounded iteration counts so the notebook remains responsive while still showing the qualitative difference between hidden ancilla motion, total logical leakage, and edge-of-truncation occupancy.</p>
 <hr />
+<h2 id="workflow-7-registered-custom-callable-primitive">Workflow 7: Registered Custom Callable Primitive<a class="headerlink" href="#workflow-7-registered-custom-callable-primitive" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.map_synthesis</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="n">QuantumMapSynthesizer</span><span class="p">,</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">Subspace</span><span class="p">,</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">TargetUnitary</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">gate_registry</span><span class="p">,</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">make_gate_from_callable</span><span class="p">,</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">)</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">custom_x_rotation</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="n">theta</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;theta&quot;</span><span class="p">]</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">s</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="n">gate_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
+</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    <span class="s2">&quot;CustomXRotation&quot;</span><span class="p">,</span>
+</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    <span class="k">lambda</span> <span class="n">name</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">make_gate_from_callable</span><span class="p">(</span>
+</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>        <span class="n">name</span><span class="p">,</span>
+</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a>        <span class="n">custom_x_rotation</span><span class="p">,</span>
+</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>        <span class="n">parameters</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;theta&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">},</span>
+</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>        <span class="n">parameter_bounds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;theta&quot;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)},</span>
+</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>        <span class="n">duration</span><span class="o">=</span><span class="n">duration</span><span class="p">,</span>
+</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>        <span class="n">optimize_time</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-6-24"><a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>        <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="s2">&quot;optimize_time&quot;</span><span class="p">},</span>
+</span><span id="__span-6-25"><a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a>    <span class="p">),</span>
+</span><span id="__span-6-26"><a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="p">)</span>
+</span><span id="__span-6-27"><a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>
+</span><span id="__span-6-28"><a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="n">primitive</span> <span class="o">=</span> <span class="n">gate_registry</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s2">&quot;CustomXRotation&quot;</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="mf">40e-9</span><span class="p">)</span>
+</span><span id="__span-6-29"><a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a><span class="n">synth</span> <span class="o">=</span> <span class="n">QuantumMapSynthesizer</span><span class="p">(</span>
+</span><span id="__span-6-30"><a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a>    <span class="n">primitives</span><span class="o">=</span><span class="p">[</span><span class="n">primitive</span><span class="p">],</span>
+</span><span id="__span-6-31"><a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a>    <span class="n">subspace</span><span class="o">=</span><span class="n">Subspace</span><span class="o">.</span><span class="n">custom</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]),</span>
+</span><span id="__span-6-32"><a id="__codelineno-6-32" name="__codelineno-6-32" href="#__codelineno-6-32"></a>    <span class="n">target</span><span class="o">=</span><span class="n">TargetUnitary</span><span class="p">(</span><span class="n">custom_x_rotation</span><span class="p">({</span><span class="s2">&quot;theta&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">},</span> <span class="kc">None</span><span class="p">)),</span>
+</span><span id="__span-6-33"><a id="__codelineno-6-33" name="__codelineno-6-33" href="#__codelineno-6-33"></a>    <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;L-BFGS-B&quot;</span><span class="p">,</span>
+</span><span id="__span-6-34"><a id="__codelineno-6-34" name="__codelineno-6-34" href="#__codelineno-6-34"></a>    <span class="n">optimize_times</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-6-35"><a id="__codelineno-6-35" name="__codelineno-6-35" href="#__codelineno-6-35"></a><span class="p">)</span>
+</span><span id="__span-6-36"><a id="__codelineno-6-36" name="__codelineno-6-36" href="#__codelineno-6-36"></a><span class="n">result</span> <span class="o">=</span> <span class="n">synth</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">maxiter</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>
+</span></code></pre></div>
+<p>For the generic subspace-only path, register the factory and then instantiate the
+custom primitive with <code>gate_registry.build(...)</code> before passing it through
+<code>primitives=[...]</code>. Name-only <code>gateset=[...]</code> lookup is reserved for adapters
+that know how to expand a gateset by name.</p>
+<p>The dedicated example script <code>examples/custom_gate_primitives_demo.py</code> fits a
+registered <code>Rx</code>-style primitive to an <code>Rx(pi/2)</code> target, then validates
+the primitive by plotting the excited-state population from <code>|g&gt;</code> against the
+analytic curve <code>sin^2(theta/2)</code>.</p>
+<p><img alt="Custom primitive excited-state population" src="../assets/images/tutorials/custom_primitive_rotation_population.png" /></p>
+<hr />
+<h2 id="validated-optimization-catalog-example">Validated Optimization Catalog Example<a class="headerlink" href="#validated-optimization-catalog-example" title="Permanent link">&para;</a></h2>
+<p>The standalone script <code>examples/unitary_synthesis_optimization_catalog.py</code> runs a compact validation suite covering the supported optimization families above and writes a summary figure to <code>documentations/assets/images/tutorials/unitary_synthesis_optimization_catalog.png</code>.</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>python<span class="w"> </span>examples/unitary_synthesis_optimization_catalog.py
+</span></code></pre></div>
+<p>The latest checked run produced the following results:</p>
+<table>
+<thead>
+<tr>
+<th>Case</th>
+<th>API surface</th>
+<th>Measured result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unitary target + duration constraint</td>
+<td><code>TargetUnitary + SynthesisConstraints(max_duration)</code></td>
+<td>fidelity <code>1.000000</code>, duration <code>40.0 ns</code></td>
+</tr>
+<tr>
+<td>State-ensemble mapping</td>
+<td><code>TargetStateMapping</code></td>
+<td>mean state fidelity <code>0.999999861</code></td>
+</tr>
+<tr>
+<td>Reduced-state target</td>
+<td><code>TargetReducedStateMapping</code></td>
+<td>reduced-state fidelity <code>1.000000</code></td>
+</tr>
+<tr>
+<td>Channel / process target</td>
+<td><code>TargetChannel</code></td>
+<td>channel overlap <code>1.000000000000</code>, Choi error <code>2.24e-16</code></td>
+</tr>
+<tr>
+<td>Isometry / encoding target</td>
+<td><code>TargetIsometry</code></td>
+<td>coherent fidelity <code>1.000000000000</code></td>
+</tr>
+<tr>
+<td>Observable target</td>
+<td><code>ObservableTarget</code></td>
+<td>weighted observable error <code>7.16e-17</code></td>
+</tr>
+<tr>
+<td>Trajectory checkpoints</td>
+<td><code>TrajectoryTarget</code></td>
+<td>trajectory task loss <code>5.93e-27</code></td>
+</tr>
+<tr>
+<td>Robust parameter uncertainty</td>
+<td><code>ParameterDistribution + MultiObjective(robustness_weight=...)</code></td>
+<td>worst-case fidelity <code>0.990410</code>, improved from nominal worst-case <code>0.972370</code></td>
+</tr>
+</tbody>
+</table>
+<p>The same script also checks the auxiliary workflow helpers and regularizers:</p>
+<ul>
+<li>final leakage penalty: <code>leakage_worst = 0.229849</code>, <code>leakage_term = 0.229849</code></li>
+<li>checkpoint leakage penalty: <code>checkpoint_leakage_worst = 1.0</code>, <code>checkpoint_term = 1.0</code></li>
+<li>edge-projector penalty: <code>edge_population_worst = 1.0</code>, <code>edge_term = 0.5</code></li>
+<li>warm start reload: saved and resumed solutions both retained <code>40.0 ns</code> total duration</li>
+<li>Pareto exploration: returned durations <code>[80.0, 20.0]</code> with one nondominated point</li>
+<li>gate-order search: selected <code>['H', 'X']</code> with objective <code>4.441e-16</code></li>
+</ul>
+<p><img alt="Validated optimization catalog summary" src="../assets/images/tutorials/unitary_synthesis_optimization_catalog.png" /></p>
+<hr />
 <h2 id="notebook-outputs">Notebook Outputs<a class="headerlink" href="#notebook-outputs" title="Permanent link">&para;</a></h2>
 <p>The notebook demonstrates:</p>
 <ul>
@@ -3914,11 +4164,14 @@
 <li>adding a <code>ParameterDistribution</code> for robustness</li>
 <li>exporting and warm-starting a saved result while inspecting a small Pareto front</li>
 <li>running channel-first and isometry-style target-action matching</li>
+<li>fitting a registered custom callable primitive and checking its excited-state observable against an analytic reference curve</li>
 <li>comparing leakage-aware relevant-map solutions with operator, density-matrix, and leakage-profile visualizations</li>
 </ul>
 <p><img alt="Unitary synthesis convergence" src="../assets/images/tutorials/unitary_synthesis_convergence.png" /></p>
 <p>The repository also includes standalone example scripts that complement the notebook:</p>
 <ul>
+<li><code>examples/custom_gate_primitives_demo.py</code></li>
+<li><code>examples/unitary_synthesis_optimization_catalog.py</code></li>
 <li><code>examples/unitary_synthesis_relevance_aware_optimizer.py</code></li>
 <li><code>examples/unitary_synthesis_flexible_target_actions.py</code></li>
 <li><code>examples/unitary_synthesis_leakage_aware_visualization.py</code></li>

@@ -156,7 +156,7 @@ For a full notebook walkthrough: `tutorials/30_advanced_protocols/03_unitary_syn
 ## Limitations / Non-Goals
 
 - Synthesis is local optimization; convergence to the global optimum is not guaranteed. Use `explore_pareto(...)` or multiple random restarts for difficult targets.
-- The current primitive gate library covers qubit rotations, displacements, conditional displacement, SNAP, SQR, conditional phase, dispersive waiting, and red/blue sideband exchange primitives. Custom primitives still require subclassing `PrimitiveGate`.
+- The current primitive gate library covers qubit rotations, displacements, conditional displacement, SNAP, SQR, conditional phase, dispersive waiting, and red/blue sideband exchange primitives. User-defined fixed-matrix, callable-unitary, and waveform-backed primitives can be created with `make_gate_from_matrix(...)`, `make_gate_from_callable(...)`, and `make_gate_from_waveform(...)`. Subclass `PrimitiveGate` only when you need specialized behavior beyond those factory helpers.
 - `ConditionalDisplacement` is an ideal operator model; it does not itself compile an echoed pulse schedule or model drive-induced nonlinear corrections. Use the pulse layer or optimal-control layer when those effects matter.
 - `JaynesCummingsExchange` and `BlueSidebandExchange` assume a rotating-wave effective interaction and therefore represent physically motivated native primitives, not a full calibration workflow. They are most useful for gate-set comparison, fast logical-basis studies, and warm-starting more detailed pulse validation.
 - Synthesis does not account for finite-bandwidth pulse shaping unless hard constraint projection (`enforce_slew_limit`) is enabled.

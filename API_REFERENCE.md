@@ -3017,6 +3017,20 @@ Important behavior:
 - `warm_start` accepts a saved payload, mapping, or previous `SynthesisResult`.
 - `optimizer` supports `auto`, `nelder_mead`, `powell`, `bfgs`, `l_bfgs_b`, `differential_evolution`, and `cma_es`.
 
+#### Common optimization use cases
+
+- Duration-constrained synthesis: combine `SynthesisConstraints(max_duration=...)`, `duration_mode`, and `MultiObjective(duration_weight=...)` with `TargetUnitary` or other ideal targets.
+- Logical subspace unitary fidelity: use `TargetUnitary` with `ignore_global_phase`, `allow_diagonal_phase`, or `phase_blocks` when the equivalence class matters.
+- State-transfer optimization: use `TargetStateMapping` for single-state or state-ensemble objectives.
+- Reduced-state or subsystem fidelity: use `TargetReducedStateMapping` when only retained subsystems are relevant.
+- Process or channel matching: use `TargetChannel` with a unitary, Kraus list, superoperator, or Choi matrix.
+- Encoding / injection maps: use `TargetIsometry` to optimize only the logical columns that matter.
+- Observable fitting: use `ObservableTarget` for expectation-value objectives.
+- Trajectory checkpoint matching: use `TrajectoryTarget` plus `TrajectoryCheckpoint` to constrain intermediate behavior.
+- Robust optimization: attach `ParameterDistribution` and `MultiObjective(robustness_weight=...)` to optimize under sampled uncertainty.
+- Leakage-aware relevant-map optimization: add final leakage, checkpoint/path leakage, and edge-projector penalties with `LeakagePenalty`.
+- Workflow helpers: use `warm_start`, `explore_pareto(...)`, and `GateOrderOptimizer` for iterative design-space exploration.
+
 ### 17.8 Results and Metrics
 
 #### Synthesis SimulationResult
@@ -3267,8 +3281,11 @@ Waveform primitives are evaluated through the full `Pulse`/`SequenceCompiler`/
 
 **Module path:** `cqed_sim.map_synthesis.systems`
 
-The gate registry maps custom gate names to factory callables so they can be
-referenced by name in the `gateset` argument of `QuantumMapSynthesizer`.
+The gate registry maps custom gate names to factory callables. Adapters that
+know how to expand named gatesets can reference those names directly in the
+`gateset` argument of `QuantumMapSynthesizer`. In the generic subspace-only
+path, instantiate the registered primitive with `gate_registry.build(...)` and
+pass it through `primitives=[...]`.
 
 ```python
 class GateRegistry:
@@ -3279,20 +3296,40 @@ class GateRegistry:
 ```
 
 A pre-constructed singleton `gate_registry` is exported from
-`cqed_sim.map_synthesis`.  Register a factory, then use the name in
-`QuantumMapSynthesizer(gateset=[...])`:
+`cqed_sim.map_synthesis`. Register a factory, build the primitive, and pass it
+explicitly into the generic synthesizer path:
 
 ```python
-from cqed_sim.map_synthesis import QuantumMapSynthesizer, gate_registry, make_gate_from_callable
+from cqed_sim.map_synthesis import (
+    QuantumMapSynthesizer,
+    Subspace,
+    TargetUnitary,
+    gate_registry,
+    make_gate_from_callable,
+)
 
 gate_registry.register(
-    "MyCZ",
+    "CustomXRotation",
     lambda name, duration, **kw: make_gate_from_callable(
-        name, my_cz_fn, parameters={}, duration=duration, **kw
+        name,
+        custom_x_rotation,
+        parameters={"theta": 0.2},
+        parameter_bounds={"theta": (-np.pi, np.pi)},
+        duration=duration,
+        optimize_time=False,
+        **{key: value for key, value in kw.items() if key != "optimize_time"},
     ),
 )
-synth = QuantumMapSynthesizer(gateset=["QubitRotation", "MyCZ"], ...)
+primitive = gate_registry.build("CustomXRotation", duration=40e-9)
+synth = QuantumMapSynthesizer(
+    primitives=[primitive],
+    subspace=Subspace.custom(2, [0, 1]),
+    target=TargetUnitary(target_unitary),
+)
 ```
+
+For a deterministic end-to-end smoke test and observable-validation plot, see
+`examples/custom_gate_primitives_demo.py`.
 
 ---
 

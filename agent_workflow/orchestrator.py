@@ -17,7 +17,7 @@ from .artifacts import (
     write_json,
     write_text,
 )
-from .backends import AgentRequest, build_role_backends
+from .backends import AgentRequest, UnavailableBackend, build_agent_backends, build_role_backends
 from .prompts import default_prompt_context, load_prompt_template, render_prompt
 from .state import RunState
 from .task_spec import TaskSpec, resolve_path
@@ -47,6 +47,7 @@ class WorkflowOrchestrator:
         self.state: RunState | None = None
         self.codex_backend = None
         self.opus_backend = None
+        self.backends: dict[str, Any] = {}
         self.backend_profile_name: str | None = None
 
     def run(self) -> int:
@@ -61,6 +62,8 @@ class WorkflowOrchestrator:
             phase = self.state.current_phase
             if phase == "initialize":
                 self._initialize_phase()
+            elif phase == "plan":
+                self._plan_phase()
             elif phase == "execute":
                 self._execute_phase()
             elif phase == "test":
@@ -90,6 +93,7 @@ class WorkflowOrchestrator:
         codex, opus, profile_name = build_role_backends(self.repo_root, self.task.backend_profile)
         self.codex_backend = codex
         self.opus_backend = opus
+        self.backends, _ = build_agent_backends(self.repo_root, self.task.backend_profile)
         self.backend_profile_name = profile_name
         self.state.max_iterations = int(self.options.max_iterations_override or self.task.max_iterations)
         self.state.write(self.run_state_path)
@@ -144,7 +148,7 @@ class WorkflowOrchestrator:
         write_text(self.task_resolved_path, resolved_yaml)
         self.state.completion_flags["initialized"] = True
         self.state.record_phase(
-            "execute",
+            "plan",
             "running",
             note=f"Initialized run with backend profile '{self.backend_profile_name}'.",
             artifact=self.task_resolved_path.name,
@@ -184,9 +188,67 @@ class WorkflowOrchestrator:
             f"Execution prompt rendered to {prompt_path.name}. Context written to {context_path.name}.",
         )
 
+    def _plan_phase(self) -> None:
+        assert self.state is not None and self.run_dir is not None
+        # Skip if human plan is supplied or planner is explicitly disabled
+        if self.task.human_plan_supplied or self.task.skip_planner:
+            self.state.plan = _wrap_human_plan(self.task.human_plan or self.task.goal)
+            self.state.record_phase(
+                "execute",
+                "running",
+                note="Plan phase skipped (human_plan supplied or skip_planner=True).",
+            )
+            append_markdown_log(
+                self.implementation_log_path,
+                "Plan",
+                "Plan phase skipped; using human plan or goal as single subtask.",
+            )
+            return
+
+        planner = self.backends.get("planner")
+        if planner is None or isinstance(planner, UnavailableBackend):
+            self.state.plan = _single_subtask_plan(self.task.goal, self.task.acceptance_criteria)
+            self.state.record_phase(
+                "execute",
+                "running",
+                note="Planner unavailable; using single-subtask fallback.",
+            )
+            append_markdown_log(
+                self.implementation_log_path,
+                "Plan",
+                "Planner backend unavailable; goal wrapped as single subtask.",
+            )
+            return
+
+        prompt_text, prompt_path, context_path = self._render_phase_prompt("plan", 0)
+        request = self._make_request("planner", "plan", 0, prompt_text, prompt_path, context_path)
+        response = planner.run(request)
+        plan_output_path = self.run_dir / "PLAN.json"
+        write_text(plan_output_path, response.content + "\n")
+
+        if response.structured and "subtasks" in response.structured:
+            plan = response.structured
+        else:
+            plan = _single_subtask_plan(self.task.goal, self.task.acceptance_criteria)
+
+        self.state.plan = plan
+        subtask_count = len(plan.get("subtasks", []))
+        self.state.record_phase(
+            "execute",
+            "running",
+            note=f"Planner produced {subtask_count} subtask(s).",
+            artifact=plan_output_path.name,
+        )
+        append_markdown_log(
+            self.implementation_log_path,
+            "Plan",
+            f"Planner produced {subtask_count} subtask(s). Plan written to {plan_output_path.name}.",
+        )
+
     def _execute_phase(self) -> None:
         assert self.state is not None and self.run_dir is not None and self.codex_backend is not None
         iteration = self.state.iteration_count + 1
+        # Resolve current subtask for context injection (handled inside _render_phase_prompt)
         prompt_text, prompt_path, context_path = self._render_phase_prompt("execute", iteration)
         request = self._make_request("codex", "execute", iteration, prompt_text, prompt_path, context_path)
         response = self.codex_backend.run(request)
@@ -328,6 +390,21 @@ class WorkflowOrchestrator:
             return
         self.state.acceptance_criteria_satisfied = bool(self.state.completion_flags["tests_complete"] or not self.task.tests_to_run)
         self.state.completion_flags["review_complete"] = True
+        # Advance subtask index; if more subtasks remain, loop back to execute
+        if self.state.plan:
+            subtasks = self.state.plan.get("subtasks", [])
+            self.state.current_subtask_index += 1
+            if self.state.current_subtask_index < len(subtasks):
+                self.state.acceptance_criteria_satisfied = False
+                self.state.completion_flags["review_complete"] = False
+                self.state.record_phase(
+                    "execute",
+                    "running",
+                    iteration=iteration + 1,
+                    note=f"Subtask {self.state.current_subtask_index} accepted; proceeding to next subtask.",
+                    artifact=output_path.name,
+                )
+                return
         self.state.record_phase("docs", "running", iteration=iteration, note=record["review_summary"], artifact=output_path.name)
 
     def _docs_phase(self) -> None:
@@ -378,6 +455,20 @@ class WorkflowOrchestrator:
         state_mapping = self.state.to_dict()
         state_mapping["run_state_path"] = str(self.run_state_path)
         state_mapping["implementation_log_path"] = str(self.implementation_log_path)
+        # Inject current subtask into state mapping for prompt rendering
+        current_subtask: dict[str, Any] = {}
+        subtask_index = 0
+        subtask_count = 0
+        if self.state.plan:
+            subtasks = self.state.plan.get("subtasks", [])
+            subtask_count = len(subtasks)
+            subtask_index = self.state.current_subtask_index
+            if subtask_index < subtask_count:
+                current_subtask = subtasks[subtask_index]
+        state_mapping["current_subtask"] = current_subtask
+        state_mapping["current_subtask_index"] = subtask_index
+        state_mapping["plan"] = self.state.plan
+
         prompt_context = default_prompt_context(
             task=task_mapping,
             state=state_mapping,
@@ -393,9 +484,12 @@ class WorkflowOrchestrator:
             "state": state_mapping,
             "backend_profile": self.backend_profile_name,
         }
-        if phase in {"execute", "review"}:
+        if phase in {"execute", "review", "evaluate"}:
             prompt_name = f"{phase.upper()}_PROMPT_iter{iteration:02d}.txt"
             context_name = f"{phase.upper()}_CONTEXT_iter{iteration:02d}.json"
+        elif phase == "plan":
+            prompt_name = "PLAN_PROMPT.txt"
+            context_name = "PLAN_CONTEXT.json"
         else:
             prompt_name = f"{phase.upper()}_PROMPT.txt"
             context_name = f"{phase.upper()}_CONTEXT.json"
@@ -497,6 +591,38 @@ class WorkflowOrchestrator:
         if self.state.status == "blocked":
             return 1
         return 2
+
+
+def _wrap_human_plan(plan_text: str) -> dict[str, Any]:
+    """Wrap a free-text human plan as a single-subtask plan dict."""
+    return {
+        "subtasks": [
+            {
+                "id": "1",
+                "description": plan_text.strip(),
+                "test_criteria": [],
+                "expected_files": [],
+            }
+        ],
+        "planning_notes": "Human-supplied plan wrapped as single subtask.",
+        "risks": [],
+    }
+
+
+def _single_subtask_plan(goal: str, acceptance_criteria: tuple[str, ...]) -> dict[str, Any]:
+    """Wrap a goal as a single-subtask plan (planner unavailable fallback)."""
+    return {
+        "subtasks": [
+            {
+                "id": "1",
+                "description": goal.strip(),
+                "test_criteria": list(acceptance_criteria),
+                "expected_files": [],
+            }
+        ],
+        "planning_notes": "Automatically generated single-subtask plan (no planner available).",
+        "risks": [],
+    }
 
 
 def resolve_latest_resume_task(repo_root: Path) -> Path | None:

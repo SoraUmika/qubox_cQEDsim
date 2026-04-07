@@ -84,6 +84,46 @@
         "type": "scripted",
         "script": "agent_workflow/demo/validation_script.json"
       }
+    },
+    "anthropic-mixed": {
+      "planner": {
+        "type": "anthropic",
+        "name": "anthropic-planner",
+        "model": "claude-opus-4-6",
+        "max_tokens": 4096
+      },
+      "executor": {
+        "type": "anthropic",
+        "name": "anthropic-executor",
+        "model": "claude-sonnet-4-6",
+        "max_tokens": 8096
+      },
+      "evaluator": {
+        "type": "anthropic",
+        "name": "anthropic-evaluator",
+        "model": "claude-opus-4-6",
+        "max_tokens": 4096
+      }
+    },
+    "anthropic-opus-all": {
+      "planner": {
+        "type": "anthropic",
+        "name": "anthropic-planner",
+        "model": "claude-opus-4-6",
+        "max_tokens": 4096
+      },
+      "executor": {
+        "type": "anthropic",
+        "name": "anthropic-executor",
+        "model": "claude-opus-4-6",
+        "max_tokens": 8096
+      },
+      "evaluator": {
+        "type": "anthropic",
+        "name": "anthropic-evaluator",
+        "model": "claude-opus-4-6",
+        "max_tokens": 4096
+      }
     }
   }
 }

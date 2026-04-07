@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,9 @@ PROMPT_FILES = {
     "docs": "opus_docs.md",
     "summary": "opus_summary.md",
     "planner": "fallback_planner.md",
+    "plan": "planner.md",
+    "experiment_planner": "experiment_planner.md",
+    "experiment_evaluator": "experiment_evaluator.md",
 }
 
 
@@ -68,4 +72,7 @@ def default_prompt_context(*, task: dict[str, Any], state: dict[str, Any], worki
         "RUN_STATE_PATH": state.get("run_state_path", "RUN_STATE.json"),
         "IMPLEMENTATION_LOG_PATH": state.get("implementation_log_path", "IMPLEMENTATION_LOG.md"),
         "TASK_PATH": task.get("task_file", ""),
+        "CURRENT_SUBTASK": json.dumps(state.get("current_subtask", {}), indent=2) if state.get("current_subtask") else "Full goal (no subtask decomposition — treat goal as the complete task).",
+        "PLAN_SUBTASK_INDEX": str(state.get("current_subtask_index", 0)),
+        "PLAN_SUBTASK_COUNT": str(len((state.get("plan") or {}).get("subtasks", []))),
     }

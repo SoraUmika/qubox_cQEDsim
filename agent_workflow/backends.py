@@ -184,6 +184,66 @@ class ScriptedBackend:
         )
 
 
+class AnthropicBackend:
+    def __init__(
+        self,
+        *,
+        name: str,
+        model: str,
+        max_tokens: int = 8096,
+        system_prompt: str | None = None,
+    ) -> None:
+        self.name = name
+        self._model = model
+        self._max_tokens = max_tokens
+        self._system_prompt = system_prompt
+
+    def run(self, request: AgentRequest) -> AgentResponse:
+        try:
+            import anthropic  # optional dependency
+        except ImportError:
+            payload = {
+                "status": "blocked",
+                "summary": "anthropic SDK not installed. Run: pip install anthropic",
+                "blocking_issues": ["pip install anthropic"],
+            }
+            return AgentResponse(
+                role=request.role,
+                phase=request.phase,
+                success=False,
+                content=json.dumps(payload, indent=2),
+                structured=payload,
+                stderr="anthropic SDK not installed",
+            )
+        client = anthropic.Anthropic()
+        messages: list[dict[str, Any]] = [{"role": "user", "content": request.prompt}]
+        kwargs: dict[str, Any] = {
+            "model": self._model,
+            "max_tokens": self._max_tokens,
+            "messages": messages,
+        }
+        if self._system_prompt:
+            kwargs["system"] = self._system_prompt
+        response = client.messages.create(**kwargs)
+        raw_content = "".join(block.text for block in response.content if hasattr(block, "text"))
+        structured = extract_json_payload(raw_content)
+        success = bool(raw_content.strip())
+        usage = {}
+        if hasattr(response, "usage") and response.usage is not None:
+            usage = {
+                "input_tokens": getattr(response.usage, "input_tokens", None),
+                "output_tokens": getattr(response.usage, "output_tokens", None),
+            }
+        return AgentResponse(
+            role=request.role,
+            phase=request.phase,
+            success=success,
+            content=raw_content,
+            structured=structured,
+            metadata={"model": self._model, "usage": usage},
+        )
+
+
 class _RoleBackend:
     def __init__(self, role: str, backend: AgentBackend) -> None:
         self.role = role
@@ -215,12 +275,28 @@ class OpusBackend(_RoleBackend):
         super().__init__("opus", backend)
 
 
+class PlannerBackend(_RoleBackend):
+    def __init__(self, backend: AgentBackend) -> None:
+        super().__init__("planner", backend)
+
+
+class ExecutorBackend(_RoleBackend):
+    def __init__(self, backend: AgentBackend) -> None:
+        super().__init__("executor", backend)
+
+
+class EvaluatorBackend(_RoleBackend):
+    def __init__(self, backend: AgentBackend) -> None:
+        super().__init__("evaluator", backend)
+
+
 def load_workflow_config(repo_root: Path) -> dict[str, Any]:
     path = repo_root / "agent_workflow" / "config.json"
     return json.loads(path.read_text(encoding="utf-8"))
 
 
 def build_role_backends(repo_root: Path, profile_name: str | None) -> tuple[CodexBackend, OpusBackend, str]:
+    """Legacy two-role builder. Prefer build_agent_backends() for new code."""
     config = load_workflow_config(repo_root)
     selected = profile_name or config.get("default_backend_profile") or "unconfigured"
     profiles = config.get("backend_profiles", {})
@@ -230,6 +306,43 @@ def build_role_backends(repo_root: Path, profile_name: str | None) -> tuple[Code
     codex = CodexBackend(_build_backend(repo_root, profile.get("codex", {}), role="codex"))
     opus = OpusBackend(_build_backend(repo_root, profile.get("opus", {}), role="opus"))
     return codex, opus, selected
+
+
+def build_agent_backends(repo_root: Path, profile_name: str | None) -> tuple[dict[str, "AgentBackend"], str]:
+    """Return a dict keyed by logical role: 'planner', 'executor', 'evaluator'.
+
+    New-format profiles define those keys directly. Old profiles with 'codex'/'opus'
+    are mapped: codex→executor, opus→evaluator, opus→planner (fallback).
+    """
+    config = load_workflow_config(repo_root)
+    selected = profile_name or config.get("default_backend_profile") or "unconfigured"
+    profiles = config.get("backend_profiles", {})
+    if selected not in profiles:
+        raise ValueError(f"Unknown backend profile '{selected}'.")
+    profile = profiles[selected]
+
+    def _role(key: str, fallback_key: str | None = None) -> "AgentBackend":
+        cfg = profile.get(key)
+        if cfg is None and fallback_key is not None:
+            cfg = profile.get(fallback_key)
+        return _build_backend(repo_root, cfg or {}, role=key)
+
+    # Support both new-format (planner/executor/evaluator) and old-format (codex/opus)
+    if "executor" in profile or "planner" in profile or "evaluator" in profile:
+        executor_backend = _role("executor")
+        evaluator_backend = _role("evaluator", fallback_key="executor")
+        planner_backend = _role("planner", fallback_key="evaluator")
+    else:
+        # Old profile: map codex→executor, opus→evaluator/planner
+        executor_backend = _build_backend(repo_root, profile.get("codex", {}), role="executor")
+        evaluator_backend = _build_backend(repo_root, profile.get("opus", {}), role="evaluator")
+        planner_backend = _build_backend(repo_root, profile.get("opus", {}), role="planner")
+
+    return {
+        "planner": PlannerBackend(planner_backend),
+        "executor": ExecutorBackend(executor_backend),
+        "evaluator": EvaluatorBackend(evaluator_backend),
+    }, selected
 
 
 def extract_json_payload(text: str) -> dict[str, Any] | None:
@@ -267,6 +380,14 @@ def _build_backend(repo_root: Path, config: dict[str, Any], *, role: str) -> Age
             cwd=config.get("cwd"),
             env={str(key): str(value) for key, value in dict(config.get("env", {})).items()},
             timeout_s=int(config["timeout_s"]) if config.get("timeout_s") is not None else None,
+        )
+    if backend_type == "anthropic":
+        model = str(config.get("model", "claude-sonnet-4-6"))
+        return AnthropicBackend(
+            name=str(config.get("name", f"anthropic:{role}")),
+            model=model,
+            max_tokens=int(config.get("max_tokens", 8096)),
+            system_prompt=config.get("system_prompt") or None,
         )
     if backend_type == "scripted":
         script = config.get("script")

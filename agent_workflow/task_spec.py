@@ -28,6 +28,7 @@ class TaskSpec:
     bootstrap_workspace_from: str | None = None
     working_directory: str | None = None
     source_path: Path | None = None
+    skip_planner: bool = False
 
     @property
     def slug(self) -> str:
@@ -64,6 +65,7 @@ class TaskSpec:
             bootstrap_workspace_from=self.bootstrap_workspace_from,
             working_directory=self.working_directory,
             source_path=path,
+            skip_planner=self.skip_planner,
         )
 
     def to_mapping(self, *, repo_root: Path | None = None, run_dir: Path | None = None, max_iterations_override: int | None = None) -> dict[str, Any]:
@@ -87,6 +89,7 @@ class TaskSpec:
             "bootstrap_workspace_from": self.bootstrap_workspace_from or "",
             "working_directory": self.working_directory or "",
             "human_plan_supplied": self.human_plan_supplied,
+            "skip_planner": self.skip_planner,
         }
         if self.source_path is not None:
             mapping["task_file"] = str(self.source_path)
@@ -142,6 +145,7 @@ def load_task_spec(path: str | Path) -> TaskSpec:
         backend_profile=_normalize_optional_string(raw.get("backend_profile")),
         bootstrap_workspace_from=_normalize_optional_string(raw.get("bootstrap_workspace_from")),
         working_directory=_normalize_optional_string(raw.get("working_directory")),
+        skip_planner=bool(raw.get("skip_planner", False)),
     )
     return spec.with_source_path(resolved)
 

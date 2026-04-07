@@ -23,6 +23,9 @@ Strict context: {{STRICT_CONTEXT}}
 Allow repo edits: {{ALLOW_REPO_EDITS}}
 Stop on blocking error: {{STOP_ON_BLOCKING_ERROR}}
 
+Current subtask ({{PLAN_SUBTASK_INDEX}} of {{PLAN_SUBTASK_COUNT}}):
+{{CURRENT_SUBTASK}}
+
 Human plan:
 {{HUMAN_PLAN}}
 

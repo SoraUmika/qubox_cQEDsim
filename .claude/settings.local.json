@@ -14,7 +14,8 @@
       "Bash(python -m examples.user_defined_gates_and_ansatz_demo)",
       "Bash(python -m pytest tests/test_40_optimal_control_grape.py tests/test_41_optimal_control_followup.py -q --tb=short)",
       "Bash(python -m pytest tests/test_40_optimal_control_grape.py tests/test_41_optimal_control_followup.py -v)",
-      "Bash(python -m pytest tests/test_22_support_aware_objective.py tests/test_34_universal_cqed_model.py tests/test_35_tutorial_api_conventions.py -q)"
+      "Bash(python -m pytest tests/test_22_support_aware_objective.py tests/test_34_universal_cqed_model.py tests/test_35_tutorial_api_conventions.py -q)",
+      "Bash(python -c \"from agent_workflow import WorkflowOrchestrator, ExperimentOrchestrator, ExperimentTaskSpec; from agent_workflow.backends import AnthropicBackend, build_agent_backends; print\\('imports OK'\\)\")"
     ]
   },
   "hooks": {
@@ -24,8 +25,8 @@
           {
             "type": "command",
             "command": "{ git status --porcelain 2>/dev/null | grep -q . && git add -A && STAT=$(git diff --cached --stat --no-color 2>/dev/null | tail -1) && git commit -m \"auto: ${STAT:-update after Claude session}\" && git push; } 2>/dev/null || true",
-            "async": true,
-            "statusMessage": "Auto-committing and pushing changes..."
+            "statusMessage": "Auto-committing and pushing changes...",
+            "async": true
           }
         ]
       }

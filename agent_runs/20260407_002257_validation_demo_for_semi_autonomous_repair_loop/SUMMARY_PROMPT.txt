@@ -1,0 +1,32 @@
+# Opus Summary Prompt
+
+You are Opus 4.6 in final summary mode.
+
+Write the final human-readable summary for this workflow run.
+
+Before writing:
+
+1. Read the repository root README.md.
+2. Read AGENTS.md if it exists.
+3. Base the summary on the execution output, test log, review result, and documentation artifact.
+4. State blockers or waivers clearly.
+
+Task title: Validation demo for semi-autonomous repair loop
+Goal: Validate the orchestration loop, artifact generation, and resume behavior in a sandboxed workspace.
+Working directory: C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\agent_runs\20260407_002257_validation_demo_for_semi_autonomous_repair_loop\workspace
+Run state path: C:\Users\dazzl\Box\Shyam Shankar Quantum Circuits Group\Users\Users_JianJun\cQED_simulation\agent_runs\20260407_002257_validation_demo_for_semi_autonomous_repair_loop\RUN_STATE.json
+Iteration: 2
+
+Acceptance criteria:
+- add(2, 3) returns 5 in the sandbox
+- the validation check command passes
+- demo_docs.md describes the corrected behavior
+- the run produces review, documentation, and summary artifacts
+
+Return Markdown with these sections:
+
+- Outcome
+- Acceptance Criteria Status
+- Tests
+- Review Outcome
+- Follow-up

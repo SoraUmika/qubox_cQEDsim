@@ -34,6 +34,8 @@ class RunState:
     repair_instructions: list[str] = field(default_factory=list)
     phase_history: list[dict[str, Any]] = field(default_factory=list)
     iterations: list[dict[str, Any]] = field(default_factory=list)
+    plan: dict[str, Any] | None = None
+    current_subtask_index: int = 0
     created_at: str = field(default_factory=utc_now)
     updated_at: str = field(default_factory=utc_now)
     completed_at: str | None = None
@@ -78,6 +80,8 @@ class RunState:
     @classmethod
     def from_path(cls, path: Path) -> "RunState":
         payload = json.loads(path.read_text(encoding="utf-8"))
+        payload.setdefault("plan", None)
+        payload.setdefault("current_subtask_index", 0)
         return cls(**payload)
 
     def to_dict(self) -> dict[str, Any]:
@@ -103,6 +107,8 @@ class RunState:
             "repair_instructions": self.repair_instructions,
             "phase_history": self.phase_history,
             "iterations": self.iterations,
+            "plan": self.plan,
+            "current_subtask_index": self.current_subtask_index,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "completed_at": self.completed_at,

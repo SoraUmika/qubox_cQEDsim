@@ -1,42 +1,81 @@
-# Python bytecode and caches
+# ============================================================
+# .gitignore for cqed_sim
+# ============================================================
+
+# ---------- Python bytecode / packaging ----------
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+wheels/
+*.whl
 
-# Virtual environments
+# ---------- Virtual environments ----------
 .venv/
+.env/
 venv/
 env/
-ENV/
 
-# Test and tooling caches
+# ---------- Testing ----------
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.hypothesis/
-.tox/
-.nox/
-
-# Coverage and build artifacts
 .coverage
 .coverage.*
+coverage.xml
 htmlcov/
-build/
-dist/
-pip-wheel-metadata/
-*.egg-info/
+.tox/
+.nox/
+.mypy_cache/
+.pytype/
+test_results.xml
 
-# Jupyter
-.ipynb_checkpoints/
-
-# VS Code and local tooling
+# ---------- IDE / editor ----------
 .vscode/
-.copilot/
+.idea/
+*.swp
+*.swo
+*~
+.editorconfig.local
 
-# OS/editor noise
+# ---------- Copilot / Claude local settings ----------
+.claude/
+
+# ---------- OS ----------
 .DS_Store
 Thumbs.db
 Desktop.ini
+ehthumbs.db
+ehthumbs_vista.db
 
-# Logs
-*.log
+# ---------- Jupyter ----------
+.ipynb_checkpoints/
+
+# ---------- LaTeX build artifacts ----------
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+# physics_and_conventions build-helper capture files
+physics_and_conventions/pdflatex_*.txt
+physics_and_conventions/write_probe.txt
+# Keep the compiled PDF and the .log for diagnostics;
+# ignore the .out and .aux already covered above.
+
+# ---------- Project-specific generated outputs ----------
+outputs/
+agent_runs/
+
+# ---------- Benchmark result caches ----------
+benchmarks/__pycache__/
+benchmarks/latest_results.json
+benchmarks/latest_results_review_*.json

@@ -135,7 +135,7 @@ def compute_floquet_transition_strengths(
         for final_index in range(n_modes):
             matrix_elements = np.asarray(
                 [
-                    (modes[initial_index].dag() * probe_operator * modes[final_index])[0, 0]
+                    complex(modes[initial_index].overlap(probe_operator * modes[final_index]))
                     for modes in mode_samples
                 ],
                 dtype=np.complex128,
@@ -250,7 +250,7 @@ def run_floquet_sweep(
     *,
     parameter_values: Sequence[float] | None = None,
     config=None,
-    reference_time: float = 0.0,
+    reference_time: float | None = None,
     show_progress: bool = False,
 ) -> FloquetSweepResult:
     """Solve Floquet problems and track quasienergy branches across a sweep.
@@ -261,9 +261,16 @@ def run_floquet_sweep(
             (used for labelling the sweep axis in the result).
         config: Optional Floquet solver config applied to every problem.
         reference_time: Time at which to evaluate Floquet modes for branch tracking.
+            When omitted, defaults to ``config.overlap_reference_time`` if a
+            config was supplied and to ``0.0`` otherwise.
         show_progress: If ``True``, display a tqdm progress bar over sweep points.
     """
     from .core import solve_floquet
+
+    if reference_time is None:
+        resolved_reference_time = float(config.overlap_reference_time) if config is not None else 0.0
+    else:
+        resolved_reference_time = float(reference_time)
 
     it = _progress(
         problems,
@@ -274,7 +281,7 @@ def run_floquet_sweep(
         dynamic_ncols=True,
     )
     results = tuple(solve_floquet(problem, config=config) for problem in it)
-    return track_floquet_branches(results, parameter_values=parameter_values, reference_time=reference_time)
+    return track_floquet_branches(results, parameter_values=parameter_values, reference_time=resolved_reference_time)
 
 
 __all__ = [

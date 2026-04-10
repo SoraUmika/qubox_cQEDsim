@@ -1,0 +1,105 @@
+{
+  "single_point": {
+    "small_dim2_t128": {
+      "dimension": 2,
+      "n_time_samples": 128,
+      "sambe_harmonic_cutoff": null,
+      "best_s": 0.007740199915133417,
+      "avg_s": 0.008180299948435277,
+      "runs_s": [
+        0.008620399981737137,
+        0.007740199915133417
+      ],
+      "peak_python_memory_mb": 0.08376312255859375,
+      "runs_peak_python_memory_mb": [
+        0.08376312255859375,
+        0.062358856201171875
+      ]
+    },
+    "medium_dim4_t256": {
+      "dimension": 4,
+      "n_time_samples": 256,
+      "sambe_harmonic_cutoff": null,
+      "best_s": 0.010698100086301565,
+      "avg_s": 0.010792800050694495,
+      "runs_s": [
+        0.010887500015087426,
+        0.010698100086301565
+      ],
+      "peak_python_memory_mb": 0.08904552459716797,
+      "runs_peak_python_memory_mb": [
+        0.08904552459716797,
+        0.08544254302978516
+      ]
+    },
+    "medium_dim4_t256_sambe3": {
+      "dimension": 4,
+      "n_time_samples": 256,
+      "sambe_harmonic_cutoff": 3,
+      "best_s": 0.012779799988493323,
+      "avg_s": 0.01305279997177422,
+      "runs_s": [
+        0.013325799955055118,
+        0.012779799988493323
+      ],
+      "peak_python_memory_mb": 0.12077808380126953,
+      "runs_peak_python_memory_mb": [
+        0.12077808380126953,
+        0.11793041229248047
+      ]
+    }
+  },
+  "sideband": {
+    "dimension": 9,
+    "n_time_samples": 128,
+    "best_s": 0.04051139997318387,
+    "avg_s": 0.04107545001897961,
+    "runs_s": [
+      0.04163950006477535,
+      0.04051139997318387
+    ],
+    "peak_python_memory_mb": 0.21821022033691406,
+    "runs_peak_python_memory_mb": [
+      0.21821022033691406,
+      0.21749305725097656
+    ]
+  },
+  "sweeps": {
+    "transmon_sweep_9_points_t96": {
+      "points": 9,
+      "dimension": 2,
+      "n_time_samples": 96,
+      "best_s": 0.0738930000225082,
+      "avg_s": 0.07432494999375194,
+      "runs_s": [
+        0.07475689996499568,
+        0.0738930000225082
+      ],
+      "peak_python_memory_mb": 0.4248008728027344,
+      "runs_peak_python_memory_mb": [
+        0.4248008728027344,
+        0.41864585876464844
+      ]
+    },
+    "transmon_sweep_25_points_t128": {
+      "points": 25,
+      "dimension": 2,
+      "n_time_samples": 128,
+      "best_s": 0.21722890005912632,
+      "avg_s": 0.22690364997833967,
+      "runs_s": [
+        0.21722890005912632,
+        0.23657839989755303
+      ],
+      "peak_python_memory_mb": 1.0884370803833008,
+      "runs_peak_python_memory_mb": [
+        1.0884370803833008,
+        1.080587387084961
+      ]
+    }
+  },
+  "notes": {
+    "memory_metric": "peak Python allocation measured with tracemalloc; excludes some native-library allocations.",
+    "interpretation": "Treat these results as machine-specific guidance for interactive versus batch-sized Floquet workloads."
+  }
+}

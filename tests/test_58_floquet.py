@@ -1,18 +1,26 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
+from scipy.special import jv
 
 from cqed_sim import (
     DispersiveTransmonCavityModel,
     FloquetConfig,
     FloquetProblem,
     PeriodicDriveTerm,
+    SidebandDriveSpec,
     TransmonModeSpec,
     UniversalCQEDModel,
     solve_floquet,
 )
+from cqed_sim.core import FrameSpec
 from cqed_sim.floquet import (
+    build_target_drive_term,
+    build_transmon_frequency_modulation_term,
     build_sambe_hamiltonian,
+    compute_floquet_modes,
+    compute_floquet_transition_strengths,
     compute_hamiltonian_fourier_components,
     extract_sambe_quasienergies,
     fold_quasienergies,
@@ -159,3 +167,215 @@ def test_branch_tracking_returns_continuous_quasienergy_sweep():
     assert sweep.tracked_quasienergies.shape == (len(amplitudes), 2)
     assert np.all((sweep.overlap_scores >= 0.0) & (sweep.overlap_scores <= 1.0))
     assert np.max(np.abs(np.diff(sweep.tracked_quasienergies, axis=0))) < 0.6
+
+
+def test_incommensurate_drive_frequency_is_rejected():
+    model = _single_transmon_model(omega_q=2.2, dim=2)
+    floquet_angular_frequency = 1.0
+    problem = FloquetProblem(
+        model=model,
+        periodic_terms=(
+            PeriodicDriveTerm(
+                target="qubit",
+                amplitude=0.18,
+                frequency=np.sqrt(2.0) * floquet_angular_frequency,
+                waveform="cos",
+            ),
+        ),
+        period=2.0 * np.pi / floquet_angular_frequency,
+    )
+
+    with pytest.raises(ValueError, match="not commensurate"):
+        solve_floquet(problem, FloquetConfig(n_time_samples=64))
+
+
+def test_floquet_modes_are_periodic_and_states_pick_up_quasienergy_phase():
+    drive_angular_frequency = 1.2
+    model = _single_transmon_model(omega_q=2.1, dim=2)
+    problem = FloquetProblem(
+        model=model,
+        periodic_terms=(
+            PeriodicDriveTerm(
+                target="qubit",
+                amplitude=0.23,
+                frequency=drive_angular_frequency,
+                phase=0.15,
+                waveform="cos",
+            ),
+        ),
+        period=2.0 * np.pi / drive_angular_frequency,
+    )
+
+    result = solve_floquet(problem, FloquetConfig(n_time_samples=128))
+    sample_time = 0.37 * problem.period
+    modes_t = compute_floquet_modes(result, t=sample_time)
+    modes_tp = compute_floquet_modes(result, t=sample_time + problem.period)
+    states_t = result.states(sample_time)
+    states_tp = result.states(sample_time + problem.period)
+
+    for mode_index, quasienergy in enumerate(result.quasienergies):
+        assert abs(modes_t[mode_index].overlap(modes_tp[mode_index])) == pytest.approx(1.0, abs=1.0e-6)
+        phase = np.exp(-1j * float(quasienergy) * problem.period)
+        assert (states_tp[mode_index] - phase * states_t[mode_index]).norm() < 1.0e-5
+
+
+def test_longitudinal_frequency_modulation_transition_strengths_match_bessel_sidebands():
+    # Validates Eq. (45) in Silveri et al., Rep. Prog. Phys. 80, 056002 (2017).
+    modulation_angular_frequency = 1.0
+    modulation_amplitude = 0.7
+    # Keep the bare qubit transition inside the first Floquet zone so the
+    # harmonic labels match the published sideband index directly.
+    model = _single_transmon_model(omega_q=0.4, dim=2)
+    problem = FloquetProblem(
+        model=model,
+        periodic_terms=(
+            build_transmon_frequency_modulation_term(
+                model,
+                amplitude=modulation_amplitude,
+                frequency=modulation_angular_frequency,
+                waveform="cos",
+            ),
+        ),
+        period=2.0 * np.pi / modulation_angular_frequency,
+    )
+
+    result = solve_floquet(problem, FloquetConfig(n_time_samples=256))
+    probe_operator = model.transmon_lowering() + model.transmon_raising()
+    strengths = compute_floquet_transition_strengths(
+        result,
+        probe_operator,
+        harmonic_cutoff=2,
+        n_time_samples=768,
+        min_strength=0.0,
+    )
+
+    ground_index = int(np.flatnonzero(result.dominant_bare_state_indices == 0)[0])
+    excited_index = int(np.flatnonzero(result.dominant_bare_state_indices == 1)[0])
+    by_harmonic = {
+        entry.harmonic: entry.strength
+        for entry in strengths
+        if entry.initial_mode == ground_index and entry.final_mode == excited_index
+    }
+
+    for harmonic in range(-2, 3):
+        expected = float(abs(jv(harmonic, modulation_amplitude / modulation_angular_frequency)) ** 2)
+        assert harmonic in by_harmonic
+        assert abs(by_harmonic[harmonic] - expected) < 3.0e-3
+
+
+def test_run_floquet_sweep_uses_config_overlap_reference_time_by_default(monkeypatch):
+    model = _single_transmon_model(omega_q=2.2, dim=2)
+    problems = [
+        FloquetProblem(
+            model=model,
+            periodic_terms=(
+                PeriodicDriveTerm(target="qubit", amplitude=0.1, frequency=1.0, waveform="cos"),
+            ),
+            period=2.0 * np.pi,
+        )
+        for _ in range(2)
+    ]
+    seen: dict[str, object] = {}
+
+    def fake_solve_floquet(problem, config=None):
+        seen.setdefault("solve_calls", 0)
+        seen["solve_calls"] = int(seen["solve_calls"]) + 1
+        return object()
+
+    def fake_track(results, *, parameter_values=None, reference_time=0.0):
+        seen["reference_time"] = reference_time
+        seen["parameter_values"] = parameter_values
+        seen["result_count"] = len(results)
+        return "tracked"
+
+    monkeypatch.setattr("cqed_sim.floquet.core.solve_floquet", fake_solve_floquet)
+    monkeypatch.setattr("cqed_sim.floquet.analysis.track_floquet_branches", fake_track)
+
+    config = FloquetConfig(n_time_samples=64, overlap_reference_time=0.37)
+    output = run_floquet_sweep(problems, parameter_values=[0.1, 0.2], config=config)
+
+    assert output == "tracked"
+    assert seen["solve_calls"] == 2
+    assert seen["result_count"] == 2
+    assert seen["reference_time"] == pytest.approx(0.37)
+    assert seen["parameter_values"] == [0.1, 0.2]
+
+
+def test_run_floquet_sweep_explicit_reference_time_overrides_config(monkeypatch):
+    model = _single_transmon_model(omega_q=2.2, dim=2)
+    problems = [
+        FloquetProblem(
+            model=model,
+            periodic_terms=(
+                PeriodicDriveTerm(target="qubit", amplitude=0.1, frequency=1.0, waveform="cos"),
+            ),
+            period=2.0 * np.pi,
+        )
+        for _ in range(2)
+    ]
+    seen: dict[str, object] = {}
+
+    def fake_solve_floquet(problem, config=None):
+        return object()
+
+    def fake_track(results, *, parameter_values=None, reference_time=0.0):
+        seen["reference_time"] = reference_time
+        return "tracked"
+
+    monkeypatch.setattr("cqed_sim.floquet.core.solve_floquet", fake_solve_floquet)
+    monkeypatch.setattr("cqed_sim.floquet.analysis.track_floquet_branches", fake_track)
+
+    config = FloquetConfig(n_time_samples=64, overlap_reference_time=0.37)
+    output = run_floquet_sweep(problems, config=config, reference_time=0.11)
+
+    assert output == "tracked"
+    assert seen["reference_time"] == pytest.approx(0.11)
+
+
+def test_effective_red_sideband_hybridization_peaks_at_predicted_resonance():
+    # Effective-Hamiltonian validation of the first-order sideband resonance
+    # discussed by Beaudoin et al., Phys. Rev. A 86, 022305 (2012).
+    model = DispersiveTransmonCavityModel(
+        omega_c=2.0 * np.pi * 5.05,
+        omega_q=2.0 * np.pi * 6.25,
+        alpha=2.0 * np.pi * (-0.25),
+        chi=2.0 * np.pi * (-0.015),
+        kerr=0.0,
+        n_cav=3,
+        n_tr=3,
+    )
+    frame = FrameSpec()
+    center_frequency = model.sideband_transition_frequency(
+        cavity_level=0,
+        lower_level=0,
+        upper_level=1,
+        sideband="red",
+        frame=frame,
+    )
+    sideband = SidebandDriveSpec(mode="storage", lower_level=0, upper_level=1, sideband="red")
+    drive_frequencies = center_frequency + 2.0 * np.pi * np.linspace(-0.12, 0.12, 13)
+    problems = []
+    for frequency in drive_frequencies:
+        drive = build_target_drive_term(
+            model,
+            sideband,
+            amplitude=2.0 * np.pi * 0.03,
+            frequency=frequency,
+            waveform="cos",
+        )
+        problems.append(FloquetProblem(model=model, periodic_terms=(drive,), period=2.0 * np.pi / frequency))
+
+    sweep = run_floquet_sweep(
+        problems,
+        parameter_values=drive_frequencies / (2.0 * np.pi),
+        config=FloquetConfig(n_time_samples=96, overlap_reference_time=0.17),
+    )
+
+    hybridization_scores = [
+        float(np.max(np.minimum(result.bare_state_overlaps[:, 1], result.bare_state_overlaps[:, 2])))
+        for result in sweep.results
+    ]
+    best_index = int(np.argmax(hybridization_scores))
+
+    assert abs((drive_frequencies[best_index] - center_frequency) / (2.0 * np.pi)) <= 0.02
+    assert hybridization_scores[best_index] > 0.45

@@ -107,6 +107,10 @@ $$
 
 Use the Sambe builder when you want explicit harmonic blocks or harmonic-cutoff comparisons. Use the propagator route as the default numerical answer.
 
+For sweep workflows, `run_floquet_sweep(...)` evaluates Floquet-mode overlaps at
+the explicitly supplied `reference_time` when you pass one, or at
+`FloquetConfig.overlap_reference_time` otherwise.
+
 ## When to use Floquet analysis instead of other tools
 
 Use `cqed_sim.floquet` when the drive is genuinely periodic and you want a spectral or dressed-state description.

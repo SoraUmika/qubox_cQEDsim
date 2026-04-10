@@ -133,6 +133,8 @@ nav:
 
       - Floquet & Driven Systems:
           - Floquet Driven Systems: tutorials/floquet_driven_systems.md
+          - Dai 2025 Intrinsic Resonances: tutorials/dai_2025_intrinsic_multiphoton_resonances.md
+          - Dai 2025 Readout-Assisted Resonances: tutorials/dai_2025_readout_assisted_floquet_resonances.md
 
       - Advanced Topics:
           - Holographic Quantum Algorithms: tutorials/holographic_quantum_algorithms.md

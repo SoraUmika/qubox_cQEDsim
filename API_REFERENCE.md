@@ -1753,6 +1753,9 @@ class FloquetConfig:
     sambe_n_time_samples: int | None = None
 ```
 
+`overlap_reference_time` is the default mode-evaluation time used by `run_floquet_sweep(...)`
+when you do not pass an explicit `reference_time` override.
+
 `PeriodicDriveTerm` supports two complementary styles:
 
 - explicit `operator=...` for parameter modulation or arbitrary periodic perturbations,
@@ -1792,7 +1795,7 @@ def solve_floquet(problem: FloquetProblem, config: FloquetConfig | None = None) 
 | `build_effective_floquet_hamiltonian(...)` | Effective static Hamiltonian in the Floquet eigenbasis |
 | `build_sambe_hamiltonian(...)` | Truncated harmonic-space Floquet Hamiltonian |
 | `extract_sambe_quasienergies(...)` | Cluster folded Sambe eigenvalues into physical quasienergy branches |
-| `run_floquet_sweep(...)` | Solve a parameter sweep and track quasienergy branches |
+| `run_floquet_sweep(...)` | Solve a parameter sweep and track quasienergy branches, defaulting to `config.overlap_reference_time` for overlap evaluation |
 | `track_floquet_branches(...)` | Overlap-based branch matching and zone unwrapping |
 
 ### cQED-specific modulation builders

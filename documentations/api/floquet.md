@@ -92,6 +92,9 @@ class FloquetConfig:
 
 `zone_center` controls how quasienergies are folded into the Floquet Brillouin zone.
 
+`overlap_reference_time` is the default mode-evaluation time used by `run_floquet_sweep(...)`
+when no explicit `reference_time` is supplied.
+
 ---
 
 ### `FloquetResult`
@@ -162,7 +165,7 @@ Primary closed-system Floquet solve. Internally wraps QuTiP's `FloquetBasis` and
 | `compute_bare_state_overlaps(...)` | Overlaps with static-Hamiltonian eigenstates |
 | `compute_floquet_transition_strengths(...)` | Harmonic-resolved transition matrix elements under a probe operator |
 | `identify_multiphoton_resonances(...)` | Detect near-`Delta E ~= n Omega` conditions |
-| `run_floquet_sweep(...)` | Solve a parameter sweep and track branches |
+| `run_floquet_sweep(...)` | Solve a parameter sweep and track branches, defaulting to `config.overlap_reference_time` for overlap evaluation |
 | `track_floquet_branches(...)` | Overlap-based branch matching and zone unwrapping |
 
 ---

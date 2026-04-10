@@ -183,4 +183,6 @@ They also connect directly to the repository's sideband tooling, so they can be 
 
 - [Floquet Analysis API](../api/floquet.md)
 - [User Guide: Floquet Analysis](../user_guides/floquet_analysis.md)
+- [Dai 2025 Intrinsic Resonances](dai_2025_intrinsic_multiphoton_resonances.md)
+- [Dai 2025 Readout-Assisted Resonances](dai_2025_readout_assisted_floquet_resonances.md)
 - [Sideband Swap](sideband_swap.md)

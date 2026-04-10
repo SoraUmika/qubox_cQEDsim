@@ -163,6 +163,8 @@ These documentation pages provide physics background, plots, and code summaries 
 
 ### Floquet & Driven Systems
 - [Floquet Driven Systems](floquet_driven_systems.md) — Floquet theorem, quasienergies, avoided crossings, multiphoton resonances
+- [Dai 2025 Intrinsic Resonances](dai_2025_intrinsic_multiphoton_resonances.md) — literature-backed reproduction of intrinsic transmon multiphoton avoided crossings with an explicit cosine-transmon Floquet model
+- [Dai 2025 Readout-Assisted Resonances](dai_2025_readout_assisted_floquet_resonances.md) — literature-backed reproduction of Appendix E readout-mode-assisted K/L branch slices with a coupled transmon-readout Floquet model
 
 ### Advanced Topics
 - [Holographic Quantum Algorithms](holographic_quantum_algorithms.md) — holographic channel estimation, MPS-inspired correlator sampling

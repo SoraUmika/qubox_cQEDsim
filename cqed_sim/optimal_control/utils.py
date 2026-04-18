@@ -59,6 +59,41 @@ def as_state_vector(
     return normalize_state_vector(vector, name=name)
 
 
+def as_density_matrix(
+    value: qt.Qobj | np.ndarray | Any,
+    *,
+    full_dim: int,
+    subspace: Subspace | None = None,
+    name: str = "density_matrix",
+) -> np.ndarray:
+    if isinstance(value, qt.Qobj):
+        data = np.asarray(value.full(), dtype=np.complex128)
+    else:
+        data = np.asarray(value, dtype=np.complex128)
+
+    if data.ndim == 1:
+        vector = as_state_vector(data, full_dim=full_dim, subspace=subspace, name=name)
+        return np.outer(vector, np.conj(vector))
+    if data.ndim != 2:
+        raise ValueError(f"{name} must be a ket, state vector, or square density matrix.")
+    if 1 in data.shape and max(data.shape) > 1:
+        vector = as_state_vector(data, full_dim=full_dim, subspace=subspace, name=name)
+        return np.outer(vector, np.conj(vector))
+    if data.shape[0] != data.shape[1]:
+        raise ValueError(f"{name} must be a square density matrix.")
+
+    matrix = np.asarray(data, dtype=np.complex128)
+    if subspace is not None and matrix.shape == (subspace.dim, subspace.dim):
+        matrix = embed_subspace_operator(matrix, subspace, outside_identity=False)
+    if matrix.shape != (int(full_dim), int(full_dim)):
+        raise ValueError(f"{name} has shape {matrix.shape}, expected {(int(full_dim), int(full_dim))}.")
+
+    trace = complex(np.trace(matrix))
+    if abs(trace) <= 0.0:
+        raise ValueError(f"{name} must have non-zero trace.")
+    return matrix / trace
+
+
 def dense_projector(subspace: Subspace) -> np.ndarray:
     projector = np.zeros((subspace.full_dim, subspace.full_dim), dtype=np.complex128)
     indices = np.asarray(subspace.indices, dtype=int)
@@ -118,6 +153,7 @@ __all__ = [
     "as_square_matrix",
     "normalize_state_vector",
     "as_state_vector",
+    "as_density_matrix",
     "dense_projector",
     "embed_subspace_operator",
     "quadrature_operators",

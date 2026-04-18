@@ -2988,6 +2988,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#floquetmarkovbath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FloquetMarkovBath
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#floquetmarkovconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FloquetMarkovConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#floquetmarkovresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FloquetMarkovResult
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3010,6 +3043,17 @@
     <span class="md-ellipsis">
       
         solve_floquet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solve_floquet_markov" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        solve_floquet_markov
       
     </span>
   </a>
@@ -3747,6 +3791,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#floquetmarkovbath" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FloquetMarkovBath
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#floquetmarkovconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FloquetMarkovConfig
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#floquetmarkovresult" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FloquetMarkovResult
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3769,6 +3846,17 @@
     <span class="md-ellipsis">
       
         solve_floquet
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#solve_floquet_markov" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        solve_floquet_markov
       
     </span>
   </a>
@@ -3890,7 +3978,7 @@
 
 
 <h1 id="api-reference-floquet-analysis-cqed_simfloquet">API Reference — Floquet Analysis (<code>cqed_sim.floquet</code>)<a class="headerlink" href="#api-reference-floquet-analysis-cqed_simfloquet" title="Permanent link">&para;</a></h1>
-<p>The Floquet module analyzes strictly periodic closed-system Hamiltonians using the same model, frame, and drive-target conventions as the rest of <code>cqed_sim</code>.</p>
+<p>The Floquet module analyzes strictly periodic Hamiltonians using the same model, frame, and drive-target conventions as the rest of <code>cqed_sim</code>, with both closed-system spectral analysis and a Floquet-Markov open-system wrapper.</p>
 <hr />
 <h2 id="core-types">Core Types<a class="headerlink" href="#core-types" title="Permanent link">&para;</a></h2>
 <h3 id="periodicdriveterm"><code>PeriodicDriveTerm</code><a class="headerlink" href="#periodicdriveterm" title="Permanent link">&para;</a></h3>
@@ -4032,11 +4120,48 @@ when no explicit <code>reference_time</code> is supplied.</p>
 </tbody>
 </table>
 <hr />
+<h3 id="floquetmarkovbath"><code>FloquetMarkovBath</code><a class="headerlink" href="#floquetmarkovbath" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">FloquetMarkovBath</span><span class="p">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">operator</span><span class="p">:</span> <span class="n">qt</span><span class="o">.</span><span class="n">Qobj</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">spectrum</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span></code></pre></div>
+<p>One bath coupling operator and its spectral-density callback for Floquet-Markov evolution.</p>
+<h3 id="floquetmarkovconfig"><code>FloquetMarkovConfig</code><a class="headerlink" href="#floquetmarkovconfig" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">FloquetMarkovConfig</span><span class="p">:</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">floquet</span><span class="p">:</span> <span class="n">FloquetConfig</span> <span class="o">=</span> <span class="n">FloquetConfig</span><span class="p">()</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">kmax</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">nT</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">w_th</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">store_states</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>    <span class="n">store_final_state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="n">store_floquet_states</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="n">normalize_output</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</span></code></pre></div>
+<p>Wraps Floquet basis settings plus QuTiP Floquet-Markov solver controls.</p>
+<h3 id="floquetmarkovresult"><code>FloquetMarkovResult</code><a class="headerlink" href="#floquetmarkovresult" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nd">@dataclass</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">FloquetMarkovResult</span><span class="p">:</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="n">floquet_result</span><span class="p">:</span> <span class="n">FloquetResult</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">config</span><span class="p">:</span> <span class="n">FloquetMarkovConfig</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">baths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">FloquetMarkovBath</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">tlist</span><span class="p">:</span> <span class="n">ndarray</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">solver_result</span><span class="p">:</span> <span class="n">Any</span>
+</span></code></pre></div>
+<p>Exposes convenience accessors for <code>states</code>, <code>expect</code>, <code>times</code>, <code>final_state</code>, and <code>floquet_states</code>.</p>
+<hr />
 <h2 id="main-solver">Main Solver<a class="headerlink" href="#main-solver" title="Permanent link">&para;</a></h2>
 <h3 id="solve_floquet"><code>solve_floquet</code><a class="headerlink" href="#solve_floquet" title="Permanent link">&para;</a></h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">solve_floquet</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">FloquetProblem</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">FloquetConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FloquetResult</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">solve_floquet</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">FloquetProblem</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">FloquetConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FloquetResult</span>
 </span></code></pre></div>
 <p>Primary closed-system Floquet solve. Internally wraps QuTiP's <code>FloquetBasis</code> and returns quasienergies, Floquet modes, the one-period propagator, overlap labels against the static Hamiltonian, and optional Sambe-space data.</p>
+<h3 id="solve_floquet_markov"><code>solve_floquet_markov</code><a class="headerlink" href="#solve_floquet_markov" title="Permanent link">&para;</a></h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">solve_floquet_markov</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">initial_state</span><span class="p">,</span> <span class="n">tlist</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">baths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_ops</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Runs dissipative Floquet-Markov evolution while reusing the Floquet basis generated from <code>solve_floquet(...)</code>.</p>
+<p>Provide either explicit <code>baths=[FloquetMarkovBath(...), ...]</code> or <code>noise=NoiseSpec(...)</code> with <code>FloquetProblem(model=...)</code> to use the convenience bridge.</p>
 <hr />
 <h2 id="builders">Builders<a class="headerlink" href="#builders" title="Permanent link">&para;</a></h2>
 <table>
@@ -4066,6 +4191,14 @@ when no explicit <code>reference_time</code> is supplied.</p>
 <tr>
 <td><code>build_dispersive_modulation_term(...)</code></td>
 <td>Dispersive modulation via <code>n_mode * n_q</code></td>
+</tr>
+<tr>
+<td><code>build_floquet_markov_baths(problem, noise, spectrum=...)</code></td>
+<td>Convert a repository <code>NoiseSpec</code> into Floquet-Markov bath operators</td>
+</tr>
+<tr>
+<td><code>flat_markov_spectrum(scale=1.0)</code></td>
+<td>Convenience white-spectrum callback</td>
 </tr>
 <tr>
 <td><code>compute_hamiltonian_fourier_components(...)</code></td>
@@ -4147,7 +4280,9 @@ when no explicit <code>reference_time</code> is supplied.</p>
 <li>Floquet analysis assumes strict periodicity.</li>
 <li>Multi-tone drives are only supported when a common period exists.</li>
 <li>Quasienergies are defined modulo the drive angular frequency.</li>
-<li>The public API is currently closed-system; Floquet-Markov hooks are a future extension.</li>
+<li><code>solve_floquet(...)</code> remains the closed-system spectral-analysis path.</li>
+<li><code>solve_floquet_markov(...)</code> is the current Markovian open-system Floquet path.</li>
+<li>The <code>NoiseSpec</code> bridge is a convenience wrapper; use explicit <code>FloquetMarkovBath(...)</code> inputs for custom spectra and coupling models.</li>
 </ul>
 
 

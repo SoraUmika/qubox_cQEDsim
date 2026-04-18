@@ -58,56 +58,63 @@ If the training distribution covers the actual device distribution, the learned 
 
 ### `01_calibration_targets_and_fitting.ipynb`
 
-This notebook generates effective spectroscopy, Rabi, and T1 targets and inspects the fitted parameter summaries.
+This notebook generates synthetic spectroscopy, Rabi, Ramsey, and T1 targets, then re-fits the resulting traces with `cqed_sim.system_id`.
 
 **What it teaches:**
 
-- How `run_spectroscopy(...)`, `run_rabi(...)`, and `run_t1(...)` package synthetic calibration traces
-- Which fitted parameters and uncertainty estimates are exposed for downstream use
-- How to think about these outputs as workflow inputs for later system-identification stages
+- How `cqed_sim.calibration_targets` packages synthetic calibration traces
+- How `fit_spectroscopy_trace(...)`, `fit_rabi_trace(...)`, `fit_ramsey_trace(...)`, and `fit_t1_trace(...)` recover the relevant physical summaries from those traces
+- How to treat those fit outputs as inputs for later uncertainty-propagation stages
 
 **Running calibration targets:**
 
 ```python
+import numpy as np
+
+from cqed_sim.calibration_targets import run_rabi, run_ramsey, run_spectroscopy, run_t1
 from cqed_sim.system_id import (
-    run_spectroscopy,
-    run_rabi,
-    run_t1,
-    CalibrationTargets,
+    fit_rabi_trace,
+    fit_ramsey_trace,
+    fit_spectroscopy_trace,
+    fit_t1_trace,
 )
 
-targets = CalibrationTargets.from_model(model, frame, noise_spec)
+drive_frequencies = np.linspace(model.omega_q - 2.0e7, model.omega_q + 2.0e7, 401)
+rabi_amplitudes = np.linspace(0.0, 2.0, 201)
+delays = np.linspace(0.0, 60.0e-6, 201)
 
-# Qubit spectroscopy
-spec_result = run_spectroscopy(
-    targets,
-    freq_range_hz=(-10e6, 10e6),
-    n_points=101,
-    shots=512,
-)
-print(f"Fitted ω_q/2π: {spec_result.omega_q_hz:.3f} Hz")
-print(f"Fitted T2*:    {spec_result.t2star_s:.2e} s")
+spectroscopy_target = run_spectroscopy(model, drive_frequencies)
+rabi_target = run_rabi(model, rabi_amplitudes, duration=40.0e-9, omega_scale=2.0 * np.pi * 12.0e6)
+ramsey_target = run_ramsey(model, delays, detuning=2.0 * np.pi * 0.6e6, t2_star=9.0e-6)
+t1_target = run_t1(model, delays, t1=24.0e-6)
 
-# Time Rabi
-rabi_result = run_rabi(
-    targets,
-    duration_range_s=(10e-9, 200e-9),
-    n_points=60,
+spectroscopy_fit = fit_spectroscopy_trace(
+    spectroscopy_target.raw_data["drive_frequencies"],
+    spectroscopy_target.raw_data["ground_response"],
 )
-print(f"Fitted Ω_R/2π: {rabi_result.rabi_frequency_hz:.3f} Hz")
+rabi_fit = fit_rabi_trace(
+    rabi_target.raw_data["amplitudes"],
+    rabi_target.raw_data["excited_population"],
+    duration=rabi_target.fitted_parameters["duration"],
+)
+ramsey_fit = fit_ramsey_trace(
+    ramsey_target.raw_data["delays"],
+    ramsey_target.raw_data["excited_population"],
+)
+t1_fit = fit_t1_trace(
+    t1_target.raw_data["delays"],
+    t1_target.raw_data["excited_population"],
+)
 
-# T1 relaxation
-t1_result = run_t1(
-    targets,
-    time_range_s=(0, 80e-6),
-    n_points=60,
-)
-print(f"Fitted T1: {t1_result.t1_s:.2e} s")
+print(f"Fitted omega_q: {spectroscopy_fit.fitted_parameters['omega_peak']:.3e}")
+print(f"Fitted omega_scale: {rabi_fit.fitted_parameters['omega_scale']:.3e}")
+print(f"Fitted delta_omega: {ramsey_fit.fitted_parameters['delta_omega']:.3e}")
+print(f"Fitted T1: {t1_fit.fitted_parameters['t1']:.2e} s")
 ```
 
 **Interpreting the fits:**
 
-Each fit returns point estimates and uncertainty bounds. The spectroscopy fit gives the qubit frequency and linewidth; the Rabi fit gives the drive coupling and verifies the frequency calibration; the T1 fit gives the energy-relaxation time.
+Each fit returns point estimates and uncertainty bounds in a `CalibrationResult`. The spectroscopy fit gives the dominant peak frequency and linewidth, the Rabi fit gives the effective drive scale, the Ramsey fit gives detuning plus `T2*`, and the T1 fit gives the energy-relaxation time.
 
 ![System identification calibration fits](../assets/images/tutorials/system_identification_fits.png)
 
@@ -115,26 +122,41 @@ Each fit returns point estimates and uncertainty bounds. The spectroscopy fit gi
 
 ### `02_evidence_to_randomizer_and_env.ipynb`
 
-This notebook packages fitted summaries into `CalibrationEvidence`, converts them into a `DomainRandomizer`, and wires the resulting priors into a hybrid RL environment.
+This notebook packages fitted summaries into `CalibrationEvidence`, converts them into a `DomainRandomizer`, and then mirrors the environment-wiring pattern used in `examples/calibration_systemid_rl_pipeline.py`.
 
 **What it teaches:**
 
-- How calibration posteriors become train-time randomization priors
+- How fitted calibration summaries become train-time randomization priors
 - How `randomizer_from_calibration(...)` bridges the calibration and control subsystems
-- What metadata and observation products are produced at `env.reset(...)`
+- How merged evidence blocks keep manual priors and fit-derived priors in one transport object
 
 **Creating calibration evidence:**
 
 ```python
-from cqed_sim.system_id import CalibrationEvidence
+from cqed_sim import CalibrationEvidence, NormalPrior
+from cqed_sim.system_id import evidence_from_fit, merge_calibration_evidence
 
-evidence = CalibrationEvidence(
-    spectroscopy = spec_result,
-    rabi         = rabi_result,
-    t1           = t1_result,
+evidence = merge_calibration_evidence(
+    evidence_from_fit(
+        spectroscopy_fit,
+        category="model",
+        parameter_map={"omega_peak": "omega_q"},
+        bounds={"omega_q": (0.0, None)},
+    ),
+    evidence_from_fit(
+        t1_fit,
+        category="noise",
+        bounds={"t1": (0.0, None)},
+        min_sigma={"t1": 0.5e-6},
+    ),
+    CalibrationEvidence(
+        model_posteriors={
+            "chi": NormalPrior(mean=2.0 * np.pi * (-2.25e6), sigma=2.0 * np.pi * 0.08e6),
+        },
+    ),
 )
 
-print(f"Estimated χ/2π: {evidence.chi_hz:.3e} ± {evidence.chi_uncertainty_hz:.3e} Hz")
+print(sorted(evidence.model_posteriors.keys()))
 ```
 
 **Converting to domain randomizer:**
@@ -142,33 +164,17 @@ print(f"Estimated χ/2π: {evidence.chi_hz:.3e} ± {evidence.chi_uncertainty_hz:
 ```python
 from cqed_sim.system_id import randomizer_from_calibration
 
-randomizer = randomizer_from_calibration(
-    evidence,
-    sample_count=8,          # Simultaneous parameter samples per training step
-    extra_noise_scale=0.2,   # Add 20% extra uncertainty beyond calibration bounds
-)
+randomizer = randomizer_from_calibration(evidence)
 
-# Inspect the parameter distributions
-for param, dist in randomizer.distributions.items():
-    print(f"  {param}: mean={dist.mean:.3e}, std={dist.std:.3e}")
+for param, prior in randomizer.model_priors_train.items():
+    print(f"  model {param}: {prior}")
+for param, prior in randomizer.noise_priors_train.items():
+    print(f"  noise {param}: {prior}")
 ```
 
 **Wiring into an RL environment:**
 
-```python
-from cqed_sim.rl_control import HybridCQEDEnv, HybridEnvConfig
-
-config = HybridEnvConfig(
-    task                = "qubit_pi_pulse",
-    domain_randomization = randomizer.to_config(),
-)
-
-env = HybridCQEDEnv(config)
-obs, info = env.reset()
-print(f"Reset metadata: {info['model_parameters']}")
-```
-
-At each `env.reset()`, a new set of model parameters is sampled from the domain-randomization distribution. The observation at the first step includes summary statistics of the current model instance, allowing the agent to adapt its strategy to the specific sample.
+The full end-to-end environment wiring now lives in `examples/calibration_systemid_rl_pipeline.py`. That example shows the current `HybridEnvConfig` shape and demonstrates that `env.reset(...)` surfaces the sampled overrides under `info["randomization"]`.
 
 ---
 

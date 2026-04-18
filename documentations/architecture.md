@@ -18,7 +18,7 @@ cqed_sim/
 |-- calibration/          # SQR gate calibration
 |-- calibration_targets/  # Spectroscopy, Rabi, Ramsey, T1, T2 echo, DRAG tuning
 |-- rl_control/           # RL environments, action/observation/reward layers, diagnostics, tasks
-|-- system_id/            # Calibration-informed priors and randomization hooks
+|-- system_id/            # Measured-trace fitting plus calibration-informed priors and randomization hooks
 |-- io/                   # Gate sequence JSON I/O
 |-- observables/          # Bloch, Fock-resolved, phase, trajectory, Wigner diagnostics
 |-- operators/            # Pauli, cavity ladder, embedding helpers
@@ -83,7 +83,7 @@ The simulation engine:
 - `analysis` for parameter translation
 - `calibration` and `calibration_targets` for reusable calibration helpers
 - `rl_control` for benchmark-task definitions, environment wrappers, domain randomization, and measurement-aware observations/rewards
-- `system_id` for lightweight posterior/prior hooks that feed the RL randomization layer
+- `system_id` for lightweight calibration-trace fitting and posterior/prior hooks that feed the RL randomization layer
 - `tomo` for tomography primitives
 - `observables` and `plotting` for diagnostics and visualization
 - `unitary_synthesis` for gate-sequence optimization

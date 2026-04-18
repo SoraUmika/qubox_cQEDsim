@@ -1,11 +1,10 @@
-# `cqed_sim.system_id` — System Identification and Calibration Bridge
+# `cqed_sim.system_id` — System Identification and Calibration Inference
 
 ## Purpose
 
-`cqed_sim.system_id` provides the bridge between experimental calibration evidence
-and robust-control or RL training workflows. It converts measured posteriors over
-device parameters into `DomainRandomizer` priors that can be used to train
-policies robust to device uncertainty.
+`cqed_sim.system_id` is the inverse-calibration layer for common cQED workflows.
+It fits measured calibration traces, converts fit summaries into posterior-like
+prior objects, and bridges those priors into the RL/domain-randomization stack.
 
 ## Key Classes and Functions
 
@@ -14,25 +13,116 @@ policies robust to device uncertainty.
 Collects posteriors from calibration measurements:
 
 ```python
-from cqed_sim.system_id import CalibrationEvidence, NormalPrior, FixedPrior
+from cqed_sim.system_id import CalibrationEvidence, FixedPrior, NormalPrior
 
 evidence = CalibrationEvidence(
     model_posteriors={
-        "chi": NormalPrior(mean=-2.84e6, std=50e3),
-        "kerr": NormalPrior(mean=-28.8e3, std=1e3),
+        "chi": NormalPrior(mean=-2.84e6, sigma=50e3),
+        "kerr": NormalPrior(mean=-28.8e3, sigma=1e3),
     },
     noise_posteriors={
-        "t1_s": NormalPrior(mean=10e-6, std=0.5e-6),
+        "t1": NormalPrior(mean=10e-6, sigma=0.5e-6),
+    },
+    measurement_posteriors={
+        "p_e_given_g": FixedPrior(value=0.02),
     },
 )
 ```
 
 Fields:
-- `model_posteriors` — posteriors over Hamiltonian parameters (chi, kerr, omega, etc.)
-- `noise_posteriors` — posteriors over noise/decoherence parameters (T1, T2, etc.)
-- `hardware_posteriors` — per-channel posteriors (drive amplitudes, offsets, etc.)
-- `measurement_posteriors` — measurement error posteriors (confusion matrices, etc.)
-- `notes` — free-form metadata
+- `model_posteriors` — posteriors over Hamiltonian parameters such as `chi`, `kerr`, and dressed frequencies
+- `noise_posteriors` — posteriors over decoherence parameters such as `t1`, `t2_star`, and `t2_echo`
+- `hardware_posteriors` — per-channel hardware posteriors
+- `measurement_posteriors` — readout or classifier error posteriors
+- `notes` — free-form metadata, including optional fit provenance
+
+### Measured-trace fit helpers
+
+The fit helpers all return `CalibrationResult`, the same lightweight result object used by `cqed_sim.calibration_targets`.
+
+| Function | Input trace | Main fitted parameters |
+|---|---|---|
+| `fit_spectroscopy_trace(drive_frequencies, response)` | single-peak spectroscopy trace | `omega_peak`, `linewidth` |
+| `fit_rabi_trace(amplitudes, excited_population, duration=...)` | driven Rabi trace | `omega_scale` |
+| `fit_ramsey_trace(delays, excited_population)` | Ramsey fringe trace | `delta_omega`, `t2_star` |
+| `fit_t1_trace(delays, excited_population)` | relaxation trace | `t1` |
+| `fit_t2_echo_trace(delays, excited_population)` | Hahn-echo trace | `t2_echo` |
+
+Each fit also returns nuisance parameters such as amplitude, offset, and phase where relevant.
+
+Example:
+
+```python
+from cqed_sim.calibration_targets import run_spectroscopy, run_t1
+from cqed_sim.system_id import fit_spectroscopy_trace, fit_t1_trace
+
+spectroscopy_target = run_spectroscopy(model, drive_frequencies)
+t1_target = run_t1(model, delays, t1=24.0e-6)
+
+spectroscopy_fit = fit_spectroscopy_trace(
+    spectroscopy_target.raw_data["drive_frequencies"],
+    spectroscopy_target.raw_data["ground_response"],
+)
+t1_fit = fit_t1_trace(
+    t1_target.raw_data["delays"],
+    t1_target.raw_data["excited_population"],
+)
+```
+
+### `prior_from_fit(...)`
+
+Converts a fitted value and uncertainty into either:
+
+- `NormalPrior(mean, sigma, low, high)` when uncertainty is nonzero, or
+- `FixedPrior(value)` when the effective uncertainty collapses to zero.
+
+`min_sigma` and `sigma_scale` let you enforce a floor or inflate narrow fit covariances before they enter the training distribution.
+
+### `evidence_from_fit(...)`
+
+Maps selected fitted parameters into one `CalibrationEvidence` category:
+
+```python
+from cqed_sim.system_id import evidence_from_fit
+
+model_evidence = evidence_from_fit(
+    spectroscopy_fit,
+    category="model",
+    parameter_map={"omega_peak": "omega_q"},
+    bounds={"omega_q": (0.0, None)},
+)
+
+noise_evidence = evidence_from_fit(
+    t1_fit,
+    category="noise",
+    bounds={"t1": (0.0, None)},
+    min_sigma={"t1": 0.5e-6},
+)
+```
+
+Categories:
+- `model`
+- `noise`
+- `measurement`
+- `hardware` with an explicit `channel=...`
+
+### `merge_calibration_evidence(...)`
+
+Combines multiple evidence blocks while rejecting duplicate posterior keys:
+
+```python
+from cqed_sim.system_id import CalibrationEvidence, NormalPrior, merge_calibration_evidence
+
+evidence = merge_calibration_evidence(
+    model_evidence,
+    noise_evidence,
+    CalibrationEvidence(
+        model_posteriors={
+            "chi": NormalPrior(mean=-2.84e6, sigma=50e3),
+        },
+    ),
+)
+```
 
 ### `randomizer_from_calibration(evidence)`
 
@@ -52,34 +142,24 @@ To separate train and eval distributions, construct `DomainRandomizer` directly.
 | Type | Description |
 |------|-------------|
 | `FixedPrior(value)` | No randomization — always returns `value` |
-| `NormalPrior(mean, std)` | Gaussian distribution |
+| `NormalPrior(mean, sigma)` | Gaussian distribution with optional clipping bounds |
 | `UniformPrior(low, high)` | Uniform distribution |
-| `ChoicePrior(choices)` | Discrete uniform over a list |
+| `ChoicePrior(values)` | Discrete uniform or weighted categorical prior |
 
 ## Integration with RL Workflows
 
-```python
-from cqed_sim.rl_control import HybridCQEDEnv, HybridEnvConfig, HybridSystemConfig
-from cqed_sim.system_id import CalibrationEvidence, NormalPrior, randomizer_from_calibration
+The shortest path is:
 
-evidence = CalibrationEvidence(
-    model_posteriors={"chi": NormalPrior(mean=-2.84e6, std=50e3)},
-)
-randomizer = randomizer_from_calibration(evidence)
+1. Generate or measure calibration traces.
+2. Fit them with `fit_*_trace(...)`.
+3. Convert selected fitted parameters with `evidence_from_fit(...)`.
+4. Merge those blocks into `CalibrationEvidence`.
+5. Call `randomizer_from_calibration(...)` and pass the result into `HybridEnvConfig`.
 
-config = HybridEnvConfig(
-    system=HybridSystemConfig(...),
-    domain_randomizer=randomizer,
-)
-env = HybridCQEDEnv(config=config)
-```
+An end-to-end repo example lives in `examples/calibration_systemid_rl_pipeline.py`.
 
 ## Scope and Limitations
 
-- This module is currently a thin bridge layer. For richer calibration workflows,
-  see `cqed_sim.calibration_targets` (which produces calibration measurements)
-  and `cqed_sim.rl_control` (which consumes randomizers).
-- The `randomizer_from_calibration` function sets train and eval distributions
-  identically. For separate train/eval splits, construct `DomainRandomizer` directly.
-- Priors must be expressed as `ParameterPrior` objects; raw floats must be wrapped
-  in `FixedPrior`.
+- The module now performs lightweight measured-trace fitting, but it is still not a joint Bayesian inference engine.
+- `fit_spectroscopy_trace(...)` assumes a single dominant Lorentzian peak or dip in the supplied response trace.
+- The `randomizer_from_calibration(...)` function sets train and eval distributions identically. For separate train/eval splits, construct `DomainRandomizer` directly.

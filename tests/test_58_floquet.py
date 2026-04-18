@@ -2,20 +2,25 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+import qutip as qt
 from scipy.special import jv
 
 from cqed_sim import (
     DispersiveTransmonCavityModel,
     FloquetConfig,
+    FloquetMarkovConfig,
     FloquetProblem,
+    NoiseSpec,
     PeriodicDriveTerm,
     SidebandDriveSpec,
     TransmonModeSpec,
     UniversalCQEDModel,
     solve_floquet,
+    solve_floquet_markov,
 )
 from cqed_sim.core import FrameSpec
 from cqed_sim.floquet import (
+    build_floquet_markov_baths,
     build_target_drive_term,
     build_transmon_frequency_modulation_term,
     build_sambe_hamiltonian,
@@ -23,6 +28,7 @@ from cqed_sim.floquet import (
     compute_floquet_transition_strengths,
     compute_hamiltonian_fourier_components,
     extract_sambe_quasienergies,
+    flat_markov_spectrum,
     fold_quasienergies,
     identify_multiphoton_resonances,
     run_floquet_sweep,
@@ -330,6 +336,56 @@ def test_run_floquet_sweep_explicit_reference_time_overrides_config(monkeypatch)
 
     assert output == "tracked"
     assert seen["reference_time"] == pytest.approx(0.11)
+
+
+def test_build_floquet_markov_baths_uses_noise_bridge_and_flat_spectrum() -> None:
+    model = _single_transmon_model(omega_q=2.2, dim=2)
+    problem = FloquetProblem(model=model, periodic_terms=(), period=2.0 * np.pi)
+
+    baths = build_floquet_markov_baths(
+        problem,
+        NoiseSpec(tphi=4.0),
+        spectrum=flat_markov_spectrum(2.5),
+    )
+
+    assert len(baths) == 1
+    assert baths[0].operator.dims == problem.static_hamiltonian.dims
+    np.testing.assert_allclose(baths[0].resolved_spectrum()(np.array([-1.0, 0.0, 1.0])), 2.5)
+
+
+def test_floquet_markov_static_relaxation_matches_expected_decay() -> None:
+    model = _single_transmon_model(omega_q=0.4, dim=2)
+    problem = FloquetProblem(model=model, periodic_terms=(), period=2.0 * np.pi)
+    tlist = np.linspace(0.0, 1.0, 11)
+    baths = build_floquet_markov_baths(problem, NoiseSpec(t1=2.0))
+
+    result = solve_floquet_markov(
+        problem,
+        qt.basis(2, 1),
+        tlist,
+        noise=NoiseSpec(t1=2.0),
+        e_ops=[model.transmon_number()],
+        config=FloquetMarkovConfig(store_states=True),
+    )
+    direct = qt.fmmesolve(
+        problem.static_hamiltonian,
+        qt.basis(2, 1),
+        tlist,
+        c_ops=[bath.operator for bath in baths],
+        spectra_cb=[bath.resolved_spectrum() for bath in baths],
+        T=problem.period,
+        e_ops=[model.transmon_number()],
+        options={"progress_bar": "", "store_states": True},
+    )
+
+    excited_population = np.asarray(result.expect[0], dtype=float)
+    direct_population = np.asarray(direct.expect[0], dtype=float)
+
+    assert result.metadata["used_noise_bridge"] is True
+    assert len(result.states) == len(tlist)
+    assert excited_population[-1] < excited_population[0]
+    assert np.all(np.diff(excited_population) <= 1.0e-5)
+    assert np.allclose(excited_population, direct_population, atol=1.0e-6)
 
 
 def test_effective_red_sideband_hybridization_peaks_at_predicted_resonance():

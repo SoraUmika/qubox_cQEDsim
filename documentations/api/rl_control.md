@@ -246,9 +246,15 @@ Key points:
 
 ## System Identification Hooks
 
-`cqed_sim.system_id` currently provides lightweight fit-then-randomize scaffolding:
+`cqed_sim.system_id` now provides lightweight measured-trace fitting plus posterior-to-randomizer scaffolding:
 
 ```python
+fit_spectroscopy_trace(freqs, response)
+fit_ramsey_trace(delays, excited_population)
+fit_t1_trace(delays, excited_population)
+
+evidence_from_fit(result, category="model")
+merge_calibration_evidence(...)
 CalibrationEvidence(
     model_posteriors={...},
     noise_posteriors={...},
@@ -259,7 +265,7 @@ CalibrationEvidence(
 randomizer_from_calibration(evidence)
 ```
 
-These helpers are intentionally simple. They are meant to bridge future calibration/posterior workflows into the RL randomization layer, not to replace a full inference package.
+These helpers are intentionally lightweight. They cover common independent trace fits and uncertainty propagation into `DomainRandomizer`, but they do not replace a full joint inference package.
 
 ---
 

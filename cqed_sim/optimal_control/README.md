@@ -30,6 +30,7 @@ Both paths remain compatible with:
 ## Main Capabilities
 
 - `solve_grape(problem, config)` and `GrapeSolver` for dense model-backed GRAPE.
+- NumPy-based density-matrix GRAPE for `ControlSystem(collapse_operators=...)` problems and `DensityMatrixTransferObjective(...)` targets.
 - `solve_structured_control(problem, config)` and `StructuredControlSolver` for parameter-space optimization over smooth pulse families.
 - `CallableParameterization` and `ControlParameterSpec` for user-defined waveform maps without a new parameterization class.
 - `StructuredPulseFamily` plus concrete families including:
@@ -124,6 +125,7 @@ Structured optimization is currently driven by SciPy minimization over the param
 The same `ControlProblem` can combine:
 
 - `StateTransferObjective`,
+- `DensityMatrixTransferObjective`,
 - `UnitaryObjective`,
 - `CustomControlObjective`,
 - waveform penalties in parameter, command, or physical domains.
@@ -186,10 +188,11 @@ Each artifact bundle includes:
 
 ## Limitations / Non-Goals
 
-- The structured backend still assumes closed-system dense propagation, just like the current GRAPE path.
+- The structured backend still assumes closed-system dense propagation.
+- The GRAPE backend supports open-system and density-matrix objectives only on the NumPy engine; the JAX engine remains closed-system only.
 - Free-final-time optimization is currently exposed as an explicit duration sweep, not as a differentiable inner solver.
 - Built-in pulse families are intentionally minimal; `CallablePulseFamily` and `CallableParameterization` are the supported public extension points for study-specific waveform families.
-- `CustomControlObjective` currently runs on the NumPy engine only; the JAX engine remains targeted at the built-in fidelity objectives.
+- `CustomControlObjective` currently runs only on the closed-system state-vector path; it is not yet wired into the density-matrix / Lindblad propagation route.
 - `evaluate_control_with_simulator(...)` reports the built-in state-transfer and unitary objectives; custom objective replay reporting remains study-specific.
 
 ## References

@@ -8,11 +8,42 @@ import qutip as qt
 
 from cqed_sim.core.drive_targets import DriveTarget
 from cqed_sim.core.frame import FrameSpec
+from cqed_sim.sim.noise import NoiseSpec, collapse_operators as runtime_collapse_operators
 
 from .utils import angular_frequency_from_period, bare_state_overlap_matrix, boundary_populations, fold_quasienergies, wrap_phase
 
 
 WaveformSpec = str | Callable[[np.ndarray], np.ndarray]
+SpectrumCallback = Callable[[np.ndarray], np.ndarray]
+
+
+def flat_markov_spectrum(scale: float = 1.0) -> SpectrumCallback:
+    level = float(scale)
+
+    def _callback(frequency: np.ndarray) -> np.ndarray:
+        values = np.asarray(frequency, dtype=float)
+        return np.full(values.shape, level, dtype=float)
+
+    return _callback
+
+
+def _wrap_spectrum_callback(callback: SpectrumCallback | None) -> SpectrumCallback:
+    if callback is None:
+        return flat_markov_spectrum()
+
+    def _wrapped(frequency: np.ndarray) -> np.ndarray:
+        values = np.asarray(frequency, dtype=float)
+        result = callback(values)
+        array = np.asarray(result, dtype=float)
+        if array.shape == ():
+            return np.full(values.shape, float(array), dtype=float)
+        if array.shape != values.shape:
+            raise ValueError(
+                f"Floquet-Markov spectrum callback returned shape {array.shape}, expected {values.shape}."
+            )
+        return array
+
+    return _wrapped
 
 
 @dataclass(frozen=True)
@@ -184,6 +215,83 @@ class FloquetConfig:
             object.__setattr__(self, "precompute_times", tuple(float(value) for value in self.precompute_times))
 
 
+@dataclass(frozen=True)
+class FloquetMarkovBath:
+    operator: qt.Qobj
+    spectrum: SpectrumCallback | None = None
+    label: str | None = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.operator, qt.Qobj):
+            raise TypeError("FloquetMarkovBath.operator must be a QuTiP Qobj.")
+        if self.spectrum is not None and not callable(self.spectrum):
+            raise TypeError("FloquetMarkovBath.spectrum must be callable when provided.")
+
+    def resolved_spectrum(self) -> SpectrumCallback:
+        return _wrap_spectrum_callback(self.spectrum)
+
+
+@dataclass(frozen=True)
+class FloquetMarkovConfig:
+    floquet: FloquetConfig = field(default_factory=FloquetConfig)
+    kmax: int = 5
+    nT: int | None = None
+    w_th: float = 0.0
+    store_states: bool | None = None
+    store_final_state: bool = True
+    store_floquet_states: bool = False
+    normalize_output: bool = True
+    progress_bar: str = ""
+    method: str | None = None
+    atol: float | None = None
+    rtol: float | None = None
+    max_step: float | None = None
+    solver_options: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if int(self.kmax) < 0:
+            raise ValueError("FloquetMarkovConfig.kmax must be non-negative.")
+        if self.nT is not None and int(self.nT) <= 0:
+            raise ValueError("FloquetMarkovConfig.nT must be positive when provided.")
+        if self.atol is not None and float(self.atol) <= 0.0:
+            raise ValueError("FloquetMarkovConfig.atol must be positive when provided.")
+        if self.rtol is not None and float(self.rtol) <= 0.0:
+            raise ValueError("FloquetMarkovConfig.rtol must be positive when provided.")
+        if self.max_step is not None and float(self.max_step) <= 0.0:
+            raise ValueError("FloquetMarkovConfig.max_step must be positive when provided.")
+
+
+@dataclass
+class FloquetMarkovResult:
+    floquet_result: "FloquetResult"
+    config: FloquetMarkovConfig
+    baths: tuple[FloquetMarkovBath, ...]
+    tlist: np.ndarray
+    solver_result: Any
+    warnings: tuple[str, ...] = ()
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def states(self):
+        return self.solver_result.states
+
+    @property
+    def expect(self):
+        return self.solver_result.expect
+
+    @property
+    def times(self) -> np.ndarray:
+        return np.asarray(self.solver_result.times, dtype=float)
+
+    @property
+    def final_state(self):
+        return getattr(self.solver_result, "final_state", None)
+
+    @property
+    def floquet_states(self):
+        return getattr(self.solver_result, "floquet_states", None)
+
+
 @dataclass
 class FloquetResult:
     problem: FloquetProblem
@@ -325,11 +433,116 @@ def solve_floquet(problem: FloquetProblem, config: FloquetConfig | None = None) 
     )
 
 
+def build_floquet_markov_baths(
+    problem: FloquetProblem,
+    noise: NoiseSpec,
+    *,
+    spectrum: SpectrumCallback | None = None,
+) -> tuple[FloquetMarkovBath, ...]:
+    if problem.model is None:
+        raise ValueError("Floquet-Markov noise bridging requires FloquetProblem(model=...) so collapse operators can be resolved.")
+    operators = runtime_collapse_operators(problem.model, noise)
+    wrapped_spectrum = _wrap_spectrum_callback(spectrum)
+    return tuple(
+        FloquetMarkovBath(
+            operator=operator if operator.isherm else operator.dag(),
+            spectrum=wrapped_spectrum,
+            label=f"bath_{index}",
+        )
+        for index, operator in enumerate(operators)
+    )
+
+
+def solve_floquet_markov(
+    problem: FloquetProblem,
+    initial_state: qt.Qobj,
+    tlist: Sequence[float],
+    *,
+    baths: Sequence[FloquetMarkovBath] | None = None,
+    noise: NoiseSpec | None = None,
+    e_ops: Any = None,
+    args: dict[str, Any] | None = None,
+    config: FloquetMarkovConfig | None = None,
+) -> FloquetMarkovResult:
+    cfg = config or FloquetMarkovConfig()
+    floquet_result = solve_floquet(problem, cfg.floquet)
+
+    resolved_baths: tuple[FloquetMarkovBath, ...]
+    if baths is not None:
+        resolved_baths = tuple(
+            bath if isinstance(bath, FloquetMarkovBath) else FloquetMarkovBath(**bath)
+            for bath in baths
+        )
+    elif noise is not None:
+        resolved_baths = build_floquet_markov_baths(problem, noise)
+    else:
+        resolved_baths = ()
+
+    if not resolved_baths:
+        raise ValueError("solve_floquet_markov requires at least one Floquet-Markov bath or a non-zero NoiseSpec.")
+
+    for bath in resolved_baths:
+        if bath.operator.dims != problem.static_hamiltonian.dims:
+            raise ValueError(
+                f"Floquet-Markov bath '{bath.label or 'operator'}' has dims {bath.operator.dims}, but the Floquet problem uses dims {problem.static_hamiltonian.dims}."
+            )
+
+    options = dict(cfg.solver_options)
+    options.setdefault("progress_bar", str(cfg.progress_bar))
+    options.setdefault("store_final_state", bool(cfg.store_final_state))
+    options.setdefault("store_floquet_states", bool(cfg.store_floquet_states))
+    options.setdefault("normalize_output", bool(cfg.normalize_output))
+    if cfg.store_states is not None:
+        options.setdefault("store_states", bool(cfg.store_states))
+    options.setdefault("atol", float(cfg.floquet.atol if cfg.atol is None else cfg.atol))
+    options.setdefault("rtol", float(cfg.floquet.rtol if cfg.rtol is None else cfg.rtol))
+    active_max_step = cfg.floquet.max_step if cfg.max_step is None else cfg.max_step
+    if active_max_step is not None:
+        options.setdefault("max_step", float(active_max_step))
+    if cfg.method is not None:
+        options.setdefault("method", str(cfg.method))
+
+    solver = qt.FMESolver(
+        floquet_result.floquet_basis,
+        [(bath.operator, bath.resolved_spectrum()) for bath in resolved_baths],
+        float(cfg.w_th),
+        kmax=int(cfg.kmax),
+        nT=None if cfg.nT is None else int(cfg.nT),
+        options=options,
+    )
+    qutip_result = solver.run(
+        initial_state,
+        np.asarray(tlist, dtype=float),
+        args=args,
+        e_ops=e_ops,
+    )
+
+    metadata = {
+        "bath_count": len(resolved_baths),
+        "used_noise_bridge": bool(noise is not None and baths is None),
+    }
+    return FloquetMarkovResult(
+        floquet_result=floquet_result,
+        config=cfg,
+        baths=resolved_baths,
+        tlist=np.asarray(tlist, dtype=float),
+        solver_result=qutip_result,
+        warnings=tuple(floquet_result.warnings),
+        metadata=metadata,
+    )
+
+
 __all__ = [
     "FloquetConfig",
+    "FloquetMarkovBath",
+    "FloquetMarkovConfig",
+    "FloquetMarkovResult",
     "FloquetProblem",
     "FloquetResult",
     "PeriodicDriveTerm",
     "PeriodicFourierComponent",
+    "build_floquet_markov_baths",
+    "flat_markov_spectrum",
     "solve_floquet",
+    "solve_floquet_markov",
 ]

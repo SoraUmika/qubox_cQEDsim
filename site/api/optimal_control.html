@@ -4410,7 +4410,7 @@
 <p>It also exposes first-class extension points for user-defined waveform maps and pulse families, plus high-level workflow helpers for outer-loop gate-time search and structured-to-GRAPE refinement.</p>
 <div class="admonition note">
 <p class="admonition-title">Current scope</p>
-<p>Both backends currently use closed-system dense propagation. The structured backend changes the optimization variable from raw slice amplitudes to a named parameter vector, but it preserves the same Hamiltonian, frame, and pulse-export conventions as the rest of <code>cqed_sim</code>.</p>
+<p>The structured backend remains closed-system. GRAPE also supports a NumPy density-matrix / Lindblad path when <code>ControlSystem</code> members include <code>collapse_operators</code> or when the problem includes <code>DensityMatrixTransferObjective(...)</code>. The JAX engine remains closed-system only.</p>
 </div>
 <hr />
 <h2 id="core-problem-objects">Core Problem Objects<a class="headerlink" href="#core-problem-objects" title="Permanent link">&para;</a></h2>
@@ -4443,13 +4443,15 @@ stack with the same effective control Hamiltonian used during optimization.
 Absolute positive drive frequencies remain a separate boundary translation handled through the
 <code>cqed_sim.core</code> frequency helpers before any raw <code>Pulse.carrier</code> is assigned.</p>
 <h3 id="controlsystem"><code>ControlSystem</code><a class="headerlink" href="#controlsystem" title="Permanent link">&para;</a></h3>
-<p>Represents one closed-system member of the control problem:</p>
+<p>Represents one member of the control problem:</p>
 <ul>
 <li><code>drift_hamiltonian</code></li>
 <li><code>control_operators</code></li>
+<li><code>collapse_operators</code></li>
 <li><code>weight</code></li>
 <li><code>label</code></li>
 </ul>
+<p>Attach <code>collapse_operators</code> to run GRAPE on the Lindblad superoperator path.</p>
 <p>Multiple <code>ControlSystem</code> objects can be attached to the same <code>ControlProblem</code> for ensemble or worst-case optimization.</p>
 <h3 id="controlproblem"><code>ControlProblem</code><a class="headerlink" href="#controlproblem" title="Permanent link">&para;</a></h3>
 <p>The solver-facing problem container:</p>
@@ -4656,20 +4658,24 @@ I(t) = \sum_k a_k \cos\left(\frac{2\pi k t}{T}\right) + \sum_{k&gt;0} b_k \sin\l
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">CustomControlObjective</span><span class="p">,</span>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">CustomObjectiveContext</span><span class="p">,</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">CustomObjectiveEvaluation</span><span class="p">,</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">StateTransferObjective</span><span class="p">,</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">StateTransferPair</span><span class="p">,</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">UnitaryObjective</span><span class="p">,</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">multi_state_transfer_objective</span><span class="p">,</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">objective_from_unitary_synthesis_target</span><span class="p">,</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">state_preparation_objective</span><span class="p">,</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="p">)</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">DensityMatrixTransferObjective</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">DensityMatrixTransferPair</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">StateTransferObjective</span><span class="p">,</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">StateTransferPair</span><span class="p">,</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">UnitaryObjective</span><span class="p">,</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">multi_state_transfer_objective</span><span class="p">,</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">objective_from_unitary_synthesis_target</span><span class="p">,</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">state_preparation_objective</span><span class="p">,</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="built-in-objectives">Built-in objectives<a class="headerlink" href="#built-in-objectives" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>state_preparation_objective(initial, target)</code></li>
 <li><code>multi_state_transfer_objective(...)</code></li>
+<li><code>DensityMatrixTransferObjective(...)</code></li>
 <li><code>UnitaryObjective(target_operator=..., subspace=...)</code></li>
 </ul>
+<p><code>DensityMatrixTransferObjective</code> accepts pure states or density matrices and evaluates a purity-normalized density overlap. For pure-state targets this reduces to standard fidelity.</p>
 <h3 id="customcontrolobjective"><code>CustomControlObjective</code><a class="headerlink" href="#customcontrolobjective" title="Permanent link">&para;</a></h3>
 <p>Allows user-defined objectives inside the shared optimal-control evaluator.</p>
 <p>The evaluator receives a <code>CustomObjectiveContext</code> with:</p>
@@ -4688,6 +4694,7 @@ I(t) = \sum_k a_k \cos\left(\frac{2\pi k t}{T}\right) + \sum_{k&gt;0} b_k \sin\l
 <li>optional <code>metrics</code></li>
 </ul>
 <p>This lets advanced studies optimize custom control metrics while staying on the standard solver/result surface.</p>
+<p><code>CustomControlObjective</code> is currently limited to the closed-system state-vector path.</p>
 <hr />
 <h2 id="penalties">Penalties<a class="headerlink" href="#penalties" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.optimal_control</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -4728,6 +4735,11 @@ I(t) = \sum_k a_k \cos\left(\frac{2\pi k t}{T}\right) + \sum_{k&gt;0} b_k \sin\l
 <li><code>engine</code> — <code>"numpy"</code> (default) or <code>"jax"</code>.</li>
 <li><code>optax_learning_rate</code> — step size for Optax optimizers (default <code>1e-3</code>). Only used when <code>engine="jax"</code> and <code>optimizer_method</code> is an Optax name.</li>
 <li><code>optax_grad_clip</code> — optional global L2 gradient clip for Optax optimizers.</li>
+</ul>
+<p>Engine behavior summary:</p>
+<ul>
+<li><code>engine="numpy"</code> supports both closed-system and density-matrix / Lindblad GRAPE.</li>
+<li><code>engine="jax"</code> currently supports only closed-system objectives.</li>
 </ul>
 <p>Optax methods are activated when <code>engine="jax"</code> <strong>and</strong> <code>optimizer_method</code> is one of <code>"adam"</code>, <code>"adagrad"</code>, <code>"sgd"</code>, or <code>"adamw"</code>. Requires the <code>optax</code> optional dependency group.</p>
 <h3 id="structuredcontrolsolver"><code>StructuredControlSolver</code><a class="headerlink" href="#structuredcontrolsolver" title="Permanent link">&para;</a></h3>

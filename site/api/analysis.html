@@ -3818,7 +3818,7 @@
 </span></code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Units</p>
-<p>All parameters are in <strong>rad/s</strong>. This matches the <code>cqed_sim</code> runtime convention. The <code>DeviceParameters</code> class in <code>cqed_sim.tomo</code> uses Hz and rad/ns internally — use its <code>.to_model()</code> method for unit-safe conversion.</p>
+<p>All parameters are in <strong>rad/s</strong>. This matches the common SI-style recommended usage in <code>cqed_sim</code>, not a hard runtime requirement. The <code>DeviceParameters</code> class in <code>cqed_sim.tomo</code> uses a separate Hz-to-rad/ns helper path for tomography workflows that choose nanoseconds as their time unit.</p>
 </div>
 <h3 id="from_measured_1"><code>from_measured</code><a class="headerlink" href="#from_measured_1" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">from_measured</span><span class="p">(</span>

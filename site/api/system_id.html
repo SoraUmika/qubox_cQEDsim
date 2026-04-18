@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cqed_simsystem_id-system-identification-and-calibration-bridge" class="md-skip">
+        <a href="#cqed_simsystem_id-system-identification-and-calibration-inference" class="md-skip">
           Skip to content
         </a>
       
@@ -3096,6 +3096,50 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#measured-trace-fit-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measured-trace fit helpers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prior_from_fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        prior_from_fit(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evidence_from_fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evidence_from_fit(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge_calibration_evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        merge_calibration_evidence(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#randomizer_from_calibrationevidence" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3654,6 +3698,50 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#measured-trace-fit-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measured-trace fit helpers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prior_from_fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        prior_from_fit(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evidence_from_fit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evidence_from_fit(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge_calibration_evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        merge_calibration_evidence(...)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#randomizer_from_calibrationevidence" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3767,38 +3855,139 @@
 
 
 
-<h1 id="cqed_simsystem_id-system-identification-and-calibration-bridge"><code>cqed_sim.system_id</code> — System Identification and Calibration Bridge<a class="headerlink" href="#cqed_simsystem_id-system-identification-and-calibration-bridge" title="Permanent link">&para;</a></h1>
+<h1 id="cqed_simsystem_id-system-identification-and-calibration-inference"><code>cqed_sim.system_id</code> — System Identification and Calibration Inference<a class="headerlink" href="#cqed_simsystem_id-system-identification-and-calibration-inference" title="Permanent link">&para;</a></h1>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h2>
-<p><code>cqed_sim.system_id</code> provides the bridge between experimental calibration evidence
-and robust-control or RL training workflows. It converts measured posteriors over
-device parameters into <code>DomainRandomizer</code> priors that can be used to train
-policies robust to device uncertainty.</p>
+<p><code>cqed_sim.system_id</code> is the inverse-calibration layer for common cQED workflows.
+It fits measured calibration traces, converts fit summaries into posterior-like
+prior objects, and bridges those priors into the RL/domain-randomization stack.</p>
 <h2 id="key-classes-and-functions">Key Classes and Functions<a class="headerlink" href="#key-classes-and-functions" title="Permanent link">&para;</a></h2>
 <h3 id="calibrationevidence"><code>CalibrationEvidence</code><a class="headerlink" href="#calibrationevidence" title="Permanent link">&para;</a></h3>
 <p>Collects posteriors from calibration measurements:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationEvidence</span><span class="p">,</span> <span class="n">NormalPrior</span><span class="p">,</span> <span class="n">FixedPrior</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationEvidence</span><span class="p">,</span> <span class="n">FixedPrior</span><span class="p">,</span> <span class="n">NormalPrior</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">evidence</span> <span class="o">=</span> <span class="n">CalibrationEvidence</span><span class="p">(</span>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">model_posteriors</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="s2">&quot;chi&quot;</span><span class="p">:</span> <span class="n">NormalPrior</span><span class="p">(</span><span class="n">mean</span><span class="o">=-</span><span class="mf">2.84e6</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">50e3</span><span class="p">),</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="s2">&quot;kerr&quot;</span><span class="p">:</span> <span class="n">NormalPrior</span><span class="p">(</span><span class="n">mean</span><span class="o">=-</span><span class="mf">28.8e3</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">1e3</span><span class="p">),</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        <span class="s2">&quot;chi&quot;</span><span class="p">:</span> <span class="n">NormalPrior</span><span class="p">(</span><span class="n">mean</span><span class="o">=-</span><span class="mf">2.84e6</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">50e3</span><span class="p">),</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>        <span class="s2">&quot;kerr&quot;</span><span class="p">:</span> <span class="n">NormalPrior</span><span class="p">(</span><span class="n">mean</span><span class="o">=-</span><span class="mf">28.8e3</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1e3</span><span class="p">),</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="p">},</span>
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">noise_posteriors</span><span class="o">=</span><span class="p">{</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="s2">&quot;t1_s&quot;</span><span class="p">:</span> <span class="n">NormalPrior</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="mf">10e-6</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.5e-6</span><span class="p">),</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>        <span class="s2">&quot;t1&quot;</span><span class="p">:</span> <span class="n">NormalPrior</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="mf">10e-6</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">0.5e-6</span><span class="p">),</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="p">},</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="p">)</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">measurement_posteriors</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        <span class="s2">&quot;p_e_given_g&quot;</span><span class="p">:</span> <span class="n">FixedPrior</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mf">0.02</span><span class="p">),</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="p">},</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="p">)</span>
 </span></code></pre></div>
 <p>Fields:
-- <code>model_posteriors</code> — posteriors over Hamiltonian parameters (chi, kerr, omega, etc.)
-- <code>noise_posteriors</code> — posteriors over noise/decoherence parameters (T1, T2, etc.)
-- <code>hardware_posteriors</code> — per-channel posteriors (drive amplitudes, offsets, etc.)
-- <code>measurement_posteriors</code> — measurement error posteriors (confusion matrices, etc.)
-- <code>notes</code> — free-form metadata</p>
+- <code>model_posteriors</code> — posteriors over Hamiltonian parameters such as <code>chi</code>, <code>kerr</code>, and dressed frequencies
+- <code>noise_posteriors</code> — posteriors over decoherence parameters such as <code>t1</code>, <code>t2_star</code>, and <code>t2_echo</code>
+- <code>hardware_posteriors</code> — per-channel hardware posteriors
+- <code>measurement_posteriors</code> — readout or classifier error posteriors
+- <code>notes</code> — free-form metadata, including optional fit provenance</p>
+<h3 id="measured-trace-fit-helpers">Measured-trace fit helpers<a class="headerlink" href="#measured-trace-fit-helpers" title="Permanent link">&para;</a></h3>
+<p>The fit helpers all return <code>CalibrationResult</code>, the same lightweight result object used by <code>cqed_sim.calibration_targets</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Input trace</th>
+<th>Main fitted parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fit_spectroscopy_trace(drive_frequencies, response)</code></td>
+<td>single-peak spectroscopy trace</td>
+<td><code>omega_peak</code>, <code>linewidth</code></td>
+</tr>
+<tr>
+<td><code>fit_rabi_trace(amplitudes, excited_population, duration=...)</code></td>
+<td>driven Rabi trace</td>
+<td><code>omega_scale</code></td>
+</tr>
+<tr>
+<td><code>fit_ramsey_trace(delays, excited_population)</code></td>
+<td>Ramsey fringe trace</td>
+<td><code>delta_omega</code>, <code>t2_star</code></td>
+</tr>
+<tr>
+<td><code>fit_t1_trace(delays, excited_population)</code></td>
+<td>relaxation trace</td>
+<td><code>t1</code></td>
+</tr>
+<tr>
+<td><code>fit_t2_echo_trace(delays, excited_population)</code></td>
+<td>Hahn-echo trace</td>
+<td><code>t2_echo</code></td>
+</tr>
+</tbody>
+</table>
+<p>Each fit also returns nuisance parameters such as amplitude, offset, and phase where relevant.</p>
+<p>Example:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.calibration_targets</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_spectroscopy</span><span class="p">,</span> <span class="n">run_t1</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">fit_spectroscopy_trace</span><span class="p">,</span> <span class="n">fit_t1_trace</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">spectroscopy_target</span> <span class="o">=</span> <span class="n">run_spectroscopy</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">drive_frequencies</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">t1_target</span> <span class="o">=</span> <span class="n">run_t1</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">delays</span><span class="p">,</span> <span class="n">t1</span><span class="o">=</span><span class="mf">24.0e-6</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">spectroscopy_fit</span> <span class="o">=</span> <span class="n">fit_spectroscopy_trace</span><span class="p">(</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="n">spectroscopy_target</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;drive_frequencies&quot;</span><span class="p">],</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">spectroscopy_target</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;ground_response&quot;</span><span class="p">],</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="p">)</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">t1_fit</span> <span class="o">=</span> <span class="n">fit_t1_trace</span><span class="p">(</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="n">t1_target</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;delays&quot;</span><span class="p">],</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="n">t1_target</span><span class="o">.</span><span class="n">raw_data</span><span class="p">[</span><span class="s2">&quot;excited_population&quot;</span><span class="p">],</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="p">)</span>
+</span></code></pre></div>
+<h3 id="prior_from_fit"><code>prior_from_fit(...)</code><a class="headerlink" href="#prior_from_fit" title="Permanent link">&para;</a></h3>
+<p>Converts a fitted value and uncertainty into either:</p>
+<ul>
+<li><code>NormalPrior(mean, sigma, low, high)</code> when uncertainty is nonzero, or</li>
+<li><code>FixedPrior(value)</code> when the effective uncertainty collapses to zero.</li>
+</ul>
+<p><code>min_sigma</code> and <code>sigma_scale</code> let you enforce a floor or inflate narrow fit covariances before they enter the training distribution.</p>
+<h3 id="evidence_from_fit"><code>evidence_from_fit(...)</code><a class="headerlink" href="#evidence_from_fit" title="Permanent link">&para;</a></h3>
+<p>Maps selected fitted parameters into one <code>CalibrationEvidence</code> category:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">evidence_from_fit</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">model_evidence</span> <span class="o">=</span> <span class="n">evidence_from_fit</span><span class="p">(</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">spectroscopy_fit</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">category</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">parameter_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;omega_peak&quot;</span><span class="p">:</span> <span class="s2">&quot;omega_q&quot;</span><span class="p">},</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">bounds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;omega_q&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)},</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="n">noise_evidence</span> <span class="o">=</span> <span class="n">evidence_from_fit</span><span class="p">(</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="n">t1_fit</span><span class="p">,</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="n">category</span><span class="o">=</span><span class="s2">&quot;noise&quot;</span><span class="p">,</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="n">bounds</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;t1&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)},</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>    <span class="n">min_sigma</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;t1&quot;</span><span class="p">:</span> <span class="mf">0.5e-6</span><span class="p">},</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="p">)</span>
+</span></code></pre></div>
+<p>Categories:
+- <code>model</code>
+- <code>noise</code>
+- <code>measurement</code>
+- <code>hardware</code> with an explicit <code>channel=...</code></p>
+<h3 id="merge_calibration_evidence"><code>merge_calibration_evidence(...)</code><a class="headerlink" href="#merge_calibration_evidence" title="Permanent link">&para;</a></h3>
+<p>Combines multiple evidence blocks while rejecting duplicate posterior keys:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationEvidence</span><span class="p">,</span> <span class="n">NormalPrior</span><span class="p">,</span> <span class="n">merge_calibration_evidence</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">evidence</span> <span class="o">=</span> <span class="n">merge_calibration_evidence</span><span class="p">(</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">model_evidence</span><span class="p">,</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">noise_evidence</span><span class="p">,</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">CalibrationEvidence</span><span class="p">(</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>        <span class="n">model_posteriors</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>            <span class="s2">&quot;chi&quot;</span><span class="p">:</span> <span class="n">NormalPrior</span><span class="p">(</span><span class="n">mean</span><span class="o">=-</span><span class="mf">2.84e6</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">50e3</span><span class="p">),</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="p">},</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="p">),</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">)</span>
+</span></code></pre></div>
 <h3 id="randomizer_from_calibrationevidence"><code>randomizer_from_calibration(evidence)</code><a class="headerlink" href="#randomizer_from_calibrationevidence" title="Permanent link">&para;</a></h3>
 <p>Converts <code>CalibrationEvidence</code> into a <code>DomainRandomizer</code> for RL training:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">randomizer_from_calibration</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">randomizer</span> <span class="o">=</span> <span class="n">randomizer_from_calibration</span><span class="p">(</span><span class="n">evidence</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">randomizer_from_calibration</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">randomizer</span> <span class="o">=</span> <span class="n">randomizer_from_calibration</span><span class="p">(</span><span class="n">evidence</span><span class="p">)</span>
 </span></code></pre></div>
 <p>The resulting randomizer uses the same posteriors for both training and evaluation.
 To separate train and eval distributions, construct <code>DomainRandomizer</code> directly.</p>
@@ -3816,43 +4005,34 @@ To separate train and eval distributions, construct <code>DomainRandomizer</code
 <td>No randomization — always returns <code>value</code></td>
 </tr>
 <tr>
-<td><code>NormalPrior(mean, std)</code></td>
-<td>Gaussian distribution</td>
+<td><code>NormalPrior(mean, sigma)</code></td>
+<td>Gaussian distribution with optional clipping bounds</td>
 </tr>
 <tr>
 <td><code>UniformPrior(low, high)</code></td>
 <td>Uniform distribution</td>
 </tr>
 <tr>
-<td><code>ChoicePrior(choices)</code></td>
-<td>Discrete uniform over a list</td>
+<td><code>ChoicePrior(values)</code></td>
+<td>Discrete uniform or weighted categorical prior</td>
 </tr>
 </tbody>
 </table>
 <h2 id="integration-with-rl-workflows">Integration with RL Workflows<a class="headerlink" href="#integration-with-rl-workflows" title="Permanent link">&para;</a></h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.rl_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">HybridCQEDEnv</span><span class="p">,</span> <span class="n">HybridEnvConfig</span><span class="p">,</span> <span class="n">HybridSystemConfig</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.system_id</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationEvidence</span><span class="p">,</span> <span class="n">NormalPrior</span><span class="p">,</span> <span class="n">randomizer_from_calibration</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">evidence</span> <span class="o">=</span> <span class="n">CalibrationEvidence</span><span class="p">(</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">model_posteriors</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;chi&quot;</span><span class="p">:</span> <span class="n">NormalPrior</span><span class="p">(</span><span class="n">mean</span><span class="o">=-</span><span class="mf">2.84e6</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">50e3</span><span class="p">)},</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">)</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">randomizer</span> <span class="o">=</span> <span class="n">randomizer_from_calibration</span><span class="p">(</span><span class="n">evidence</span><span class="p">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">config</span> <span class="o">=</span> <span class="n">HybridEnvConfig</span><span class="p">(</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">system</span><span class="o">=</span><span class="n">HybridSystemConfig</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="n">domain_randomizer</span><span class="o">=</span><span class="n">randomizer</span><span class="p">,</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="p">)</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="n">env</span> <span class="o">=</span> <span class="n">HybridCQEDEnv</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
-</span></code></pre></div>
+<p>The shortest path is:</p>
+<ol>
+<li>Generate or measure calibration traces.</li>
+<li>Fit them with <code>fit_*_trace(...)</code>.</li>
+<li>Convert selected fitted parameters with <code>evidence_from_fit(...)</code>.</li>
+<li>Merge those blocks into <code>CalibrationEvidence</code>.</li>
+<li>Call <code>randomizer_from_calibration(...)</code> and pass the result into <code>HybridEnvConfig</code>.</li>
+</ol>
+<p>An end-to-end repo example lives in <code>examples/calibration_systemid_rl_pipeline.py</code>.</p>
 <h2 id="scope-and-limitations">Scope and Limitations<a class="headerlink" href="#scope-and-limitations" title="Permanent link">&para;</a></h2>
 <ul>
-<li>This module is currently a thin bridge layer. For richer calibration workflows,
-  see <code>cqed_sim.calibration_targets</code> (which produces calibration measurements)
-  and <code>cqed_sim.rl_control</code> (which consumes randomizers).</li>
-<li>The <code>randomizer_from_calibration</code> function sets train and eval distributions
-  identically. For separate train/eval splits, construct <code>DomainRandomizer</code> directly.</li>
-<li>Priors must be expressed as <code>ParameterPrior</code> objects; raw floats must be wrapped
-  in <code>FixedPrior</code>.</li>
+<li>The module now performs lightweight measured-trace fitting, but it is still not a joint Bayesian inference engine.</li>
+<li><code>fit_spectroscopy_trace(...)</code> assumes a single dominant Lorentzian peak or dip in the supplied response trace.</li>
+<li>The <code>randomizer_from_calibration(...)</code> function sets train and eval distributions identically. For separate train/eval splits, construct <code>DomainRandomizer</code> directly.</li>
 </ul>
 
 

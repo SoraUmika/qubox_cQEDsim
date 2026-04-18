@@ -205,8 +205,7 @@ dataclass itself.
 
 ## Remaining Issues / Known Documentation Debt
 
-1. `cqed_sim/tomo/README.md` line 83: "All frequencies in `rad/s`, times in `s`"
-   should be corrected to "rad/ns, times in ns".
+1. Resolved on 2026-04-13: the tomo helper documentation was clarified so it now states that `DeviceParameters.to_model()` is a helper-specific Hz-to-rad/ns convenience path for tomography workflows, while the core `cqed_sim` model layer remains unit-coherent.
 2. No SNAP waveform bridge support exists; the error message now clearly directs
    users to the model-backed path.
 3. The `FrameSpec.omega_c_frame` name ambiguity is documented but the field name

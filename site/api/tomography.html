@@ -3790,7 +3790,7 @@
 </table>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p><code>DeviceParameters.to_model()</code> uses <strong>rad/ns</strong> units internally, which differs from the library's standard rad/s convention. This is specific to the tomography device-parameter workflow.</p>
+<p><code>DeviceParameters.to_model()</code> uses a helper-specific <strong>rad/ns</strong> conversion path for tomography workflows that are parameterized in nanoseconds. The core <code>cqed_sim</code> model layer remains unit-coherent, so this does not imply a global rad/ns-only simulator convention.</p>
 </div>
 <hr />
 <h2 id="tomography-protocol">Tomography Protocol<a class="headerlink" href="#tomography-protocol" title="Permanent link">&para;</a></h2>

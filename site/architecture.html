@@ -3870,7 +3870,7 @@
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>|-- calibration/          # SQR gate calibration
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>|-- calibration_targets/  # Spectroscopy, Rabi, Ramsey, T1, T2 echo, DRAG tuning
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>|-- rl_control/           # RL environments, action/observation/reward layers, diagnostics, tasks
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>|-- system_id/            # Calibration-informed priors and randomization hooks
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>|-- system_id/            # Measured-trace fitting plus calibration-informed priors and randomization hooks
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>|-- io/                   # Gate sequence JSON I/O
 </span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>|-- observables/          # Bloch, Fock-resolved, phase, trajectory, Wigner diagnostics
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>|-- operators/            # Pauli, cavity ladder, embedding helpers
@@ -3926,7 +3926,7 @@
 <li><code>analysis</code> for parameter translation</li>
 <li><code>calibration</code> and <code>calibration_targets</code> for reusable calibration helpers</li>
 <li><code>rl_control</code> for benchmark-task definitions, environment wrappers, domain randomization, and measurement-aware observations/rewards</li>
-<li><code>system_id</code> for lightweight posterior/prior hooks that feed the RL randomization layer</li>
+<li><code>system_id</code> for lightweight calibration-trace fitting and posterior/prior hooks that feed the RL randomization layer</li>
 <li><code>tomo</code> for tomography primitives</li>
 <li><code>observables</code> and <code>plotting</code> for diagnostics and visualization</li>
 <li><code>unitary_synthesis</code> for gate-sequence optimization</li>

@@ -3884,7 +3884,9 @@
 <li>Strong-drive problems can require more transmon and cavity levels than static calculations.</li>
 <li>Use <code>FloquetConfig.sambe_harmonic_cutoff</code> only when you specifically want harmonic-space analysis.</li>
 <li>Commensurate multi-tone drives are fine, but you must supply a consistent common period.</li>
-<li>The current public API is closed-system. Dissipative Floquet-Markov extensions are a future step.</li>
+<li><code>solve_floquet(...)</code> remains the closed-system path for quasienergy and dressed-state analysis.</li>
+<li><code>solve_floquet_markov(...)</code> provides periodic Markovian open-system evolution with explicit bath operators or a convenience <code>NoiseSpec</code> bridge when <code>FloquetProblem(model=...)</code> is used.</li>
+<li>For non-flat spectral densities or custom couplings, prefer explicit <code>FloquetMarkovBath(...)</code> definitions over the default convenience bridge.</li>
 </ul>
 
 

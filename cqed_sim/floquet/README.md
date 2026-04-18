@@ -1,6 +1,6 @@
 # `cqed_sim.floquet`
 
-The `cqed_sim.floquet` package adds periodic-drive Floquet analysis for closed cQED Hamiltonians built from the same model and operator conventions used elsewhere in `cqed_sim`.
+The `cqed_sim.floquet` package adds periodic-drive Floquet analysis and Floquet-Markov evolution wrappers built from the same model and operator conventions used elsewhere in `cqed_sim`.
 
 ## Why this module exists
 
@@ -31,7 +31,13 @@ Floquet analysis is useful when you care about:
 - `FloquetProblem`
 - `FloquetConfig`
 - `FloquetResult`
+- `FloquetMarkovBath`
+- `FloquetMarkovConfig`
+- `FloquetMarkovResult`
 - `solve_floquet(...)`
+- `solve_floquet_markov(...)`
+- `build_floquet_markov_baths(...)`
+- `flat_markov_spectrum(...)`
 - `build_effective_floquet_hamiltonian(...)`
 - `build_sambe_hamiltonian(...)`
 - `compute_floquet_transition_strengths(...)`
@@ -121,7 +127,9 @@ Use the regular `simulate_sequence(...)` time-domain path when:
 
 - the drive is not strictly periodic,
 - you care about finite-duration pulse transients,
-- you need open-system Lindblad evolution today.
+- you need non-periodic open-system Lindblad evolution.
+
+Use `solve_floquet_markov(...)` when the Hamiltonian is periodic and you want Markovian dissipative evolution in the Floquet basis with explicit bath operators or a convenience `NoiseSpec` bridge.
 
 ## Caveats
 
@@ -129,7 +137,9 @@ Use the regular `simulate_sequence(...)` time-domain path when:
 - Multi-tone drives are only strictly Floquet when the tones are commensurate with a common period.
 - Quasienergies are defined modulo the drive angular frequency `Omega = 2 pi / T`.
 - Strong-drive transmon problems often require additional transmon levels.
-- The current package surface is closed-system. QuTiP Floquet-Markov primitives exist underneath, but they are not yet wired into the public `cqed_sim.floquet` API.
+- `solve_floquet(...)` remains the closed-system spectral-analysis path.
+- `solve_floquet_markov(...)` is the open-system Floquet-Markov path and assumes a Markovian bath.
+- The `NoiseSpec` bridge is a convenience wrapper. For custom spectral-density studies, prefer explicit `FloquetMarkovBath(operator=..., spectrum=...)` definitions.
 
 ## Related files
 

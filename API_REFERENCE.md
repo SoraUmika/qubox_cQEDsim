@@ -121,7 +121,7 @@ cqed_sim/
 ├── calibration/     # SQR gate calibration, reduced multitone checks, full logical-subspace multitone validation
 ├── calibration_targets/  # Spectroscopy, Rabi, Ramsey, T1, T2 echo, DRAG tuning
 ├── rl_control/      # RL environments, task registry, action/observation/reward layers, randomization
-├── system_id/       # Calibration-informed priors and fit-then-randomize hooks
+├── system_id/       # Measured-trace fitting plus calibration-informed priors and randomization hooks
 ├── io/              # Gate sequence JSON I/O
 ├── observables/     # Bloch, Fock-resolved, phase, trajectory, Wigner diagnostics
 ├── operators/       # Pauli, cavity ladder, embedding helpers
@@ -1769,6 +1769,27 @@ Target-based Floquet terms default to the Hermitian in-phase quadrature construc
 def solve_floquet(problem: FloquetProblem, config: FloquetConfig | None = None) -> FloquetResult
 ```
 
+```python
+@dataclass(frozen=True)
+class FloquetMarkovBath:
+    operator: qt.Qobj
+    spectrum: Callable[[ndarray], ndarray] | None = None
+    label: str | None = None
+
+@dataclass(frozen=True)
+class FloquetMarkovConfig:
+    floquet: FloquetConfig = FloquetConfig()
+    kmax: int = 5
+    nT: int | None = None
+    w_th: float = 0.0
+    store_states: bool | None = None
+    store_final_state: bool = True
+    store_floquet_states: bool = False
+    normalize_output: bool = True
+
+def solve_floquet_markov(problem, initial_state, tlist, *, baths=None, noise=None, e_ops=None, args=None, config=None) -> FloquetMarkovResult
+```
+
 `FloquetResult` contains:
 
 - folded quasienergies,
@@ -1806,13 +1827,17 @@ def solve_floquet(problem: FloquetProblem, config: FloquetConfig | None = None) 
 | `build_transmon_frequency_modulation_term(...)` | Modulate `n_q` for transmon-frequency modulation |
 | `build_mode_frequency_modulation_term(...)` | Modulate a bosonic number operator |
 | `build_dispersive_modulation_term(...)` | Modulate `n_mode * n_q` directly |
+| `build_floquet_markov_baths(problem, noise, spectrum=...)` | Convert a repository `NoiseSpec` into Floquet-Markov bath operators |
+| `flat_markov_spectrum(scale=1.0)` | Convenience white-spectrum callback |
 
 ### Notes and caveats
 
 - Floquet analysis assumes exact periodicity.
 - Multi-tone drives are only strictly Floquet when commensurate with the supplied common period.
 - Quasienergies are defined modulo the drive angular frequency.
-- The current public API is closed-system. Open-system Floquet-Markov support is a future extension.
+- `solve_floquet(...)` remains the closed-system spectral-analysis path.
+- `solve_floquet_markov(...)` is the current Markovian open-system Floquet path.
+- The `NoiseSpec` bridge is a convenience wrapper; use explicit `FloquetMarkovBath(...)` definitions for custom spectra and coupling models.
 - For strongly driven transmons, increasing `n_tr` is often more important than increasing the Floquet time grid.
 
 ---
@@ -2225,9 +2250,10 @@ class DeviceParameters:
 | `hz_to_rad_per_ns(f_hz)` | Convert Hz to rad/ns: 2π·f·10⁻⁹ |
 | `to_model(n_cav=12, n_tr=3)` | Build `DispersiveTransmonCavityModel` with all params in rad/ns |
 
-**Note:** `DeviceParameters.to_model()` uses rad/ns units internally, which differs
-from the library's standard rad/s convention. This is specific to the tomography
-device-parameter workflow.
+**Note:** `DeviceParameters.to_model()` uses a helper-specific rad/ns conversion
+path for tomography workflows that are parameterized in nanoseconds. The core
+`cqed_sim` model layer remains unit-coherent, so this does not imply a global
+rad/ns-only simulator convention.
 
 ### Tomography Protocol
 
@@ -3582,7 +3608,13 @@ DomainRandomizer(
     model_priors_train={"chi": NormalPrior(...)}
 )
 
+fit_spectroscopy_trace(freqs, response)
+fit_ramsey_trace(delays, excited_population)
+fit_t1_trace(delays, excited_population)
+
 CalibrationEvidence(...)
+evidence_from_fit(result, category="model")
+merge_calibration_evidence(...)
 randomizer_from_calibration(evidence)
 ```
 
@@ -3590,7 +3622,10 @@ Highlights:
 
 - The benchmark ladder currently covers vacuum preservation, coherent-state preparation, Fock-state preparation, storage-basis superpositions, even/odd cat preparation, ancilla-storage entanglement, and a reduced conditional-phase gate task.
 - `DomainRandomizer` separates train and eval priors and records the sampled per-episode metadata.
-- `cqed_sim.system_id` intentionally provides lightweight fit-then-randomize scaffolding rather than a full inference engine.
+- `CalibrationEvidence` remains the transport object between calibration workflows and RL randomization.
+- `evidence_from_fit(...)` converts selected fitted parameters into bounded `NormalPrior` or `FixedPrior` objects.
+- `fit_spectroscopy_trace(...)` assumes a single dominant Lorentzian peak or dip in the supplied trace.
+- `cqed_sim.system_id` provides lightweight trace fitting and posterior propagation rather than a full joint inference engine.
 
 ### Gymnasium Wrapper and SB3 Integration
 
@@ -3737,6 +3772,8 @@ For model-backed control problems, the `Q` quadrature is built as `+i(raising - 
 CustomControlObjective(...)
 CustomObjectiveContext(...)
 CustomObjectiveEvaluation(...)
+DensityMatrixTransferPair(...)
+DensityMatrixTransferObjective(...)
 StateTransferPair(...)
 StateTransferObjective(...)
 UnitaryObjective(...)
@@ -3749,6 +3786,7 @@ objective_from_unitary_synthesis_target(...)
 Supported task styles:
 
 - single-state preparation
+- mixed-state or density-matrix transfer
 - multi-state transfer
 - retained-subspace gate synthesis
 - full truncated-space unitary synthesis
@@ -3756,6 +3794,8 @@ Supported task styles:
 - custom control metrics with explicit physical-waveform gradients through `CustomControlObjective`
 
 `UnitaryObjective` evaluates unitary targets through weighted probe-state transfer pairs so the same machinery can represent direct full-space targets and restricted logical-subspace targets.
+
+`DensityMatrixTransferObjective` accepts pure states or density matrices and evaluates a purity-normalized density overlap. For pure-state targets this reduces to standard fidelity.
 
 `CustomControlObjective` is the extension point for study-specific metrics. The evaluator receives the active `ControlProblem`, `ControlSystem`, `ControlSchedule`, resolved command/physical waveforms, propagation object, and final unitary, and returns a scalar cost plus a gradient with respect to the physical control waveform.
 
@@ -3799,6 +3839,7 @@ These helpers reuse the existing model-layer drive operators and tensor-ordering
 `build_control_problem_from_model(...)` also accepts:
 
 - `parameterization_cls=...` plus `parameterization_kwargs={...}` for structured command parameterizations such as `HeldSampleParameterization`,
+- `noise=NoiseSpec(...)` to attach Lindblad collapse operators to each built `ControlSystem`,
 - `hardware_model=HardwareModel(...)` to attach a command-to-physical waveform transform directly to the problem.
 
 `build_structured_control_problem_from_model(...)` is the higher-level convenience builder for the new structured backend. It reuses `ModelControlChannelSpec` plus the existing model-layer drive operators, then attaches `StructuredPulseParameterization` instead of one of the rectangular schedule parameterizations.
@@ -3861,8 +3902,9 @@ solve_grape(...)
 
 Solver behavior:
 
-- dense closed-system propagation with exact matrix exponentials,
-- exact slice derivatives via `scipy.linalg.expm_frechet` (NumPy engine) or JAX automatic differentiation (JAX engine),
+- dense closed-system propagation with exact matrix exponentials for state-vector / unitary objectives,
+- dense Liouvillian superoperator propagation for density-matrix objectives and `collapse_operators` on the NumPy engine,
+- exact slice derivatives via `scipy.linalg.expm_frechet` for NumPy propagators and JAX automatic differentiation for the closed-system JAX engine,
 - ensemble aggregation with `"mean"` or `"worst"`,
 - optional hardware-aware forward propagation through `GrapeConfig(apply_hardware_in_forward_model=True)`,
 - support for explicit initial schedules or built-in zero/random initialization,
@@ -3871,8 +3913,8 @@ Solver behavior:
 
 **Engine selection:**
 
-- `GrapeConfig(engine="numpy")` (default): NumPy + SciPy propagator with manual `expm_frechet` gradients.
-- `GrapeConfig(engine="jax")`: JAX-accelerated propagator with `jax.value_and_grad` automatic differentiation.  Supports GPU via `GrapeConfig(engine="jax", jax_device="gpu")`.
+- `GrapeConfig(engine="numpy")` (default): NumPy + SciPy propagator with manual `expm_frechet` gradients. Supports both closed-system and density-matrix / Lindblad GRAPE.
+- `GrapeConfig(engine="jax")`: JAX-accelerated closed-system propagator with `jax.value_and_grad` automatic differentiation. Supports GPU via `GrapeConfig(engine="jax", jax_device="gpu")`.
 
 **Optimizer selection:**
 
@@ -4228,12 +4270,13 @@ the original two-mode API). An alias `omega_s_frame` exists as a property but
 does not rename the underlying field. This can cause confusion in three-mode
 workflows.
 
-### MODERATE: DeviceParameters Uses rad/ns
+### MODERATE: DeviceParameters Uses a Tomography-Specific rad/ns Helper Path
 
 `cqed_sim.tomo.device.DeviceParameters.to_model()` produces a model using rad/ns
-units for all frequencies, which differs from the library's standard rad/s convention.
-This is a deliberate choice for the tomography workflow (where nanosecond timescales
-are natural) but requires care when mixing with the standard library path.
+units for all frequencies because that helper targets tomography workflows that
+are typically expressed in nanoseconds. The core simulator itself remains
+unit-coherent, so the caveat is only that callers should not mix the helper's
+rad/ns output with seconds-based schedules in the same workflow.
 
 ### ~~LOW: Higher-Order Coefficients Lack Isolated Tests~~ (RESOLVED)
 

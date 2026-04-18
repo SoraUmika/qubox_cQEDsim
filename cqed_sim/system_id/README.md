@@ -1,80 +1,92 @@
-# `cqed_sim.system_id` — System Identification and Calibration Bridge
+# `cqed_sim.system_id` — System Identification and Calibration Inference
 
 ## What this module does
 
-`cqed_sim.system_id` bridges calibration evidence (measured posteriors over device
-parameters) to model randomization for robust control and RL training workflows.
-It converts measured posteriors into `DomainRandomizer` priors that can be used to
-train policies robust to device uncertainty.
+`cqed_sim.system_id` covers the lightweight inverse-calibration layer of the
+repository. It fits common measured calibration traces, converts the fitted values
+and uncertainties into prior objects, and bridges those priors into the RL/domain-
+randomization stack.
 
 ## Main classes and functions
 
 | Name | Type | Description |
 |---|---|---|
 | `CalibrationEvidence` | dataclass | Collects posterior distributions over model, noise, hardware, and measurement parameters |
+| `fit_spectroscopy_trace(...)` | function | Fits a single Lorentzian spectroscopy peak or dip |
+| `fit_rabi_trace(...)` | function | Fits an offset Rabi trace and returns `omega_scale` plus nuisance terms |
+| `fit_ramsey_trace(...)` | function | Fits Ramsey detuning, `t2_star`, offset, amplitude, and phase |
+| `fit_t1_trace(...)` | function | Fits an offset exponential `T1` decay |
+| `fit_t2_echo_trace(...)` | function | Fits an offset exponential Hahn-echo decay |
+| `prior_from_fit(...)` | function | Converts a fitted value and uncertainty into a bounded `NormalPrior` or `FixedPrior` |
+| `evidence_from_fit(...)` | function | Maps selected fitted parameters into one `CalibrationEvidence` category |
+| `merge_calibration_evidence(...)` | function | Combines multiple evidence blocks while rejecting duplicate posterior keys |
 | `randomizer_from_calibration(evidence)` | function | Converts `CalibrationEvidence` into a `DomainRandomizer` |
 | `FixedPrior(value)` | prior | No randomization — always returns `value` |
-| `NormalPrior(mean, std)` | prior | Gaussian distribution |
+| `NormalPrior(mean, sigma)` | prior | Gaussian distribution with optional clipping bounds |
 | `UniformPrior(low, high)` | prior | Uniform distribution |
-| `ChoicePrior(choices)` | prior | Discrete uniform over a list |
+| `ChoicePrior(values)` | prior | Discrete uniform or weighted categorical prior |
 
 The prior types are re-exported from `cqed_sim.rl_control.domain_randomization`.
 
-## How it works
-
-`CalibrationEvidence` collects posteriors from calibration measurements, organized
-by category:
+## Typical workflow
 
 ```python
-from cqed_sim.system_id import CalibrationEvidence, NormalPrior, FixedPrior
+import numpy as np
 
-evidence = CalibrationEvidence(
-    model_posteriors={
-        "chi": NormalPrior(mean=-2.84e6, std=50e3),
-        "kerr": NormalPrior(mean=-28.8e3, std=1e3),
-    },
-    noise_posteriors={
-        "t1": NormalPrior(mean=10e-6, std=0.5e-6),
-    },
-    hardware_posteriors={
-        "drive_q": {"amp_scale": FixedPrior(1.0)},
-    },
-    measurement_posteriors={
-        "p_e_given_g": FixedPrior(0.02),
-    },
+from cqed_sim.calibration_targets import run_spectroscopy, run_t1
+from cqed_sim.system_id import (
+    CalibrationEvidence,
+    NormalPrior,
+    evidence_from_fit,
+    fit_spectroscopy_trace,
+    fit_t1_trace,
+    merge_calibration_evidence,
+    randomizer_from_calibration,
 )
-```
 
-`randomizer_from_calibration(evidence)` converts this into a `DomainRandomizer`,
-setting both the train and eval distributions to the same posteriors:
+spectroscopy_target = run_spectroscopy(model, drive_frequencies)
+t1_target = run_t1(model, delays, t1=24.0e-6)
 
-```python
-from cqed_sim.system_id import randomizer_from_calibration
+spectroscopy_fit = fit_spectroscopy_trace(
+    spectroscopy_target.raw_data["drive_frequencies"],
+    spectroscopy_target.raw_data["ground_response"],
+)
+t1_fit = fit_t1_trace(
+    t1_target.raw_data["delays"],
+    t1_target.raw_data["excited_population"],
+)
+
+evidence = merge_calibration_evidence(
+    evidence_from_fit(
+        spectroscopy_fit,
+        category="model",
+        parameter_map={"omega_peak": "omega_q"},
+        bounds={"omega_q": (0.0, None)},
+    ),
+    evidence_from_fit(
+        t1_fit,
+        category="noise",
+        bounds={"t1": (0.0, None)},
+        min_sigma={"t1": 0.5e-6},
+    ),
+    CalibrationEvidence(
+        model_posteriors={
+            "chi": NormalPrior(mean=-2.84e6, sigma=50e3),
+        },
+    ),
+)
 
 randomizer = randomizer_from_calibration(evidence)
 ```
 
-## When to use
-
-Use this module when you have measured device parameters with uncertainty and want
-to train an RL policy (via `HybridCQEDEnv`) that is robust to that uncertainty. The
-typical workflow is:
-
-1. Run calibration sweeps (`cqed_sim.calibration_targets`) to measure device parameters.
-2. Fit posteriors and wrap them in prior objects.
-3. Build a `CalibrationEvidence` and convert it to a `DomainRandomizer`.
-4. Pass the randomizer to `HybridEnvConfig` for RL training.
-
 ## Relationship to the rest of `cqed_sim`
 
-- **Depends on**: `cqed_sim.rl_control.domain_randomization` (for `DomainRandomizer` and prior types)
-- **Feeds into**: `HybridCQEDEnv` via `HybridEnvConfig(domain_randomizer=randomizer)`
-- **Upstream**: `cqed_sim.calibration_targets` produces the calibration measurements that become posteriors
+- **Upstream**: `cqed_sim.calibration_targets` generates synthetic or simulated calibration traces that can be re-fit through this module.
+- **Downstream**: `randomizer_from_calibration(...)` feeds `cqed_sim.rl_control.DomainRandomizer` and then `HybridCQEDEnv`.
+- **Shared result type**: The fit helpers return `CalibrationResult`, the same lightweight result container used by `cqed_sim.calibration_targets`.
 
-## Limitations
+## Current scope and limitations
 
-- This module is a thin bridge layer. It does not perform fitting or inference.
-- `randomizer_from_calibration` sets train and eval distributions identically.
-  For separate train/eval splits, construct `DomainRandomizer` directly.
-- Priors must be expressed as `ParameterPrior` objects; raw floats must be wrapped
-  in `FixedPrior`.
+- Fits are independent trace-by-trace curve fits, not a joint Bayesian inference engine.
+- `fit_spectroscopy_trace(...)` assumes one dominant Lorentzian peak or dip in the supplied trace.
+- `randomizer_from_calibration(...)` sets train and eval distributions identically. For separate train/eval splits, construct `DomainRandomizer` directly.

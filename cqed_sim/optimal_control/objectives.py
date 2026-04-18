@@ -8,7 +8,7 @@ import qutip as qt
 
 from cqed_sim.unitary_synthesis.subspace import Subspace
 
-from .utils import as_square_matrix, as_state_vector
+from .utils import as_density_matrix, as_square_matrix, as_state_vector
 
 
 @dataclass(frozen=True)
@@ -103,6 +103,91 @@ class StateTransferObjective:
             )
             target_states.append(
                 as_state_vector(pair.target_state, full_dim=full_dim, subspace=subspace, name=f"{self.name}.target[{index}]")
+            )
+            weights.append(float(pair.weight))
+            labels.append(pair.label or f"pair_{index}")
+        weight_array = np.asarray(weights, dtype=float)
+        weight_array = weight_array / np.sum(weight_array)
+        return (
+            np.asarray(initial_states, dtype=np.complex128),
+            np.asarray(target_states, dtype=np.complex128),
+            weight_array,
+            tuple(labels),
+        )
+
+
+@dataclass(frozen=True)
+class DensityMatrixTransferPair:
+    initial_state: qt.Qobj | np.ndarray | Any
+    target_state: qt.Qobj | np.ndarray | Any
+    weight: float = 1.0
+    label: str | None = None
+
+    def __post_init__(self) -> None:
+        if float(self.weight) <= 0.0:
+            raise ValueError("DensityMatrixTransferPair.weight must be positive.")
+
+
+@dataclass(frozen=True)
+class DensityMatrixTransferObjective:
+    pairs: tuple[DensityMatrixTransferPair, ...]
+    weight: float = 1.0
+    name: str = "density_matrix_transfer"
+
+    def __post_init__(self) -> None:
+        if not self.pairs:
+            raise ValueError("DensityMatrixTransferObjective requires at least one state pair.")
+        if float(self.weight) <= 0.0:
+            raise ValueError("DensityMatrixTransferObjective.weight must be positive.")
+
+    @classmethod
+    def single(
+        cls,
+        initial_state: qt.Qobj | np.ndarray | Any,
+        target_state: qt.Qobj | np.ndarray | Any,
+        *,
+        weight: float = 1.0,
+        label: str | None = None,
+        name: str = "density_matrix_transfer",
+    ) -> "DensityMatrixTransferObjective":
+        return cls(
+            pairs=(
+                DensityMatrixTransferPair(
+                    initial_state=initial_state,
+                    target_state=target_state,
+                    label=label,
+                ),
+            ),
+            weight=weight,
+            name=name,
+        )
+
+    def resolved_pairs(
+        self,
+        *,
+        full_dim: int,
+        subspace: Subspace | None = None,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, tuple[str, ...]]:
+        initial_states: list[np.ndarray] = []
+        target_states: list[np.ndarray] = []
+        weights: list[float] = []
+        labels: list[str] = []
+        for index, pair in enumerate(self.pairs):
+            initial_states.append(
+                as_density_matrix(
+                    pair.initial_state,
+                    full_dim=full_dim,
+                    subspace=subspace,
+                    name=f"{self.name}.initial[{index}]",
+                )
+            )
+            target_states.append(
+                as_density_matrix(
+                    pair.target_state,
+                    full_dim=full_dim,
+                    subspace=subspace,
+                    name=f"{self.name}.target[{index}]",
+                )
             )
             weights.append(float(pair.weight))
             labels.append(pair.label or f"pair_{index}")
@@ -246,6 +331,8 @@ __all__ = [
     "CustomObjectiveContext",
     "CustomObjectiveEvaluation",
     "CustomControlObjective",
+    "DensityMatrixTransferPair",
+    "DensityMatrixTransferObjective",
     "StateTransferPair",
     "StateTransferObjective",
     "UnitaryObjective",

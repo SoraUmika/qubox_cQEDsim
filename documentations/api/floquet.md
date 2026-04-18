@@ -1,6 +1,6 @@
 # API Reference — Floquet Analysis (`cqed_sim.floquet`)
 
-The Floquet module analyzes strictly periodic closed-system Hamiltonians using the same model, frame, and drive-target conventions as the rest of `cqed_sim`.
+The Floquet module analyzes strictly periodic Hamiltonians using the same model, frame, and drive-target conventions as the rest of `cqed_sim`, with both closed-system spectral analysis and a Floquet-Markov open-system wrapper.
 
 ---
 
@@ -130,6 +130,51 @@ Useful methods:
 
 ---
 
+### `FloquetMarkovBath`
+
+```python
+@dataclass(frozen=True)
+class FloquetMarkovBath:
+    operator: qt.Qobj
+    spectrum: Callable[[ndarray], ndarray] | None = None
+    label: str | None = None
+```
+
+One bath coupling operator and its spectral-density callback for Floquet-Markov evolution.
+
+### `FloquetMarkovConfig`
+
+```python
+@dataclass(frozen=True)
+class FloquetMarkovConfig:
+    floquet: FloquetConfig = FloquetConfig()
+    kmax: int = 5
+    nT: int | None = None
+    w_th: float = 0.0
+    store_states: bool | None = None
+    store_final_state: bool = True
+    store_floquet_states: bool = False
+    normalize_output: bool = True
+```
+
+Wraps Floquet basis settings plus QuTiP Floquet-Markov solver controls.
+
+### `FloquetMarkovResult`
+
+```python
+@dataclass
+class FloquetMarkovResult:
+    floquet_result: FloquetResult
+    config: FloquetMarkovConfig
+    baths: tuple[FloquetMarkovBath, ...]
+    tlist: ndarray
+    solver_result: Any
+```
+
+Exposes convenience accessors for `states`, `expect`, `times`, `final_state`, and `floquet_states`.
+
+---
+
 ## Main Solver
 
 ### `solve_floquet`
@@ -139,6 +184,16 @@ def solve_floquet(problem: FloquetProblem, config: FloquetConfig | None = None) 
 ```
 
 Primary closed-system Floquet solve. Internally wraps QuTiP's `FloquetBasis` and returns quasienergies, Floquet modes, the one-period propagator, overlap labels against the static Hamiltonian, and optional Sambe-space data.
+
+### `solve_floquet_markov`
+
+```python
+def solve_floquet_markov(problem, initial_state, tlist, *, baths=None, noise=None, e_ops=None, args=None, config=None)
+```
+
+Runs dissipative Floquet-Markov evolution while reusing the Floquet basis generated from `solve_floquet(...)`.
+
+Provide either explicit `baths=[FloquetMarkovBath(...), ...]` or `noise=NoiseSpec(...)` with `FloquetProblem(model=...)` to use the convenience bridge.
 
 ---
 
@@ -151,6 +206,8 @@ Primary closed-system Floquet solve. Internally wraps QuTiP's `FloquetBasis` and
 | `build_transmon_frequency_modulation_term(...)` | Qubit-frequency modulation via `n_q` |
 | `build_mode_frequency_modulation_term(...)` | Mode-frequency modulation via `n_mode` |
 | `build_dispersive_modulation_term(...)` | Dispersive modulation via `n_mode * n_q` |
+| `build_floquet_markov_baths(problem, noise, spectrum=...)` | Convert a repository `NoiseSpec` into Floquet-Markov bath operators |
+| `flat_markov_spectrum(scale=1.0)` | Convenience white-spectrum callback |
 | `compute_hamiltonian_fourier_components(...)` | Numerical or exact Fourier components of the periodic Hamiltonian |
 
 ---
@@ -185,4 +242,6 @@ Primary closed-system Floquet solve. Internally wraps QuTiP's `FloquetBasis` and
 - Floquet analysis assumes strict periodicity.
 - Multi-tone drives are only supported when a common period exists.
 - Quasienergies are defined modulo the drive angular frequency.
-- The public API is currently closed-system; Floquet-Markov hooks are a future extension.
+- `solve_floquet(...)` remains the closed-system spectral-analysis path.
+- `solve_floquet_markov(...)` is the current Markovian open-system Floquet path.
+- The `NoiseSpec` bridge is a convenience wrapper; use explicit `FloquetMarkovBath(...)` inputs for custom spectra and coupling models.

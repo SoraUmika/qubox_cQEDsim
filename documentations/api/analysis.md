@@ -79,7 +79,7 @@ params = from_measured(
 ```
 
 !!! note "Units"
-    All parameters are in **rad/s**. This matches the `cqed_sim` runtime convention. The `DeviceParameters` class in `cqed_sim.tomo` uses Hz and rad/ns internally — use its `.to_model()` method for unit-safe conversion.
+    All parameters are in **rad/s**. This matches the common SI-style recommended usage in `cqed_sim`, not a hard runtime requirement. The `DeviceParameters` class in `cqed_sim.tomo` uses a separate Hz-to-rad/ns helper path for tomography workflows that choose nanoseconds as their time unit.
 
 ### `from_measured`
 

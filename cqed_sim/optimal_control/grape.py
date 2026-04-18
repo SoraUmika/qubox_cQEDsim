@@ -21,6 +21,7 @@ from .initial_guesses import (
 from .objectives import (
     CustomControlObjective,
     CustomObjectiveContext,
+    DensityMatrixTransferObjective,
     StateTransferObjective,
     UnitaryObjective,
 )
@@ -33,7 +34,14 @@ from .penalties import (
     LeakagePenalty,
     SlewRatePenalty,
 )
-from .propagators import backward_target_history, build_propagation_data, propagate_state_history
+from .propagators import (
+    backward_density_target_history,
+    backward_target_history,
+    build_lindblad_propagation_data,
+    build_propagation_data,
+    propagate_density_history,
+    propagate_state_history,
+)
 from .result import GrapeIterationRecord, GrapeResult
 from .utils import dense_projector
 from .utils import finite_bound_scale
@@ -98,6 +106,18 @@ class _PreparedObjective:
 
 
 @dataclass(frozen=True)
+class _PreparedDensityObjective:
+    kind: str
+    name: str
+    weight: float
+    initial_densities: np.ndarray
+    target_densities: np.ndarray
+    state_weights: np.ndarray
+    labels: tuple[str, ...]
+    raw_objective: DensityMatrixTransferObjective
+
+
+@dataclass(frozen=True)
 class _PreparedCustomObjective:
     kind: str
     name: str
@@ -121,7 +141,7 @@ class _ScheduleEvaluation:
     resolved_waveforms: Any
 
 
-def _prepare_objective(problem, objective: StateTransferObjective | UnitaryObjective | CustomControlObjective):
+def _prepare_objective(problem, objective: StateTransferObjective | UnitaryObjective | DensityMatrixTransferObjective | CustomControlObjective):
     if isinstance(objective, StateTransferObjective):
         initial_states, target_states, weights, labels = objective.resolved_pairs(full_dim=problem.full_dim)
         return _PreparedObjective(
@@ -142,6 +162,18 @@ def _prepare_objective(problem, objective: StateTransferObjective | UnitaryObjec
             weight=float(objective.weight),
             initial_states=initial_states,
             target_states=target_states,
+            state_weights=weights,
+            labels=labels,
+            raw_objective=objective,
+        )
+    if isinstance(objective, DensityMatrixTransferObjective):
+        initial_states, target_states, weights, labels = objective.resolved_pairs(full_dim=problem.full_dim)
+        return _PreparedDensityObjective(
+            kind="density_matrix_transfer",
+            name=str(objective.name),
+            weight=float(objective.weight),
+            initial_densities=initial_states,
+            target_densities=target_states,
             state_weights=weights,
             labels=labels,
             raw_objective=objective,
@@ -219,6 +251,61 @@ def _evaluate_state_objective(prepared: _PreparedObjective, propagation, control
     return cost, gradient, metrics, forward
 
 
+def _projector_batch(states: np.ndarray) -> np.ndarray:
+    vectors = np.asarray(states, dtype=np.complex128)
+    return vectors[:, :, None] * np.conj(vectors[:, None, :])
+
+
+def _density_vectors(densities: np.ndarray) -> np.ndarray:
+    matrices = np.asarray(densities, dtype=np.complex128)
+    return np.transpose(matrices, (0, 2, 1)).reshape(matrices.shape[0], -1)
+
+
+def _resolve_density_objective(prepared: _PreparedObjective | _PreparedDensityObjective) -> tuple[np.ndarray, np.ndarray]:
+    if isinstance(prepared, _PreparedDensityObjective):
+        return prepared.initial_densities, prepared.target_densities
+    return _projector_batch(prepared.initial_states), _projector_batch(prepared.target_states)
+
+
+def _evaluate_density_objective(
+    prepared: _PreparedObjective | _PreparedDensityObjective,
+    propagation,
+    control_operators: tuple[np.ndarray, ...],
+):
+    initial_densities, target_densities = _resolve_density_objective(prepared)
+    target_vectors = _density_vectors(target_densities)
+    target_norms = np.real(np.sum(np.conj(target_vectors) * target_vectors, axis=1))
+    target_norms = np.maximum(target_norms, 1.0e-18)
+    forward = propagate_density_history(propagation, initial_densities)
+    backward = backward_density_target_history(propagation, target_densities)
+    final_states = forward[:, -1, :]
+    overlaps = np.real(np.sum(np.conj(target_vectors) * final_states, axis=1)) / target_norms
+    cost = 1.0 - float(np.sum(prepared.state_weights * overlaps))
+    gradient = np.zeros((len(control_operators), len(propagation.slice_superoperators)), dtype=float)
+
+    for step_index in range(len(propagation.slice_superoperators)):
+        rho_j = forward[:, step_index, :]
+        lambda_j1 = backward[:, step_index + 1, :]
+        for control_index, _operator in enumerate(control_operators):
+            d_super = propagation.slice_derivative(step_index, control_index)
+            drho = rho_j @ d_super.T
+            amplitudes = np.sum(np.conj(lambda_j1) * drho, axis=1) / target_norms
+            gradient[control_index, step_index] += -float(
+                np.real(np.sum(prepared.state_weights * amplitudes))
+            )
+
+    reported = np.clip(overlaps, 0.0, 1.0)
+    metrics = {
+        "fidelity_weighted": float(np.sum(prepared.state_weights * reported)),
+        "fidelity_mean": float(np.mean(reported)),
+        "fidelity_min": float(np.min(reported)),
+        "fidelity_max": float(np.max(reported)),
+        "infidelity": float(1.0 - np.sum(prepared.state_weights * reported)),
+        "metric_type": "density_overlap",
+    }
+    return cost, gradient, metrics, forward
+
+
 def _evaluate_leakage_records(
     forward: np.ndarray,
     propagation,
@@ -244,6 +331,35 @@ def _evaluate_leakage_records(
             dpsi = psi_j @ d_unitary.T
             amplitudes = np.sum(np.conj(lambda_j1) * dpsi, axis=1)
             pair_gradients[:, control_index, step_index] = -2.0 * np.real(amplitudes)
+
+    return leakages, pair_gradients
+
+
+def _evaluate_density_leakage_records(
+    forward: np.ndarray,
+    propagation,
+    control_operators: tuple[np.ndarray, ...],
+    projector: np.ndarray,
+):
+    projector_vector = _density_vectors(np.asarray(projector, dtype=np.complex128)[None, :, :])[0]
+    final_states = forward[:, -1, :]
+    keep_probabilities = np.real(np.sum(np.conj(projector_vector)[None, :] * final_states, axis=1))
+    leakages = np.clip(1.0 - keep_probabilities, 0.0, 1.0)
+
+    backward = np.zeros_like(forward)
+    backward[:, -1, :] = projector_vector[None, :]
+    for step_index in range(len(propagation.slice_superoperators) - 1, -1, -1):
+        backward[:, step_index, :] = backward[:, step_index + 1, :] @ propagation.slice_superoperators[step_index].conj()
+
+    pair_gradients = np.zeros((forward.shape[0], len(control_operators), len(propagation.slice_superoperators)), dtype=float)
+    for step_index in range(len(propagation.slice_superoperators)):
+        rho_j = forward[:, step_index, :]
+        lambda_j1 = backward[:, step_index + 1, :]
+        for control_index, _operator in enumerate(control_operators):
+            d_super = propagation.slice_derivative(step_index, control_index)
+            drho = rho_j @ d_super.T
+            amplitudes = np.sum(np.conj(lambda_j1) * drho, axis=1)
+            pair_gradients[:, control_index, step_index] = -np.real(amplitudes)
 
     return leakages, pair_gradients
 
@@ -438,7 +554,7 @@ def _evaluate_system_jax(
     """
     from .propagators_jax import build_jax_evaluator
 
-    if any(isinstance(prepared, _PreparedCustomObjective) for prepared in prepared_objectives):
+    if any(isinstance(prepared, (_PreparedCustomObjective, _PreparedDensityObjective)) for prepared in prepared_objectives):
         raise ValueError("CustomControlObjective is currently supported only with engine='numpy'.")
 
     if jax_evaluator is None:
@@ -564,6 +680,13 @@ def _evaluate_schedule(
     resolved = applied.resolved
     physical_values = np.asarray(resolved.physical_values, dtype=float)
     step_durations_s = np.diff(np.asarray(resolved.time_boundaries_s, dtype=float))
+    requires_superoperator = any(bool(system.collapse_operators) for system in problem.systems) or any(
+        isinstance(prepared, _PreparedDensityObjective) for prepared in prepared_objectives
+    )
+    if requires_superoperator and engine == "jax":
+        raise ValueError("Open-system and density-matrix GRAPE currently support only engine='numpy'.")
+    if requires_superoperator and any(isinstance(prepared, _PreparedCustomObjective) for prepared in prepared_objectives):
+        raise ValueError("CustomControlObjective is currently supported only for closed-system state-vector GRAPE problems.")
     system_objectives: list[float] = []
     system_gradients: list[np.ndarray] = []
     system_metrics: list[dict[str, Any]] = []
@@ -589,14 +712,26 @@ def _evaluate_schedule(
             continue
 
         # ----- NumPy engine (existing path) -----
-        propagation = build_propagation_data(
-            drift_hamiltonian=system.drift_hamiltonian,
-            control_operators=system.control_operators,
-            control_values=physical_values,
-            step_durations_s=step_durations_s,
+        system_requires_superoperator = bool(system.collapse_operators) or any(
+            isinstance(prepared, _PreparedDensityObjective) for prepared in prepared_objectives
         )
-        if system_index == 0:
-            nominal_final_unitary = propagation.final_unitary
+        if system_requires_superoperator:
+            propagation = build_lindblad_propagation_data(
+                drift_hamiltonian=system.drift_hamiltonian,
+                control_operators=system.control_operators,
+                collapse_operators=system.collapse_operators,
+                control_values=physical_values,
+                step_durations_s=step_durations_s,
+            )
+        else:
+            propagation = build_propagation_data(
+                drift_hamiltonian=system.drift_hamiltonian,
+                control_operators=system.control_operators,
+                control_values=physical_values,
+                step_durations_s=step_durations_s,
+            )
+            if system_index == 0:
+                nominal_final_unitary = propagation.final_unitary
 
         objective_total = 0.0
         gradient_total = np.zeros_like(schedule.values, dtype=float)
@@ -636,7 +771,11 @@ def _evaluate_schedule(
                 )
                 continue
 
-            cost, gradient_physical, metrics, forward = _evaluate_state_objective(prepared, propagation, system.control_operators)
+            if system_requires_superoperator:
+                cost, gradient_physical, metrics, forward = _evaluate_density_objective(prepared, propagation, system.control_operators)
+            else:
+                assert isinstance(prepared, _PreparedObjective)
+                cost, gradient_physical, metrics, forward = _evaluate_state_objective(prepared, propagation, system.control_operators)
             weighted_cost = float(prepared.weight) * float(cost)
             objective_total += weighted_cost
             gradient_total += float(prepared.weight) * applied.pullback_physical(gradient_physical)
@@ -649,7 +788,7 @@ def _evaluate_schedule(
                 **metrics,
             }
 
-            if prepared.kind == "unitary":
+            if prepared.kind == "unitary" and not system_requires_superoperator:
                 unitary_objective = prepared.raw_objective
                 assert isinstance(unitary_objective, UnitaryObjective)
                 target_matrix = _unitary_target_matrix(problem, unitary_objective)
@@ -669,12 +808,20 @@ def _evaluate_schedule(
             objective_reports.append(report)
 
             for penalty_index, prepared_penalty in enumerate(prepared_leakage_penalties):
-                leakages, pair_gradients = _evaluate_leakage_records(
-                    forward,
-                    propagation,
-                    system.control_operators,
-                    prepared_penalty.projector,
-                )
+                if system_requires_superoperator:
+                    leakages, pair_gradients = _evaluate_density_leakage_records(
+                        forward,
+                        propagation,
+                        system.control_operators,
+                        prepared_penalty.projector,
+                    )
+                else:
+                    leakages, pair_gradients = _evaluate_leakage_records(
+                        forward,
+                        propagation,
+                        system.control_operators,
+                        prepared_penalty.projector,
+                    )
                 for pair_index, leakage in enumerate(leakages):
                     pair_weight = float(prepared.weight) * float(prepared.state_weights[pair_index])
                     leakage_records[penalty_index].append(

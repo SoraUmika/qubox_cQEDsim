@@ -36,7 +36,7 @@ class DeviceParameters:
 | `to_model(n_cav=12, n_tr=3)` | Build `DispersiveTransmonCavityModel` with all params in rad/ns |
 
 !!! warning
-    `DeviceParameters.to_model()` uses **rad/ns** units internally, which differs from the library's standard rad/s convention. This is specific to the tomography device-parameter workflow.
+    `DeviceParameters.to_model()` uses a helper-specific **rad/ns** conversion path for tomography workflows that are parameterized in nanoseconds. The core `cqed_sim` model layer remains unit-coherent, so this does not imply a global rad/ns-only simulator convention.
 
 ---
 

@@ -4121,17 +4121,23 @@
 </ul>
 <hr />
 <h2 id="system-identification-hooks">System Identification Hooks<a class="headerlink" href="#system-identification-hooks" title="Permanent link">&para;</a></h2>
-<p><code>cqed_sim.system_id</code> currently provides lightweight fit-then-randomize scaffolding:</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">CalibrationEvidence</span><span class="p">(</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">model_posteriors</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="n">noise_posteriors</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="n">hardware_posteriors</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="n">measurement_posteriors</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="p">)</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="n">randomizer_from_calibration</span><span class="p">(</span><span class="n">evidence</span><span class="p">)</span>
+<p><code>cqed_sim.system_id</code> now provides lightweight measured-trace fitting plus posterior-to-randomizer scaffolding:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">fit_spectroscopy_trace</span><span class="p">(</span><span class="n">freqs</span><span class="p">,</span> <span class="n">response</span><span class="p">)</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">fit_ramsey_trace</span><span class="p">(</span><span class="n">delays</span><span class="p">,</span> <span class="n">excited_population</span><span class="p">)</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="n">fit_t1_trace</span><span class="p">(</span><span class="n">delays</span><span class="p">,</span> <span class="n">excited_population</span><span class="p">)</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">evidence_from_fit</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="s2">&quot;model&quot;</span><span class="p">)</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="n">merge_calibration_evidence</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="n">CalibrationEvidence</span><span class="p">(</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="n">model_posteriors</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>    <span class="n">noise_posteriors</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>    <span class="n">hardware_posteriors</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>    <span class="n">measurement_posteriors</span><span class="o">=</span><span class="p">{</span><span class="o">...</span><span class="p">},</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="p">)</span>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="n">randomizer_from_calibration</span><span class="p">(</span><span class="n">evidence</span><span class="p">)</span>
 </span></code></pre></div>
-<p>These helpers are intentionally simple. They are meant to bridge future calibration/posterior workflows into the RL randomization layer, not to replace a full inference package.</p>
+<p>These helpers are intentionally lightweight. They cover common independent trace fits and uncertainty propagation into <code>DomainRandomizer</code>, but they do not replace a full joint inference package.</p>
 <hr />
 <h2 id="example-entry-points">Example Entry Points<a class="headerlink" href="#example-entry-points" title="Permanent link">&para;</a></h2>
 <ul>

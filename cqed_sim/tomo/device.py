@@ -16,16 +16,18 @@ class DeviceParameters:
 
     Unit-conversion note
     --------------------
-    The simulation core uses **nanoseconds** as its internal time unit (pulse durations,
-    ``dt``, and ``t_end`` are all in ns).  Correspondingly, Hamiltonian frequencies must
-    be in **rad/ns** so that the product ``omega * t`` is dimensionless.  The helper
-    ``hz_to_rad_per_ns`` performs the conversion::
+    This helper is designed for tomography workflows that conventionally use
+    **nanoseconds** for times and therefore **rad/ns** for angular frequencies.
+    The underlying ``cqed_sim`` model layer is unit-coherent: it accepts any
+    internally consistent frequency/time units.  ``DeviceParameters`` simply
+    chooses the Hz-to-rad/ns path for convenience when building tomo-focused
+    example models.  The helper ``hz_to_rad_per_ns`` performs that conversion::
 
         omega_rad_per_ns = 2 * pi * f_hz * 1e-9
 
-    This is intentional and consistent with the rest of ``cqed_sim``.  Do not replace
-    this with a ``rad/s`` conversion when constructing ``DispersiveTransmonCavityModel``
-    from physical device frequencies.
+    This helper-specific conversion is intentional.  Do not replace it with a
+    ``rad/s`` conversion unless the surrounding tomography workflow is also being
+    expressed in seconds rather than nanoseconds.
     """
 
     ro_fq: float = 8596222556.078796
@@ -63,8 +65,11 @@ class DeviceParameters:
     def hz_to_rad_per_ns(self, f_hz: float) -> float:
         """Convert a frequency from Hz to rad/ns.
 
-        The simulation uses nanoseconds as its time unit, so all Hamiltonian
-        frequencies must be in rad/ns.  This helper implements::
+        The tomography helper path commonly uses nanoseconds for time, so this
+        method converts Hz to rad/ns.  Other parts of the library may instead
+        use rad/s with seconds; the core model layer is unit-coherent.
+
+        This helper implements::
 
             omega_rad_per_ns = 2 * pi * f_hz * 1e-9
 
@@ -84,8 +89,9 @@ class DeviceParameters:
         """Construct a ``DispersiveTransmonCavityModel`` from the device parameters.
 
         All frequency fields are converted from Hz to **rad/ns** via
-        :meth:`hz_to_rad_per_ns` before being passed to the model.  The resulting
-        model is consistent with simulation time steps expressed in nanoseconds.
+        :meth:`hz_to_rad_per_ns` before being passed to the model.  That choice
+        is specific to the helper workflow and is consistent with tomography
+        scripts that use nanosecond time steps.
 
         Parameters
         ----------

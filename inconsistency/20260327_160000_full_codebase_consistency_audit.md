@@ -69,7 +69,7 @@ Update on 2026-03-27 later in the day:
 
 ### A. `cqed_sim/tomo/README.md` unit convention
 
-The tomo `DeviceParameters` helper deliberately uses Hz / rad·ns internally, which differs from the library-wide recommended convention (rad/s, seconds). The deviation is documented in the README, but previous inconsistency report `20260317_cleanup_pass.md` flagged it as an open item. Still unresolved.
+Resolved on 2026-04-13. The tomo helper docs now describe `DeviceParameters` as a tomography-specific Hz-to-rad/ns convenience path while keeping the core `cqed_sim` model layer documented as unit-coherent.
 
 ### B. `documentations/getting_started.md` placement
 
@@ -91,13 +91,14 @@ The tomo `DeviceParameters` helper deliberately uses Hz / rad·ns internally, wh
 
 ## Status
 
-- **Current status:** Partially fixed. Issues 1 and 2 resolved. Issues 3–4 remain open. Issue 5 was fixed earlier.
+- **Current status:** Fixed on 2026-04-13. Issues 1, 2, and 5 were already resolved at audit time. Issues 3-4 were resolved by moving the stray module-local validation test into the numbered top-level suite as `tests/test_30_native_primitives.py`. Suspected item A is also resolved.
 - **Resolution summary:**
   - Issue 1 resolved at audit time: Added `run_sweep` to §6.4, `ConditionalPhaseSQRGate` to §8, and §17.9–17.11 (user-defined gate factories, gate registry, gate-order search) to `API_REFERENCE.md`. Matching updates applied to `documentations/api/unitary_synthesis.md`, `documentations/api/gate_io.md`, and `documentations/api/simulation.md`.
   - Later on 2026-03-27, the `ConditionalPhaseSQRGate` portion of that documentation update was superseded because the symbol was removed from the active public API.
   - Issue 2 resolved: Created `cqed_sim/control/README.md`.
   - Issue 5 resolved: `.gitignore` created at repository root.
-  - Issues 3–4: Remain open for follow-up.
+  - Issues 3-4 resolved on 2026-04-13: `cqed_sim/unitary_synthesis/tests/test_native_primitives.py` was migrated into the top-level suite as `tests/test_30_native_primitives.py`, which also closes the missing `test_30_*` numbering gap.
+  - Suspected item A resolved on 2026-04-13: the tomo helper docs now describe the rad/ns path as helper-specific rather than a global simulator requirement.
 
 ---
 
@@ -109,7 +110,8 @@ The tomo `DeviceParameters` helper deliberately uses Hz / rad·ns internally, wh
   - `documentations/api/gate_io.md` updated with `ConditionalPhaseSQRGate` and corrected Gate union type. The `ConditionalPhaseSQRGate` portion was later superseded when that symbol was removed from the active API.
   - `documentations/api/unitary_synthesis.md` updated with user-defined gate factories, gate registry, and gate-order search sections.
   - `cqed_sim/control/README.md` created with module purpose, key classes, usage examples, and integration notes.
+  - `tests/test_30_native_primitives.py` now carries the previously module-local unitary-synthesis primitive validation coverage.
+  - `cqed_sim/unitary_synthesis/tests/test_native_primitives.py` was removed from the package tree.
+  - `cqed_sim/tomo/device.py`, `cqed_sim/tomo/README.md`, `API_REFERENCE.md`, `documentations/api/tomography.md`, and `documentations/api/analysis.md` were updated on 2026-04-13 so the tomography helper's rad/ns path is documented as helper-specific and consistent with the repo's unit-coherent global contract.
 - **Remaining concerns:**
-  - `unitary_synthesis/tests/` tests (Issue 3) should be migrated to `tests/`.
-  - Test numbering gap (Issue 4) is cosmetic but worth filling if a new test is added in that slot.
-  - Suspected items A–E should be evaluated individually.
+  - Suspected items B-E should be evaluated individually.

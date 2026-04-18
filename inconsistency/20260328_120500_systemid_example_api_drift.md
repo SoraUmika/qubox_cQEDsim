@@ -1,7 +1,7 @@
 # System-ID Example API Drift
 
 Created: 2026-03-28 12:05:00
-Status: Open
+Status: Fixed on 2026-04-10
 
 ## Confirmed Issues
 
@@ -29,15 +29,23 @@ Status: Open
 - Tutorial or documentation work that reuses the example without source verification can inherit stale API assumptions.
 - The mismatch obscures the intended calibration-evidence -> randomizer -> environment workflow.
 
-## Suspected Issues
+## Suspected / Follow-up Questions
 
-- The example may contain additional stale assumptions beyond `run_t1(...)` and hardware-prior field names because it was not fully repaired in this task.
+- The notebook assets under `tutorials/31_system_identification_and_domain_randomization/` were not updated in this fix pass and should be kept under review if they are treated as canonical runnable workflows.
 
-## Unresolved Questions
+## Status
 
-- Whether the example should be repaired to the current stable reset/inspection workflow or replaced with a narrower script that avoids unsupported rollout paths.
+- Fixed for `examples/calibration_systemid_rl_pipeline.py`.
+- The example now uses explicit delay arrays for calibration targets, re-fits measured-like traces through `cqed_sim.system_id`, and builds `CalibrationEvidence` through `evidence_from_fit(...)` plus `merge_calibration_evidence(...)`.
 
-## Notes For Follow-Up
+## Fix Record
 
-- During this tutorial-extension task, the new workflow notebooks were implemented from validated source-level APIs instead of reusing this stale example.
-- A later cleanup pass should either update this example to current APIs or remove claims that it demonstrates the full calibration-to-RL path.
+- Fixed on 2026-04-10 in:
+  - `examples/calibration_systemid_rl_pipeline.py`
+  - `cqed_sim/system_id/fitting.py`
+  - `cqed_sim/system_id/__init__.py`
+  - `tests/test_48_system_id.py`
+  - `cqed_sim/system_id/README.md`
+  - `documentations/api/system_id.md`
+  - `documentations/tutorials/system_identification.md`
+  - `API_REFERENCE.md`

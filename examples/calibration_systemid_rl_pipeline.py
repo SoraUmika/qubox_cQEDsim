@@ -24,16 +24,22 @@ from cqed_sim import (
     HybridCQEDEnv,
     HybridEnvConfig,
     HybridSystemConfig,
+    CalibrationEvidence,
     NormalPrior,
     PrimitiveActionSpace,
     ReducedDispersiveModelConfig,
-    UniformPrior,
     build_observation_model,
     build_reward_model,
+    evidence_from_fit,
     fock_state_preparation_task,
+    fit_rabi_trace,
+    fit_ramsey_trace,
+    fit_spectroscopy_trace,
+    fit_t1_trace,
+    merge_calibration_evidence,
 )
-from cqed_sim.calibration_targets import run_rabi, run_spectroscopy, run_t1
-from cqed_sim.system_id import CalibrationEvidence, randomizer_from_calibration
+from cqed_sim.calibration_targets import run_rabi, run_ramsey, run_spectroscopy, run_t1
+from cqed_sim.system_id import randomizer_from_calibration
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -61,46 +67,76 @@ def run_calibration(model: DispersiveTransmonCavityModel) -> dict[str, Any]:
     )
     drive_frequencies = 2 * np.pi * freq_span
 
-    spectro = run_spectroscopy(model, drive_frequencies)
-    rabi = run_rabi(model, np.linspace(0.0, 2.0e8, 61), duration=40.0e-9)
-    t1 = run_t1(model)
+    rabi_amplitudes = np.linspace(0.0, 2.0, 201)
+    delays = np.linspace(0.0, 60.0e-6, 201)
 
-    print("  Spectroscopy  :", spectro.fitted_parameters)
-    print("  Rabi          :", rabi.fitted_parameters)
-    print("  T1            :", t1.fitted_parameters)
-    return {"spectroscopy": spectro, "rabi": rabi, "t1": t1}
+    targets = {
+        "spectroscopy": run_spectroscopy(model, drive_frequencies),
+        "rabi": run_rabi(model, rabi_amplitudes, duration=40.0e-9, omega_scale=2.0 * np.pi * 12.0e6),
+        "ramsey": run_ramsey(model, delays, detuning=2.0 * np.pi * 0.6e6, t2_star=9.0e-6),
+        "t1": run_t1(model, delays, t1=24.0e-6),
+    }
+    fits = {
+        "spectroscopy": fit_spectroscopy_trace(
+            targets["spectroscopy"].raw_data["drive_frequencies"],
+            targets["spectroscopy"].raw_data["ground_response"],
+        ),
+        "rabi": fit_rabi_trace(
+            targets["rabi"].raw_data["amplitudes"],
+            targets["rabi"].raw_data["excited_population"],
+            duration=targets["rabi"].fitted_parameters["duration"],
+        ),
+        "ramsey": fit_ramsey_trace(
+            targets["ramsey"].raw_data["delays"],
+            targets["ramsey"].raw_data["excited_population"],
+        ),
+        "t1": fit_t1_trace(
+            targets["t1"].raw_data["delays"],
+            targets["t1"].raw_data["excited_population"],
+        ),
+    }
+
+    for name, result in fits.items():
+        print(f"  {name.capitalize():<13}: {result.fitted_parameters}")
+    return {"targets": targets, "fits": fits}
 
 
 # ── 2.  Build CalibrationEvidence ─────────────────────────────────
 def build_evidence(calibration: dict[str, Any]) -> CalibrationEvidence:
     """Wrap calibration results as prior distributions."""
-    spectro = calibration["spectroscopy"]
-    t1_result = calibration["t1"]
-
-    omega_q_fit = spectro.fitted_parameters.get("omega_01", 2 * np.pi * 6.0e9)
-    omega_q_std = spectro.uncertainties.get("omega_01", 2 * np.pi * 2.0e6)
-
-    t1_fit = t1_result.fitted_parameters.get("t1", 50.0e-6)
-    t1_std = t1_result.uncertainties.get("t1", 5.0e-6)
-
-    return CalibrationEvidence(
+    fits = calibration["fits"]
+    fitted_evidence = merge_calibration_evidence(
+        evidence_from_fit(
+            fits["spectroscopy"],
+            category="model",
+            parameter_map={"omega_peak": "omega_q"},
+            bounds={"omega_q": (0.0, None)},
+            min_sigma={"omega_q": 2.0 * np.pi * 0.25e6},
+        ),
+        evidence_from_fit(
+            fits["t1"],
+            category="noise",
+            bounds={"t1": (0.0, None)},
+            min_sigma={"t1": 0.5e-6},
+        ),
+        evidence_from_fit(
+            fits["ramsey"],
+            category="noise",
+            parameter_map={"t2_star": "t2_star"},
+            bounds={"t2_star": (0.0, None)},
+            min_sigma={"t2_star": 0.5e-6},
+        ),
+    )
+    manual_model_evidence = CalibrationEvidence(
         model_posteriors={
-            "omega_q": NormalPrior(omega_q_fit, omega_q_std),
-            "chi": NormalPrior(
-                2 * np.pi * (-2.25e6),
-                2 * np.pi * 0.08e6,
-            ),
-            "kerr": NormalPrior(
-                2 * np.pi * (-6.0e3),
-                2 * np.pi * 1.5e3,
-            ),
+            "chi": NormalPrior(mean=2 * np.pi * (-2.25e6), sigma=2 * np.pi * 0.08e6),
+            "kerr": NormalPrior(mean=2 * np.pi * (-6.0e3), sigma=2 * np.pi * 1.5e3),
         },
-        noise_posteriors={
-            "t1": NormalPrior(t1_fit, t1_std),
-        },
-        notes={
-            "source": "simulated calibration pipeline example",
-        },
+    )
+    return merge_calibration_evidence(
+        fitted_evidence,
+        manual_model_evidence,
+        notes={"source": "simulated calibration pipeline example"},
     )
 
 
@@ -250,11 +286,14 @@ def main() -> None:
     # Summary
     summary = {
         "calibration": {
-            k: {
-                "fitted": v.fitted_parameters,
-                "uncertainties": v.uncertainties,
+            section: {
+                name: {
+                    "fitted": result.fitted_parameters,
+                    "uncertainties": result.uncertainties,
+                }
+                for name, result in section_results.items()
             }
-            for k, v in calibration.items()
+            for section, section_results in calibration.items()
         },
         "evidence_keys": {
             "model_posteriors": sorted(evidence.model_posteriors.keys()),

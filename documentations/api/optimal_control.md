@@ -8,7 +8,7 @@ The `cqed_sim.optimal_control` package provides the direct-control layer of the 
 It also exposes first-class extension points for user-defined waveform maps and pulse families, plus high-level workflow helpers for outer-loop gate-time search and structured-to-GRAPE refinement.
 
 !!! note "Current scope"
-    Both backends currently use closed-system dense propagation. The structured backend changes the optimization variable from raw slice amplitudes to a named parameter vector, but it preserves the same Hamiltonian, frame, and pulse-export conventions as the rest of `cqed_sim`.
+    The structured backend remains closed-system. GRAPE also supports a NumPy density-matrix / Lindblad path when `ControlSystem` members include `collapse_operators` or when the problem includes `DensityMatrixTransferObjective(...)`. The JAX engine remains closed-system only.
 
 ---
 
@@ -51,12 +51,15 @@ Absolute positive drive frequencies remain a separate boundary translation handl
 
 ### `ControlSystem`
 
-Represents one closed-system member of the control problem:
+Represents one member of the control problem:
 
 - `drift_hamiltonian`
 - `control_operators`
+- `collapse_operators`
 - `weight`
 - `label`
+
+Attach `collapse_operators` to run GRAPE on the Lindblad superoperator path.
 
 Multiple `ControlSystem` objects can be attached to the same `ControlProblem` for ensemble or worst-case optimization.
 
@@ -319,6 +322,8 @@ from cqed_sim.optimal_control import (
     CustomControlObjective,
     CustomObjectiveContext,
     CustomObjectiveEvaluation,
+    DensityMatrixTransferObjective,
+    DensityMatrixTransferPair,
     StateTransferObjective,
     StateTransferPair,
     UnitaryObjective,
@@ -332,7 +337,10 @@ from cqed_sim.optimal_control import (
 
 - `state_preparation_objective(initial, target)`
 - `multi_state_transfer_objective(...)`
+- `DensityMatrixTransferObjective(...)`
 - `UnitaryObjective(target_operator=..., subspace=...)`
+
+`DensityMatrixTransferObjective` accepts pure states or density matrices and evaluates a purity-normalized density overlap. For pure-state targets this reduces to standard fidelity.
 
 ### `CustomControlObjective`
 
@@ -354,6 +362,8 @@ It must return `CustomObjectiveEvaluation` containing:
 - optional `metrics`
 
 This lets advanced studies optimize custom control metrics while staying on the standard solver/result surface.
+
+`CustomControlObjective` is currently limited to the closed-system state-vector path.
 
 ---
 
@@ -406,6 +416,11 @@ Key `GrapeConfig` fields:
 - `engine` — `"numpy"` (default) or `"jax"`.
 - `optax_learning_rate` — step size for Optax optimizers (default `1e-3`). Only used when `engine="jax"` and `optimizer_method` is an Optax name.
 - `optax_grad_clip` — optional global L2 gradient clip for Optax optimizers.
+
+Engine behavior summary:
+
+- `engine="numpy"` supports both closed-system and density-matrix / Lindblad GRAPE.
+- `engine="jax"` currently supports only closed-system objectives.
 
 Optax methods are activated when `engine="jax"` **and** `optimizer_method` is one of `"adam"`, `"adagrad"`, `"sgd"`, or `"adamw"`. Requires the `optax` optional dependency group.
 

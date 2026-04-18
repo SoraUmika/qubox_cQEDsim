@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 import qutip as qt
 from scipy.linalg import expm
 
@@ -8,6 +9,7 @@ from cqed_sim import (
     ControlProblem,
     ControlSystem,
     ControlTerm,
+    DensityMatrixTransferObjective,
     DispersiveTransmonCavityModel,
     FrameSpec,
     GrapeConfig,
@@ -226,3 +228,104 @@ def test_grape_worst_case_ensemble_improves_worst_case_transfer() -> None:
     assert nominal_result.success
     assert robust_result.success
     assert worst_case_fidelity(robust_result) > worst_case_fidelity(nominal_result)
+
+
+def test_grape_noisy_state_transfer_matches_direct_liouvillian_overlap() -> None:
+    sigma_x = np.array([[0.0, 1.0], [1.0, 0.0]], dtype=np.complex128)
+    sigma_minus = np.array([[0.0, 1.0], [0.0, 0.0]], dtype=np.complex128)
+    collapse = np.sqrt(0.1) * sigma_minus
+    time_grid = PiecewiseConstantTimeGrid.uniform(steps=1, dt_s=1.0)
+    parameterization = PiecewiseConstantParameterization(
+        time_grid=time_grid,
+        control_terms=(
+            ControlTerm(
+                name="x_drive",
+                operator=0.5 * sigma_x,
+                amplitude_bounds=(-4.0 * np.pi, 4.0 * np.pi),
+                quadrature="SCALAR",
+            ),
+        ),
+    )
+    objective = StateTransferObjective.single(
+        np.array([1.0, 0.0], dtype=np.complex128),
+        np.array([0.0, 1.0], dtype=np.complex128),
+        name="flip",
+    )
+    problem = ControlProblem(
+        parameterization=parameterization,
+        systems=(
+            ControlSystem(
+                drift_hamiltonian=np.zeros((2, 2), dtype=np.complex128),
+                control_operators=(0.5 * sigma_x,),
+                collapse_operators=(collapse,),
+                label="noisy",
+            ),
+        ),
+        objectives=(objective,),
+    )
+
+    result = GrapeSolver(GrapeConfig(maxiter=60, seed=31, random_scale=0.4)).solve(problem)
+
+    assert result.success
+    assert result.nominal_final_unitary is None
+    report = result.system_metrics[0]["objectives"][0]
+    assert report["metric_type"] == "density_overlap"
+
+    amplitude = float(result.schedule.values[0, 0])
+    hamiltonian = amplitude * 0.5 * sigma_x
+    identity = np.eye(2, dtype=np.complex128)
+    cd_c = collapse.conj().T @ collapse
+    liouvillian = -1j * (np.kron(identity, hamiltonian) - np.kron(hamiltonian.T, identity))
+    liouvillian += np.kron(collapse.conj(), collapse)
+    liouvillian -= 0.5 * np.kron(identity, cd_c)
+    liouvillian -= 0.5 * np.kron(cd_c.T, identity)
+    rho0 = np.array([[1.0, 0.0], [0.0, 0.0]], dtype=np.complex128)
+    rho_final = (expm(liouvillian) @ rho0.T.reshape(-1)).reshape(2, 2).T
+    target = np.array([[0.0, 0.0], [0.0, 1.0]], dtype=np.complex128)
+    target_overlap = float(np.real(np.trace(target @ rho_final)))
+
+    assert report["fidelity_weighted"] == pytest.approx(target_overlap, abs=1.0e-6)
+    assert target_overlap > 0.8
+
+
+def test_density_matrix_transfer_objective_supports_closed_system_mixed_targets() -> None:
+    sigma_x = np.array([[0.0, 1.0], [1.0, 0.0]], dtype=np.complex128)
+    time_grid = PiecewiseConstantTimeGrid.uniform(steps=1, dt_s=1.0)
+    parameterization = PiecewiseConstantParameterization(
+        time_grid=time_grid,
+        control_terms=(
+            ControlTerm(
+                name="x_drive",
+                operator=0.5 * sigma_x,
+                amplitude_bounds=(-4.0 * np.pi, 4.0 * np.pi),
+                quadrature="SCALAR",
+            ),
+        ),
+    )
+    maximally_mixed = 0.5 * np.eye(2, dtype=np.complex128)
+    objective = DensityMatrixTransferObjective.single(
+        maximally_mixed,
+        maximally_mixed,
+        name="preserve_mixed_state",
+    )
+    problem = ControlProblem(
+        parameterization=parameterization,
+        systems=(
+            ControlSystem(
+                drift_hamiltonian=np.zeros((2, 2), dtype=np.complex128),
+                control_operators=(0.5 * sigma_x,),
+                label="closed_density",
+            ),
+        ),
+        objectives=(objective,),
+    )
+
+    result = GrapeSolver(GrapeConfig(maxiter=5, seed=7, random_scale=0.1)).solve(
+        problem,
+        initial_schedule=np.array([[0.0]], dtype=float),
+    )
+
+    assert result.success
+    report = result.system_metrics[0]["objectives"][0]
+    assert report["metric_type"] == "density_overlap"
+    assert report["fidelity_weighted"] == pytest.approx(1.0, abs=1.0e-10)

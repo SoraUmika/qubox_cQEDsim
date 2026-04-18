@@ -82,7 +82,7 @@ bloch_vectors = true_fock_resolved_vectors(result.final_state, model)
 - AllXY sequences use the standard 21-pair protocol from the cQED gate calibration literature.
 - Fock-resolved tomography measures the qubit state conditioned on each Fock sector using selective pulses; it requires that the selective π-pulses are well-calibrated to the `chi` shift of the model.
 - Leakage-matrix calibration assumes a multilevel transmon and uses level-selective operations; it is not meaningful for a strictly two-level qubit model.
-- The `DeviceParameters` helper in `cqed_sim.tomo.device` stores frequencies in **Hz** and converts to **rad/ns** via `to_model()`.  The resulting model uses nanoseconds as the time unit.  This is a deliberate, self-consistent convention for the tomo device helper and differs from the library-wide recommended convention of rad/s and seconds.  When using `DeviceParameters.to_model()`, ensure all simulation times (pulse durations, `t_end`, `dt`) are also expressed in nanoseconds.
+- The `DeviceParameters` helper in `cqed_sim.tomo.device` stores frequencies in **Hz** and converts to **rad/ns** via `to_model()`. This is a helper-specific convenience path for tomography workflows that use nanosecond time scales. The underlying `cqed_sim` model layer remains unit-coherent, so this does not mean the core simulator requires nanoseconds globally. When using `DeviceParameters.to_model()`, keep the surrounding tomography workflow internally consistent by expressing pulse durations, `t_end`, and `dt` in nanoseconds as well.
 
 ## Relationships to Other Modules
 

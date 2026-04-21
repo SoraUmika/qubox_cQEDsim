@@ -44,6 +44,8 @@ Both paths remain compatible with:
 - `optimize_gate_time_with_grape(...)` and `optimize_gate_time_with_structured_control(...)` for explicit outer-loop duration search.
 - `build_grape_refinement_problem(...)` and `solve_structured_then_grape(...)` for structured-to-GRAPE warm-start refinement.
 - `save_structured_control_artifacts(...)` to persist optimized parameters, waveform tables, spectra, and optimization-history plots for studies.
+- `synthesize_readout_emptying_pulse(...)`, `build_readout_emptying_parameterization(...)`, and `export_readout_emptying_to_pulse(...)` for segmented readout-resonator emptying pulses with optional Kerr-aware correction.
+- `verify_readout_emptying_pulse(...)` and `refine_readout_emptying_pulse(...)` for qualification-first evaluation of those pulses under measurement, Lindblad, robustness, and hardware-distortion replay.
 
 ## Structured Pulse Families
 
@@ -163,6 +165,8 @@ Interactive and script entry points:
 - `examples/hardware_constrained_grape_demo.py`
 - `examples/grape_storage_subspace_gate_demo.py`
 - `examples/structured_optimal_control_demo.py`
+- `examples/readout_emptying_demo.py`
+- `examples/studies/readout_emptying/`
 
 The structured demo writes real study artifacts under:
 

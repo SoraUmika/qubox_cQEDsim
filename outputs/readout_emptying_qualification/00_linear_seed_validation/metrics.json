@@ -1,0 +1,35 @@
+{
+  "metrics": {
+    "waveform_l2_norm": 15316.968026028268,
+    "waveform_peak_amplitude": 43982297.1502571,
+    "integrated_branch_separation": 2.9992551678128564e-08,
+    "max_final_residual_photons": 5.127595883936578e-30,
+    "final_residual_photons_g": 1.3609102469526307e-30,
+    "peak_photons_g": 4.172950078661239,
+    "avg_photons_g": 1.1673911257839076,
+    "final_residual_photons_e": 5.127595883936578e-30,
+    "peak_photons_e": 4.172950078661254,
+    "avg_photons_e": 1.167391125783911,
+    "null_space_dimension": 2.0,
+    "constraint_condition_number": 6.229243769192896,
+    "kerr_phase_peak": 0.0
+  },
+  "linear_metrics": {
+    "waveform_l2_norm": 15316.968026028268,
+    "waveform_peak_amplitude": 43982297.1502571,
+    "integrated_branch_separation": 2.9992551678128564e-08,
+    "max_final_residual_photons": 5.127595883936578e-30,
+    "final_residual_photons_g": 1.3609102469526307e-30,
+    "peak_photons_g": 4.172950078661239,
+    "avg_photons_g": 1.1673911257839076,
+    "final_residual_photons_e": 5.127595883936578e-30,
+    "peak_photons_e": 4.172950078661254,
+    "avg_photons_e": 1.167391125783911
+  },
+  "artifacts": {
+    "segment_waveform": "outputs\\readout_emptying_qualification\\00_linear_seed_validation\\segment_waveform.png",
+    "phase_space": "outputs\\readout_emptying_qualification\\00_linear_seed_validation\\phase_space.png",
+    "terminal_zoom": "outputs\\readout_emptying_qualification\\00_linear_seed_validation\\terminal_zoom.png",
+    "matrix_vs_ode": "outputs\\readout_emptying_qualification\\00_linear_seed_validation\\matrix_vs_ode.png"
+  }
+}

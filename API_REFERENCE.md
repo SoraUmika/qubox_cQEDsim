@@ -3723,6 +3723,47 @@ Key behaviors:
 - schedules can be flattened/unflattened for optimizers
 - schedules can be exported into standard repository `Pulse` objects using either command or physical waveforms
 
+### Readout-emptying pulse family
+
+The optimal-control package now also includes a segmented readout-emptying family for dispersive resonators:
+
+```python
+ReadoutEmptyingSpec(...)
+ReadoutEmptyingConstraints(...)
+ReadoutResonatorBranch(...)
+ReadoutEmptyingResult(...)
+ReadoutEmptyingVerificationConfig(...)
+ReadoutEmptyingVerificationReport(...)
+ReadoutEmptyingRefinementConfig(...)
+ReadoutEmptyingRefinementResult(...)
+synthesize_readout_emptying_pulse(...)
+export_readout_emptying_to_pulse(...)
+build_readout_emptying_parameterization(...)
+evaluate_readout_emptying_with_chain(...)
+verify_readout_emptying_pulse(...)
+refine_readout_emptying_pulse(...)
+```
+
+Highlights:
+
+- the terminal emptying constraints are built from the exact finite-width segment integral rather than a short-segment approximation
+- the default selector maximizes branch separation inside the null space instead of returning the trivial zero waveform
+- the reduced `CallableParameterization` uses null-space coordinates, so downstream optimization can preserve emptying automatically
+- the replay helpers cover both the linear cavity model and a simple mean-field Kerr extension
+- `verify_readout_emptying_pulse(...)` is the qualification-first companion layer: it compares at least the square baseline, analytic seed, Kerr-corrected seed, and optional refined waveform under measurement, Lindblad, hardware, and robustness sweeps
+- `refine_readout_emptying_pulse(...)` is a reduced outer-loop study harness over the existing runtime stack, not a new open-system `ControlProblem` objective family
+- the refinement variables are intentionally low-dimensional: null-space coordinates plus optional duration scaling, endpoint ramps, and shared chirp scaling
+- the exported pulse remains compatible with the standard `Pulse` / `SequenceCompiler` / measurement replay stack
+
+See also:
+
+- `documentations/api/readout_emptying.md`
+- `examples/readout_emptying_demo.py`
+- `examples/studies/readout_emptying/`
+- `tests/test_readout_emptying_linear.py`
+- `tests/test_readout_emptying_kerr.py`
+- `tests/test_readout_emptying_export_and_replay.py`
+
 Gate-duration changes are intentionally handled through explicit workflow helpers such as `optimize_gate_time_with_grape(...)` and `optimize_gate_time_with_structured_control(...)`, rather than by assuming a differentiable free-final-time inner solver.
 
 The explicit control pipeline is:

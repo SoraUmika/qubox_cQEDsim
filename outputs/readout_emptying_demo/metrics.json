@@ -1,0 +1,69 @@
+{
+  "spec": {
+    "kappa": 12566370.614359172,
+    "chi": 6283185.307179586,
+    "kerr": 502654.8245743669,
+    "tau": 3.2e-07,
+    "n_segments": 4
+  },
+  "constraints": {
+    "amplitude_max": 50265482.45743669
+  },
+  "linear_metrics": {
+    "waveform_l2_norm": 19142.7163750677,
+    "waveform_peak_amplitude": 50265482.45743668,
+    "integrated_branch_separation": 2.0186748168210117e-07,
+    "max_final_residual_photons": 0.03407476474852864,
+    "final_residual_photons_g": 0.02652217852351164,
+    "peak_photons_g": 9.978221693437181,
+    "avg_photons_g": 2.641693508815944,
+    "final_residual_photons_e": 0.03407476474852864,
+    "peak_photons_e": 9.856584866333927,
+    "avg_photons_e": 3.128284893037949,
+    "null_space_dimension": 2.0,
+    "constraint_condition_number": 5.140946166422296,
+    "kerr_phase_peak": 0.0
+  },
+  "corrected_metrics": {
+    "waveform_l2_norm": 19142.7163750677,
+    "waveform_peak_amplitude": 50265482.45743668,
+    "integrated_branch_separation": 1.8740751959925967e-07,
+    "max_final_residual_photons": 0.00010912275088443226,
+    "final_residual_photons_g": 7.25528785414322e-05,
+    "peak_photons_g": 9.978221693437176,
+    "avg_photons_g": 2.825125524149628,
+    "final_residual_photons_e": 0.00010912275088443226,
+    "peak_photons_e": 9.856584866333925,
+    "avg_photons_e": 2.7557460647866443,
+    "null_space_dimension": 2.0,
+    "constraint_condition_number": 5.140946166422296,
+    "kerr_phase_peak": 0.44942673976989284
+  },
+  "square_metrics": {
+    "linear_residual": 20.291425008642896,
+    "kerr_residual": 19.841865221001562,
+    "integrated_branch_separation": 6.599571186121441e-07
+  },
+  "measurement": {
+    "linear": {
+      "measurement_chain_separation": 7462.805117813854,
+      "measurement_chain_accuracy": 1.0,
+      "drive_frequency": 43985438742.91069,
+      "dt": 2e-09
+    },
+    "corrected": {
+      "measurement_chain_separation": 7462.80511781387,
+      "measurement_chain_accuracy": 1.0,
+      "drive_frequency": 43985438742.91069,
+      "dt": 2e-09
+    }
+  },
+  "artifacts": {
+    "waveform": "outputs\\readout_emptying_demo\\waveform.png",
+    "phase_space": "outputs\\readout_emptying_demo\\phase_space.png",
+    "photons": "outputs\\readout_emptying_demo\\photons.png",
+    "residuals": "outputs\\readout_emptying_demo\\residuals.png",
+    "separation": "outputs\\readout_emptying_demo\\separation.png",
+    "iq_clusters": "outputs\\readout_emptying_demo\\iq_clusters.png"
+  }
+}

@@ -125,6 +125,7 @@ nav:
           - Unitary Synthesis: tutorials/unitary_synthesis.md
           - SNAP & Fock State Prep: tutorials/snap_fock_state_prep.md
           - Optimal Control: tutorials/optimal_control.md
+          - Readout Emptying Qualification: tutorials/readout_emptying_qualification.md
           - RL Hybrid Control: tutorials/rl_hybrid_control.md
           - Hardware-Aware Control: tutorials/hardware_context.md
 
@@ -151,6 +152,7 @@ nav:
       - Sequence Compilation: api/sequence.md
       - Simulation Engine: api/simulation.md
       - Measurement & Readout: api/measurement.md
+      - Readout Emptying: api/readout_emptying.md
       - Floquet Analysis: api/floquet.md
       - Optimal Control: api/optimal_control.md
       - Hardware & Control: api/hardware.md

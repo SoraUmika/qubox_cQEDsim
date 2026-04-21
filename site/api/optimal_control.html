@@ -1923,6 +1923,8 @@
       
         
       
+        
+      
     
     
     
@@ -2041,6 +2043,34 @@
     
   
     Optimal Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/readout_emptying_qualification.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Readout Emptying Qualification
   
 
     
@@ -2611,6 +2641,8 @@
       
         
       
+        
+      
     
     
     
@@ -2842,6 +2874,34 @@
     
   
     Measurement & Readout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="readout_emptying.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Readout Emptying
   
 
     
@@ -4502,6 +4562,15 @@ Absolute positive drive frequencies remain a separate boundary translation handl
 </ul>
 <p>This is the direct extension point for ansatzes such as amplitude/phase maps, compressed Fourier or spline schedules, or other analytic waveform families that are easier to describe as a pure function than as a custom class.</p>
 <p><code>CallableParameterization</code> still resolves onto the standard command-waveform shape <code>(n_controls, n_time_slices)</code>, so the same objectives, penalties, hardware maps, pulse export, and replay path continue to work.</p>
+<p>One concrete repository example is the readout-emptying family in
+<code>cqed_sim.optimal_control.readout_emptying</code>, which uses a null-space
+<code>CallableParameterization</code> so that downstream optimization can vary reduced
+coordinates without breaking the terminal cavity-emptying constraints. See
+<code>documentations/api/readout_emptying.md</code>.</p>
+<p>That same feature now has a qualification-first companion layer in
+<code>cqed_sim.optimal_control.readout_emptying_eval</code>, which replays the seed pulse
+through measurement, Lindblad, robustness, and hardware-distortion studies
+without introducing a parallel control stack.</p>
 <h3 id="built-in-rectangular-and-basis-parameterizations">Built-in rectangular and basis parameterizations<a class="headerlink" href="#built-in-rectangular-and-basis-parameterizations" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>PiecewiseConstantParameterization</code></li>

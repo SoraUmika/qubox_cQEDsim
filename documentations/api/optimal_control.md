@@ -122,6 +122,17 @@ This is the direct extension point for ansatzes such as amplitude/phase maps, co
 
 `CallableParameterization` still resolves onto the standard command-waveform shape `(n_controls, n_time_slices)`, so the same objectives, penalties, hardware maps, pulse export, and replay path continue to work.
 
+One concrete repository example is the readout-emptying family in
+`cqed_sim.optimal_control.readout_emptying`, which uses a null-space
+`CallableParameterization` so that downstream optimization can vary reduced
+coordinates without breaking the terminal cavity-emptying constraints. See
+`documentations/api/readout_emptying.md`.
+
+That same feature now has a qualification-first companion layer in
+`cqed_sim.optimal_control.readout_emptying_eval`, which replays the seed pulse
+through measurement, Lindblad, robustness, and hardware-distortion studies
+without introducing a parallel control stack.
+
 ### Built-in rectangular and basis parameterizations
 
 - `PiecewiseConstantParameterization`

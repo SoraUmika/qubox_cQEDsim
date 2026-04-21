@@ -1,0 +1,37 @@
+{
+  "kerr_mhz": [
+    0.0,
+    0.02,
+    0.04,
+    0.06,
+    0.08,
+    0.1
+  ],
+  "uncorrected_residuals": [
+    5.127595883936578e-30,
+    7.368435431123233e-05,
+    0.00029755664420251396,
+    0.0006769906997267718,
+    0.0012192904551619295,
+    0.0019342508056745605
+  ],
+  "corrected_residuals": [
+    5.127595883936578e-30,
+    2.5857519245496173e-07,
+    1.0490527551510087e-06,
+    2.393646569920485e-06,
+    4.31464580796654e-06,
+    6.834365403339467e-06
+  ],
+  "strategy_residuals": {
+    "analytic_seed": 0.0006769906997267718,
+    "average_branch": 2.393646569920485e-06,
+    "g_branch": 2.393646569920383e-06,
+    "e_branch": 2.393646569920768e-06
+  },
+  "artifacts": {
+    "residual_vs_kerr": "outputs\\readout_emptying_qualification\\01_kerr_replay_and_chirp\\residual_vs_kerr.png",
+    "shared_vs_branch_specific": "outputs\\readout_emptying_qualification\\01_kerr_replay_and_chirp\\shared_vs_branch_specific.png",
+    "chirp_profile": "outputs\\readout_emptying_qualification\\01_kerr_replay_and_chirp\\chirp_profile.png"
+  }
+}

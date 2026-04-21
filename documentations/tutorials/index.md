@@ -1,6 +1,6 @@
 # Tutorial Curriculum
 
-The `cqed_sim` tutorial library contains **47 Jupyter notebooks** organized into two complementary tracks:
+The `cqed_sim` tutorial library contains **48 Jupyter notebooks** organized into two complementary tracks:
 
 1. **Workflow tutorials** — categorized by topic, starting from a first simulation and building toward optimal control and RL
 2. **Foundational curriculum** — numbered 01–26, covering individual API features and physics concepts in depth
@@ -59,6 +59,7 @@ Each stage builds on the previous one. Within each stage, notebooks are intended
 | `30_advanced_protocols/04_snap_optimization_workflow.ipynb` | SNAP gate optimization for bosonic state preparation |
 | `30_advanced_protocols/05_rl_hybrid_control_environment.ipynb` | Gym-compatible RL environment for cQED control with measurement-like observations |
 | `30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` | GRAPE optimal control: problem setup, hardware maps, solve, replay, and benchmark |
+| `30_advanced_protocols/07_readout_emptying_qualification_workflow.ipynb` | Qualification-first readout-emptying workflow: analytic seed, Kerr replay, Lindblad validation, reduced refinement, and hardware sensitivity |
 
 ### 31 — System ID & Domain Randomization
 
@@ -155,6 +156,7 @@ These documentation pages provide physics background, plots, and code summaries 
 - [Unitary Synthesis](unitary_synthesis.md) — gate sequence optimization: constraint, leakage, robust, Pareto, target-action matching, and leakage visualization
 - [SNAP & Fock State Prep](snap_fock_state_prep.md) — SNAP gate physics, Displacement–SNAP–Displacement protocol, Wigner-verified Fock state preparation
 - [GRAPE Optimal Control](optimal_control.md) — GRAPE algorithm, hardware-aware mode, convergence plots, replay verification
+- [Readout Emptying Qualification](readout_emptying_qualification.md) — segmented emptying seed, Kerr replay, Lindblad readout validation, reduced refinement, and hardware sensitivity
 - [RL Hybrid Control](rl_hybrid_control.md) — Gym environment, measurement-conditioned control, domain randomization
 - [Hardware-Aware Control](hardware_context.md) — signal chain: filtering, DAC, IQ limits, gradient-through-hardware GRAPE
 

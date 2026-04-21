@@ -402,8 +402,85 @@ being discussed:
   before mixer-phase rotation and I/Q integration.
 \end{itemize}
 
+\subsection*{Segmented readout-emptying pulses}
+The readout-emptying helpers in
+\texttt{cqed\_sim/optimal\_control/readout\_emptying.py} reuse the same effective
+readout convention instead of introducing a separate cavity model. The implemented
+piecewise-constant synthesis uses
+\[
+\dot{\alpha}_s(t)
+=
+-\left(\frac{\kappa}{2} + i \Delta_s\right)\alpha_s(t) - i\epsilon(t),
+\qquad
+\Delta_s = \omega_{r,s} - \omega_d,
+\]
+with a common segmented drive \(\epsilon(t)\) and branch labels \(s\in\{g,e\}\).
+
 \noindent
-Direct tests: \texttt{tests/experiment/test\_readout\_chain.py}.
+The public \texttt{ReadoutEmptyingSpec.detuning\_center} is defined as the drive
+offset relative to the midpoint of the dressed \(g/e\) resonator frequencies,
+\[
+\omega_d = \omega_{\mathrm{mid}} + \delta_{\mathrm{center}},
+\]
+so the default two-branch detunings become
+\[
+\Delta_g = -\delta_{\mathrm{center}} - \chi/2,
+\qquad
+\Delta_e = -\delta_{\mathrm{center}} + \chi/2.
+\]
+
+\noindent
+The terminal emptying matrix is built from the exact finite-width segment
+coefficient
+\[
+c_{s,n}
+=
+-i \int_{t_n}^{t_{n+1}}
+\exp\!\left[-\left(\frac{\kappa}{2}+i\Delta_s\right)(\tau-t')\right] dt',
+\]
+which matches the effective readout-response convention already used by the
+measurement layer. The Kerr replay path extends this with a mean-field nonlinear
+shift \(K|\alpha|^2\) in the detuning.
+
+\noindent
+The current Kerr phase-correction helper is intentionally approximate: it derives a
+single correction phase from one branch or an average branch occupation history and
+therefore is not an exact simultaneous cancellation when the \(g\) and \(e\)
+trajectories differ.
+
+\noindent
+The companion qualification workflow in
+\texttt{cqed\_sim/optimal\_control/readout\_emptying\_eval.py} does not introduce
+a second readout-control stack. It reuses the same segmented seed family and applies
+it across a model hierarchy:
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Model A:} the exact linear branch replay used for synthesis and
+  null-space verification,
+  \item \textbf{Model B:} the mean-field Kerr replay used to study nonlinear
+  residuals and shared-chirp corrections,
+  \item \textbf{Model C:} the existing dispersive Lindblad runtime, typically through
+  \texttt{DispersiveReadoutTransmonStorageModel} plus \texttt{NoiseSpec}, for
+  emitted-field separation, residual photons, and non-QND proxies,
+  \item \textbf{Hardware replay:} the existing \texttt{HardwareModel} /
+  \texttt{HardwareMap} pipeline, which distorts the command waveform before the
+  same replay and measurement layers are evaluated.
+\end{itemize}
+
+\noindent
+The reduced refinement helper is therefore a solver-adjacent study harness rather
+than a new optimizer convention. Its trainable variables remain low-dimensional and
+interpretably tied to the seed family: null-space coordinates, optional global
+duration scaling, optional endpoint ramps, and optional shared chirp scaling. This
+preserves the existing command-to-physical waveform convention
+\(c(t)=I(t)+iQ(t)\), the same readout-drive sign convention used by the seed
+constructor, and the same measurement-layer interpretation of the emitted I/Q
+response.
+
+\noindent
+Direct tests: \texttt{tests/experiment/test\_readout\_chain.py},
+\texttt{tests/test\_readout\_emptying\_linear.py},
+\texttt{tests/test\_readout\_emptying\_kerr.py},
+\texttt{tests/test\_readout\_emptying\_export\_and\_replay.py}.
 
 \section{Sequential Sideband Reset Approximation}
 The sequential storage-reset workflow lives in

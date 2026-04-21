@@ -16,9 +16,9 @@ It answers a different question from the seed constructor:
 - `kerr_replay_and_chirp.py`
   - nonlinear Kerr degradation and shared-chirp recovery
 - `dispersive_lindblad_validation.py`
-  - emitted-field separation, IQ clouds, and assignment-proxy validation
+  - emitted-field separation, calibrated overlap-error validation, IQ clouds, and ringdown comparison
 - `reduced_refinement.py`
-  - reduced-parameter refinement plus leakage/non-QND amplitude sweep
+  - reduced-parameter refinement plus disturbance-proxy amplitude sweep
 - `hardware_sensitivity.py`
   - filter distortion, mismatch heatmap, and photon-number sensitivity
 - `summary_benchmark.py`
@@ -36,6 +36,15 @@ The final benchmark script also refreshes the website-ready tutorial figures und
 
 That includes the summary benchmark figures plus the promoted stage plots used by
 `documentations/tutorials/readout_emptying_qualification.md`.
+
+The current shipped proof intentionally does **not** use raw assignment accuracy or raw
+`non_qnd_total` as headline evidence. Instead it emphasizes:
+
+- calibrated Gaussian overlap error,
+- post-pulse ringdown time and tail energy,
+- strong-readout disturbance proxies,
+- Lindblad output separation,
+- and robustness under mismatch and filtering.
 
 ## References
 

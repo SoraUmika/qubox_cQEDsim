@@ -115,8 +115,20 @@ Controls the deployment-style verification path:
 - optional `readout_model`, `frame`, and `noise`
 - `compiler_dt_s`
 - `shots_per_branch`
+- `measurement_noise_mode`
+- `measurement_target_square_error`
+- `measurement_min_noise_temperature`
+- `strong_readout_spec`
+- `ringdown_threshold_photons`
 - mismatch sweeps for `chi`, `kappa`, `kerr`, amplitude scale, and timing
 - optional `hardware_variants`
+
+Important defaults:
+
+- `measurement_noise_mode="calibrated_target_error"` clones the provided `ReadoutChain` and tunes the amplifier noise so the matched-energy square baseline lands near the requested Gaussian overlap error.
+- `measurement_target_square_error=0.10` is the shipped tutorial default, chosen so the discrimination plots are informative rather than saturated.
+- `strong_readout_spec` enables the phenomenological occupancy-activated disturbance proxy used by the qualification workflow.
+- `ringdown_threshold_photons=1e-2` controls the reported post-pulse ringdown time.
 
 ### `ReadoutEmptyingVerificationReport`
 
@@ -125,6 +137,8 @@ Returned by `verify_readout_emptying_pulse(...)`:
 - `baseline_results`
 - `baseline_metrics`
 - `measurement_metrics`
+- `disturbance_metrics`
+- `ringdown_metrics`
 - `lindblad_metrics`
 - `hardware_metrics`
 - `robustness`
@@ -139,6 +153,9 @@ Controls the reduced refinement harness:
 - derivative-free outer-loop settings such as `maxiter` and `method`
 - objective weights for residual, separation, measurement error, leakage, robustness, and bandwidth sensitivity
 - optional `measurement_chain`, `hardware_model`, `readout_model`, `frame`, and `noise`
+- calibrated-noise readout controls via `measurement_noise_mode`, `measurement_target_square_error`, and `measurement_min_noise_temperature`
+- pulse-disturbance proxy control via `strong_readout_spec`
+- ringdown scoring reference via `ringdown_threshold_photons`
 - optional chirp-scale, segment-duration, and endpoint-ramp controls
 - uncertainty levels used for robustness-aware scoring
 
@@ -209,7 +226,9 @@ Routes the synthesized waveform through `ReadoutChain.simulate_waveform(...)` an
 - noiseless traces,
 - I/Q centers,
 - measurement separation,
-- and a simple synthetic classification proxy.
+- calibrated noise standard deviation and SNR,
+- Gaussian overlap error,
+- and a Monte Carlo classification accuracy diagnostic.
 
 ### `verify_readout_emptying_pulse(...)`
 
@@ -224,11 +243,33 @@ By default it compares:
 
 The report replays each baseline through the configured measurement chain, optional hardware model, optional dispersive Lindblad model, and mismatch sweeps.
 
+Headline verification metrics now emphasize the physically discriminating quantities:
+
+- `max_final_residual_photons`
+- `measurement_chain_gaussian_overlap_error`
+- `ringdown_time_to_threshold`
+- `strong_readout_disturbance_proxy`
+- `lindblad_output_separation`
+- `robustness_worst_residual`
+
+The Lindblad relaxation total is still reported as both `non_qnd_total` and `background_relaxation_total`, but it is interpreted as a fixed-duration background relaxation reference rather than a pulse-induced disturbance proof.
+
 ### `refine_readout_emptying_pulse(...)`
 
 Runs a reduced-dimensional outer-loop refinement over the existing null-space family plus optional shared-chirp, segment-duration, and endpoint-ramp controls.
 
 This is intentionally solver-adjacent rather than solver-native: it reuses the simulator and hardware stack, but it does not introduce new `ControlProblem` objective types in this phase.
+
+By default the refinement objective now uses:
+
+- residual photons,
+- output-field separation,
+- calibrated Gaussian overlap error,
+- strong-readout disturbance proxy,
+- robustness residual,
+- and hardware bandwidth penalty.
+
+It no longer optimizes against saturated `measurement_chain_accuracy` or interprets raw `non_qnd_total` as the leakage term.
 
 ---
 

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Sequence
 
 import numpy as np
+from scipy.special import erfc
 
 from cqed_sim.measurement import ReadoutChain
 from cqed_sim.pulses import Pulse
@@ -927,6 +928,12 @@ def evaluate_readout_emptying_with_chain(
     if len(labels) >= 2:
         iq_separation = float(np.linalg.norm(iq_centers[labels[0]] - iq_centers[labels[1]]))
 
+    noise_std = float(chain.integrated_noise_sigma(duration=float(result.spec.tau), dt=resolved_dt))
+    measurement_snr = float(iq_separation / max(noise_std, 1.0e-18))
+    gaussian_overlap_error = float(0.5 * erfc(iq_separation / (2.0 * np.sqrt(2.0) * max(noise_std, 1.0e-18))))
+    if noise_std <= 0.0:
+        gaussian_overlap_error = 0.0 if iq_separation > 0.0 else 0.5
+
     rng = np.random.default_rng(seed)
     sampled_iq: dict[str, np.ndarray] = {}
     accuracy = float("nan")
@@ -958,6 +965,10 @@ def evaluate_readout_emptying_with_chain(
 
     metrics = {
         "measurement_chain_separation": float(iq_separation),
+        "measurement_chain_center_distance": float(iq_separation),
+        "measurement_chain_noise_std": float(noise_std),
+        "measurement_chain_snr": float(measurement_snr),
+        "measurement_chain_gaussian_overlap_error": float(gaussian_overlap_error),
         "measurement_chain_accuracy": float(accuracy),
         "drive_frequency": float(drive_frequency),
         "dt": float(resolved_dt),

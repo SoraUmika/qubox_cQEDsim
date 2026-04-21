@@ -4228,8 +4228,20 @@
 <li>optional <code>readout_model</code>, <code>frame</code>, and <code>noise</code></li>
 <li><code>compiler_dt_s</code></li>
 <li><code>shots_per_branch</code></li>
+<li><code>measurement_noise_mode</code></li>
+<li><code>measurement_target_square_error</code></li>
+<li><code>measurement_min_noise_temperature</code></li>
+<li><code>strong_readout_spec</code></li>
+<li><code>ringdown_threshold_photons</code></li>
 <li>mismatch sweeps for <code>chi</code>, <code>kappa</code>, <code>kerr</code>, amplitude scale, and timing</li>
 <li>optional <code>hardware_variants</code></li>
+</ul>
+<p>Important defaults:</p>
+<ul>
+<li><code>measurement_noise_mode="calibrated_target_error"</code> clones the provided <code>ReadoutChain</code> and tunes the amplifier noise so the matched-energy square baseline lands near the requested Gaussian overlap error.</li>
+<li><code>measurement_target_square_error=0.10</code> is the shipped tutorial default, chosen so the discrimination plots are informative rather than saturated.</li>
+<li><code>strong_readout_spec</code> enables the phenomenological occupancy-activated disturbance proxy used by the qualification workflow.</li>
+<li><code>ringdown_threshold_photons=1e-2</code> controls the reported post-pulse ringdown time.</li>
 </ul>
 <h3 id="readoutemptyingverificationreport"><code>ReadoutEmptyingVerificationReport</code><a class="headerlink" href="#readoutemptyingverificationreport" title="Permanent link">&para;</a></h3>
 <p>Returned by <code>verify_readout_emptying_pulse(...)</code>:</p>
@@ -4237,6 +4249,8 @@
 <li><code>baseline_results</code></li>
 <li><code>baseline_metrics</code></li>
 <li><code>measurement_metrics</code></li>
+<li><code>disturbance_metrics</code></li>
+<li><code>ringdown_metrics</code></li>
 <li><code>lindblad_metrics</code></li>
 <li><code>hardware_metrics</code></li>
 <li><code>robustness</code></li>
@@ -4250,6 +4264,9 @@
 <li>derivative-free outer-loop settings such as <code>maxiter</code> and <code>method</code></li>
 <li>objective weights for residual, separation, measurement error, leakage, robustness, and bandwidth sensitivity</li>
 <li>optional <code>measurement_chain</code>, <code>hardware_model</code>, <code>readout_model</code>, <code>frame</code>, and <code>noise</code></li>
+<li>calibrated-noise readout controls via <code>measurement_noise_mode</code>, <code>measurement_target_square_error</code>, and <code>measurement_min_noise_temperature</code></li>
+<li>pulse-disturbance proxy control via <code>strong_readout_spec</code></li>
+<li>ringdown scoring reference via <code>ringdown_threshold_photons</code></li>
 <li>optional chirp-scale, segment-duration, and endpoint-ramp controls</li>
 <li>uncertainty levels used for robustness-aware scoring</li>
 </ul>
@@ -4307,7 +4324,9 @@
 <li>noiseless traces,</li>
 <li>I/Q centers,</li>
 <li>measurement separation,</li>
-<li>and a simple synthetic classification proxy.</li>
+<li>calibrated noise standard deviation and SNR,</li>
+<li>Gaussian overlap error,</li>
+<li>and a Monte Carlo classification accuracy diagnostic.</li>
 </ul>
 <h3 id="verify_readout_emptying_pulse"><code>verify_readout_emptying_pulse(...)</code><a class="headerlink" href="#verify_readout_emptying_pulse" title="Permanent link">&para;</a></h3>
 <p>Builds the qualification-first comparison table around one seed result.</p>
@@ -4319,9 +4338,29 @@
 <li>any extra baselines supplied through <code>comparison_results=...</code></li>
 </ul>
 <p>The report replays each baseline through the configured measurement chain, optional hardware model, optional dispersive Lindblad model, and mismatch sweeps.</p>
+<p>Headline verification metrics now emphasize the physically discriminating quantities:</p>
+<ul>
+<li><code>max_final_residual_photons</code></li>
+<li><code>measurement_chain_gaussian_overlap_error</code></li>
+<li><code>ringdown_time_to_threshold</code></li>
+<li><code>strong_readout_disturbance_proxy</code></li>
+<li><code>lindblad_output_separation</code></li>
+<li><code>robustness_worst_residual</code></li>
+</ul>
+<p>The Lindblad relaxation total is still reported as both <code>non_qnd_total</code> and <code>background_relaxation_total</code>, but it is interpreted as a fixed-duration background relaxation reference rather than a pulse-induced disturbance proof.</p>
 <h3 id="refine_readout_emptying_pulse"><code>refine_readout_emptying_pulse(...)</code><a class="headerlink" href="#refine_readout_emptying_pulse" title="Permanent link">&para;</a></h3>
 <p>Runs a reduced-dimensional outer-loop refinement over the existing null-space family plus optional shared-chirp, segment-duration, and endpoint-ramp controls.</p>
 <p>This is intentionally solver-adjacent rather than solver-native: it reuses the simulator and hardware stack, but it does not introduce new <code>ControlProblem</code> objective types in this phase.</p>
+<p>By default the refinement objective now uses:</p>
+<ul>
+<li>residual photons,</li>
+<li>output-field separation,</li>
+<li>calibrated Gaussian overlap error,</li>
+<li>strong-readout disturbance proxy,</li>
+<li>robustness residual,</li>
+<li>and hardware bandwidth penalty.</li>
+</ul>
+<p>It no longer optimizes against saturated <code>measurement_chain_accuracy</code> or interprets raw <code>non_qnd_total</code> as the leakage term.</p>
 <hr />
 <h2 id="minimal-example">Minimal example<a class="headerlink" href="#minimal-example" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>

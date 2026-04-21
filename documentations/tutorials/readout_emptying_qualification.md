@@ -28,22 +28,26 @@ The summary benchmark script refreshes the tutorial-ready figures below:
 
 ![Readout Emptying Waveforms](../assets/images/tutorials/readout_emptying/waveform_family.png)
 
+![Readout Emptying Tradeoff Frontier](../assets/images/tutorials/readout_emptying/tradeoff_frontier.png)
+
 Interpretation:
 
-- the square pulse is the easy baseline but leaves the largest residual ringdown;
-- the analytic seed removes the exact linear residual;
-- the shared-chirp correction improves the nonlinear residual while keeping useful separation;
-- the reduced refinement is the place where hardware and robustness tradeoffs are tuned, not the seed constructor.
+- the old headline bars for `assignment accuracy` and `non-QND total` were misleading in the shipped fixture, because zero amplifier noise saturated the first metric and fixed-duration `T1` dominated the second;
+- the square pulse is still the easy baseline, but it now stands out in physically informative metrics: worst residual photons, worst Gaussian overlap error, longest post-pulse ringdown, and the largest strong-readout disturbance proxy;
+- the analytic seed and the shared-chirp pulse keep the readout overlap error near `4.2e-2` while collapsing the residual ringdown by more than four orders of magnitude relative to the square pulse;
+- the reduced refinement is where the workflow moves along the residual-versus-readout-utility frontier: it accepts some separation loss in exchange for much lower disturbance sensitivity and better robustness.
 
 ## Nominal benchmark snapshot
 
 The current checked-in summary run from `examples/studies/readout_emptying/summary_benchmark.py` reports:
 
-- fast-model terminal residual photons drop from about `15.1` for the matched-energy square pulse to `1.7e-3` for the analytic seed, `2.0e-4` for the shared-chirp pulse, and `2.6e-4` after reduced refinement;
-- in the dispersive Lindblad replay, the same ordering becomes about `2.62` for the square pulse, `1.07e-1` for the analytic seed, `1.04e-1` for the shared-chirp pulse, and `1.73e-2` for the refined waveform;
-- measurement-chain separation improves from about `3.04e3` for the square pulse to `4.09e3` for the analytic and shared-chirp seeds, while the refined waveform trades some separation down to about `3.69e3` in exchange for lower residual energy and better robustness.
+- fast-model terminal residual photons drop from about `15.1` for the matched-energy square pulse to `1.7e-3` for the analytic seed, `2.0e-4` for the shared-chirp pulse, and `4.4e-4` after reduced refinement;
+- under the calibrated-noise measurement model, the square baseline is pinned to a Gaussian overlap error of about `0.10`, while the analytic and shared-chirp seeds improve that to about `4.2e-2` and the refined waveform stays competitive at about `4.5e-2`;
+- the post-pulse ringdown time needed to fall below `1e-2` photons is about `582 ns` for the square pulse and effectively `0 ns` for the emptying-family pulses in this nominal run;
+- the phenomenological strong-readout disturbance proxy drops from about `5.97e6` for the square pulse to about `62.9` for the analytic seed, `61.9` for the shared-chirp pulse, and `0.40` for the refined waveform;
+- in the dispersive Lindblad replay, output separation is still nonzero for every family: about `0.552` for the square pulse, `0.311` for the analytic seed, `0.310` for the shared-chirp pulse, and `0.241` for the refined waveform.
 
-That tradeoff is the intended behavior of the qualification-first path: the seed constructor gives an interpretable physics-driven waveform family, while the refinement harness moves along the residual-versus-readout-utility frontier without changing the public construction API.
+That tradeoff is the intended behavior of the qualification-first path: the seed constructor gives an interpretable physics-driven waveform family, while the refinement harness moves along the residual-versus-readout-utility and disturbance frontier without changing the public construction API.
 
 ## Linear seed evidence
 
@@ -73,9 +77,13 @@ The workflow then checks whether the pulse still behaves like a good readout pul
 
 ![Synthetic IQ Clouds](../assets/images/tutorials/readout_emptying/iq_clouds.png)
 
-![Residual Versus Fidelity Tradeoff](../assets/images/tutorials/readout_emptying/residual_vs_fidelity.png)
+![Measurement Overlap Error](../assets/images/tutorials/readout_emptying/measurement_overlap_error.png)
 
-These plots come from `dispersive_lindblad_validation.py` and show the emitted-field separation, single-shot proxy behavior, and the residual-versus-readout-performance frontier across pulse families.
+![Residual Versus Discrimination](../assets/images/tutorials/readout_emptying/residual_vs_discrimination.png)
+
+![Ringdown Tail Comparison](../assets/images/tutorials/readout_emptying/ringdown_tail_comparison.png)
+
+These plots come from `dispersive_lindblad_validation.py` and show the emitted-field separation, calibrated-noise IQ overlap, and the residual-versus-readout-performance frontier across pulse families. The overlap metric is now intentionally non-saturated: the study first calibrates the amplifier noise so the matched-energy square pulse lands near `10%` Gaussian overlap error, then compares the emptying-family pulses against that same noisy measurement chain.
 
 ## Hardware sensitivity
 
@@ -100,10 +108,25 @@ The full artifact set is generated under `outputs/readout_emptying_qualification
 
 - `00_linear_seed_validation/`: segment waveform, phase-space trajectory, terminal zoom, and matrix-vs-ODE check
 - `01_kerr_replay_and_chirp/`: residual-vs-Kerr, shared-vs-branch-specific chirp comparison, and chirp profile
-- `02_dispersive_lindblad_validation/`: output-IQ trajectories, IQ clouds, assignment proxy, and residual-vs-fidelity tradeoff
-- `03_reduced_refinement/`: leakage-vs-strength and refined comparison plots
+- `02_dispersive_lindblad_validation/`: output-IQ trajectories, IQ clouds, calibrated overlap-error benchmark, residual-vs-discrimination tradeoff, and ringdown-tail comparison
+- `03_reduced_refinement/`: disturbance-proxy-versus-strength and refined comparison plots
 - `04_hardware_sensitivity/`: mismatch heatmap, prefilter-vs-postfilter comparison, and performance-vs-max-photons plot
 - `05_summary_benchmark/`: the summary comparison and waveform-family figures embedded above
+
+## What Is And Is Not Being Proved
+
+The updated qualification workflow makes three claims and keeps them separate:
+
+- exact cancellation is proved by the matrix-versus-ODE and phase-space evidence in the linear branch model;
+- readout usefulness is assessed by emitted-field separation, calibrated Gaussian overlap error, and residual-versus-discrimination tradeoff plots;
+- deployment realism is assessed by robustness sweeps, hardware filtering, ringdown metrics, and the strong-readout disturbance proxy.
+
+Two quantities remain in the JSON metrics but are no longer used as headline proof:
+
+- `measurement_chain_accuracy` is still reported as a Monte Carlo diagnostic, but it is no longer the main discrimination figure because finite-shot sampling can still saturate it;
+- `background_relaxation_total` is the fixed-duration Lindblad relaxation total for the nominal `T1/Tphi` model. It is useful as a background reference, but it is not interpreted here as a pulse-induced non-QND metric.
+
+The strong-readout disturbance metrics are intentionally labeled as phenomenological proxies. They are built from the existing occupancy-activated helper in `cqed_sim.measurement.strong_readout`, so they quantify how aggressively a waveform drives the system toward a strong-readout disturbance regime without claiming to be a microscopic breakdown model.
 
 ## References
 

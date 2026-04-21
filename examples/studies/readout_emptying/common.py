@@ -143,6 +143,8 @@ def verification_config(
         compiler_dt_s=4.0e-9,
         shots_per_branch=int(shots_per_branch),
         seed=7,
+        measurement_noise_mode="calibrated_target_error",
+        measurement_target_square_error=0.10,
         hardware_variants={} if hardware_variants is None else dict(hardware_variants),
     )
 
@@ -165,6 +167,8 @@ def refinement_config(
         noise=noise_spec(spec),
         compiler_dt_s=4.0e-9,
         shots_per_branch=int(shots_per_branch),
+        measurement_noise_mode="calibrated_target_error",
+        measurement_target_square_error=0.10,
         maxiter=int(maxiter),
         hardware_variants={} if hardware_variants is None else dict(hardware_variants),
         build_verification_report=bool(build_verification_report),
@@ -207,6 +211,8 @@ def comparison_payload(report, refined=None) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "comparison_table": report.comparison_table,
         "measurement_metrics": report.measurement_metrics,
+        "disturbance_metrics": report.disturbance_metrics,
+        "ringdown_metrics": report.ringdown_metrics,
         "lindblad_metrics": report.lindblad_metrics,
         "hardware_metrics": report.hardware_metrics,
     }

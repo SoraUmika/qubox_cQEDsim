@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from cqed_sim import DispersiveReadoutTransmonStorageModel, FrameSpec, SequenceCompiler
-from cqed_sim.measurement import ReadoutChain, ReadoutResonator
+from cqed_sim.measurement import AmplifierChain, ReadoutChain, ReadoutResonator
 from cqed_sim.optimal_control import FirstOrderLowPassHardwareMap, HardwareModel
 from cqed_sim.optimal_control.readout_emptying import (
     ReadoutEmptyingConstraints,
@@ -79,6 +79,7 @@ def test_measurement_chain_evaluation_reports_separation_and_accuracy() -> None:
             epsilon=1.0,
             chi=spec.chi,
         ),
+        amplifier=AmplifierChain(noise_temperature=6.0),
         integration_time=spec.tau,
         dt=2e-9,
     )
@@ -87,7 +88,9 @@ def test_measurement_chain_evaluation_reports_separation_and_accuracy() -> None:
     metrics = evaluation["metrics"]
 
     assert metrics["measurement_chain_separation"] > 0.0
-    assert metrics["measurement_chain_accuracy"] >= 0.95
+    assert metrics["measurement_chain_snr"] > 0.0
+    assert np.isfinite(metrics["measurement_chain_gaussian_overlap_error"])
+    assert metrics["measurement_chain_noise_std"] > 0.0
     assert set(evaluation["iq_centers"]) == {"g", "e"}
 
 
@@ -157,7 +160,13 @@ def test_verification_report_covers_square_corrected_and_hardware_replay() -> No
     )
 
     assert {"square", "analytic_seed", "kerr_corrected"} <= set(report.comparison_table)
+    assert report.comparison_table["square"]["max_final_residual_photons"] > report.comparison_table["analytic_seed"]["max_final_residual_photons"]
     assert report.comparison_table["kerr_corrected"]["measurement_chain_separation"] > 0.0
+    assert report.comparison_table["square"]["measurement_chain_gaussian_overlap_error"] > 0.0
+    assert report.comparison_table["square"]["measurement_chain_gaussian_overlap_error"] != report.comparison_table["analytic_seed"]["measurement_chain_gaussian_overlap_error"]
+    assert report.comparison_table["square"]["background_relaxation_total"] == report.comparison_table["square"]["non_qnd_total"]
+    assert report.comparison_table["square"]["strong_readout_disturbance_proxy"] != report.comparison_table["analytic_seed"]["strong_readout_disturbance_proxy"]
+    assert report.comparison_table["square"]["ringdown_time_to_threshold"] > report.comparison_table["kerr_corrected"]["ringdown_time_to_threshold"]
     assert report.comparison_table["kerr_corrected"]["lindblad_output_separation"] > 0.0
     assert report.hardware_metrics["kerr_corrected"]["command_physical_rms_delta"] > 0.0
     assert "narrower_lp" in report.robustness["kerr_corrected"]["hardware_variants"]
@@ -184,3 +193,33 @@ def test_refinement_harness_returns_a_nonworse_nominal_solution() -> None:
     assert refined.metrics["objective_improvement"] >= -1.0e-9
     assert refined.refined_result.metrics["integrated_branch_separation"] > 0.0
     assert refined.refined_result.metrics["max_final_residual_photons"] >= 0.0
+    assert np.isfinite(refined.metrics["final_measurement_error"])
+    assert np.isfinite(refined.metrics["final_leakage"])
+
+
+def test_summary_benchmark_artifact_metrics_are_not_flat() -> None:
+    from examples.studies.readout_emptying import summary_benchmark
+    from examples.studies.readout_emptying.common import comparison_payload, hardware_models, nonlinear_spec, refinement_config
+
+    spec, constraints = nonlinear_spec(include_kerr_phase_correction=True)
+    seed_result = synthesize_readout_emptying_pulse(spec, constraints)
+    hardware, variants = hardware_models()
+    refined = refine_readout_emptying_pulse(
+        seed_result,
+        refinement_config(spec, hardware=hardware, hardware_variants=variants, shots_per_branch=8, maxiter=2),
+    )
+    report = refined.verification_report
+    assert report is not None
+
+    payload = comparison_payload(report, refined=refined)
+    labels = ("square", "analytic_seed", "kerr_corrected", "refined")
+    overlap_values = [payload["comparison_table"][label]["measurement_chain_gaussian_overlap_error"] for label in labels]
+    ringdown_values = [payload["comparison_table"][label]["ringdown_time_to_threshold"] for label in labels]
+    disturbance_values = [payload["comparison_table"][label]["strong_readout_disturbance_proxy"] for label in labels]
+
+    assert len({round(value, 12) for value in overlap_values}) > 1
+    assert len({round(value, 12) for value in ringdown_values}) > 1
+    assert len({round(value, 12) for value in disturbance_values}) > 1
+
+    summary_benchmark._benchmark_bars  # smoke-check that the updated artifact helper exists
+    summary_benchmark._tradeoff_frontier

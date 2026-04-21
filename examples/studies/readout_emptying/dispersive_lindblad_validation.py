@@ -70,35 +70,46 @@ def _iq_clouds(path, report) -> None:
     plt.close(fig)
 
 
-def _assignment_fidelity(path, report) -> None:
+def _measurement_overlap_error(path, report) -> None:
     labels = ("square", "analytic_seed", "kerr_corrected")
-    values = [report.measurement_metrics[label]["measurement_chain_accuracy"] for label in labels]
+    values = [report.measurement_metrics[label]["measurement_chain_gaussian_overlap_error"] for label in labels]
     fig, axis = plt.subplots(figsize=(7.0, 4.0))
     axis.bar(labels, values, color=["tab:red", "tab:blue", "tab:green"])
-    axis.set_ylim(0.0, 1.05)
-    axis.set_ylabel("Synthetic assignment accuracy")
+    axis.set_ylabel("Gaussian overlap error")
     axis.grid(alpha=0.25, axis="y")
     fig.tight_layout()
     fig.savefig(path, dpi=180)
     plt.close(fig)
 
 
-def _residual_vs_fidelity(path, report) -> None:
+def _residual_vs_discrimination(path, report) -> None:
     labels = ("square", "analytic_seed", "kerr_corrected")
     fig, axis = plt.subplots(figsize=(6.0, 5.0))
     for label, color in zip(labels, ("tab:red", "tab:blue", "tab:green"), strict=True):
         axis.scatter(
             report.comparison_table[label]["max_final_residual_photons"],
-            report.comparison_table[label]["measurement_chain_accuracy"],
+            report.comparison_table[label]["measurement_chain_gaussian_overlap_error"],
             s=60,
             color=color,
             label=label,
         )
     axis.set_xscale("log")
     axis.set_xlabel("Max final residual photons")
-    axis.set_ylabel("Synthetic assignment accuracy")
+    axis.set_ylabel("Gaussian overlap error")
     axis.grid(alpha=0.25)
     axis.legend()
+    fig.tight_layout()
+    fig.savefig(path, dpi=180)
+    plt.close(fig)
+
+
+def _ringdown_tail_comparison(path, report) -> None:
+    labels = ("square", "analytic_seed", "kerr_corrected")
+    values = [report.ringdown_metrics[label]["ringdown_time_to_threshold"] * 1.0e9 for label in labels]
+    fig, axis = plt.subplots(figsize=(7.0, 4.0))
+    axis.bar(labels, values, color=["tab:red", "tab:blue", "tab:green"])
+    axis.set_ylabel("Ringdown time to 1e-2 photons (ns)")
+    axis.grid(alpha=0.25, axis="y")
     fig.tight_layout()
     fig.savefig(path, dpi=180)
     plt.close(fig)
@@ -117,16 +128,18 @@ def main() -> None:
     _output_iq_trajectories(output_dir / "output_iq_trajectories.png", report)
     _integrated_pointer_separation(output_dir / "integrated_pointer_separation.png", report)
     _iq_clouds(output_dir / "iq_clouds.png", report)
-    _assignment_fidelity(output_dir / "assignment_fidelity.png", report)
-    _residual_vs_fidelity(output_dir / "residual_vs_fidelity.png", report)
+    _measurement_overlap_error(output_dir / "measurement_overlap_error.png", report)
+    _residual_vs_discrimination(output_dir / "residual_vs_discrimination.png", report)
+    _ringdown_tail_comparison(output_dir / "ringdown_tail_comparison.png", report)
 
     payload = comparison_payload(report)
     payload["artifacts"] = {
         "output_iq_trajectories": str(output_dir / "output_iq_trajectories.png"),
         "integrated_pointer_separation": str(output_dir / "integrated_pointer_separation.png"),
         "iq_clouds": str(output_dir / "iq_clouds.png"),
-        "assignment_fidelity": str(output_dir / "assignment_fidelity.png"),
-        "residual_vs_fidelity": str(output_dir / "residual_vs_fidelity.png"),
+        "measurement_overlap_error": str(output_dir / "measurement_overlap_error.png"),
+        "residual_vs_discrimination": str(output_dir / "residual_vs_discrimination.png"),
+        "ringdown_tail_comparison": str(output_dir / "ringdown_tail_comparison.png"),
     }
     (output_dir / "metrics.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(f"Saved dispersive Lindblad validation artifacts to {output_dir}")

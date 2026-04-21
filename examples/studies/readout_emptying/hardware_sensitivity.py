@@ -74,13 +74,13 @@ def _mismatch_heatmap(path, physical_result) -> None:
     plt.close(fig)
 
 
-def _performance_vs_max_photons(path, amplitudes_mhz, peak_photons, accuracies) -> None:
+def _performance_vs_max_photons(path, amplitudes_mhz, peak_photons, overlap_error) -> None:
     fig, axis = plt.subplots(figsize=(7.0, 4.0))
-    axis.plot(peak_photons, accuracies, marker="o")
+    axis.plot(peak_photons, overlap_error, marker="o")
     for index, label in enumerate(amplitudes_mhz):
-        axis.annotate(f"{label:.1f}", (peak_photons[index], accuracies[index]), textcoords="offset points", xytext=(4, 4))
+        axis.annotate(f"{label:.1f}", (peak_photons[index], overlap_error[index]), textcoords="offset points", xytext=(4, 4))
     axis.set_xlabel("Peak photons (e branch)")
-    axis.set_ylabel("Synthetic assignment accuracy")
+    axis.set_ylabel("Gaussian overlap error")
     axis.grid(alpha=0.25)
     fig.tight_layout()
     fig.savefig(path, dpi=180)
@@ -102,7 +102,7 @@ def main() -> None:
 
     amplitude_caps = np.linspace(5.0, 9.0, 5)
     peak_photons: list[float] = []
-    accuracies: list[float] = []
+    overlap_error: list[float] = []
     for amplitude_cap in amplitude_caps:
         amplitude_spec, amplitude_constraints = nonlinear_spec(
             include_kerr_phase_correction=True,
@@ -114,8 +114,8 @@ def main() -> None:
             verification_config(amplitude_spec, hardware=hardware, hardware_variants=variants, shots_per_branch=16),
         )
         peak_photons.append(float(amplitude_report.comparison_table["kerr_corrected"]["peak_photons_e"]))
-        accuracies.append(float(amplitude_report.comparison_table["kerr_corrected"]["measurement_chain_accuracy"]))
-    _performance_vs_max_photons(output_dir / "performance_vs_max_photons.png", amplitude_caps, peak_photons, accuracies)
+        overlap_error.append(float(amplitude_report.comparison_table["kerr_corrected"]["measurement_chain_gaussian_overlap_error"]))
+    _performance_vs_max_photons(output_dir / "performance_vs_max_photons.png", amplitude_caps, peak_photons, overlap_error)
 
     payload = {
         "hardware_metrics": report.hardware_metrics,
@@ -123,7 +123,7 @@ def main() -> None:
         "amplitude_sweep": {
             "amplitude_cap_mhz": [float(value) for value in amplitude_caps],
             "peak_photons_e": peak_photons,
-            "measurement_chain_accuracy": accuracies,
+            "measurement_chain_gaussian_overlap_error": overlap_error,
         },
         "artifacts": {
             "prefilter_vs_postfilter": str(output_dir / "prefilter_vs_postfilter.png"),

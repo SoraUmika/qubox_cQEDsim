@@ -467,6 +467,47 @@ it across a model hierarchy:
 \end{itemize}
 
 \noindent
+The qualification metrics are now interpreted in three distinct categories rather
+than being collapsed into a single ``good/bad readout'' number:
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Construction validity:} exact terminal emptying and phase-space
+  return-to-origin checks in the linear branch model,
+  \item \textbf{Readout validity:} emitted-field separation and a calibrated-noise
+  Gaussian overlap error from the measurement-chain replay,
+  \item \textbf{Deployment validity:} post-pulse ringdown metrics, mismatch and
+  hardware sensitivity, and a phenomenological strong-readout disturbance proxy.
+\end{itemize}
+
+\noindent
+The calibrated-noise discrimination metric intentionally avoids the previous
+zero-noise saturation failure mode. When
+\texttt{measurement\_noise\_mode="calibrated\_target\_error"}, the verification
+layer clones the configured \texttt{ReadoutChain} and chooses the amplifier noise
+temperature so that the matched-energy square baseline lands near a target Gaussian
+overlap error. The resulting comparison is therefore anchored to a controlled
+readout difficulty rather than to a noiseless IQ separation that trivially gives
+unit assignment accuracy for every candidate waveform.
+
+\noindent
+The Lindblad quantity previously reported as \texttt{non\_qnd\_total} is still
+computed, but it is now also labeled as
+\texttt{background\_relaxation\_total}. In the current dispersive-Lindblad
+qualification fixture this number is dominated by the fixed \(\mathrm{T}_1\)
+relaxation accumulated over the common readout duration, so it is treated as a
+background reference rather than as direct evidence of pulse-induced non-QND
+disturbance.
+
+\noindent
+Pulse-dependent disturbance is instead summarized through the existing
+\texttt{cqed\_sim.measurement.strong\_readout} helper. That helper is
+operational and phenomenological: it estimates the state-averaged readout occupancy
+and turns on auxiliary transition-drive envelopes once the occupancy approaches a
+chosen fraction of \(n_{\mathrm{crit}}\). The reported
+\texttt{strong\_readout\_disturbance\_proxy} is therefore a useful qualification
+signal for whether a waveform is pushing toward a strong-readout disturbance regime,
+but it is not a microscopic breakdown model and should be interpreted accordingly.
+
+\noindent
 The reduced refinement helper is therefore a solver-adjacent study harness rather
 than a new optimizer convention. Its trainable variables remain low-dimensional and
 interpretably tied to the seed family: null-space coordinates, optional global

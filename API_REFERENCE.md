@@ -3751,6 +3751,8 @@ Highlights:
 - the reduced `CallableParameterization` uses null-space coordinates, so downstream optimization can preserve emptying automatically
 - the replay helpers cover both the linear cavity model and a simple mean-field Kerr extension
 - `verify_readout_emptying_pulse(...)` is the qualification-first companion layer: it compares at least the square baseline, analytic seed, Kerr-corrected seed, and optional refined waveform under measurement, Lindblad, hardware, and robustness sweeps
+- the verification layer now exposes calibrated-noise discrimination metrics (`measurement_chain_snr`, `measurement_chain_gaussian_overlap_error`, `measurement_chain_noise_std`), ringdown metrics (`ringdown_time_to_threshold`, `ringdown_tail_energy`), and strong-readout disturbance proxies (`strong_readout_disturbance_proxy`)
+- the fixed-duration Lindblad relaxation total is still reported for reference, but it is labeled as `background_relaxation_total` and is not the headline pulse-induced disturbance proof
 - `refine_readout_emptying_pulse(...)` is a reduced outer-loop study harness over the existing runtime stack, not a new open-system `ControlProblem` objective family
 - the refinement variables are intentionally low-dimensional: null-space coordinates plus optional duration scaling, endpoint ramps, and shared chirp scaling
 - the exported pulse remains compatible with the standard `Pulse` / `SequenceCompiler` / measurement replay stack

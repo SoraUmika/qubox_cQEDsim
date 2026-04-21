@@ -45,7 +45,7 @@ Both paths remain compatible with:
 - `build_grape_refinement_problem(...)` and `solve_structured_then_grape(...)` for structured-to-GRAPE warm-start refinement.
 - `save_structured_control_artifacts(...)` to persist optimized parameters, waveform tables, spectra, and optimization-history plots for studies.
 - `synthesize_readout_emptying_pulse(...)`, `build_readout_emptying_parameterization(...)`, and `export_readout_emptying_to_pulse(...)` for segmented readout-resonator emptying pulses with optional Kerr-aware correction.
-- `verify_readout_emptying_pulse(...)` and `refine_readout_emptying_pulse(...)` for qualification-first evaluation of those pulses under measurement, Lindblad, robustness, and hardware-distortion replay.
+- `verify_readout_emptying_pulse(...)` and `refine_readout_emptying_pulse(...)` for qualification-first evaluation of those pulses under calibrated-noise measurement replay, ringdown analysis, strong-readout disturbance proxies, Lindblad validation, robustness sweeps, and hardware-distortion replay.
 
 ## Structured Pulse Families
 

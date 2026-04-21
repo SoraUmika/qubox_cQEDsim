@@ -23,9 +23,9 @@ from common import (
 
 def _leakage_vs_strength(path, strength_mhz, leakages, peak_photons) -> None:
     fig, axis = plt.subplots(figsize=(7.0, 4.0))
-    axis.plot(strength_mhz, leakages, marker="o", color="tab:purple", label="non-QND total")
+    axis.plot(strength_mhz, leakages, marker="o", color="tab:purple", label="disturbance proxy")
     axis.set_xlabel("Amplitude cap / 2pi (MHz)")
-    axis.set_ylabel("non-QND total")
+    axis.set_ylabel("Strong-readout disturbance proxy")
     axis.grid(alpha=0.25)
     twin = axis.twinx()
     twin.plot(strength_mhz, peak_photons, marker="s", color="tab:gray", label="peak photons")
@@ -38,7 +38,7 @@ def _leakage_vs_strength(path, strength_mhz, leakages, peak_photons) -> None:
 def _refined_comparison(path, report) -> None:
     labels = ("square", "analytic_seed", "kerr_corrected", "refined")
     residuals = [report.comparison_table[label]["max_final_residual_photons"] for label in labels]
-    separations = [report.comparison_table[label]["measurement_chain_separation"] for label in labels]
+    separations = [report.comparison_table[label]["lindblad_output_separation"] for label in labels]
     x = np.arange(len(labels), dtype=float)
     fig, axes = plt.subplots(1, 2, figsize=(10.0, 4.0))
     axes[0].bar(x, residuals, color=["tab:red", "tab:blue", "tab:green", "tab:orange"])
@@ -48,7 +48,7 @@ def _refined_comparison(path, report) -> None:
     axes[0].grid(alpha=0.25, axis="y")
     axes[1].bar(x, separations, color=["tab:red", "tab:blue", "tab:green", "tab:orange"])
     axes[1].set_xticks(x, labels, rotation=15)
-    axes[1].set_ylabel("Measurement-chain separation")
+    axes[1].set_ylabel("Lindblad output separation")
     axes[1].grid(alpha=0.25, axis="y")
     fig.tight_layout()
     fig.savefig(path, dpi=180)
@@ -80,7 +80,7 @@ def main() -> None:
             amplitude_result,
             verification_config(amplitude_spec, hardware=hardware, hardware_variants=variants, shots_per_branch=16),
         )
-        leakages.append(float(amplitude_report.comparison_table["kerr_corrected"]["non_qnd_total"]))
+        leakages.append(float(amplitude_report.comparison_table["kerr_corrected"]["strong_readout_disturbance_proxy"]))
         peak_photons.append(float(amplitude_report.comparison_table["kerr_corrected"]["peak_photons_e"]))
 
     _leakage_vs_strength(output_dir / "leakage_vs_strength.png", amplitude_caps, leakages, peak_photons)
@@ -89,7 +89,7 @@ def main() -> None:
     payload = comparison_payload(report, refined=refined)
     payload["amplitude_sweep"] = {
         "amplitude_cap_mhz": [float(value) for value in amplitude_caps],
-        "non_qnd_total": leakages,
+        "strong_readout_disturbance_proxy": leakages,
         "peak_photons_e": peak_photons,
     }
     payload["artifacts"] = {

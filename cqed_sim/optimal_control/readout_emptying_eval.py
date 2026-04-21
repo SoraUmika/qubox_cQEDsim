@@ -4,10 +4,17 @@ from dataclasses import dataclass, field, replace
 from typing import Any, Mapping, Sequence
 
 import numpy as np
+from scipy.constants import Boltzmann as K_B
 from scipy.optimize import minimize
+from scipy.special import erfcinv
 
 from cqed_sim.core import FrameSpec
-from cqed_sim.measurement import ReadoutChain
+from cqed_sim.measurement import (
+    ReadoutChain,
+    StrongReadoutMixingSpec,
+    build_strong_readout_disturbance,
+    estimate_dispersive_critical_photon_number,
+)
 from cqed_sim.sequence import SequenceCompiler
 from cqed_sim.sim import NoiseSpec, SimulationConfig, prepare_simulation
 
@@ -235,6 +242,216 @@ def _drive_frequency_from_reference(
     return float(omega_r + 0.5 * spec.chi + spec.detuning_center)
 
 
+def _clone_measurement_chain_with_noise_temperature(chain: ReadoutChain, noise_temperature: float) -> ReadoutChain:
+    return replace(
+        chain,
+        amplifier=replace(chain.amplifier, noise_temperature=float(max(noise_temperature, 0.0))),
+    )
+
+
+def _sigma_for_target_overlap_error(center_distance: float, target_error: float) -> float:
+    distance = float(max(center_distance, 0.0))
+    error = float(target_error)
+    if distance <= 0.0 or error <= 0.0:
+        return 0.0
+    if error >= 0.5:
+        return float("inf")
+    scale = float(erfcinv(2.0 * error))
+    if abs(scale) <= 1.0e-18:
+        return float("inf")
+    return float(distance / (2.0 * np.sqrt(2.0) * scale))
+
+
+def _noise_temperature_for_integrated_sigma(chain: ReadoutChain, sigma: float, *, dt: float, duration: float) -> float:
+    if float(sigma) <= 0.0:
+        return 0.0
+    n_samples = max(1, int(np.ceil(float(duration) / float(dt))))
+    impedance = float(chain.amplifier.impedance_ohm)
+    if float(dt) <= 0.0 or impedance <= 0.0:
+        return float(chain.amplifier.noise_temperature)
+    instantaneous_sigma = float(sigma) * np.sqrt(float(n_samples))
+    return float((instantaneous_sigma * instantaneous_sigma * float(dt)) / (2.0 * K_B * impedance))
+
+
+def _resolved_measurement_chain(
+    reference_result: ReadoutEmptyingResult | None,
+    config: "ReadoutEmptyingVerificationConfig | ReadoutEmptyingRefinementConfig",
+) -> tuple[ReadoutChain | None, dict[str, Any]]:
+    chain = config.measurement_chain
+    if chain is None:
+        return None, {"mode": "disabled"}
+
+    mode = str(getattr(config, "measurement_noise_mode", "as_provided")).lower()
+    if mode == "as_provided" or reference_result is None:
+        return chain, {
+            "mode": "as_provided",
+            "noise_temperature": float(chain.amplifier.noise_temperature),
+            "noise_std": float(chain.integrated_noise_sigma(duration=float(reference_result.spec.tau), dt=float(chain.dt)))
+            if reference_result is not None
+            else float(chain.integrated_noise_sigma()),
+        }
+
+    if mode != "calibrated_target_error":
+        raise ValueError(f"Unsupported measurement_noise_mode '{mode}'.")
+
+    zero_noise_chain = _clone_measurement_chain_with_noise_temperature(chain, 0.0)
+    zero_noise_measurement = evaluate_readout_emptying_with_chain(reference_result, zero_noise_chain, shots_per_branch=0)
+    center_distance = float(zero_noise_measurement["metrics"].get("measurement_chain_center_distance", 0.0))
+    resolved_dt = float(chain.dt)
+    resolved_duration = float(reference_result.spec.tau)
+    target_sigma = _sigma_for_target_overlap_error(
+        center_distance,
+        float(getattr(config, "measurement_target_square_error", 0.10)),
+    )
+    target_temperature = _noise_temperature_for_integrated_sigma(
+        chain,
+        target_sigma,
+        dt=resolved_dt,
+        duration=resolved_duration,
+    )
+    resolved_temperature = max(
+        float(target_temperature),
+        float(getattr(config, "measurement_min_noise_temperature", 0.0)),
+    )
+    calibrated_chain = _clone_measurement_chain_with_noise_temperature(chain, resolved_temperature)
+    return calibrated_chain, {
+        "mode": mode,
+        "reference_label": "square",
+        "target_square_error": float(getattr(config, "measurement_target_square_error", 0.10)),
+        "center_distance": float(center_distance),
+        "target_noise_std": float(target_sigma),
+        "noise_temperature": float(resolved_temperature),
+        "noise_std": float(calibrated_chain.integrated_noise_sigma(duration=resolved_duration, dt=resolved_dt)),
+    }
+
+
+def _ringdown_metrics(
+    result: ReadoutEmptyingResult,
+    *,
+    threshold_photons: float,
+) -> dict[str, float]:
+    threshold = float(threshold_photons)
+    if threshold <= 0.0:
+        raise ValueError("ringdown_threshold_photons must be positive.")
+    final_n = {str(label): float(value) for label, value in result.final_n.items()}
+    if not final_n:
+        return {
+            "post_pulse_residual_integral": 0.0,
+            "ringdown_tail_energy": 0.0,
+            "ringdown_time_to_threshold": 0.0,
+        }
+    kappa = float(result.spec.kappa)
+    worst_label = max(final_n, key=final_n.get)
+    worst_final = float(final_n[worst_label])
+    if kappa <= 0.0:
+        time_to_threshold = float(0.0 if worst_final <= threshold else np.inf)
+        post_integral = float(0.0 if worst_final <= 0.0 else np.inf)
+        tail_energy = float(0.0 if worst_final <= threshold else np.inf)
+    else:
+        time_to_threshold = float(max(np.log(max(worst_final, threshold) / threshold), 0.0) / kappa)
+        post_integral = float(worst_final / kappa)
+        tail_energy = float(max(worst_final - threshold, 0.0) / kappa)
+    metrics = {
+        "post_pulse_residual_integral": float(post_integral),
+        "ringdown_tail_energy": float(tail_energy),
+        "ringdown_time_to_threshold": float(time_to_threshold),
+    }
+    for label, value in final_n.items():
+        if kappa <= 0.0:
+            label_time = float(0.0 if value <= threshold else np.inf)
+            label_integral = float(0.0 if value <= 0.0 else np.inf)
+            label_tail = float(0.0 if value <= threshold else np.inf)
+        else:
+            label_time = float(max(np.log(max(value, threshold) / threshold), 0.0) / kappa)
+            label_integral = float(value / kappa)
+            label_tail = float(max(value - threshold, 0.0) / kappa)
+        metrics[f"post_pulse_residual_integral_{label}"] = float(label_integral)
+        metrics[f"ringdown_tail_energy_{label}"] = float(label_tail)
+        metrics[f"ringdown_time_to_threshold_{label}"] = float(label_time)
+    metrics["ringdown_worst_final_residual"] = float(worst_final)
+    return metrics
+
+
+def _resolved_strong_readout_spec(
+    config: "ReadoutEmptyingVerificationConfig | ReadoutEmptyingRefinementConfig",
+    *,
+    result: ReadoutEmptyingResult,
+    measurement_chain: ReadoutChain | None,
+    readout_model: Any | None,
+) -> StrongReadoutMixingSpec | None:
+    spec = getattr(config, "strong_readout_spec", None)
+    if spec is None or measurement_chain is None:
+        return None
+    if spec.n_crit is not None:
+        return spec
+    if readout_model is None:
+        return spec
+    omega_q = getattr(readout_model, "omega_q", None)
+    omega_r = getattr(readout_model, "omega_r", None)
+    alpha = getattr(readout_model, "alpha", None)
+    if omega_q is None or omega_r is None or alpha is None:
+        return spec
+    n_crit = estimate_dispersive_critical_photon_number(
+        omega_q=float(omega_q),
+        omega_mode=float(omega_r),
+        alpha=float(alpha),
+        chi=float(result.spec.chi),
+        g=float(measurement_chain.resonator.g),
+    )
+    return replace(spec, n_crit=float(n_crit))
+
+
+def _strong_readout_summary(
+    result: ReadoutEmptyingResult,
+    *,
+    measurement_chain: ReadoutChain | None,
+    readout_model: Any | None,
+    compiler_dt_s: float | None,
+    drive_frequency: float | None,
+    config: "ReadoutEmptyingVerificationConfig | ReadoutEmptyingRefinementConfig",
+) -> dict[str, Any]:
+    resolved_spec = _resolved_strong_readout_spec(
+        config,
+        result=result,
+        measurement_chain=measurement_chain,
+        readout_model=readout_model,
+    )
+    if resolved_spec is None or measurement_chain is None:
+        return {"metrics": {}}
+
+    dt = float(measurement_chain.dt if compiler_dt_s is None else compiler_dt_s)
+    pulse = export_readout_emptying_to_pulse(result, channel="readout", carrier=0.0)
+    compiled = SequenceCompiler(dt=dt).compile([pulse], t_end=float(result.spec.tau))
+    drive_envelope = np.asarray(compiled.channels["readout"].baseband[:-1], dtype=np.complex128)
+    disturbance = build_strong_readout_disturbance(
+        measurement_chain.resonator,
+        drive_envelope,
+        dt=dt,
+        spec=resolved_spec,
+        duration=float(result.spec.tau),
+        drive_frequency=drive_frequency,
+        chi=float(result.spec.chi),
+    )
+    ge_power = float(np.sum(np.abs(disturbance.ge_envelope) ** 2) * dt)
+    ef_power = float(np.sum(np.abs(disturbance.ef_envelope) ** 2) * dt)
+    higher_power = float(
+        sum(float(np.sum(np.abs(envelope) ** 2) * dt) for envelope in disturbance.higher_envelopes.values())
+    )
+    metrics = {
+        "strong_readout_peak_activation": float(disturbance.peak_activation),
+        "strong_readout_peak_mean_occupancy": float(disturbance.peak_mean_occupancy),
+        "strong_readout_ge_power_integral": float(ge_power),
+        "strong_readout_ef_power_integral": float(ef_power),
+        "strong_readout_disturbance_proxy": float(ge_power + ef_power + higher_power),
+    }
+    return {
+        "metrics": metrics,
+        "disturbance": disturbance,
+        "resolved_spec": resolved_spec,
+        "dt": float(dt),
+    }
+
+
 def _resolved_frame(frame: FrameSpec, *, drive_frequency: float | None) -> FrameSpec:
     if drive_frequency is None or abs(float(frame.omega_r_frame)) > 1.0e-18:
         return frame
@@ -320,6 +537,7 @@ def _lindblad_validation(
         "e_to_g_probability": float(final_pg_e),
         "e_population_retained": float(final_pe_e),
         "e_to_f_probability": float(final_pf_e),
+        "background_relaxation_total": float(final_pe_g + final_pg_e + final_pf_e),
         "non_qnd_total": float(final_pe_g + final_pg_e + final_pf_e),
         "compiler_dt_s": float(compiled.dt),
     }
@@ -400,6 +618,8 @@ def _robustness_summary(
     command_result: ReadoutEmptyingResult,
     nominal_result: ReadoutEmptyingResult,
     config: "ReadoutEmptyingVerificationConfig",
+    *,
+    measurement_chain: ReadoutChain | None = None,
 ) -> dict[str, Any]:
     summaries: dict[str, Any] = {}
     overall_residuals: list[float] = []
@@ -417,7 +637,7 @@ def _robustness_summary(
                 nominal_result,
                 scale_kind=scale_kind,
                 scale=float(scale),
-                measurement_chain=config.measurement_chain,
+                measurement_chain=measurement_chain,
             )
             records.append(
                 {
@@ -482,6 +702,11 @@ class ReadoutEmptyingVerificationConfig:
     seed: int | None = None
     include_square_baseline: bool = True
     include_kerr_corrected_baseline: bool = True
+    measurement_noise_mode: str = "calibrated_target_error"
+    measurement_target_square_error: float = 0.10
+    measurement_min_noise_temperature: float = 0.0
+    strong_readout_spec: StrongReadoutMixingSpec | None = field(default_factory=StrongReadoutMixingSpec)
+    ringdown_threshold_photons: float = 1.0e-2
     chi_scales: tuple[float, ...] = (0.97, 1.0, 1.03)
     kappa_scales: tuple[float, ...] = (0.97, 1.0, 1.03)
     kerr_scales: tuple[float, ...] = (0.9, 1.0, 1.1)
@@ -493,10 +718,23 @@ class ReadoutEmptyingVerificationConfig:
         object.__setattr__(self, "shots_per_branch", int(self.shots_per_branch))
         if int(self.shots_per_branch) < 0:
             raise ValueError("shots_per_branch must be nonnegative.")
+        measurement_noise_mode = str(self.measurement_noise_mode).lower()
+        if measurement_noise_mode not in {"as_provided", "calibrated_target_error"}:
+            raise ValueError("measurement_noise_mode must be 'as_provided' or 'calibrated_target_error'.")
+        if not 0.0 <= float(self.measurement_target_square_error) < 0.5:
+            raise ValueError("measurement_target_square_error must be in [0, 0.5).")
+        if float(self.measurement_min_noise_temperature) < 0.0:
+            raise ValueError("measurement_min_noise_temperature must be nonnegative.")
+        if float(self.ringdown_threshold_photons) <= 0.0:
+            raise ValueError("ringdown_threshold_photons must be positive.")
         if self.compiler_dt_s is not None and float(self.compiler_dt_s) <= 0.0:
             raise ValueError("compiler_dt_s must be positive when provided.")
         if self.max_step_s is not None and float(self.max_step_s) <= 0.0:
             raise ValueError("max_step_s must be positive when provided.")
+        object.__setattr__(self, "measurement_noise_mode", measurement_noise_mode)
+        object.__setattr__(self, "measurement_target_square_error", float(self.measurement_target_square_error))
+        object.__setattr__(self, "measurement_min_noise_temperature", float(self.measurement_min_noise_temperature))
+        object.__setattr__(self, "ringdown_threshold_photons", float(self.ringdown_threshold_photons))
         object.__setattr__(self, "chi_scales", _resolved_scale_tuple(self.chi_scales, name="chi_scales"))
         object.__setattr__(self, "kappa_scales", _resolved_scale_tuple(self.kappa_scales, name="kappa_scales"))
         object.__setattr__(self, "kerr_scales", _resolved_scale_tuple(self.kerr_scales, name="kerr_scales"))
@@ -515,6 +753,8 @@ class ReadoutEmptyingVerificationReport:
     baseline_results: dict[str, ReadoutEmptyingResult]
     baseline_metrics: dict[str, dict[str, float]]
     measurement_metrics: dict[str, dict[str, float]]
+    disturbance_metrics: dict[str, dict[str, float]]
+    ringdown_metrics: dict[str, dict[str, float]]
     lindblad_metrics: dict[str, dict[str, float]]
     hardware_metrics: dict[str, dict[str, Any]]
     robustness: dict[str, dict[str, Any]]
@@ -536,6 +776,11 @@ class ReadoutEmptyingRefinementConfig:
     compiler_dt_s: float | None = None
     max_step_s: float | None = None
     shots_per_branch: int = 64
+    measurement_noise_mode: str = "calibrated_target_error"
+    measurement_target_square_error: float = 0.10
+    measurement_min_noise_temperature: float = 0.0
+    strong_readout_spec: StrongReadoutMixingSpec | None = field(default_factory=StrongReadoutMixingSpec)
+    ringdown_threshold_photons: float = 1.0e-2
     objective_weights: Mapping[str, float] = field(
         default_factory=lambda: {
             "residual": 1.0,
@@ -569,6 +814,15 @@ class ReadoutEmptyingRefinementConfig:
             raise ValueError("duration_log_bound must be positive.")
         if float(self.null_coordinate_bound_scale) <= 0.0:
             raise ValueError("null_coordinate_bound_scale must be positive.")
+        measurement_noise_mode = str(self.measurement_noise_mode).lower()
+        if measurement_noise_mode not in {"as_provided", "calibrated_target_error"}:
+            raise ValueError("measurement_noise_mode must be 'as_provided' or 'calibrated_target_error'.")
+        if not 0.0 <= float(self.measurement_target_square_error) < 0.5:
+            raise ValueError("measurement_target_square_error must be in [0, 0.5).")
+        if float(self.measurement_min_noise_temperature) < 0.0:
+            raise ValueError("measurement_min_noise_temperature must be nonnegative.")
+        if float(self.ringdown_threshold_photons) <= 0.0:
+            raise ValueError("ringdown_threshold_photons must be positive.")
         if self.compiler_dt_s is not None and float(self.compiler_dt_s) <= 0.0:
             raise ValueError("compiler_dt_s must be positive when provided.")
         if self.max_step_s is not None and float(self.max_step_s) <= 0.0:
@@ -580,6 +834,10 @@ class ReadoutEmptyingRefinementConfig:
         if float(self.amplitude_scale_uncertainty) < 0.0 or float(self.timing_scale_uncertainty) < 0.0:
             raise ValueError("scale uncertainties must be nonnegative.")
         object.__setattr__(self, "hardware_variants", dict(self.hardware_variants))
+        object.__setattr__(self, "measurement_noise_mode", measurement_noise_mode)
+        object.__setattr__(self, "measurement_target_square_error", float(self.measurement_target_square_error))
+        object.__setattr__(self, "measurement_min_noise_temperature", float(self.measurement_min_noise_temperature))
+        object.__setattr__(self, "ringdown_threshold_photons", float(self.ringdown_threshold_photons))
         object.__setattr__(self, "objective_weights", {str(key): float(value) for key, value in self.objective_weights.items()})
 
 
@@ -632,12 +890,16 @@ def verify_readout_emptying_pulse(
     baseline_results: dict[str, ReadoutEmptyingResult] = {}
     baseline_metrics: dict[str, dict[str, float]] = {}
     measurement_metrics: dict[str, dict[str, float]] = {}
+    disturbance_metrics: dict[str, dict[str, float]] = {}
+    ringdown_metrics: dict[str, dict[str, float]] = {}
     lindblad_metrics: dict[str, dict[str, float]] = {}
     hardware_metrics: dict[str, dict[str, Any]] = {}
     robustness: dict[str, dict[str, Any]] = {}
     diagnostics: dict[str, Any] = {
         "command_results": {},
         "measurement": {},
+        "disturbance": {},
+        "ringdown": {},
         "lindblad": {},
         "hardware": {},
     }
@@ -652,9 +914,20 @@ def verify_readout_emptying_pulse(
         baseline_results[label] = nominal_result
         baseline_metrics[label] = dict(nominal_result.metrics)
         hardware_metrics[label] = dict(hardware_summary["hardware_metrics"])
+        diagnostics["command_results"][label] = candidate
+        diagnostics["hardware"][label] = hardware_summary
+
+    measurement_reference = baseline_results.get("square")
+    resolved_measurement_chain, measurement_calibration = _resolved_measurement_chain(
+        measurement_reference,
+        resolved_config,
+    )
+    diagnostics["measurement_calibration"] = measurement_calibration
+
+    for label, nominal_result in baseline_results.items():
         measurement = _measurement_summary(
             nominal_result,
-            resolved_config.measurement_chain,
+            resolved_measurement_chain,
             shots_per_branch=resolved_config.shots_per_branch,
             seed=None if resolved_config.seed is None else int(resolved_config.seed) + len(measurement_metrics),
         )
@@ -663,9 +936,29 @@ def verify_readout_emptying_pulse(
             for key, value in measurement.get("metrics", {}).items()
             if isinstance(value, (int, float, np.floating))
         }
+        disturbance = _strong_readout_summary(
+            nominal_result,
+            measurement_chain=resolved_measurement_chain,
+            readout_model=resolved_config.readout_model,
+            compiler_dt_s=resolved_config.compiler_dt_s,
+            drive_frequency=drive_frequency,
+            config=resolved_config,
+        )
+        disturbance_metrics[label] = {
+            key: float(value)
+            for key, value in disturbance.get("metrics", {}).items()
+            if isinstance(value, (int, float, np.floating))
+        }
+        ringdown = {
+            "metrics": _ringdown_metrics(
+                nominal_result,
+                threshold_photons=resolved_config.ringdown_threshold_photons,
+            )
+        }
+        ringdown_metrics[label] = dict(ringdown["metrics"])
         diagnostics["measurement"][label] = measurement
-        diagnostics["command_results"][label] = candidate
-        diagnostics["hardware"][label] = hardware_summary
+        diagnostics["disturbance"][label] = disturbance
+        diagnostics["ringdown"][label] = ringdown
         if resolved_config.readout_model is not None:
             lindblad = _lindblad_validation(
                 nominal_result,
@@ -680,12 +973,19 @@ def verify_readout_emptying_pulse(
             diagnostics["lindblad"][label] = lindblad
         else:
             lindblad_metrics[label] = {}
-        robustness[label] = _robustness_summary(candidate, nominal_result, resolved_config)
+        robustness[label] = _robustness_summary(
+            diagnostics["command_results"][label],
+            nominal_result,
+            resolved_config,
+            measurement_chain=resolved_measurement_chain,
+        )
 
     comparison_table: dict[str, dict[str, float]] = {}
     for label, metrics in baseline_metrics.items():
         comparison = dict(metrics)
         comparison.update(measurement_metrics.get(label, {}))
+        comparison.update(disturbance_metrics.get(label, {}))
+        comparison.update(ringdown_metrics.get(label, {}))
         comparison.update(lindblad_metrics.get(label, {}))
         comparison["robustness_worst_residual"] = float(robustness[label]["overall_worst_residual"])
         comparison["robustness_worst_separation"] = float(robustness[label]["overall_worst_separation"])
@@ -697,6 +997,8 @@ def verify_readout_emptying_pulse(
         baseline_results=baseline_results,
         baseline_metrics=baseline_metrics,
         measurement_metrics=measurement_metrics,
+        disturbance_metrics=disturbance_metrics,
+        ringdown_metrics=ringdown_metrics,
         lindblad_metrics=lindblad_metrics,
         hardware_metrics=hardware_metrics,
         robustness=robustness,
@@ -751,6 +1053,8 @@ def refine_readout_emptying_pulse(
         "amplitude": (1.0 - float(resolved_config.amplitude_scale_uncertainty), 1.0 + float(resolved_config.amplitude_scale_uncertainty)),
         "timing": (1.0 - float(resolved_config.timing_scale_uncertainty), 1.0 + float(resolved_config.timing_scale_uncertainty)),
     }
+    square_reference_result = _apply_hardware_model(_square_pulse_result(base_result), resolved_config.hardware_model)[0]
+    resolved_measurement_chain, measurement_calibration = _resolved_measurement_chain(square_reference_result, resolved_config)
 
     def unpack(values: np.ndarray) -> tuple[np.ndarray, float, np.ndarray | None, np.ndarray | None]:
         cursor = 0
@@ -839,7 +1143,7 @@ def refine_readout_emptying_pulse(
         candidate_result, diagnostics = build_candidate(values)
         measurement = _measurement_summary(
             candidate_result,
-            resolved_config.measurement_chain,
+            resolved_measurement_chain,
             shots_per_branch=resolved_config.shots_per_branch,
             seed=resolved_config.seed,
         )
@@ -850,7 +1154,7 @@ def refine_readout_emptying_pulse(
         }
         drive_frequency = _drive_frequency_from_reference(
             candidate_result.spec,
-            measurement_chain=resolved_config.measurement_chain,
+            measurement_chain=resolved_measurement_chain,
             readout_model=resolved_config.readout_model,
         )
         lindblad_metrics: dict[str, float] = {}
@@ -867,8 +1171,26 @@ def refine_readout_emptying_pulse(
             )
             lindblad_metrics = dict(lindblad_data["metrics"])
 
+        disturbance = _strong_readout_summary(
+            candidate_result,
+            measurement_chain=resolved_measurement_chain,
+            readout_model=resolved_config.readout_model,
+            compiler_dt_s=resolved_config.compiler_dt_s,
+            drive_frequency=drive_frequency,
+            config=resolved_config,
+        )
+        disturbance_metrics = {
+            key: float(value)
+            for key, value in disturbance.get("metrics", {}).items()
+            if isinstance(value, (int, float, np.floating))
+        }
+        ringdown_metrics = _ringdown_metrics(
+            candidate_result,
+            threshold_photons=resolved_config.ringdown_threshold_photons,
+        )
+
         uncertainty_config = ReadoutEmptyingVerificationConfig(
-            measurement_chain=resolved_config.measurement_chain,
+            measurement_chain=resolved_measurement_chain,
             hardware_model=resolved_config.hardware_model,
             readout_model=None,
             frame=resolved_config.frame,
@@ -876,6 +1198,11 @@ def refine_readout_emptying_pulse(
             compiler_dt_s=resolved_config.compiler_dt_s,
             max_step_s=resolved_config.max_step_s,
             shots_per_branch=0,
+            measurement_noise_mode="as_provided",
+            measurement_target_square_error=resolved_config.measurement_target_square_error,
+            measurement_min_noise_temperature=resolved_config.measurement_min_noise_temperature,
+            strong_readout_spec=resolved_config.strong_readout_spec,
+            ringdown_threshold_photons=resolved_config.ringdown_threshold_photons,
             chi_scales=nominal_variants["chi"],
             kappa_scales=nominal_variants["kappa"],
             kerr_scales=nominal_variants["kerr"],
@@ -883,25 +1210,42 @@ def refine_readout_emptying_pulse(
             timing_scales=nominal_variants["timing"],
             hardware_variants=resolved_config.hardware_variants,
         )
-        robustness = _robustness_summary(diagnostics["command_result"], candidate_result, uncertainty_config)
+        robustness = _robustness_summary(
+            diagnostics["command_result"],
+            candidate_result,
+            uncertainty_config,
+            measurement_chain=resolved_measurement_chain,
+        )
 
         summary = {
             "residual": float(candidate_result.metrics["max_final_residual_photons"]),
             "separation": float(
-                measurement_metrics.get("measurement_chain_separation", candidate_result.metrics["integrated_branch_separation"])
+                lindblad_metrics.get(
+                    "lindblad_output_separation",
+                    measurement_metrics.get("measurement_chain_separation", candidate_result.metrics["integrated_branch_separation"]),
+                )
             ),
             "measurement_error": float(
-                1.0 - measurement_metrics.get("measurement_chain_accuracy", 1.0)
-                if np.isfinite(measurement_metrics.get("measurement_chain_accuracy", 1.0))
-                else 0.0
+                measurement_metrics.get("measurement_chain_gaussian_overlap_error", 0.0)
             ),
-            "leakage": float(lindblad_metrics.get("non_qnd_total", 0.0)),
+            "leakage": float(disturbance_metrics.get("strong_readout_disturbance_proxy", 0.0)),
             "robustness": float(robustness["overall_worst_residual"]),
             "bandwidth": float(diagnostics["hardware_summary"]["hardware_metrics"]["command_physical_rms_delta"]),
+            "ringdown_time_to_threshold": float(ringdown_metrics["ringdown_time_to_threshold"]),
+            "lindblad_output_separation": float(
+                lindblad_metrics.get(
+                    "lindblad_output_separation",
+                    measurement_metrics.get("measurement_chain_separation", candidate_result.metrics["integrated_branch_separation"]),
+                )
+            ),
         }
         metadata = {
             "measurement": measurement,
             "measurement_metrics": measurement_metrics,
+            "measurement_calibration": measurement_calibration,
+            "disturbance": disturbance,
+            "disturbance_metrics": disturbance_metrics,
+            "ringdown_metrics": ringdown_metrics,
             "lindblad": lindblad_data,
             "lindblad_metrics": lindblad_metrics,
             "robustness": robustness,
@@ -977,7 +1321,7 @@ def refine_readout_emptying_pulse(
         verification_report = verify_readout_emptying_pulse(
             pulse_init,
             ReadoutEmptyingVerificationConfig(
-                measurement_chain=resolved_config.measurement_chain,
+                measurement_chain=resolved_measurement_chain,
                 hardware_model=resolved_config.hardware_model,
                 readout_model=resolved_config.readout_model,
                 frame=resolved_config.frame,
@@ -986,6 +1330,11 @@ def refine_readout_emptying_pulse(
                 max_step_s=resolved_config.max_step_s,
                 shots_per_branch=resolved_config.shots_per_branch,
                 seed=resolved_config.seed,
+                measurement_noise_mode="as_provided",
+                measurement_target_square_error=resolved_config.measurement_target_square_error,
+                measurement_min_noise_temperature=resolved_config.measurement_min_noise_temperature,
+                strong_readout_spec=resolved_config.strong_readout_spec,
+                ringdown_threshold_photons=resolved_config.ringdown_threshold_photons,
                 hardware_variants=resolved_config.hardware_variants,
             ),
             comparison_results={"refined": accepted_result},
@@ -1009,12 +1358,15 @@ def refine_readout_emptying_pulse(
             "final_leakage": float(accepted_summary["leakage"]),
             "final_robustness": float(accepted_summary["robustness"]),
             "final_bandwidth_penalty": float(accepted_summary["bandwidth"]),
+            "final_ringdown_time_to_threshold": float(accepted_summary["ringdown_time_to_threshold"]),
+            "final_lindblad_output_separation": float(accepted_summary["lindblad_output_separation"]),
         },
         history=history,
         diagnostics={
             "seed_summary": initial_summary,
             "accepted_summary": accepted_summary,
             "accepted_metadata": accepted_metadata,
+            "measurement_calibration": measurement_calibration,
             "optimizer_summary": {
                 "success": bool(optimizer_result.success),
                 "message": str(optimizer_result.message),

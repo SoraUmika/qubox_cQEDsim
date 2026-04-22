@@ -466,6 +466,12 @@ The DSD architecture shows that two elementary operations — coherent displacem
 - `tutorials/30_advanced_protocols/04_snap_optimization_workflow.ipynb` — SNAP pulse-level optimization
 - `tutorials/30_advanced_protocols/03_unitary_synthesis_workflow.ipynb` — broader synthesis workflows
 
+## References
+
+[1] Stefan Krastanov, Victor V. Albert, Chao Shen, Chang-Ling Zou, Reinier W. Heeres, Brian Vlastakis, et al., "Universal control of an oscillator with dispersive coupling to a qubit," Physical Review A 92, 040303(R) (2015). DOI: [10.1103/PhysRevA.92.040303](https://doi.org/10.1103/PhysRevA.92.040303)
+
+[2] Alexandre Blais, Arne L. Grimsmo, S. M. Girvin, and Andreas Wallraff, "Circuit quantum electrodynamics," Reviews of Modern Physics 93, 025005 (2021). DOI: [10.1103/RevModPhys.93.025005](https://doi.org/10.1103/RevModPhys.93.025005)
+
 ## See Also
 
 - [Unitary Synthesis](unitary_synthesis.md) — full synthesis API reference

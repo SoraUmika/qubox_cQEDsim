@@ -98,6 +98,12 @@ for delay in delays:
 
 ---
 
+## References
+
+[1] Michael A. Nielsen and Isaac L. Chuang, "Quantum Computation and Quantum Information," Cambridge University Press (2000).
+
+[2] Alexandre Blais, Arne L. Grimsmo, S. M. Girvin, and Andreas Wallraff, "Circuit quantum electrodynamics," Reviews of Modern Physics 93, 025005 (2021). DOI: [10.1103/RevModPhys.93.025005](https://doi.org/10.1103/RevModPhys.93.025005)
+
 ## See Also
 
 - [Qubit Drive & Rabi](qubit_drive_rabi.md) — pulse-level qubit control

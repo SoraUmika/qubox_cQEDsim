@@ -2,6 +2,9 @@
 
 This page gets you from a fresh install to a complete simulation in under 5 minutes.
 
+!!! tip "Not sure where to go after this?"
+    Use [Choose by Goal](choose_by_goal.md) to branch into spectroscopy, readout, Floquet, control, or contributor workflows.
+
 ---
 
 ## 1. Install

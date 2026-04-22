@@ -28,7 +28,7 @@ def test_tutorial_index_count_matches_notebook_inventory() -> None:
     match = re.search(r"contains \*\*(\d+) Jupyter notebooks\*\*", DOC_INDEX.read_text(encoding="utf-8"))
     assert match is not None
     assert int(match.group(1)) == len(notebooks)
-    assert len(notebooks) == 47
+    assert len(notebooks) == 48
 
 
 def test_new_workflow_notebooks_are_listed_in_readmes() -> None:

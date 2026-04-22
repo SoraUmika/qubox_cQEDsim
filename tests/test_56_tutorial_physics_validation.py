@@ -20,6 +20,7 @@ from tutorials.tutorial_support import (
     MHz,
     cross_kerr_conditional_phase,
     final_expectation,
+    fit_rabi_vs_amplitude,
     gaussian_quasistatic_echo_excited_population,
     gaussian_quasistatic_ramsey_excited_population,
     ns,
@@ -60,6 +61,56 @@ def test_tutorial_04_pi_pulse_matches_repo_rabi_normalization() -> None:
 
     assert np.max(np.abs(simulated - theory)) < 3.0e-3
     assert simulated[-1] > 0.99
+
+
+def test_tutorial_09_power_rabi_fit_recovers_drive_scaling() -> None:
+    omega_scale_true = 2.0 * np.pi * 18.0e6
+    duration_s = 25.0 * ns
+    amplitude_scales = np.linspace(0.0, 2.0, 17)
+
+    model = DispersiveTransmonCavityModel(
+        omega_c=GHz(5.0),
+        omega_q=GHz(6.1),
+        alpha=0.0,
+        chi=0.0,
+        kerr=0.0,
+        n_cav=1,
+        n_tr=2,
+    )
+    frame = FrameSpec(omega_q_frame=model.omega_q)
+    dt = duration_s / 150.0
+
+    excited_population = []
+    for scale in amplitude_scales:
+        pulse = Pulse(
+            "q",
+            0.0,
+            duration_s,
+            square_envelope,
+            amp=0.5 * omega_scale_true * float(scale),
+            carrier=0.0,
+            label="power_rabi",
+        )
+        compiled = SequenceCompiler(dt=dt).compile([pulse], t_end=duration_s + dt)
+        result = simulate_sequence(
+            model,
+            compiled,
+            model.basis_state(0, 0),
+            {"q": "qubit"},
+            config=SimulationConfig(frame=frame, max_step=dt),
+        )
+        excited_population.append(final_expectation(result, "P_e"))
+
+    fit = fit_rabi_vs_amplitude(
+        amplitude_scales,
+        np.asarray(excited_population, dtype=float),
+        duration=duration_s,
+        p0=(omega_scale_true, 0.0),
+    )
+
+    assert np.isclose(fit.parameters["omega_scale"], omega_scale_true, rtol=2.0e-2)
+    assert abs(fit.parameters["offset"]) < 5.0e-3
+    assert np.sqrt(np.mean((fit.model_y - np.asarray(excited_population, dtype=float)) ** 2)) < 5.0e-3
 
 
 def test_tutorial_11_and_12_helpers_match_pulse_level_t1_and_ramsey() -> None:
@@ -211,6 +262,43 @@ def test_tutorial_13_echo_refocuses_quasistatic_detuning() -> None:
 
     assert np.sqrt(np.mean((ramsey_mean - ramsey_theory) ** 2)) < 1.0e-2
     assert np.max(np.abs(echo_mean - echo_theory)) < 2.0e-3
+
+
+def test_tutorial_16_storage_decay_matches_exponential_and_is_monotone() -> None:
+    kappa = 1.0 / (40.0 * us)
+    delays_s = np.linspace(0.0, 120.0, 9) * us
+
+    model = DispersiveTransmonCavityModel(
+        omega_c=GHz(5.0),
+        omega_q=GHz(6.0),
+        alpha=0.0,
+        chi=0.0,
+        kerr=0.0,
+        n_cav=6,
+        n_tr=2,
+    )
+    frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
+
+    simulated = []
+    for delay_s in delays_s:
+        dt = 20.0 * ns
+        compiled = SequenceCompiler(dt=dt).compile([], t_end=float(max(delay_s, dt)))
+        result = simulate_sequence(
+            model,
+            compiled,
+            model.basis_state(0, 1),
+            {},
+            config=SimulationConfig(frame=frame, max_step=dt),
+            noise=NoiseSpec(kappa=kappa),
+        )
+        simulated.append(final_expectation(result, "n_c"))
+
+    simulated = np.asarray(simulated, dtype=float)
+    theory = np.exp(-kappa * delays_s)
+
+    assert np.all(np.diff(simulated) <= 1.0e-8)
+    assert np.max(np.abs(simulated - theory)) < 3.0e-3
+    assert simulated[-1] < simulated[1]
 
 
 def test_tutorial_15_cross_kerr_phase_uses_negative_dynamical_sign() -> None:

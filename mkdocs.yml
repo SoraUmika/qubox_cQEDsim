@@ -73,6 +73,7 @@ nav:
   - Home: index.md
   - Quickstart: quickstart.md
   - Installation: installation.md
+  - Choose by Goal: choose_by_goal.md
 
   - Physics & Conventions: physics_conventions.md
 
@@ -91,6 +92,7 @@ nav:
 
   - Tutorials:
       - Overview: tutorials/index.md
+      - Physics Audit Matrix: tutorials/tutorial_physics_audit_matrix.md
 
       - Foundational Curriculum:
           - Minimal Dispersive Model: tutorials/minimal_dispersive_model.md

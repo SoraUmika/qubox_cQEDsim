@@ -9,6 +9,7 @@ Run from the repository root:
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -24,6 +25,8 @@ sys.path.insert(0, str(REPO))
 
 OUT_DIR = REPO / "documentations" / "assets" / "images" / "tutorials"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+VALIDATION_DIR = OUT_DIR / "validation"
+VALIDATION_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -42,6 +45,172 @@ STYLE = {
 
 def _apply_style():
     plt.rcParams.update(STYLE)
+
+
+def _write_validation_summary(filename: str, payload: dict) -> None:
+    VALIDATION_DIR.mkdir(parents=True, exist_ok=True)
+    path = VALIDATION_DIR / filename
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+
+def _relative_branch_phase(states, reference_state, shifted_state) -> np.ndarray:
+    phases: list[float] = []
+    for state in states:
+        amp_reference = complex(reference_state.overlap(state))
+        amp_shifted = complex(shifted_state.overlap(state))
+        if abs(amp_reference) < 1.0e-12 or abs(amp_shifted) < 1.0e-12:
+            raise ValueError("Relative phase extraction encountered a vanishing branch amplitude.")
+        phases.append(float(np.angle(amp_shifted / amp_reference)))
+    return np.unwrap(np.asarray(phases, dtype=float))
+
+
+def compute_cross_kerr_phase_data() -> dict[str, object]:
+    """Return the conditional storage-phase trace induced by readout occupancy."""
+    from cqed_sim.core import DispersiveReadoutTransmonStorageModel, FrameSpec
+    from cqed_sim.sequence import SequenceCompiler
+    from cqed_sim.sim import SimulationConfig, simulate_sequence
+
+    model = DispersiveReadoutTransmonStorageModel(
+        omega_s=2 * np.pi * 5.0e9,
+        omega_r=2 * np.pi * 7.5e9,
+        omega_q=2 * np.pi * 6.0e9,
+        alpha=2 * np.pi * (-200e6),
+        chi_sr=2 * np.pi * 1.5e6,
+        chi_s=0.0,
+        chi_r=0.0,
+        n_storage=4,
+        n_readout=4,
+        n_tr=2,
+    )
+    frame = FrameSpec(
+        omega_c_frame=model.omega_s,
+        omega_q_frame=model.omega_q,
+        omega_r_frame=model.omega_r,
+    )
+
+    duration_s = 700.0e-9
+    dt_s = 2.0e-9
+    compiled = SequenceCompiler(dt=dt_s).compile([], t_end=duration_s)
+
+    empty_readout_branch = (model.basis_state(0, 0, 0) + model.basis_state(0, 1, 0)).unit()
+    occupied_readout_branch = (model.basis_state(0, 0, 1) + model.basis_state(0, 1, 1)).unit()
+
+    result_empty = simulate_sequence(
+        model,
+        compiled,
+        empty_readout_branch,
+        {},
+        config=SimulationConfig(frame=frame, store_states=True, max_step=dt_s),
+    )
+    result_occupied = simulate_sequence(
+        model,
+        compiled,
+        occupied_readout_branch,
+        {},
+        config=SimulationConfig(frame=frame, store_states=True, max_step=dt_s),
+    )
+
+    times_s = np.asarray(compiled.tlist, dtype=float)
+    empty_phase = _relative_branch_phase(
+        result_empty.states,
+        model.basis_state(0, 0, 0),
+        model.basis_state(0, 1, 0),
+    )
+    occupied_phase = _relative_branch_phase(
+        result_occupied.states,
+        model.basis_state(0, 0, 1),
+        model.basis_state(0, 1, 1),
+    )
+    conditional_phase = occupied_phase - empty_phase
+    theory_phase = -float(model.chi_sr) * times_s
+    fitted_slope_rad_s, fitted_offset_rad = np.polyfit(times_s, conditional_phase, deg=1)
+
+    return {
+        "times_ns": (times_s * 1.0e9).tolist(),
+        "conditional_phase_rad": conditional_phase.tolist(),
+        "theory_phase_rad": theory_phase.tolist(),
+        "chi_sr_hz": float(model.chi_sr / (2.0 * np.pi)),
+        "fitted_slope_hz": float(fitted_slope_rad_s / (2.0 * np.pi)),
+        "fitted_offset_rad": float(fitted_offset_rad),
+        "max_abs_phase_error_rad": float(np.max(np.abs(conditional_phase - theory_phase))),
+    }
+
+
+def compute_floquet_quasienergy_scan_data() -> dict[str, object]:
+    """Return a visibly hybridized Floquet branch pair and its avoided-crossing gap."""
+    from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec, SidebandDriveSpec
+    from cqed_sim.floquet import FloquetProblem, FloquetConfig, build_target_drive_term, run_floquet_sweep
+
+    model = DispersiveTransmonCavityModel(
+        omega_c=2 * np.pi * 5.05e9,
+        omega_q=2 * np.pi * 6.25e9,
+        alpha=2 * np.pi * (-250e6),
+        chi=2 * np.pi * (-15.0e6),
+        kerr=0.0,
+        n_cav=4,
+        n_tr=3,
+    )
+    frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
+
+    sideband = SidebandDriveSpec(mode="storage", lower_level=0, upper_level=2, sideband="red")
+    omega_sb0 = model.sideband_transition_frequency(
+        cavity_level=0,
+        lower_level=0,
+        upper_level=2,
+        sideband="red",
+        frame=frame,
+    )
+
+    drive_amplitude_mhz = 0.03
+    scan_detunings_mhz = np.linspace(-0.30, 0.30, 25)
+    problems = []
+    for detuning_mhz in scan_detunings_mhz:
+        drive_frequency_hz = omega_sb0 / (2.0 * np.pi) + detuning_mhz * 1.0e6
+        drive = build_target_drive_term(
+            model,
+            sideband,
+            amplitude=2 * np.pi * drive_amplitude_mhz * 1.0e6,
+            frequency=2 * np.pi * drive_frequency_hz,
+            waveform="cos",
+        )
+        problems.append(
+            FloquetProblem(
+                model=model,
+                frame=frame,
+                periodic_terms=(drive,),
+                period=1.0 / abs(drive_frequency_hz),
+                label="sideband_scan",
+            )
+        )
+
+    sweep = run_floquet_sweep(
+        problems,
+        parameter_values=scan_detunings_mhz,
+        config=FloquetConfig(n_time_samples=96),
+    )
+
+    tracked_quasienergies_mhz = np.asarray(sweep.tracked_quasienergies, dtype=float) / (2.0 * np.pi * 1.0e6)
+    center_index = len(scan_detunings_mhz) // 2
+    center_result = sweep.results[center_index]
+    center_max_overlaps = np.max(center_result.bare_state_overlaps, axis=1)
+    highlighted_pair = np.argsort(center_max_overlaps)[:2]
+    highlighted_pair = highlighted_pair[np.argsort(tracked_quasienergies_mhz[center_index, highlighted_pair])]
+
+    highlighted_branches_mhz = tracked_quasienergies_mhz[:, highlighted_pair]
+    highlighted_gap_mhz = np.abs(highlighted_branches_mhz[:, 1] - highlighted_branches_mhz[:, 0])
+    resonance_index = int(np.argmin(highlighted_gap_mhz))
+
+    return {
+        "scan_detunings_mhz": scan_detunings_mhz.tolist(),
+        "tracked_quasienergies_mhz": tracked_quasienergies_mhz.tolist(),
+        "highlighted_pair_indices": [int(index) for index in highlighted_pair],
+        "highlighted_branches_mhz": highlighted_branches_mhz.tolist(),
+        "highlighted_gap_mhz": highlighted_gap_mhz.tolist(),
+        "center_pair_max_overlaps": center_max_overlaps[highlighted_pair].tolist(),
+        "drive_amplitude_mhz": drive_amplitude_mhz,
+        "resonance_detuning_mhz": float(scan_detunings_mhz[resonance_index]),
+        "min_gap_mhz": float(highlighted_gap_mhz[resonance_index]),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -295,70 +464,24 @@ def plot_cross_kerr_phase():
     """Relative phase vs free-evolution time for storage-readout cross-Kerr."""
     _apply_style()
     print("[5/6] Cross-Kerr phase accumulation …")
-    from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec, prepare_state
-    from cqed_sim.sequence import SequenceCompiler
-    from cqed_sim.sim import SimulationConfig, simulate_sequence
 
     try:
-        from cqed_sim.core import DispersiveReadoutTransmonStorageModel
-        model = DispersiveReadoutTransmonStorageModel(
-            omega_s=2 * np.pi * 5.0e9,
-            omega_r=2 * np.pi * 7.5e9,
-            omega_q=2 * np.pi * 6.0e9,
-            alpha=2 * np.pi * (-200e6),
-            chi_sr=2 * np.pi * 1.5e6,
-            chi_s=0.0,
-            chi_r=0.0,
-            n_storage=4,
-            n_readout=4,
-            n_tr=2,
-        )
-        frame = FrameSpec(
-            omega_c_frame=model.omega_s,
-            omega_q_frame=model.omega_q,
-            omega_r_frame=model.omega_r,
-        )
-
-        s0r1 = model.basis_state(0, 1, 0)
-        s1r1 = model.basis_state(1, 1, 0)
-        initial_state = (s0r1 + s1r1).unit()
-
-        chi_sr_hz = 1.5e6
-        times_ns = np.linspace(0, 700, 50)
-        phases = []
-
-        for t_ns in times_ns:
-            t_s = t_ns * 1e-9
-            if t_s == 0:
-                phases.append(0.0)
-                continue
-            compiled = SequenceCompiler(dt=2e-9).compile([], t_end=t_s)
-            result = simulate_sequence(
-                model, compiled, initial_state, {},
-                config=SimulationConfig(frame=frame),
-            )
-            state = result.final_state
-            amp_ref = s0r1.overlap(state)
-            amp_shifted = s1r1.overlap(state)
-            phases.append(float(np.angle(amp_shifted / amp_ref)))
-
-        theory_times_ns = np.linspace(0, 700, 300)
-        theory_phases = 2 * np.pi * chi_sr_hz * (theory_times_ns * 1e-9)
+        data = compute_cross_kerr_phase_data()
+        times_ns = np.asarray(data["times_ns"], dtype=float)
+        conditional_phase = np.asarray(data["conditional_phase_rad"], dtype=float)
+        theory_phase = np.asarray(data["theory_phase_rad"], dtype=float)
 
         fig, ax = plt.subplots(figsize=(8, 4))
-        ax.plot(times_ns, phases, "o", ms=4, color="#1f77b4", label="Simulation")
-        ax.plot(theory_times_ns, (theory_phases + np.pi) % (2 * np.pi) - np.pi,
-                "--", linewidth=1.5, color="#ff7f0e",
-                label=r"Theory: $\chi_{sr} \cdot t$")
+        ax.plot(times_ns, conditional_phase, "o", ms=3.5, color="#1f77b4", label="Simulation")
+        ax.plot(times_ns, theory_phase, "--", linewidth=1.5, color="#ff7f0e", label=r"Theory: $-\chi_{sr} \cdot t$")
         ax.set_xlabel("Free evolution time (ns)")
-        ax.set_ylabel("Relative phase (rad)")
-        ax.set_title(
-            r"Cross-Kerr Conditional Phase  ($\chi_{sr}/2\pi = 1.5$ MHz)"
-        )
+        ax.set_ylabel("Conditional relative phase (rad)")
+        ax.set_title(r"Cross-Kerr Conditional Phase  ($\Delta\phi_{r=1} - \Delta\phi_{r=0} = -\chi_{sr} t$)")
         ax.legend()
         fig.tight_layout()
         fig.savefig(OUT_DIR / "cross_kerr_phase.png", dpi=150)
         plt.close(fig)
+        _write_validation_summary("cross_kerr_phase.json", data)
         print("    ✓ cross_kerr_phase.png")
     except Exception as exc:
         print(f"    ✗ cross_kerr_phase skipped: {exc}")
@@ -373,78 +496,38 @@ def plot_floquet_quasienergy_scan():
     print("[6/6] Floquet quasienergy scan …")
 
     try:
-        from cqed_sim.core import DispersiveTransmonCavityModel, FrameSpec, SidebandDriveSpec
-        from cqed_sim.floquet import (
-            FloquetProblem,
-            FloquetConfig,
-            run_floquet_sweep,
-            build_target_drive_term,
-        )
-
-        model = DispersiveTransmonCavityModel(
-            omega_c=2 * np.pi * 5.05e9,
-            omega_q=2 * np.pi * 6.25e9,
-            alpha=2 * np.pi * (-250e6),
-            chi=2 * np.pi * (-15.0e6),
-            kerr=0.0,
-            n_cav=4,
-            n_tr=3,
-        )
-        frame = FrameSpec(omega_c_frame=model.omega_c, omega_q_frame=model.omega_q)
-
-        sideband = SidebandDriveSpec(
-            mode="storage", lower_level=0, upper_level=2, sideband="red"
-        )
-        omega_sb0 = model.sideband_transition_frequency(
-            cavity_level=0, lower_level=0, upper_level=2,
-            sideband="red", frame=frame,
-        )
-
-        scan_detunings_mhz = np.linspace(-0.25, 0.25, 25)
-        problems = []
-        for det_mhz in scan_detunings_mhz:
-            freq_hz = omega_sb0 / (2 * np.pi) + det_mhz * 1e6
-            drive = build_target_drive_term(
-                model, sideband,
-                amplitude=2 * np.pi * 0.03e6,
-                frequency=2 * np.pi * freq_hz,
-                waveform="cos",
-            )
-            problems.append(FloquetProblem(
-                model=model, frame=frame,
-                periodic_terms=(drive,),
-                period=1.0 / abs(freq_hz),
-                label="sideband_scan",
-            ))
-
-        sweep = run_floquet_sweep(
-            problems,
-            parameter_values=scan_detunings_mhz,
-            config=FloquetConfig(n_time_samples=64),
-        )
-
-        tracked_mhz = sweep.tracked_quasienergies / (2 * np.pi * 1e6)
-        gap_mhz = np.min(np.abs(np.diff(tracked_mhz, axis=1)), axis=1)
+        data = compute_floquet_quasienergy_scan_data()
+        scan_detunings_mhz = np.asarray(data["scan_detunings_mhz"], dtype=float)
+        tracked_mhz = np.asarray(data["tracked_quasienergies_mhz"], dtype=float)
+        highlighted_branches_mhz = np.asarray(data["highlighted_branches_mhz"], dtype=float)
+        highlighted_gap_mhz = np.asarray(data["highlighted_gap_mhz"], dtype=float)
+        resonance_detuning_mhz = float(data["resonance_detuning_mhz"])
+        local_window_mhz = float(1.15 * max(np.max(np.abs(highlighted_branches_mhz)), 0.15))
 
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 7), sharex=True)
         for i in range(tracked_mhz.shape[1]):
-            ax1.plot(scan_detunings_mhz, tracked_mhz[:, i], linewidth=1.5)
-        ax1.set_ylabel("Quasienergy (MHz)")
-        ax1.set_title("Floquet Quasienergy Branches — Sideband Drive Sweep")
+            ax1.plot(scan_detunings_mhz, tracked_mhz[:, i], linewidth=1.0, color="0.78", zorder=1)
+        ax1.plot(scan_detunings_mhz, highlighted_branches_mhz[:, 0], linewidth=2.2, color="#1f77b4", label="Highlighted branch A", zorder=3)
+        ax1.plot(scan_detunings_mhz, highlighted_branches_mhz[:, 1], linewidth=2.2, color="#ff7f0e", label="Highlighted branch B", zorder=3)
+        ax1.set_ylabel("Quasienergy window (MHz)")
+        ax1.set_ylim(-local_window_mhz, local_window_mhz)
+        ax1.set_title("Floquet quasienergies near the resonant avoided crossing")
+        ax1.legend(loc="lower left", fontsize=9)
 
-        ax2.plot(scan_detunings_mhz, gap_mhz, color="#d62728", linewidth=1.5)
+        ax2.plot(scan_detunings_mhz, highlighted_gap_mhz, color="#d62728", linewidth=1.8)
         ax2.axvline(
-            scan_detunings_mhz[np.argmin(gap_mhz)],
+            resonance_detuning_mhz,
             ls="--", color="gray", alpha=0.6, label="Min gap (resonance)",
         )
-        ax2.set_ylabel("Min quasienergy gap (MHz)")
+        ax2.set_ylabel("Highlighted-pair gap (MHz)")
         ax2.set_xlabel("Drive detuning (MHz)")
-        ax2.set_title("Avoided-Crossing Gap Diagnostic")
+        ax2.set_title("Avoided-crossing gap for the resonant Floquet pair")
         ax2.legend()
 
         fig.tight_layout()
         fig.savefig(OUT_DIR / "floquet_quasienergy_scan.png", dpi=150)
         plt.close(fig)
+        _write_validation_summary("floquet_quasienergy_scan.json", data)
         print("    ✓ floquet_quasienergy_scan.png")
     except Exception as exc:
         print(f"    ✗ floquet_quasienergy_scan skipped: {exc}")

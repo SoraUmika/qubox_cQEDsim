@@ -52,6 +52,11 @@ result = simulate_sequence(
 
 ---
 
+!!! tip "Not sure where to start?"
+    Use [Choose by Goal](choose_by_goal.md) for a task-first route through models, tutorials, examples, and contributor paths.
+
+---
+
 ## What `cqed_sim` Does
 
 <div class="grid cards" markdown>

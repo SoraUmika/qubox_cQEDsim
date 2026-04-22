@@ -208,6 +208,12 @@ The selectivity condition for QND discrimination is $\Omega_R \ll |\chi|$, where
 - `tutorials/07_cavity_conditioned_qubit_spectroscopy_number_splitting.ipynb` — foundational curriculum
 - `tutorials/08_dispersive_shift_and_dressed_frequencies.ipynb` — computing $\chi$ and dressed levels
 
+## References
+
+[1] D. I. Schuster, A. A. Houck, J. A. Schreier, A. Wallraff, J. M. Gambetta, B. R. Johnson, et al., "Resolving photon number states in a superconducting circuit," Nature 445, 515-518 (2007). DOI: [10.1038/nature05461](https://doi.org/10.1038/nature05461)
+
+[2] Alexandre Blais, Arne L. Grimsmo, S. M. Girvin, and Andreas Wallraff, "Circuit quantum electrodynamics," Reviews of Modern Physics 93, 025005 (2021). DOI: [10.1103/RevModPhys.93.025005](https://doi.org/10.1103/RevModPhys.93.025005)
+
 ## See Also
 
 - [Displacement & Spectroscopy](displacement_spectroscopy.md) — end-to-end workflow

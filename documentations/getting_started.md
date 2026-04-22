@@ -6,6 +6,9 @@ This page introduces the core mental model for working with `cqed_sim`.
     If you just want to run a simulation as fast as possible, jump to the [Quickstart](quickstart.md) page.
     Come back here for a deeper understanding of how the library is organized.
 
+!!! tip "Not sure where to start?"
+    Use [Choose by Goal](choose_by_goal.md) to pick a default model, tutorial, example, or contributor path by task.
+
 ---
 
 ## What Is `cqed_sim`?

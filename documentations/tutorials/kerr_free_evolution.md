@@ -155,6 +155,12 @@ For the full guided walkthrough, use `tutorials/10_core_workflows/02_kerr_free_e
 
 ---
 
+## References
+
+[1] B. Yurke and D. Stoler, "Generating quantum mechanical superpositions of macroscopically distinguishable states via amplitude dispersion," Physical Review Letters 57, 13-16 (1986). DOI: [10.1103/PhysRevLett.57.13](https://doi.org/10.1103/PhysRevLett.57.13)
+
+[2] G. Kirchmair, B. Vlastakis, Z. Leghtas, S. E. Nigg, H. Paik, E. Ginossar, et al., "Observation of quantum state collapse and revival due to the single-photon Kerr effect," Nature 495, 205-209 (2013). DOI: [10.1038/nature11902](https://doi.org/10.1038/nature11902)
+
 ## See Also
 
 - [Phase Space Conventions](phase_space_conventions.md) — alpha vs. quadrature coordinates, √2 rescaling

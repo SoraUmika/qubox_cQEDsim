@@ -8,6 +8,9 @@ Standalone scripts and study helpers demonstrating common `cqed_sim` workflows. 
     python examples/protocol_style_simulation.py
     ```
 
+!!! tip "Not sure which example matches your task?"
+    Use [Choose by Goal](choose_by_goal.md) for the fastest route into examples, tutorials, and model classes.
+
 ---
 
 ## Repo Automation

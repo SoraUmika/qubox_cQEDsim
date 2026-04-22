@@ -7,9 +7,14 @@ The `cqed_sim` tutorial library contains **48 Jupyter notebooks** organized into
 
 Both tracks can be used independently. Start with the workflow tutorials for a guided learning path, and dip into the foundational curriculum for deeper treatments of specific topics.
 
+The current public-figure verification status is tracked in [Tutorial Physics Audit Matrix](tutorial_physics_audit_matrix.md).
+
 !!! tip "Recommended starting point"
     If you are new to `cqed_sim`, begin with the [Quickstart](../quickstart.md) page, then open
     `tutorials/00_getting_started/01_protocol_style_simulation.ipynb`.
+
+!!! tip "Not sure which tutorial track fits your task?"
+    Use [Choose by Goal](../choose_by_goal.md) for a task-first route into tutorials, examples, and model choices.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Model the readout resonator coupled to a transmon, simulate dispersive readout, and visualize qubit-state-dependent IQ separation.
 
-**Notebook:** `tutorials/17_readout_resonator_dispersive_coupling.ipynb`
+**Notebook:** `tutorials/17_readout_resonator_response.ipynb`
 
 ---
 
@@ -96,6 +96,12 @@ print(f"IQ_e = ({np.real(alpha_e):.3f}, {np.imag(alpha_e):.3f})")
 | SNR | Single-shot SNR | 1–10 |
 
 ---
+
+## References
+
+[1] Alexandre Blais, Arne L. Grimsmo, S. M. Girvin, and Andreas Wallraff, "Circuit quantum electrodynamics," Reviews of Modern Physics 93, 025005 (2021). DOI: [10.1103/RevModPhys.93.025005](https://doi.org/10.1103/RevModPhys.93.025005)
+
+[2] Alexandre Blais, Ren-Shou Huang, Andreas Wallraff, S. M. Girvin, and R. J. Schoelkopf, "Cavity quantum electrodynamics for superconducting electrical circuits: An architecture for quantum computation," Physical Review A 69, 062320 (2004). DOI: [10.1103/PhysRevA.69.062320](https://doi.org/10.1103/PhysRevA.69.062320)
 
 ## See Also
 

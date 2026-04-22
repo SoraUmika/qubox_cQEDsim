@@ -62,6 +62,12 @@ The red circles show the exact qubit transition frequency $\omega_{ge}(n)$ from 
 
 ---
 
+## References
+
+[1] Alexandre Blais, Ren-Shou Huang, Andreas Wallraff, S. M. Girvin, and R. J. Schoelkopf, "Cavity quantum electrodynamics for superconducting electrical circuits: An architecture for quantum computation," Physical Review A 69, 062320 (2004). DOI: [10.1103/PhysRevA.69.062320](https://doi.org/10.1103/PhysRevA.69.062320)
+
+[2] Alexandre Blais, Arne L. Grimsmo, S. M. Girvin, and Andreas Wallraff, "Circuit quantum electrodynamics," Reviews of Modern Physics 93, 025005 (2021). DOI: [10.1103/RevModPhys.93.025005](https://doi.org/10.1103/RevModPhys.93.025005)
+
 ## See Also
 
 - [Minimal Dispersive Model](minimal_dispersive_model.md) — basic model construction

@@ -128,3 +128,26 @@ noise = NoiseSpec(
     nth_readout=0.0,
 )
 ```
+
+---
+
+## Bath Occupations From Microwave Wiring
+
+Use `cqed_sim.microwave_noise` when `nth`, `nth_storage`, or `nth_readout`
+should come from a cryogenic microwave line rather than from a hand-entered
+number:
+
+```python
+from cqed_sim.microwave_noise import NoiseCascade, PassiveLoss
+
+cascade = NoiseCascade([
+    PassiveLoss("4K", temp_K=4.0, loss_db=20.0),
+    PassiveLoss("MXC", temp_K=0.02, loss_db=40.0),
+])
+
+result = cascade.propagate(6.0e9, source_temp_K=300.0)
+noise = NoiseSpec(kappa_readout=5e5, nth_readout=float(result.n_out))
+```
+
+The microwave-noise helpers propagate normally ordered Bose occupation, not a
+symmetrized noise temperature.

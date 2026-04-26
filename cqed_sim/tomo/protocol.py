@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable
 
 import numpy as np
@@ -114,10 +114,11 @@ def run_all_xy(
     dt_ns: float = 0.2,
     frame: FrameSpec | None = None,
     noise: NoiseSpec | None = None,
+    simulation_config: SimulationConfig | None = None,
 ) -> dict[str, np.ndarray]:
     frame = frame or FrameSpec(omega_q_frame=model.omega_q)
     compiler = SequenceCompiler(dt=dt_ns)
-    config = SimulationConfig(frame=frame)
+    config = SimulationConfig(frame=frame) if simulation_config is None else replace(simulation_config, frame=frame)
     init = model.basis_state(0, 0)
     measured = []
     expected = []
@@ -230,13 +231,14 @@ def run_fock_resolved_tomo(
     pre_rotation_mode: str = "pulse",
     leakage_cal: tuple[np.ndarray, dict[str, np.ndarray]] | None = None,
     unmix_lambda: float = 1e-2,
+    simulation_config: SimulationConfig | None = None,
 ) -> FockTomographyResult:
     axes = ("x", "y", "z")
     v_hat = {a: np.zeros(n_max + 1, dtype=float) for a in axes}
     p_n = np.zeros(n_max + 1, dtype=float)
     frame = FrameSpec(omega_q_frame=model.omega_q)
     compiler = SequenceCompiler(dt=dt_ns)
-    config = SimulationConfig(frame=frame)
+    config = SimulationConfig(frame=frame) if simulation_config is None else replace(simulation_config, frame=frame)
     for n in range(n_max + 1):
         rho0 = state_prep()
         for a in axes:

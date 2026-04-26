@@ -6,12 +6,10 @@
   "tests/test_44_rl_sanity_and_regression.py::test_parametric_action_space_random_rollout_stays_finite[qubit_gaussian]": true,
   "tests/test_44_rl_sanity_and_regression.py::test_primitive_action_space_random_rollout_stays_finite": true,
   "tests/test_44_rl_sanity_and_regression.py::test_zero_action_vector_is_safe_for_all_action_spaces": true,
-  "tests/test_44_rl_sanity_and_regression.py::test_all_benchmark_tasks_baseline_run_without_error": true,
   "tests/test_44_rl_sanity_and_regression.py::test_diagnostics_api_exposes_required_keys": true,
   "tests/test_44_rl_sanity_and_regression.py::test_scripted_demonstration_produces_valid_records": true,
   "tests/test_44_rl_sanity_and_regression.py::test_fock_1_state_task_metrics_are_bounded": true,
   "tests/test_51_optimal_control_hardware_constraints.py::test_smooth_iq_radius_below_limit_is_identity": true,
   "tests/test_45_performance_multistart_and_sweep.py::TestGrapeMultistartConfig::test_defaults": true,
-  "tests/test_42_gates.py::TestCoupledGates::test_beam_splitter_unitarity": true,
   "tests/unitary_synthesis/test_namespace_compatibility.py::test_unitary_synthesis_package_import_emits_deprecation_warning": true
 }

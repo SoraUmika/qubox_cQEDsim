@@ -77,7 +77,7 @@ problem = FloquetProblem(
     period=2.0 * np.pi / drive.frequency,
 )
 
-result = solve_floquet(problem, FloquetConfig(n_time_samples=128))
+result = solve_floquet(problem, FloquetConfig(n_time_samples=128, nsteps=100000))
 print(result.quasienergies)
 ```
 
@@ -104,6 +104,11 @@ The primary closed-system solver wraps QuTiP's `FloquetBasis`, which provides:
 - one-period propagators,
 - quasienergies,
 - Floquet modes and states at arbitrary time.
+
+`FloquetConfig.nsteps` and `FloquetConfig.solver_options` are passed through to
+QuTiP `FloquetBasis`. The Floquet-Markov wrapper also reuses these defaults for
+`FMESolver`, with `FloquetMarkovConfig.solver_options` available for additional
+native QuTiP options.
 
 An optional truncated Sambe-space builder is also included for harmonic-space analysis and sideband interpretation:
 

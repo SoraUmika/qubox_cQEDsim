@@ -18,6 +18,7 @@ Tomography is essential for diagnosing and benchmarking quantum gate operations 
 - **`selective_qubit_drive_frequency(model, n)`**: Returns the positive physical qubit drive frequency for the Fock-sector-selective tag tone.
 - **`selective_pi_pulse(model, cal, n, device)`**: Constructs a π-pulse selective to Fock sector `n`, translating that positive drive frequency into the raw internal carrier expected by the runtime.
 - **`run_fock_resolved_tomo(model, cal, device, n_sectors)`**: Runs Fock-resolved qubit tomography: measures the qubit Bloch vector conditioned on each Fock number sector up to `n_sectors`. Returns a `FockTomographyResult`.
+- **`simulation_config`**: Optional runtime config accepted by the tomography helpers for QuTiP controls such as `nsteps` and `solver_options`.
 - **`true_fock_resolved_vectors(state, model)`**: Computes the exact conditioned Bloch vectors from a simulation state, without running additional simulations.
 - **`calibrate_leakage_matrix(model, cal, device)`**: Calibrates the leakage matrix relating population in higher transmon levels to readout outcomes.
 - **`ALL_XY_21`**: The canonical list of 21 AllXY gate pairs.

@@ -38,6 +38,7 @@ from cqed_sim.pulses.pulse import Pulse
 from cqed_sim.sequence.scheduler import SequenceCompiler
 from cqed_sim.sim.noise import NoiseSpec, collapse_operators
 from cqed_sim.sim.runner import hamiltonian_time_slices
+from cqed_sim.solvers.options import build_qutip_solver_options
 from cqed_sim.unitary_synthesis.progress import NullReporter, ProgressEvent, ProgressReporter
 from physics_and_conventions.conventions import to_internal_units
 
@@ -456,15 +457,19 @@ def _noise_enabled(config: Mapping[str, Any]) -> bool:
 
 
 def _solver_options(config: Mapping[str, Any]) -> dict[str, Any]:
-    options = {
-        "atol": 1.0e-8,
-        "rtol": 1.0e-7,
-        "store_states": True,
-        "nsteps": int(config.get("qutip_nsteps_sqr_calibration", 100000)),
-    }
-    if float(config.get("max_step_s", 0.0)) > 0.0:
-        options["max_step"] = float(config["max_step_s"])
-    return options
+    solver_options = dict(config.get("solver_options", {}) or {})
+    nsteps = config.get("nsteps")
+    if nsteps is None and "nsteps" not in solver_options:
+        nsteps = config.get("qutip_nsteps_sqr_calibration", 100000)
+    max_step = float(config["max_step_s"]) if float(config.get("max_step_s", 0.0)) > 0.0 else None
+    return build_qutip_solver_options(
+        atol=1.0e-8,
+        rtol=1.0e-7,
+        max_step=max_step,
+        nsteps=None if nsteps is None else int(nsteps),
+        store_states=True,
+        solver_options=solver_options,
+    )
 
 
 def _vectorize_operator(matrix: np.ndarray) -> np.ndarray:
@@ -647,9 +652,7 @@ def _final_unitary_from_hamiltonian(
     tlist: np.ndarray,
     config: Mapping[str, Any],
 ) -> np.ndarray:
-    options = {"atol": 1.0e-8, "rtol": 1.0e-7, "nsteps": int(config.get("qutip_nsteps_sqr_calibration", 100000))}
-    if float(config.get("max_step_s", 0.0)) > 0.0:
-        options["max_step"] = float(config["max_step_s"])
+    options = _solver_options(config)
     propagators = qt.propagator(hamiltonian, tlist, options=options, tlist=tlist)
     final = propagators[-1] if isinstance(propagators, list) else propagators
     return _normalized_unitary(np.asarray(final.full(), dtype=np.complex128))

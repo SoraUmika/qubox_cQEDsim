@@ -21,6 +21,7 @@ from cqed_sim.sim import SimulationConfig as RuntimeSimulationConfig
 from cqed_sim.sim import prepare_simulation, simulate_batch
 from cqed_sim.sim.noise import NoiseSpec
 from cqed_sim.sim.runner import hamiltonian_time_slices
+from cqed_sim.solvers.options import build_qutip_solver_options
 
 
 def _sigmoid_stable(x: np.ndarray | float) -> np.ndarray:
@@ -71,7 +72,9 @@ def _runtime_simulation_config(settings: Mapping[str, Any]) -> RuntimeSimulation
             atol=float(data.get("atol", 1.0e-8)),
             rtol=float(data.get("rtol", 1.0e-7)),
             max_step=None if data.get("max_step") is None else float(data["max_step"]),
+            nsteps=None if data.get("nsteps") is None else int(data["nsteps"]),
             store_states=bool(data.get("store_states", False)),
+            solver_options=dict(data.get("solver_options", {}) or {}),
             backend=data.get("backend"),
         )
 
@@ -80,20 +83,22 @@ def _runtime_simulation_config(settings: Mapping[str, Any]) -> RuntimeSimulation
         atol=float(settings.get("atol", 1.0e-8)),
         rtol=float(settings.get("rtol", 1.0e-7)),
         max_step=None if settings.get("max_step") is None else float(settings["max_step"]),
+        nsteps=None if settings.get("nsteps") is None else int(settings["nsteps"]),
         store_states=bool(settings.get("store_states", False)),
+        solver_options=dict(settings.get("solver_options", {}) or {}),
         backend=settings.get("runtime_backend"),
     )
 
 
 def _solver_options(cfg: RuntimeSimulationConfig) -> dict[str, Any]:
-    options: dict[str, Any] = {
-        "atol": float(cfg.atol),
-        "rtol": float(cfg.rtol),
-        "store_final_state": True,
-    }
-    if cfg.max_step is not None:
-        options["max_step"] = float(cfg.max_step)
-    return options
+    return build_qutip_solver_options(
+        atol=cfg.atol,
+        rtol=cfg.rtol,
+        max_step=cfg.max_step,
+        nsteps=cfg.nsteps,
+        store_final_state=True,
+        solver_options=cfg.solver_options,
+    )
 
 
 def _coerce_state_qobj(state: qt.Qobj | np.ndarray, *, subsystem_dims: list[int] | None = None) -> qt.Qobj:

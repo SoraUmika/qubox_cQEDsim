@@ -18,6 +18,7 @@ Pulses sit between the physical model (in `cqed_sim.core`) and the simulation ru
 - **Amplitude formulas**: `displacement_square_amplitude`, `rotation_gaussian_amplitude`, `sqr_lambda0_rad_s`, `sqr_rotation_coefficient`, `sqr_tone_amplitude_rad_s`. Closed-form physical amplitude calculations used internally by the builders.
 - **SQR tone construction**: `build_sqr_tone_specs`, `pad_parameter_array`, `pad_sqr_angles` for assembling multitone SQR waveforms from per-Fock angle arrays.
 - **Hardware distortion**: `HardwareConfig` wraps optional hardware-level distortion models (e.g. IIR/FIR filters) that can be applied to pulse envelopes before simulation.
+- **Strong-readout seeds**: `square_readout_seed`, `gaussian_readout_seed`, `ramped_readout_seed`, and `clear_readout_seed` build sampled readout envelopes for high-power readout studies.
 
 ## Key Entry Points
 
@@ -33,6 +34,7 @@ Pulses sit between the physical model (in `cqed_sim.core`) and the simulation ru
 | `multitone_gaussian_envelope(...)` | Multi-frequency Gaussian |
 | `MultitoneTone` | Single-tone spec for multitone waveforms |
 | `HardwareConfig` | Optional hardware distortion model |
+| `clear_readout_seed(...)` | CLEAR-like kick-up, plateau, and depletion seed |
 
 ## Usage Guidance
 
@@ -79,6 +81,7 @@ p = Pulse(
 - **Envelope normalization**: envelope arrays from the standard helpers are normalized (peak 1 or area-normalized depending on context); `Pulse.amplitude` scales the overall drive strength.
 - **Time units**: `t0` and `dt` are in seconds.
 - **Channel labels**: the standard channel labels are `"qubit"`, `"cavity"` / `"storage"`, `"readout"`, `"sideband"`. Multilevel variants use `TransmonTransitionDriveSpec` and `SidebandDriveSpec` from `cqed_sim.core`.
+- **Strong-readout pulse seeds**: `clear.py` returns sampled complex envelopes in angular-frequency units. Each builder accepts an optional frequency-domain AWG transfer function so the simulated pulse can include command-chain filtering before it reaches the Hamiltonian.
 
 ## Relationships to Other Modules
 

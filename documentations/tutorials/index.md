@@ -174,6 +174,7 @@ These documentation pages provide physics background, plots, and code summaries 
 - [Dai 2025 Readout-Assisted Resonances](dai_2025_readout_assisted_floquet_resonances.md) — literature-backed reproduction of Appendix E readout-mode-assisted K/L branch slices with a coupled transmon-readout Floquet model
 
 ### Advanced Topics
+- [Residual Thermal Photons and Cavity Attenuators](residual_thermal_photons.md) — photon-shot-noise dephasing, multi-bath occupations, added-noise extraction, and cold dissipative attenuator design
 - [Holographic Quantum Algorithms](holographic_quantum_algorithms.md) — holographic channel estimation, MPS-inspired correlator sampling
 - [Generalized Holographic Workflow](holographic_generalized_unitary_workflow.md) — finite per-step unitary sequences, MPS lifting, and exact-vs-sampled validation
 - [Holographic GHZ and Cluster Workflow](holographic_ghz_cluster_workflow.md) — explicit GHZ and cluster-state circuits lifted into exact and sampled holographic sequences

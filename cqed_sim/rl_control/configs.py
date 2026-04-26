@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, Mapping
 
 from cqed_sim.core import FrameSpec
 from cqed_sim.measurement import QubitMeasurementSpec
@@ -51,6 +51,8 @@ class HybridSystemConfig:
     crosstalk_matrix: dict[str, dict[str, float]] = field(default_factory=dict)
     dt: float = 4.0e-9
     max_step: float | None = None
+    nsteps: int | None = None
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass

@@ -60,6 +60,14 @@ that.
 - Choose this when: you need pointer-state separation, IQ trajectories, readout-chain intuition, or a path toward readout emptying.
 - Do not start here if: you only need synthetic qubit measurement from a final state and not an explicit readout model.
 
+### Convert Cryogenic Wiring Into Bath Occupations
+
+- Recommended starting page: [Microwave Thermal Noise](user_guides/microwave_noise.md)
+- Exact example or notebook: `examples/microwave_noise_fridge_chain.py`
+- Next page to open: [Microwave Thermal Noise API](api/microwave_noise.md)
+- Choose this when: you need normally ordered thermal photon occupations from attenuators, cables, filters, isolators, or passive S-matrix components before setting `NoiseSpec(nth=...)`.
+- Do not start here if: you are trying to change solver collapse operators rather than supply calibrated bath occupations.
+
 ### Optimize Control Pulses
 
 - Recommended starting page: [Optimal Control](tutorials/optimal_control.md)

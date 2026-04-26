@@ -88,6 +88,7 @@ nav:
       - Extracting Observables: user_guides/extracting_observables.md
       - State Prep & Measurement: user_guides/state_prep_measurement.md
       - Open System Dynamics: user_guides/open_system_dynamics.md
+      - Microwave Thermal Noise: user_guides/microwave_noise.md
       - Agent Workflow: user_guides/agent_workflow.md
 
   - Tutorials:
@@ -140,6 +141,7 @@ nav:
           - Dai 2025 Readout-Assisted Resonances: tutorials/dai_2025_readout_assisted_floquet_resonances.md
 
       - Advanced Topics:
+          - Residual Thermal Photons: tutorials/residual_thermal_photons.md
           - Holographic Quantum Algorithms: tutorials/holographic_quantum_algorithms.md
           - Generalized Holographic Workflow: tutorials/holographic_generalized_unitary_workflow.md
           - Holographic GHZ and Cluster Workflow: tutorials/holographic_ghz_cluster_workflow.md
@@ -153,7 +155,9 @@ nav:
       - Pulse System: api/pulses.md
       - Sequence Compilation: api/sequence.md
       - Simulation Engine: api/simulation.md
+      - Microwave Thermal Noise: api/microwave_noise.md
       - Measurement & Readout: api/measurement.md
+      - Strong Readout: api/strong_readout.md
       - Readout Emptying: api/readout_emptying.md
       - Floquet Analysis: api/floquet.md
       - Optimal Control: api/optimal_control.md

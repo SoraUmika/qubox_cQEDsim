@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Sequence
+from dataclasses import dataclass, field
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 import qutip as qt
@@ -11,6 +11,7 @@ from cqed_sim.core.frame import FrameSpec
 from cqed_sim.sequence.scheduler import CompiledSequence
 from cqed_sim.sim.noise import NoiseSpec, split_collapse_operators
 from cqed_sim.sim.runner import default_observables, hamiltonian_time_slices
+from cqed_sim.solvers.options import build_qutip_solver_options
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,7 @@ class ContinuousReadoutSpec:
     atol: float = 1e-8
     rtol: float = 1e-7
     max_step: float | None = None
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
     seeds: int | Sequence[int] | None = None
     progress_bar: str | bool = ""
 
@@ -56,17 +58,20 @@ class ContinuousReadoutResult:
 
 
 def _stochastic_solver_options(spec: ContinuousReadoutSpec) -> dict[str, Any]:
-    options: dict[str, Any] = {
-        "store_states": bool(spec.store_states),
-        "store_final_state": True,
+    extra_options: dict[str, Any] = {
         "keep_runs_results": bool(spec.keep_runs_results),
         "store_measurement": spec.store_measurement,
-        "progress_bar": spec.progress_bar,
         "tol": max(float(spec.atol), float(spec.rtol)),
     }
     if spec.max_step is not None:
-        options["dt"] = float(spec.max_step)
-    return options
+        extra_options["dt"] = float(spec.max_step)
+    return build_qutip_solver_options(
+        store_states=bool(spec.store_states),
+        store_final_state=True,
+        progress_bar=spec.progress_bar,
+        extra_options=extra_options,
+        solver_options=spec.solver_options,
+    )
 
 
 def _trajectory_expectation_slice(expectation_data: np.ndarray, traj_index: int) -> np.ndarray:

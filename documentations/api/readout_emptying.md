@@ -114,6 +114,7 @@ Controls the deployment-style verification path:
 - optional `hardware_model`
 - optional `readout_model`, `frame`, and `noise`
 - `compiler_dt_s`
+- optional `simulation_config` for Lindblad replay solver controls
 - `shots_per_branch`
 - `measurement_noise_mode`
 - `measurement_target_square_error`
@@ -152,7 +153,7 @@ Controls the reduced refinement harness:
 
 - derivative-free outer-loop settings such as `maxiter` and `method`
 - objective weights for residual, separation, measurement error, leakage, robustness, and bandwidth sensitivity
-- optional `measurement_chain`, `hardware_model`, `readout_model`, `frame`, and `noise`
+- optional `measurement_chain`, `hardware_model`, `readout_model`, `frame`, `noise`, and `simulation_config`
 - calibrated-noise readout controls via `measurement_noise_mode`, `measurement_target_square_error`, and `measurement_min_noise_temperature`
 - pulse-disturbance proxy control via `strong_readout_spec`
 - ringdown scoring reference via `ringdown_threshold_photons`

@@ -16,7 +16,7 @@
         <link rel="prev" href="state_prep_measurement.html">
       
       
-        <link rel="next" href="agent_workflow.html">
+        <link rel="next" href="microwave_noise.html">
       
       
         
@@ -619,6 +619,8 @@
       
         
       
+        
+      
     
     
     
@@ -1085,10 +1087,49 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#bath-occupations-from-microwave-wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bath Occupations From Microwave Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -2637,6 +2678,8 @@
       
         
       
+        
+      
     
     
     
@@ -2683,6 +2726,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/residual_thermal_photons.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Residual Thermal Photons
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2818,6 +2889,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -3089,6 +3164,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/measurement.html" class="md-nav__link">
         
   
@@ -3097,6 +3200,34 @@
     
   
     Measurement & Readout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/strong_readout.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strong Readout
   
 
     
@@ -3872,6 +4003,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#bath-occupations-from-microwave-wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bath Occupations From Microwave Wiring
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -4108,6 +4250,23 @@
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">nth_readout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">)</span>
 </span></code></pre></div>
+<hr />
+<h2 id="bath-occupations-from-microwave-wiring">Bath Occupations From Microwave Wiring<a class="headerlink" href="#bath-occupations-from-microwave-wiring" title="Permanent link">&para;</a></h2>
+<p>Use <code>cqed_sim.microwave_noise</code> when <code>nth</code>, <code>nth_storage</code>, or <code>nth_readout</code>
+should come from a cryogenic microwave line rather than from a hand-entered
+number:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.microwave_noise</span><span class="w"> </span><span class="kn">import</span> <span class="n">NoiseCascade</span><span class="p">,</span> <span class="n">PassiveLoss</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">cascade</span> <span class="o">=</span> <span class="n">NoiseCascade</span><span class="p">([</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">PassiveLoss</span><span class="p">(</span><span class="s2">&quot;4K&quot;</span><span class="p">,</span> <span class="n">temp_K</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span> <span class="n">loss_db</span><span class="o">=</span><span class="mf">20.0</span><span class="p">),</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">PassiveLoss</span><span class="p">(</span><span class="s2">&quot;MXC&quot;</span><span class="p">,</span> <span class="n">temp_K</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">loss_db</span><span class="o">=</span><span class="mf">40.0</span><span class="p">),</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">])</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="n">result</span> <span class="o">=</span> <span class="n">cascade</span><span class="o">.</span><span class="n">propagate</span><span class="p">(</span><span class="mf">6.0e9</span><span class="p">,</span> <span class="n">source_temp_K</span><span class="o">=</span><span class="mf">300.0</span><span class="p">)</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">noise</span> <span class="o">=</span> <span class="n">NoiseSpec</span><span class="p">(</span><span class="n">kappa_readout</span><span class="o">=</span><span class="mf">5e5</span><span class="p">,</span> <span class="n">nth_readout</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">n_out</span><span class="p">))</span>
+</span></code></pre></div>
+<p>The microwave-noise helpers propagate normally ordered Bose occupation, not a
+symmetrized noise temperature.</p>
 
 
 

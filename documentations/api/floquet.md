@@ -81,6 +81,8 @@ class FloquetConfig:
     atol: float = 1e-8
     rtol: float = 1e-7
     max_step: float | None = None
+    nsteps: int | None = None
+    solver_options: dict[str, Any] = field(default_factory=dict)
     sort: bool = True
     sparse: bool = False
     zone_center: float = 0.0
@@ -94,6 +96,8 @@ class FloquetConfig:
 
 `overlap_reference_time` is the default mode-evaluation time used by `run_floquet_sweep(...)`
 when no explicit `reference_time` is supplied.
+
+`nsteps` and `solver_options` are passed to QuTiP `FloquetBasis`. `FloquetMarkovConfig.floquet` supplies the default tolerances and `nsteps` for `FMESolver`; `FloquetMarkovConfig.solver_options` remains the direct escape hatch for extra QuTiP options.
 
 ---
 
@@ -155,6 +159,7 @@ class FloquetMarkovConfig:
     store_final_state: bool = True
     store_floquet_states: bool = False
     normalize_output: bool = True
+    solver_options: dict[str, Any] = field(default_factory=dict)
 ```
 
 Wraps Floquet basis settings plus QuTiP Floquet-Markov solver controls.

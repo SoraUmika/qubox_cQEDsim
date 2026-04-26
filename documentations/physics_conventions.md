@@ -361,6 +361,98 @@ Per-transition ancilla decay is activated by setting `NoiseSpec(transmon_t1=(T1_
 
 ---
 
+## Microwave Thermal Noise
+
+`cqed_sim.microwave_noise` is an input-line bath-occupation model for open-system
+simulations. It propagates the normally ordered thermal photon occupation
+
+$$
+n_B(f,T) = \frac{1}{\exp(h f / k_B T)-1},
+$$
+
+rather than a symmetrized noise temperature. The resulting occupations are meant
+to feed `NoiseSpec(nth=..., nth_storage=..., nth_readout=...)` and related
+Lindblad rates; solver internals continue to use the same collapse-operator
+conventions described above.
+
+`n_bose(...)` takes frequency in Hz, while `n_bose_angular(...)`,
+`gamma_phi_thermal(...)`, and Lindblad-rate helpers use angular rates in rad/s.
+The strict thermal helpers return zero occupation at `T=0` and reject negative
+frequencies, temperatures, occupations, couplings, or rates.
+
+For a mode coupled to multiple Markov baths, the effective occupation is
+
+$$
+\bar n_\mathrm{eff} =
+\frac{\sum_j \kappa_j \bar n_j}{\sum_j \kappa_j}.
+$$
+
+`BathSpec` requires exactly one of `temperature_K` or `nbar` for every nonzero
+coupled bath. The emitted Lindblad rates are
+$\kappa_\downarrow=\kappa(\bar n_\mathrm{eff}+1)$ and
+$\kappa_\uparrow=\kappa\bar n_\mathrm{eff}$.
+
+For matched passive loss, the power transmission $\eta$ acts directly on
+occupation:
+
+$$
+n_\mathrm{out} = \eta n_\mathrm{in} + (1-\eta)n_B(f,T),
+\qquad
+\eta = 10^{-\mathrm{loss\_dB}/10}.
+$$
+
+A lossless filter is not a cold bath. It can reduce transmitted out-of-band
+occupation, but an in-band pass filter leaves the incoming occupation unchanged
+unless a genuinely dissipative, cold element is present.
+
+Distributed lossy lines use power attenuation in Nepers per meter:
+
+$$
+\frac{dn}{dz} = \alpha(z,f)\left[n_B(f,T(z))-n(z,f)\right],
+\qquad
+\alpha = \frac{\ln 10}{10}\,\mathrm{attenuation}_{\mathrm{dB/m}}.
+$$
+
+Passive S-matrix components propagate normally ordered covariances as
+
+$$
+C_\mathrm{out} =
+S C_\mathrm{in} S^\dagger + n_B(f,T)\left(I-S S^\dagger\right),
+$$
+
+with an explicit positive-semidefinite check on $I-S S^\dagger$. The reporting
+helper `sym_noise_temperature(...)` is intentionally separate and should not be
+used as a Lindblad thermal occupation.
+
+All microwave-noise frequencies are in Hz. Rate and dephasing helpers use angular
+rates for `kappa`, `chi`, and `gamma_zero_temp`.
+
+Photon-shot-noise dephasing uses the Zhang/Clerk-Utami expression already
+implemented by `thermal_photon_dephasing(...)` as the canonical default exposed
+by `gamma_phi_thermal(...)`. The compact Lorentzian expression
+
+$$
+\Gamma_\phi^\mathrm{Lor} =
+\bar n\frac{\kappa\chi^2}{\kappa^2+\chi^2}
+$$
+
+is intentionally named `gamma_phi_lorentzian_interpolation(...)` so it is not
+mistaken for the default convention.
+
+The effective cavity attenuator model uses
+
+$$
+\bar n_\mathrm{ro} =
+\frac{\kappa_i\bar n_i+\kappa_c\bar n_c}{\kappa_i+\kappa_c}.
+$$
+
+For a cold internal bath and $\kappa_i/\kappa_c=6$, this gives the Wang-style
+$\bar n_\mathrm{ro}\approx\bar n_c/7$ reduction. The two-mode helper diagonalizes
+the readout/attenuator linear Hamiltonian and reports participation ratios,
+effective linewidths, and effective dispersive shifts.
+
+---
+
 ## Sequential Sideband Reset Approximation
 
 The staged storage-reset workflow uses the explicit three-mode storage-transmon-readout model together with two driven effective red sidebands:

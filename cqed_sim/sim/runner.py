@@ -3,7 +3,7 @@ from __future__ import annotations
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 import multiprocessing as mp
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 
 
 def _progress(iterable, enabled: bool, **kwargs):
@@ -25,6 +25,7 @@ from cqed_sim.core.frame import FrameSpec
 from cqed_sim.sequence.scheduler import CompiledSequence
 from cqed_sim.sim.noise import NoiseSpec, collapse_operators
 from cqed_sim.sim.solver import solve_with_backend
+from cqed_sim.solvers.options import build_qutip_solver_options
 
 
 @dataclass(frozen=True)
@@ -33,8 +34,10 @@ class SimulationConfig:
     atol: float = 1e-8
     rtol: float = 1e-7
     max_step: float | None = None
+    nsteps: int | None = None
     store_states: bool = False
     backend: BaseBackend | None = None
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
     # dynamiqs fields — set dynamiqs_solver to a solver name (e.g. "Tsit5")
     # to use the JAX/diffrax path instead of QuTiP.  None (default) keeps the
     # existing QuTiP path unchanged.
@@ -148,15 +151,15 @@ def _qutip_hamiltonian_from_slices(hamiltonian_slices: list, tlist: Sequence[flo
 
 
 def _solver_options(cfg: SimulationConfig) -> dict[str, Any]:
-    options: dict[str, Any] = {
-        "atol": cfg.atol,
-        "rtol": cfg.rtol,
-        "store_states": bool(cfg.store_states),
-        "store_final_state": True,
-    }
-    if cfg.max_step is not None:
-        options["max_step"] = cfg.max_step
-    return options
+    return build_qutip_solver_options(
+        atol=cfg.atol,
+        rtol=cfg.rtol,
+        max_step=cfg.max_step,
+        nsteps=cfg.nsteps,
+        store_states=bool(cfg.store_states),
+        store_final_state=True,
+        solver_options=cfg.solver_options,
+    )
 
 
 def _final_state_from_result(result: qt.solver.Result) -> qt.Qobj:

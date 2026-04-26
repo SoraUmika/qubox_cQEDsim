@@ -24,7 +24,7 @@ The `sim` module is the simulation runtime for `cqed_sim`. It assembles the time
 
 ### Configuration
 
-- **`SimulationConfig`**: Controls frame (`FrameSpec`), solver tolerances, time step, backend choice, noise model, and whether to store full state trajectories.
+- **`SimulationConfig`**: Controls frame (`FrameSpec`), solver tolerances, time step, QuTiP `nsteps`, extra QuTiP `solver_options`, backend choice, noise model, and whether to store full state trajectories.
 - **`NoiseSpec`**: Specifies collapse operators for open-system evolution. Supports `T1`, `T2`, and multilevel transmon decay via `transmon_t1=(T1_ge, T1_fe, ...)`.
 - **`split_collapse_operators(...)`**: Splits noise channels into unmonitored Lindblad terms and a monitored bosonic-emission path for stochastic readout replay.
 - **`hamiltonian_time_slices(...)`**: Returns the time-sliced Hamiltonian matrices for inspection without running the solver.
@@ -81,7 +81,7 @@ result = simulate_sequence(
     compiled,
     initial_state,
     drive_ops,
-    config=SimulationConfig(frame=frame, max_step=2.0e-9),
+    config=SimulationConfig(frame=frame, max_step=2.0e-9, nsteps=100000),
 )
 rho_q = reduced_qubit_state(result.final_state)
 ```
@@ -138,6 +138,7 @@ result = simulate_sequence(model, compiled, psi0, drive_ops,
 ## Important Assumptions / Conventions
 
 - The solver backend is QuTiP by default. Dense NumPy and JAX backends are available via `SimulationConfig(backend=NumPyBackend())` for small systems.
+- On the QuTiP path, `SimulationConfig.solver_options` is merged with explicit project-level fields. Conflicting duplicate keys raise `ValueError`.
 - The time-dependent Hamiltonian is assembled in piecewise-constant form from the compiled channel schedule.
 - Frame and carrier conventions follow `cqed_sim.core`: public wrappers should translate positive physical drive frequencies through the core helpers before assigning the raw low-level `Pulse.carrier = -omega_transition(frame)` expected by the runtime.
 - Extractors that take `state` accept either a `qt.Qobj` density matrix or a ket; they trace out subsystems in the canonical tensor order (qubit first, then bosonic modes).

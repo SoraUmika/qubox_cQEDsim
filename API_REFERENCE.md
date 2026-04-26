@@ -38,9 +38,10 @@
    - 6.3 [SimulationResult](#63-simulationresult)
    - 6.4 [SimulationSession and Prepared Simulation](#64-simulationsession-and-prepared-simulation)
    - 6.5 [NoiseSpec](#65-noisespec)
-   - 6.6 [Coupling Helpers](#66-coupling-helpers)
-   - 6.7 [State Extractors](#67-state-extractors)
-   - 6.8 [Diagnostics](#68-diagnostics)
+   - 6.6 [Microwave Thermal Noise](#66-microwave-thermal-noise)
+   - 6.7 [Coupling Helpers](#67-coupling-helpers)
+   - 6.8 [State Extractors](#68-state-extractors)
+   - 6.9 [Diagnostics](#69-diagnostics)
 7. [State Preparation and Measurement (`cqed_sim.core`, `cqed_sim.measurement`)](#7-state-preparation-and-measurement)
    - 7.1 [State Preparation](#71-state-preparation)
    - 7.2 [Qubit Measurement](#72-qubit-measurement)
@@ -1127,14 +1128,18 @@ class SimulationConfig:
     atol: float = 1e-8
     rtol: float = 1e-7
     max_step: float | None = None
+    nsteps: int | None = None
     store_states: bool = False
     backend: BaseBackend | None = None   # None = use QuTiP path
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
     # dynamiqs GPU-accelerated ODE solver (optional)
     dynamiqs_solver: str | None = None   # e.g. "Tsit5", "Dopri5", "Expm"
     dynamiqs_atol: float = 1e-8
     dynamiqs_rtol: float = 1e-6
     dynamiqs_device: str | None = None   # "cpu" or "gpu"; None = default
 ```
+
+On the QuTiP path, `atol`, `rtol`, `max_step`, `nsteps`, `store_states`, and `store_final_state` are converted into native QuTiP solver options. `solver_options` is an escape hatch for additional QuTiP keys such as `method`; duplicate keys that conflict with explicit config fields raise `ValueError`.
 
 **dynamiqs solver fields** (all default to disabled):
 
@@ -1287,7 +1292,118 @@ Returns Lindblad jump operators:
 
 ---
 
-### 6.6 Coupling Helpers
+### 6.6 Microwave Thermal Noise
+
+**Module path:** `cqed_sim.microwave_noise`
+
+This package propagates normally ordered microwave thermal photon occupation
+through passive cryogenic wiring. Use its output as `NoiseSpec.nth`,
+`NoiseSpec.nth_storage`, or `NoiseSpec.nth_readout`. It does not change the
+Lindblad solver internals.
+
+| Function / Class | Signature | Description |
+|---|---|---|
+| `bose_occupation(freq_hz, temp_K)` | `(float\|array, float\|array) -> float\|ndarray` | Bose occupation `1/(exp(h f/k_B T)-1)`, vectorized over frequency; returns 0 for `temp_K <= 0` |
+| `loss_db_to_power_transmission(loss_db)` | `(float\|array) -> float\|ndarray` | Positive insertion loss convention: `eta = 10 ** (-loss_db/10)` |
+| `occupation_to_effective_temperature(freq_hz, n)` | `-> float\|ndarray` | Inverts Bose occupation; returns 0 where `n <= 0` |
+| `sym_noise_temperature(freq_hz, temp_K)` | `-> float\|ndarray` | Reporting-only symmetrized noise temperature; not a Lindblad bath occupation |
+| `PassiveLoss(name, temp_K, loss_db)` | dataclass | Matched passive lossy component; `loss_db` may be a scalar or `loss_db(freq_hz)` |
+| `DistributedLine(name, length_m, attenuation_db_per_m, temperature_K, num_slices)` | dataclass | Sliced line with power attenuation in dB/m and temperature profile |
+| `DirectionalLoss(name, temp_K, forward_loss_db, reverse_isolation_db)` | dataclass | Scalar isolator/circulator approximation with direction-specific loss |
+| `PassiveSMatrixComponent(name, temp_K, S_matrix)` | dataclass | Passive covariance propagation with PSD check of `I - S S^dagger` |
+| `NoiseCascade(components)` | dataclass | Scalar matched cascade returning `NoiseCascadeResult` plus exact noise budget |
+| `n_bose(freq_hz, temp_K)` / `n_bose_angular(omega_rad_s, temp_K)` | `-> float` | Strict scalar Bose helpers; reject negative frequency or temperature |
+| `BathSpec(...)`, `ModeBathModel(...)` | dataclasses | Typed multi-bath resonator occupation and effective Lindblad-rate model |
+| `resonator_thermal_occupation(kappas, n_baths)` | `-> float` | Linewidth-weighted resonator occupation |
+| `resonator_lindblad_rates(kappa, n)` | `-> (downward_rate, upward_rate)` | Bosonic thermal Lindblad rates |
+| `qubit_thermal_rates(gamma_zero_temp, n)` | `-> (Gamma_down, Gamma_up, Gamma_1)` | Qubit thermal transition rates |
+| `thermal_photon_dephasing(kappa, chi, n_cav, exact=True, approximation=None)` | `-> float` | Photon-shot-noise dephasing in angular-rate units |
+| `gamma_phi_thermal(nbar, kappa_rad_s, chi_rad_s)` | `-> float` | Canonical Zhang/Clerk-Utami residual-photon dephasing wrapper |
+| `gamma_phi_lorentzian_interpolation(...)` | `-> float` | Explicit compact interpolation `nbar*kappa*chi**2/(kappa**2+chi**2)` |
+| `gamma_phi_strong_dispersive_N(...)` | `-> float` | Strong-dispersive photon-number-conditioned escape/dephasing rate |
+| `PassiveLossStage`, `LosslessFilterStage`, `MicrowaveNoiseChain` | dataclasses | Lightweight design-facing line-noise chain; lossless in-band filters do not thermalize |
+| `EffectiveCavityAttenuator(...)` | dataclass | Cold-bath readout attenuator model with weighted effective occupation |
+| `TwoModeCavityAttenuatorModel(...)` | dataclass | Linear readout/attenuator hybridization, participation, linewidth, and inherited chi estimates |
+| `simulate_ramsey_with_residual_photons(...)` | `-> RamseyResult` | Deterministic Lindblad Ramsey helper initialized with thermal bosonic states |
+| `simulate_noise_induced_dephasing(...)` / `fit_noise_induced_dephasing(...)` | `-> NoiseInducedDephasingResult` | Synthetic added-noise dephasing extraction and offset fit |
+
+Scalar passive propagation uses power transmission, not amplitude transmission:
+
+```python
+n_out = eta * n_in + (1.0 - eta) * bose_occupation(freq_hz, temp_K)
+```
+
+`DistributedLine` applies the same rule to midpoint slices, with
+`alpha_Np_per_m = ln(10)/10 * attenuation_db_per_m` and
+`eta_i = exp(-alpha_i * dz)`.
+
+`NoiseCascade.propagate(...)` returns:
+
+```python
+@dataclass(frozen=True)
+class NoiseCascadeResult:
+    n_out: np.ndarray
+    effective_temperature: np.ndarray
+    trace: tuple[ComponentTrace, ...]
+    budget: NoiseBudget
+```
+
+For scalar matched cascades, `budget.weights`, `budget.occupations`, and
+`budget.contributions` satisfy
+`n_out = w_source*n_source + sum_i w_i*n_B(f,T_i)` and
+`w_source + sum_i w_i = 1` up to numerical roundoff. Distributed lines are
+budgeted exactly at the slice level.
+
+`PassiveSMatrixComponent` propagates normally ordered covariance matrices:
+
+```python
+C_out = S @ C_in @ S.conj().T + n_B(freq_hz, temp_K) * (I - S @ S.conj().T)
+```
+
+It raises `ValueError` if `I - S S^dagger` is not positive semidefinite.
+
+Residual-photon helpers use the same angular-rate convention as the simulator:
+`kappa`, `chi`, and `Gamma_phi` are rad/s when times are seconds. The canonical
+dephasing wrapper follows the more general Zhang/Clerk-Utami expression already
+used by `thermal_photon_dephasing(...)`; the Lorentzian expression is available
+only through the explicit `gamma_phi_lorentzian_interpolation(...)` name.
+
+Cold dissipative attenuators and lossless filters are intentionally separate.
+A `PassiveLossStage` emits its physical Bose occupation and can thermalize
+in-band noise when physically cold. A `LosslessFilterStage` rejects transmitted
+occupation outside its passband but leaves the in-band occupation unchanged.
+For Wang-style cavity attenuators, `EffectiveCavityAttenuator` implements
+`n_eff=(kappa_i*n_i+kappa_c*n_c)/(kappa_i+kappa_c)`, so `kappa_i/kappa_c=6`
+and `n_i=0` gives `n_eff=n_c/7`.
+
+Example:
+
+```python
+from cqed_sim.microwave_noise import NoiseCascade, PassiveLoss
+from cqed_sim.sim import NoiseSpec
+
+cascade = NoiseCascade([
+    PassiveLoss("4K", temp_K=4.0, loss_db=20.0),
+    PassiveLoss("MXC", temp_K=0.02, loss_db=40.0),
+])
+result = cascade.propagate(6.0e9, source_temp_K=300.0)
+noise = NoiseSpec(kappa_readout=2.0e6, nth_readout=float(result.n_out))
+```
+
+Reference examples:
+
+- `examples/microwave_noise_fridge_chain.py`
+- `examples/microwave_noise_resonator_ports.py`
+- `examples/microwave_noise_qubit_rates.py`
+- `examples/microwave_noise_photon_dephasing.py`
+- `examples/noise/photon_shot_noise_dephasing.py`
+- `examples/noise/multimode_thermal_photons.py`
+- `examples/microwave/cavity_attenuator_design.py`
+- `examples/noise/noise_induced_dephasing_extraction.py`
+
+---
+
+### 6.7 Coupling Helpers
 
 **Module path:** `cqed_sim.sim.couplings`
 
@@ -1302,7 +1418,7 @@ Returns Lindblad jump operators:
 
 ---
 
-### 6.7 State Extractors
+### 6.8 State Extractors
 
 **Module path:** `cqed_sim.sim.extractors`
 
@@ -1375,7 +1491,7 @@ avoid redundant QuTiP tensor-product construction.
 
 ---
 
-### 6.8 Diagnostics
+### 6.9 Diagnostics
 
 **Module path:** `cqed_sim.sim.diagnostics`
 
@@ -1544,6 +1660,8 @@ Common APIs:
 | `integrate_measurement_record(...)` | Integrate a homodyne or heterodyne record over its final time axis |
 
 The monitored path is built from `split_collapse_operators(...)`: one selected bosonic emission channel is promoted to the stochastic measurement path, while relaxation, thermal excitation, and dephasing remain ordinary Lindblad terms.
+
+`ContinuousReadoutSpec.solver_options` forwards additional native QuTiP `smesolve` options. The existing `max_step` field maps to the SME-specific `dt` option.
 
 ### 7.5 Strong-Readout Disturbance Helpers
 
@@ -1744,6 +1862,8 @@ class FloquetConfig:
     atol: float = 1e-8
     rtol: float = 1e-7
     max_step: float | None = None
+    nsteps: int | None = None
+    solver_options: dict[str, Any] = field(default_factory=dict)
     sort: bool = True
     sparse: bool = False
     zone_center: float = 0.0
@@ -1755,6 +1875,8 @@ class FloquetConfig:
 
 `overlap_reference_time` is the default mode-evaluation time used by `run_floquet_sweep(...)`
 when you do not pass an explicit `reference_time` override.
+
+`nsteps` and `solver_options` are forwarded to QuTiP `FloquetBasis`. The nested `FloquetMarkovConfig.floquet` settings also supply the default tolerances and `nsteps` for `FMESolver`, unless `FloquetMarkovConfig.solver_options` provides a non-conflicting override.
 
 `PeriodicDriveTerm` supports two complementary styles:
 
@@ -2001,6 +2123,8 @@ class ConditionedMultitoneRunConfig:
     tone_cutoff: float = 1.0e-10
     include_all_levels: bool = False
     max_step_s: float | None = None
+    nsteps: int | None = None
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
     fock_fqs_hz: tuple[float, ...] | None = None
 
 @dataclass(frozen=True)
@@ -3549,6 +3673,8 @@ class HybridSystemConfig:
     crosstalk_matrix: dict[str, dict[str, float]] = field(default_factory=dict)
     dt: float = 4.0e-9
     max_step: float | None = None
+    nsteps: int | None = None
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
 ```
 
 Highlights:
@@ -3557,6 +3683,7 @@ Highlights:
 - `HybridCQEDEnv.step(action)` parses the configured action space, generates pulses, compiles distortions, propagates the system, optionally measures, and returns the next observation plus reward.
 - `render_diagnostics()` exposes simulator-side debugging state such as reduced states, ancilla populations, Wigner diagnostics, compiled channels, segment metadata, pulse summaries, and the resolved frame/regime metadata.
 - `estimate_metrics(...)` evaluates a baseline sequence or user-supplied policy/actions over multiple seeded rollouts and reports distribution summaries.
+- `nsteps` and `solver_options` are passed to the full-pulse runtime through `SimulationConfig`.
 
 ### Action, Observation, and Reward Layers
 
@@ -3744,6 +3871,8 @@ verify_readout_emptying_pulse(...)
 refine_readout_emptying_pulse(...)
 ```
 
+`ConditionedMultitoneRunConfig.nsteps` and `solver_options` are forwarded to the reduced-sector `sesolve`, full-runtime `SimulationConfig`, and targeted-subspace propagator paths. The legacy SQR calibration mapping key `qutip_nsteps_sqr_calibration` is still honored, but explicit `nsteps` or `solver_options["nsteps"]` takes precedence.
+
 Highlights:
 
 - the terminal emptying constraints are built from the exact finite-width segment integral rather than a short-segment approximation
@@ -3756,6 +3885,7 @@ Highlights:
 - `refine_readout_emptying_pulse(...)` is a reduced outer-loop study harness over the existing runtime stack, not a new open-system `ControlProblem` objective family
 - the refinement variables are intentionally low-dimensional: null-space coordinates plus optional duration scaling, endpoint ramps, and shared chirp scaling
 - the exported pulse remains compatible with the standard `Pulse` / `SequenceCompiler` / measurement replay stack
+- `ReadoutEmptyingVerificationConfig` and `ReadoutEmptyingRefinementConfig` accept an optional `SimulationConfig` for the Lindblad verification/refinement replay path
 
 See also:
 
@@ -4038,6 +4168,8 @@ Available objects:
 
 Replay can target either the command waveform or the physical waveform through `waveform_mode="command" | "physical" | "problem_default"`.
 
+`ControlEvaluationCase` accepts `nsteps`, `solver_options`, or a full `SimulationConfig` for QuTiP replay. `evaluate_control_with_simulator(...)` also accepts those settings at top level and applies them as defaults to cases that do not specify their own solver configuration.
+
 This path is the supported way to answer: "the optimizer says the pulse is good, but how does it behave when replayed through the simulator with noise?"
 
 ### Benchmark Harness
@@ -4287,7 +4419,92 @@ intended as primary user entry points but are accessible.
 
 ---
 
-## 21. Ambiguities / Gaps / Known Mismatches
+## 21. Strong Readout Stack
+
+The strong-readout extension adds a multi-fidelity framework for readout pulses
+that must be checked for assignment fidelity, physical QND fidelity, transitions,
+leakage, residual photons, Purcell/filter behavior, and measurement records.
+
+### Models
+
+| Symbol | Module | Purpose |
+|---|---|---|
+| `TransmonCosineSpec` | `cqed_sim.models.transmon` | Charge-basis cosine transmon parameters |
+| `diagonalize_transmon(...)` | `cqed_sim.models.transmon` | Lowest transmon eigenstates and charge matrix elements |
+| `TransmonModel` | `cqed_sim.models.transmon` | Convenience wrapper for cosine or Duffing backend |
+| `MultilevelCQEDModel` | `cqed_sim.models.multilevel_cqed` | Transmon plus readout resonator Hamiltonian |
+| `IQPulse` | `cqed_sim.models.multilevel_cqed` | Complex readout-drive samples in rad/s |
+| `ExplicitPurcellFilterMode` | `cqed_sim.models.purcell_filter` | Explicit filter mode with `sqrt(kappa_f) f` output |
+| `FilteredMultilevelCQEDModel` | `cqed_sim.models.purcell_filter` | Tensor ordering `|q,n_r,n_f>` |
+| `diagonalize_dressed_hamiltonian(...)` | `cqed_sim.models.dressed_basis` | Dressed labels, projectors, transition matrices |
+| `scan_mist(...)` | `cqed_sim.models.mist_floquet` | Semiclassical MIST penalty map |
+
+The full transmon Hamiltonian is
+
+```text
+Hq = 4 EC (n - ng)^2 - EJ cos(phi)
+```
+
+with charge basis ordered from `-n_cut` to `+n_cut`.  Energies and rates are
+angular frequencies, normally rad/s; times are seconds.
+
+### Solvers, Readout, and Metrics
+
+| Symbol | Module | Purpose |
+|---|---|---|
+| `solve_master_equation(...)` | `cqed_sim.solvers.master_equation` | Lindblad replay for time-dependent Hamiltonian data |
+| `collapse_operators_from_model(...)` | `cqed_sim.solvers.master_equation` | Model-native and dressed-basis collapse operator assembly |
+| `simulate_measurement_trajectories(...)` | `cqed_sim.solvers.trajectories` | Homodyne/heterodyne records with efficiency and Gaussian noise |
+| `MasterEquationConfig` | `cqed_sim.solvers.master_equation` | QuTiP master-equation controls including `atol`, `rtol`, `max_step`, `nsteps`, and `solver_options` |
+| `TrajectoryConfig.master_equation_config` | `cqed_sim.solvers.trajectories` | Optional `MasterEquationConfig` used by the deterministic trajectory mean solve |
+| `output_operator(...)` | `cqed_sim.readout.input_output` | `sqrt(kappa_r) a` or `sqrt(kappa_f) f` output selection |
+| `MatchedFilterClassifier` | `cqed_sim.readout.classifiers` | Matched-filter classification |
+| `GaussianMLClassifier` | `cqed_sim.readout.classifiers` | Gaussian maximum-likelihood classification |
+| `ReadoutMetricSet` | `cqed_sim.metrics.readout_metrics` | Assignment, QND, leakage, residual-photon, energy, and slew metrics |
+| `compute_readout_metrics(...)` | `cqed_sim.metrics.readout_metrics` | Metric bundle construction |
+
+Confusion matrices use `P(predicted | prepared)`.  Assignment fidelity and
+physical QND fidelity are intentionally separate.  `collapse_operators_from_model(...)`
+appends supplied dressed-basis decays to model-native collapse operators.  The
+matched-filter score is `Re(record @ template*) - 0.5 ||template||^2`, the
+equal-noise maximum-likelihood boundary for fixed templates.
+
+### Pulses and Optimization
+
+| Symbol | Module | Purpose |
+|---|---|---|
+| `square_readout_seed(...)` | `cqed_sim.pulses.clear` | Square readout seed |
+| `gaussian_readout_seed(...)` | `cqed_sim.pulses.clear` | Gaussian readout seed |
+| `ramped_readout_seed(...)` | `cqed_sim.pulses.clear` | Smooth ramped readout seed |
+| `clear_readout_seed(...)` | `cqed_sim.pulses.clear` | CLEAR-like kick-up, plateau, depletion seed |
+| `StrongReadoutOptimizer` | `cqed_sim.optimization.strong_readout_optimizer` | Multi-fidelity optimizer returning ranked and Pareto candidates |
+| `PulseConstraints` | `cqed_sim.optimization.strong_readout_optimizer` | Amplitude, slew, bandwidth, duration, and frequency constraints |
+
+The optimizer objective is:
+
+```text
+L = wA*(1 - F_assign)
+  + wQ*(1 - F_QND_phys)
+  + wL*P_leak
+  + wR*n_res
+  + wE*pulse_energy
+  + wS*slew_penalty
+  + wM*MIST_penalty
+```
+
+Example workflow: `examples/optimize_strong_readout.py`.
+
+Correctness checks:
+
+```bash
+py -3.12 -m pytest tests/test_65_strong_readout_stack.py tests/test_66_strong_readout_correctness.py -q
+py -3.12 -m pytest tests/test_67_strong_readout_convergence_slow.py -m slow -q
+py -3.12 test_against_papers/strong_readout_clear_mist_validation.py
+```
+
+---
+
+## 22. Ambiguities / Gaps / Known Mismatches
 
 ### Runtime/Synthesis Convention Alignment
 

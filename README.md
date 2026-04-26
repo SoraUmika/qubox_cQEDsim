@@ -46,6 +46,8 @@ Core library:
   - Periodic-drive Floquet analysis, quasienergies, one-period propagators, harmonic-space Sambe builders, resonance helpers, and branch-tracking utilities for driven cQED models.
 - `cqed_sim/measurement`
   - Reusable qubit measurement primitives and readout-chain modeling.
+- `cqed_sim/microwave_noise`
+  - Distributed cryogenic microwave thermal-noise propagation for converting line attenuation, filters, isolators, and passive S-matrix components into effective bath occupations for Lindblad models.
 - `cqed_sim/analysis`, `cqed_sim/calibration_targets`, `cqed_sim/backends`
   - Parameter translation, calibration-target surrogates, and optional dense NumPy/JAX backend support.
 - `cqed_sim/calibration`, `cqed_sim/observables`, `cqed_sim/operators`, `cqed_sim/tomo`, `cqed_sim/io`, `cqed_sim/plotting`, `cqed_sim/map_synthesis`, `cqed_sim/unitary_synthesis`, `cqed_sim/optimal_control`

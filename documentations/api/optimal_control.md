@@ -326,6 +326,17 @@ The identity transfer case is represented by `HardwareModel(maps=())` or `hardwa
 
 ---
 
+## Simulator Replay Controls
+
+`ControlEvaluationCase` and `evaluate_control_with_simulator(...)` replay optimized schedules through the standard `cqed_sim.sim` runtime. For large Hilbert-space or long-duration replays, pass either:
+
+- `nsteps=...` and `solver_options={...}` directly on the case or top-level replay call, or
+- `simulation_config=SimulationConfig(...)` for the full runtime configuration.
+
+Case-level settings take precedence over top-level defaults.
+
+---
+
 ## Objectives
 
 ```python

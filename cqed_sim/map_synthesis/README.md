@@ -16,3 +16,5 @@ The package still optimizes unitaries, but it also supports reduced-state, isome
 ## Implementation Note
 
 This package currently re-exports the existing synthesis implementation from `cqed_sim.unitary_synthesis` so the transition can happen without breaking current workflows.
+
+Runtime propagation settings are inherited from the underlying synthesis stack. Backend settings may include `nsteps` and `solver_options` when model-backed waveform primitives are replayed through QuTiP.

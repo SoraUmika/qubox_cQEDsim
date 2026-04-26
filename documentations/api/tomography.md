@@ -68,6 +68,7 @@ ALL_XY_21: list[tuple[str, str]]  # 21 standard gate pairs
 
 def run_all_xy(
     model, cal: QubitPulseCal, dt_ns=0.2, frame=None, noise=None,
+    simulation_config=None,
 ) -> dict[str, np.ndarray]  # {"measured_z", "expected_z", "rms_error"}
 
 def autocalibrate_all_xy(
@@ -82,9 +83,11 @@ def run_fock_resolved_tomo(
     model, state_prep: Callable, n_max: int, cal: QubitPulseCal,
     tag_duration_ns=1000.0, tag_amp=0.0015, dt_ns=1.0,
     noise=None, ideal_tag=False, pre_rotation_mode="pulse",
-    leakage_cal=None, unmix_lambda=1e-2,
+    leakage_cal=None, unmix_lambda=1e-2, simulation_config=None,
 ) -> FockTomographyResult
 ```
+
+`simulation_config` is copied onto the tomography default rotating qubit frame, so QuTiP controls such as `nsteps` and `solver_options` can be passed through without changing the existing frame convention.
 
 | Field | Type | Description |
 |---|---|---|

@@ -342,6 +342,90 @@ Direct tests:
 \texttt{tests/test\_41\_optimal\_control\_followup.py},
 \texttt{tests/test\_42\_optimal\_control\_hardware\_constraints.py}.
 
+\section{Strong-Readout Model Hierarchy}
+The strong-readout stack in \texttt{cqed\_sim/models},
+\texttt{cqed\_sim/solvers}, \texttt{cqed\_sim/readout},
+\texttt{cqed\_sim/metrics}, and \texttt{cqed\_sim/optimization} extends the
+effective readout-chain layer with a microscopic multilevel path. It is intended
+for cases where a linear dispersive pointer model is useful for seeding but is
+not sufficient for final certification.
+
+\subsection*{Cosine transmon and units}
+The full transmon backend uses the charge-basis Hamiltonian
+\[
+H_q = 4 E_C (\hat n-n_g)^2 - E_J \cos\hat\phi,
+\]
+with charge states ordered from \(-n_{\mathrm{cut}}\) to
+\(+n_{\mathrm{cut}}\). The exported charge matrix elements are those of
+\(\hat n\) in the lowest retained transmon eigenbasis. A Duffing backend remains
+available for lightweight checks, but the cosine model is the convention-bearing
+path for strong-drive leakage and MIST scans. \(E_J\), \(E_C\), eigenenergies,
+couplings, linewidths, drive envelopes, and collapse rates are angular
+frequencies, normally rad/s; times are seconds.
+
+\subsection*{Multilevel readout Hamiltonian}
+The no-filter tensor ordering is \(|q,n_r\rangle\). The driven Hamiltonian is
+\[
+H = H_q + \omega_r a^\dagger a
+  + \sum_{mn} g_{mn}|m\rangle\langle n| (a+a^\dagger)
+  + \epsilon(t)a^\dagger + \epsilon^*(t)a,
+\]
+with optional rotating-frame offsets and an optional rotating-wave coupling
+approximation for fast validation. The drive envelope \(\epsilon(t)\) is a
+complex IQ sample stream in angular-frequency units.
+
+\subsection*{Explicit Purcell filter}
+When a filter mode is explicit, the tensor ordering is
+\(|q,n_r,n_f\rangle\), the additional Hamiltonian terms are
+\[
+H_f = \omega_f f^\dagger f + J(a^\dagger f + a f^\dagger),
+\]
+and the output channel is
+\[
+L_{\mathrm{out}}=\sqrt{\kappa_f}\,f.
+\]
+In this explicit-filter mode, a separate Purcell qubit-decay collapse operator
+for the same output channel is forbidden to avoid double-counting. If no filter
+is present, the output field convention is \(L_{\mathrm{out}}=\sqrt{\kappa_r}a\).
+
+\subsection*{Dressed basis, QND, and classifiers}
+The strong-readout dressed-basis helper diagonalizes the undriven coupled
+Hamiltonian and labels eigenstates by maximum bare-state overlap with
+\(|q,n_r,n_f\rangle\) or \(|q,n_r\rangle\). Dressed qubit projectors are
+\[
+P_m = \sum_{\mathbf n} |\widetilde{m,\mathbf n}\rangle
+      \langle\widetilde{m,\mathbf n}|.
+\]
+For final states \(\rho_i(T)\) prepared from initial qubit level \(i\), the
+physical transition matrix is
+\[
+T_{j i} = \mathrm{Tr}[P_j \rho_i(T)].
+\]
+This transition matrix is used for physical QND fidelity and leakage. It is
+kept separate from assignment fidelity, which is computed from the classifier
+confusion matrix \(P(\mathrm{predicted}\mid\mathrm{prepared})\). High SNR alone
+does not certify QND behavior.
+
+\subsection*{Optimization objective}
+The strong-readout optimizer uses the linear pointer model only as a fast Stage
+A seeding model, then accepts master-equation, stochastic-trajectory, and
+MIST/Floquet scorers for higher-fidelity validation. Its scalar objective is
+\[
+\begin{aligned}
+L ={}& w_A(1-F_{\mathrm{assign}})
+    + w_Q(1-F_{\mathrm{QND,phys}})
+    + w_L P_{\mathrm{leak}}
+    + w_R n_{\mathrm{res}} \\
+   &+ w_E E_{\mathrm{pulse}}
+    + w_S S_{\mathrm{slew}}
+    + w_M P_{\mathrm{MIST}}.
+\end{aligned}
+\]
+Returned candidates are ranked and Pareto-filtered rather than reduced to a
+single waveform. Convergence checks should compare qubit-level truncation,
+resonator cutoff, filter cutoff, charge-basis cutoff, and timestep before a
+strong-readout pulse is treated as certified.
+
 \section{Physical Readout Chain}
 The physical readout-chain path models a driven dispersive resonator with optional
 Purcell filtering and additive amplifier noise. This section is an \emph{effective
@@ -1464,6 +1548,131 @@ Direct tests:
 \texttt{tests/test\_18\_noise\_and\_sideband.py},
 \texttt{tests/test\_28\_three\_mode\_drives\_and\_noise.py},
 \texttt{tests/test\_31\_multilevel\_sideband\_extension.py}.
+
+\section{Distributed Microwave Thermal Noise}
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{cqed\_sim.microwave\_noise} propagates normally ordered
+  thermal photon occupation \(\bar{n}(f)\), not the symmetrized noise
+  temperature. Frequencies in this module are in Hz.
+  \item The thermal occupation convention is
+  \[
+  n_B(f,T)=\frac{1}{\exp(h f/k_B T)-1},
+  \]
+  with \(n_B=0\) at \(T=0\). Negative temperatures, frequencies, bath
+  occupations, couplings, and rates are rejected by the helper APIs. The
+  angular-frequency helper uses \(\omega=2\pi f\), and the inverse effective
+  temperature helper uses
+  \[
+  T_{\mathrm{eff}}=
+  \frac{h f}{k_B\ln(1+1/\bar{n})}.
+  \]
+  \item A resonator mode coupled to multiple Markov baths uses the weighted
+  occupation convention
+  \[
+  \bar{n}_{\mathrm{eff}}=
+  \frac{\sum_j \kappa_j\bar{n}_j}{\sum_j\kappa_j}.
+  \]
+  For every nonzero-coupled bath, \texttt{BathSpec} requires exactly one of a
+  physical temperature or an explicit \(\bar{n}\). The corresponding thermal
+  Lindblad rates are
+  \[
+  \kappa_\downarrow=\kappa(\bar{n}_{\mathrm{eff}}+1),\qquad
+  \kappa_\uparrow=\kappa\bar{n}_{\mathrm{eff}}.
+  \]
+  \item A matched passive lossy element with power transmission \(\eta\) and
+  physical temperature \(T\) is modeled as
+  \[
+  n_{\mathrm{out}}(f)=\eta(f)n_{\mathrm{in}}(f)
+  +\left[1-\eta(f)\right]n_B(f,T).
+  \]
+  Positive insertion loss in dB maps to
+  \[
+  \eta = 10^{-\mathrm{loss\_db}/10}.
+  \]
+  This is a power-transmission convention for occupations; amplitude
+  transmission is not used to propagate occupations.
+  \item A lossless filter is not treated as a cold bath. It can suppress
+  transmitted out-of-band occupation, but in-band pass transmission leaves the
+  incoming occupation unchanged unless a dissipative cold element is also
+  present.
+  \item A distributed lossy line follows
+  \[
+  \frac{dn}{dz} = \alpha(z,f)\left[n_B(f,T(z))-n(z,f)\right],
+  \]
+  implemented by midpoint slices with
+  \[
+  \eta_i=\exp(-\alpha_i dz),\qquad
+  \alpha_{\mathrm{Np/m}}=\frac{\ln 10}{10}\alpha_{\mathrm{dB/m}}.
+  \]
+  \item For scalar matched cascades, the exact budget decomposition is
+  \[
+  n_{\mathrm{out}} = w_{\mathrm{source}}n_{\mathrm{source}}
+  + \sum_i w_i n_B(f,T_i),
+  \qquad
+  w_{\mathrm{source}} + \sum_i w_i = 1.
+  \]
+  Distributed lines are represented exactly at the slice level in this
+  decomposition.
+  \item Passive multiport components use the normally ordered covariance rule
+  \[
+  C_{\mathrm{out}} = S C_{\mathrm{in}} S^\dagger
+  + n_B(f,T)\left(I-S S^\dagger\right),
+  \]
+  and the implementation rejects components for which \(I-S S^\dagger\) is
+  not positive semidefinite.
+  \item The cQED helper rates preserve the existing Lindblad convention:
+  bosonic rates are \(\kappa(n+1)\) downward and \(\kappa n\) upward, and qubit
+  rates are \(\Gamma_\downarrow=\Gamma_0(n+1)\) and
+  \(\Gamma_\uparrow=\Gamma_0 n\).
+  \item Thermal-photon dephasing uses angular-rate inputs \(\kappa\) and
+  \(\chi\). The exact expression implemented for a dispersive resonator bath is
+  \[
+  \Gamma_\phi =
+  \frac{\kappa}{2}\mathrm{Re}\left[
+  \sqrt{\left(1+\frac{2 i\chi}{\kappa}\right)^2
+  +\frac{8 i\chi \bar{n}}{\kappa}}-1\right],
+  \]
+  with weak-dispersive and strong-dispersive low-occupation approximations
+  \(4\chi^2\bar{n}(\bar{n}+1)/\kappa\) and \(\kappa\bar{n}\), respectively.
+  The older compact Lorentzian interpolation
+  \[
+  \Gamma_\phi^{\mathrm{Lor}}=
+  \bar{n}\frac{\kappa\chi^2}{\kappa^2+\chi^2}
+  \]
+  is available only through the explicitly named
+  \texttt{gamma\_phi\_lorentzian\_interpolation(...)} helper, not as the
+  canonical default.
+  \item Residual-photon Lindblad Ramsey helpers reuse
+  \texttt{UniversalCQEDModel}, \texttt{NoiseSpec}, QuTiP \texttt{mesolve}, and
+  the existing tensor-order convention. Bosonic modes are initialized in
+  thermal states at the requested \(\bar{n}\) before Ramsey or echo evolution.
+  The dispersive sign follows the repository Hamiltonian convention
+  \(+\chi n_{\mathrm{mode}}n_q\); negative \(\chi\) lowers the qubit transition
+  frequency as photon number increases.
+  \item The effective cavity-attenuator model treats a readout mode coupled to
+  a cold internal dissipative bath and a hot external line:
+  \[
+  \bar{n}_{\mathrm{ro}}=
+  \frac{\kappa_i\bar{n}_i+\kappa_c\bar{n}_c}{\kappa_i+\kappa_c}.
+  \]
+  When \(\bar{n}_i\simeq0\) and \(\kappa_i/\kappa_c=6\), this gives
+  \(\bar{n}_{\mathrm{ro}}\simeq\bar{n}_c/7\), matching the Wang-style cavity
+  attenuator design target. The two-mode cavity-attenuator helper diagonalizes
+  the linear readout--attenuator Hamiltonian and reports mode frequencies,
+  participation ratios, effective linewidths, and effective dispersive shifts.
+\end{itemize}
+
+\noindent
+Reference anchors: Krinner et al., EPJ Quantum Technology 6, 2 (2019);
+Clerk et al., Rev. Mod. Phys. 82, 1155 (2010); Caves, Phys. Rev. D 26, 1817
+(1982); Zhang et al., npj Quantum Information 3, 1 (2017); Sears et al.,
+Phys. Rev. B 86, 180504(R) (2012); Clerk and Utami, Phys. Rev. A 75, 042302
+(2007); Wang et al., Phys. Rev. Applied 11, 014031 (2019).
+
+\noindent
+Direct tests:
+\texttt{tests/test\_64\_microwave\_thermal\_noise.py},
+\texttt{tests/test\_69\_residual\_thermal\_photons.py}.
 
 \section{State Representation}
 \begin{itemize}[leftmargin=1.5em]

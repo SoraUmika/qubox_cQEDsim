@@ -150,6 +150,8 @@ Confusion-matrix convention: `p_observed = M @ p_latent` with `(g, e)` ordering.
 
 The monitored path is constructed from `cqed_sim.sim.split_collapse_operators(...)`: one selected bosonic emission channel is promoted to the stochastic measurement path, while relaxation, thermal excitation, and dephasing remain ordinary Lindblad terms.
 
+`ContinuousReadoutSpec.solver_options` forwards additional native QuTiP `smesolve` options. Its `max_step` field keeps the existing SME behavior and maps to QuTiP's `dt` option.
+
 ---
 
 ## Strong-Readout Disturbance Helpers

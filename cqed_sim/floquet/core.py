@@ -9,6 +9,7 @@ import qutip as qt
 from cqed_sim.core.drive_targets import DriveTarget
 from cqed_sim.core.frame import FrameSpec
 from cqed_sim.sim.noise import NoiseSpec, collapse_operators as runtime_collapse_operators
+from cqed_sim.solvers.options import build_qutip_solver_options
 
 from .utils import angular_frequency_from_period, bare_state_overlap_matrix, boundary_populations, fold_quasienergies, wrap_phase
 
@@ -193,6 +194,8 @@ class FloquetConfig:
     atol: float = 1.0e-8
     rtol: float = 1.0e-7
     max_step: float | None = None
+    nsteps: int | None = None
+    solver_options: dict[str, Any] = field(default_factory=dict)
     sort: bool = True
     sparse: bool = False
     zone_center: float = 0.0
@@ -209,10 +212,13 @@ class FloquetConfig:
             raise ValueError("FloquetConfig.n_time_samples must be at least 8.")
         if self.max_step is not None and float(self.max_step) <= 0.0:
             raise ValueError("FloquetConfig.max_step must be positive when provided.")
+        if self.nsteps is not None and int(self.nsteps) <= 0:
+            raise ValueError("FloquetConfig.nsteps must be positive when provided.")
         if self.sambe_harmonic_cutoff is not None and int(self.sambe_harmonic_cutoff) < 0:
             raise ValueError("FloquetConfig.sambe_harmonic_cutoff must be non-negative when provided.")
         if self.precompute_times is not None:
             object.__setattr__(self, "precompute_times", tuple(float(value) for value in self.precompute_times))
+        object.__setattr__(self, "solver_options", dict(self.solver_options))
 
 
 @dataclass(frozen=True)
@@ -357,9 +363,13 @@ def solve_floquet(problem: FloquetProblem, config: FloquetConfig | None = None) 
     _validate_periodicity(problem, cfg)
     qutip_hamiltonian = build_floquet_hamiltonian(problem)
 
-    options: dict[str, Any] = {"atol": cfg.atol, "rtol": cfg.rtol}
-    if cfg.max_step is not None:
-        options["max_step"] = cfg.max_step
+    options = build_qutip_solver_options(
+        atol=cfg.atol,
+        rtol=cfg.rtol,
+        max_step=cfg.max_step,
+        nsteps=cfg.nsteps,
+        solver_options=cfg.solver_options,
+    )
 
     floquet_kwargs: dict[str, Any] = {
         "options": options,
@@ -487,20 +497,25 @@ def solve_floquet_markov(
                 f"Floquet-Markov bath '{bath.label or 'operator'}' has dims {bath.operator.dims}, but the Floquet problem uses dims {problem.static_hamiltonian.dims}."
             )
 
-    options = dict(cfg.solver_options)
-    options.setdefault("progress_bar", str(cfg.progress_bar))
-    options.setdefault("store_final_state", bool(cfg.store_final_state))
-    options.setdefault("store_floquet_states", bool(cfg.store_floquet_states))
-    options.setdefault("normalize_output", bool(cfg.normalize_output))
+    extra_options: dict[str, Any] = {
+        "store_floquet_states": bool(cfg.store_floquet_states),
+        "normalize_output": bool(cfg.normalize_output),
+    }
     if cfg.store_states is not None:
-        options.setdefault("store_states", bool(cfg.store_states))
-    options.setdefault("atol", float(cfg.floquet.atol if cfg.atol is None else cfg.atol))
-    options.setdefault("rtol", float(cfg.floquet.rtol if cfg.rtol is None else cfg.rtol))
+        extra_options["store_states"] = bool(cfg.store_states)
     active_max_step = cfg.floquet.max_step if cfg.max_step is None else cfg.max_step
-    if active_max_step is not None:
-        options.setdefault("max_step", float(active_max_step))
     if cfg.method is not None:
-        options.setdefault("method", str(cfg.method))
+        extra_options["method"] = str(cfg.method)
+    options = build_qutip_solver_options(
+        atol=cfg.floquet.atol if cfg.atol is None else cfg.atol,
+        rtol=cfg.floquet.rtol if cfg.rtol is None else cfg.rtol,
+        max_step=active_max_step,
+        nsteps=cfg.floquet.nsteps,
+        store_final_state=bool(cfg.store_final_state),
+        progress_bar=str(cfg.progress_bar),
+        extra_options=extra_options,
+        solver_options=cfg.solver_options,
+    )
 
     solver = qt.FMESolver(
         floquet_result.floquet_basis,

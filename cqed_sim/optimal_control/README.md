@@ -32,6 +32,7 @@ Both paths remain compatible with:
 - `solve_grape(problem, config)` and `GrapeSolver` for dense model-backed GRAPE.
 - NumPy-based density-matrix GRAPE for `ControlSystem(collapse_operators=...)` problems and `DensityMatrixTransferObjective(...)` targets.
 - `solve_structured_control(problem, config)` and `StructuredControlSolver` for parameter-space optimization over smooth pulse families.
+- `evaluate_control_with_simulator(...)` replay cases accept `nsteps`, `solver_options`, or a full `SimulationConfig` for large-cutoff QuTiP validation runs.
 - `CallableParameterization` and `ControlParameterSpec` for user-defined waveform maps without a new parameterization class.
 - `StructuredPulseFamily` plus concrete families including:
   - `CallablePulseFamily`,

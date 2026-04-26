@@ -108,6 +108,8 @@ class EpisodeModelBundle:
     crosstalk_matrix: dict[str, dict[str, float]]
     dt: float
     max_step: float | None
+    nsteps: int | None
+    solver_options: dict[str, Any]
     measurement_spec: QubitMeasurementSpec | None
     randomization: RandomizationSample | None = None
 
@@ -221,6 +223,8 @@ class HamiltonianModelFactory:
             crosstalk_matrix={channel: dict(values) for channel, values in system_config.crosstalk_matrix.items()},
             dt=float(system_config.dt),
             max_step=system_config.max_step,
+            nsteps=system_config.nsteps,
+            solver_options=dict(system_config.solver_options),
             measurement_spec=resolved_measurement_spec,
             randomization=randomization,
         )
@@ -483,7 +487,13 @@ class OpenSystemEngine:
         self.bundle = bundle
 
     def _simulation_config(self, *, store_states: bool = False) -> SimulationConfig:
-        return SimulationConfig(frame=self.bundle.frame, max_step=self.bundle.max_step, store_states=store_states)
+        return SimulationConfig(
+            frame=self.bundle.frame,
+            max_step=self.bundle.max_step,
+            nsteps=self.bundle.nsteps,
+            store_states=store_states,
+            solver_options=self.bundle.solver_options,
+        )
 
     def propagate_state(self, initial_state: qt.Qobj, compiled: Any, drive_ops: dict[str, Any], *, store_states: bool = False):
         return simulate_sequence(

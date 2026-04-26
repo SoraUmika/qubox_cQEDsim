@@ -2,322 +2,338 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/index.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/PHYSICS_CORRECTNESS_EVALUATION.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/architecture.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/choose_by_goal.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/developer.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/examples.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/getting_started.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/installation.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/physics_conventions.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/quickstart.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/analysis.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/backends.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/calibration.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/calibration_targets.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/core.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/floquet.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/gate_io.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/gates.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/hardware.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/holographic_sim.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/measurement.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
+    </url>
+    <url>
+         <loc>https://soraumika.github.io/qubox_cQEDsim/api/microwave_noise.html</loc>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/observables.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/operators.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/optimal_control.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/overview.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/plotting.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/pulses.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/readout_emptying.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/rl_control.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/sequence.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/simulation.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
+    </url>
+    <url>
+         <loc>https://soraumika.github.io/qubox_cQEDsim/api/strong_readout.html</loc>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/system_id.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/tomography.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/api/unitary_synthesis.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/index.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/calibration_workflow.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/cross_kerr.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/dai_2025_intrinsic_multiphoton_resonances.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/dai_2025_readout_assisted_floquet_resonances.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/dispersive_shift_dressed.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/displacement_spectroscopy.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/floquet_driven_systems.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/frame_sanity_checks.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/getting_started_simulation.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/hardware_context.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/holographic_generalized_unitary_workflow.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/holographic_ghz_cluster_workflow.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/holographic_quantum_algorithms.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/kerr_free_evolution.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/minimal_dispersive_model.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/multilevel_transmon.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/number_splitting.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/observables_visualization.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/open_system_dynamics.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/optimal_control.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/phase_space_conventions.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/qubit_drive_rabi.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/readout_emptying_qualification.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/readout_resonator.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
+    </url>
+    <url>
+         <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/residual_thermal_photons.html</loc>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/rl_hybrid_control.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/sequence_building.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/sideband_interactions.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/sideband_swap.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/snap_fock_state_prep.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/storage_cavity_dynamics.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/system_identification.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/truncation_convergence.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/tutorial_physics_audit_matrix.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/unitary_synthesis.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/tutorials/units_frames_conventions.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/agent_workflow.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/defining_models.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/extracting_observables.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/floquet_analysis.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/frames.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
+    </url>
+    <url>
+         <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/microwave_noise.html</loc>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/open_system_dynamics.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/pulse_construction.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/running_simulations.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/sequence_compilation.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
     <url>
          <loc>https://soraumika.github.io/qubox_cQEDsim/user_guides/state_prep_measurement.html</loc>
-         <lastmod>2026-04-22</lastmod>
+         <lastmod>2026-04-26</lastmod>
     </url>
 </urlset>

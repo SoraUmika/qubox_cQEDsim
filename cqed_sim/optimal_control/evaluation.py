@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any, Sequence, TYPE_CHECKING
+from typing import Any, Mapping, Sequence, TYPE_CHECKING
 
 import numpy as np
 import qutip as qt
@@ -30,6 +30,9 @@ class ControlEvaluationCase:
     weight: float = 1.0
     compiler_dt_s: float | None = None
     max_step_s: float | None = None
+    nsteps: int | None = None
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
+    simulation_config: SimulationConfig | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -39,6 +42,20 @@ class ControlEvaluationCase:
             raise ValueError("ControlEvaluationCase.compiler_dt_s must be positive when provided.")
         if self.max_step_s is not None and float(self.max_step_s) <= 0.0:
             raise ValueError("ControlEvaluationCase.max_step_s must be positive when provided.")
+        if self.nsteps is not None and int(self.nsteps) <= 0:
+            raise ValueError("ControlEvaluationCase.nsteps must be positive when provided.")
+        object.__setattr__(self, "solver_options", dict(self.solver_options))
+
+
+def _simulation_config_for_case(case: ControlEvaluationCase) -> SimulationConfig:
+    if case.simulation_config is not None:
+        return case.simulation_config
+    return SimulationConfig(
+        frame=case.frame,
+        max_step=case.max_step_s,
+        nsteps=case.nsteps,
+        solver_options=case.solver_options,
+    )
 
 
 @dataclass(frozen=True)
@@ -194,7 +211,7 @@ def _evaluate_case(
             f"Evaluation case '{case.label}' has model dimension incompatible with ControlProblem.full_dim={problem.full_dim}."
         )
 
-    config = SimulationConfig(frame=case.frame, max_step=case.max_step_s)
+    config = _simulation_config_for_case(case)
     session = prepare_simulation(case.model, compiled, drive_ops, config=config, noise=case.noise, e_ops={})
     dims = _qobj_dims(case.model, problem.full_dim)
     objective_reports: list[ControlObjectiveEvaluation] = []
@@ -288,6 +305,9 @@ def evaluate_control_with_simulator(
     noise: NoiseSpec | None = None,
     compiler_dt_s: float | None = None,
     max_step_s: float | None = None,
+    nsteps: int | None = None,
+    solver_options: Mapping[str, Any] | None = None,
+    simulation_config: SimulationConfig | None = None,
     aggregate_mode: str | None = None,
     waveform_mode: str = "problem_default",
 ) -> ControlEvaluationResult:
@@ -309,6 +329,9 @@ def evaluate_control_with_simulator(
                 noise=noise,
                 compiler_dt_s=compiler_dt_s,
                 max_step_s=max_step_s,
+                nsteps=nsteps,
+                solver_options=dict(solver_options or {}),
+                simulation_config=simulation_config,
             ),
         )
 
@@ -343,28 +366,20 @@ def evaluate_control_with_simulator(
             compiled = SequenceCompiler(dt=case_dt).compile(pulses, t_end=resolved_duration_s)
             compiled_cache[case_dt] = compiled
         resolved_case = case
-        if case.max_step_s is None and max_step_s is not None:
-            resolved_case = ControlEvaluationCase(
-                model=case.model,
-                label=case.label,
-                frame=case.frame,
-                noise=case.noise,
-                weight=case.weight,
-                compiler_dt_s=case_dt,
-                max_step_s=max_step_s,
-                metadata=dict(case.metadata),
-            )
-        elif case.compiler_dt_s is None:
-            resolved_case = ControlEvaluationCase(
-                model=case.model,
-                label=case.label,
-                frame=case.frame,
-                noise=case.noise,
-                weight=case.weight,
-                compiler_dt_s=case_dt,
-                max_step_s=case.max_step_s,
-                metadata=dict(case.metadata),
-            )
+        updates: dict[str, Any] = {}
+        if case.compiler_dt_s is None:
+            updates["compiler_dt_s"] = case_dt
+        if case.simulation_config is None:
+            if simulation_config is not None:
+                updates["simulation_config"] = simulation_config
+            if case.max_step_s is None and max_step_s is not None:
+                updates["max_step_s"] = max_step_s
+            if case.nsteps is None and nsteps is not None:
+                updates["nsteps"] = nsteps
+            if not case.solver_options and solver_options:
+                updates["solver_options"] = dict(solver_options)
+        if updates:
+            resolved_case = replace(case, **updates)
         member_reports.append(_evaluate_case(problem, resolved_case, compiled, drive_ops))
 
     mode = str(problem.ensemble_aggregate if aggregate_mode is None else aggregate_mode)

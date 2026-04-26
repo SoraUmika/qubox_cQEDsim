@@ -13,10 +13,10 @@
         <link rel="canonical" href="https://soraumika.github.io/qubox_cQEDsim/api/measurement.html">
       
       
-        <link rel="prev" href="simulation.html">
+        <link rel="prev" href="microwave_noise.html">
       
       
-        <link rel="next" href="readout_emptying.html">
+        <link rel="next" href="strong_readout.html">
       
       
         
@@ -617,6 +617,8 @@
       
         
       
+        
+      
     
     
     
@@ -931,6 +933,34 @@
     
   
     Open System Dynamics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
   
 
     
@@ -2487,6 +2517,8 @@
       
         
       
+        
+      
     
     
     
@@ -2533,6 +2565,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/residual_thermal_photons.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Residual Thermal Photons
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2670,6 +2730,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -2922,6 +2986,34 @@
     
   
     Simulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
   
 
     
@@ -3233,6 +3325,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="strong_readout.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strong Readout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -4440,6 +4560,7 @@
 </tbody>
 </table>
 <p>The monitored path is constructed from <code>cqed_sim.sim.split_collapse_operators(...)</code>: one selected bosonic emission channel is promoted to the stochastic measurement path, while relaxation, thermal excitation, and dephasing remain ordinary Lindblad terms.</p>
+<p><code>ContinuousReadoutSpec.solver_options</code> forwards additional native QuTiP <code>smesolve</code> options. Its <code>max_step</code> field keeps the existing SME behavior and maps to QuTiP's <code>dt</code> option.</p>
 <hr />
 <h2 id="strong-readout-disturbance-helpers">Strong-Readout Disturbance Helpers<a class="headerlink" href="#strong-readout-disturbance-helpers" title="Permanent link">&para;</a></h2>
 <p><strong>Module path:</strong> <code>cqed_sim.measurement.strong_readout</code></p>

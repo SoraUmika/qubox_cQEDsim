@@ -617,6 +617,8 @@
       
         
       
+        
+      
     
     
     
@@ -931,6 +933,34 @@
     
   
     Open System Dynamics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
   
 
     
@@ -2487,6 +2517,8 @@
       
         
       
+        
+      
     
     
     
@@ -2533,6 +2565,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/residual_thermal_photons.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Residual Thermal Photons
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2670,6 +2730,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -2942,6 +3006,34 @@
   
   
     <li class="md-nav__item">
+      <a href="microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="measurement.html" class="md-nav__link">
         
   
@@ -2950,6 +3042,34 @@
     
   
     Measurement & Readout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="strong_readout.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strong Readout
   
 
     
@@ -3986,6 +4106,7 @@
 <p class="admonition-title">Convention</p>
 <p>The synthesis drift-phase layer matches the runtime dispersive/Kerr convention. Model-backed waveform primitives use the same <code>Pulse</code>, <code>SequenceCompiler</code>, and <code>cqed_sim.sim</code> stack as the rest of the library. Public-facing frequency parameters should still stay in positive physical drive frequencies and be translated through the shared core frequency helpers only when assigning the raw low-level runtime field <code>Pulse.carrier = -omega_transition(frame)</code>.</p>
 </div>
+<p>Runtime backend settings that build a <code>SimulationConfig</code> may include <code>nsteps</code> and <code>solver_options</code>; those fields are forwarded to QuTiP <code>propagator(...)</code> when model-backed waveform primitives are replayed.</p>
 <hr />
 <h2 id="system-interface">System Interface<a class="headerlink" href="#system-interface" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">QuantumSystem</span><span class="p">:</span>

@@ -43,6 +43,8 @@ class SQRCalibrationResult:
 | `export_calibration_result(result, path, config)` | `-> Path` | Write JSON |
 | `load_calibration_result(path)` | `-> SQRCalibrationResult` | Read JSON |
 
+Solver controls: legacy SQR calibration still honors `qutip_nsteps_sqr_calibration`, but explicit `config["nsteps"]` or `config["solver_options"]["nsteps"]` now takes precedence. Additional QuTiP options can be supplied through `config["solver_options"]`.
+
 ---
 
 ## Evaluation and Benchmarking
@@ -88,6 +90,8 @@ class TargetedSubspaceOptimizationConfig:
 | `optimize_targeted_subspace_multitone(model, targets, run_config, ..., initial_logical_block_phase=None, optimization_config=...)` | Two-stage targeted-subspace optimization over waveform corrections and optional logical block-phase parameters |
 
 `TargetedSubspaceValidationResult` records the applied logical block phase, the best-fit logical block phase inferred from the raw restricted operator, the corrected restricted-process fidelity, and the gauge-fixed logical block-phase residuals.
+
+`ConditionedMultitoneRunConfig` exposes `nsteps` and `solver_options`; those settings are forwarded to reduced conditioned-qubit checks, full runtime validation, and targeted-subspace propagator replay. The targeted-subspace default remains `nsteps=100000` when neither field is supplied.
 
 ---
 

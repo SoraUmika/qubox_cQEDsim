@@ -617,6 +617,8 @@
       
         
       
+        
+      
     
     
     
@@ -931,6 +933,34 @@
     
   
     Open System Dynamics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="user_guides/microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
   
 
     
@@ -2487,6 +2517,8 @@
       
         
       
+        
+      
     
     
     
@@ -2533,6 +2565,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tutorials/residual_thermal_photons.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Residual Thermal Photons
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2722,6 +2782,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#residual-photon-and-microwave-environment-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Residual Photon and Microwave Environment Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#floquet-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2831,6 +2902,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -3102,6 +3177,34 @@
   
   
     <li class="md-nav__item">
+      <a href="api/microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="api/measurement.html" class="md-nav__link">
         
   
@@ -3110,6 +3213,34 @@
     
   
     Measurement & Readout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/strong_readout.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strong Readout
   
 
     
@@ -3808,6 +3939,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#residual-photon-and-microwave-environment-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Residual Photon and Microwave Environment Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#floquet-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4094,12 +4236,74 @@
 <td><code>tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb</code></td>
 </tr>
 <tr>
+<td><code>microwave_noise_fridge_chain.py</code></td>
+<td>Cryogenic attenuator cascade and exact thermal-noise budget at 6 GHz</td>
+<td><code>user_guides/microwave_noise.md</code></td>
+</tr>
+<tr>
+<td><code>microwave_noise_resonator_ports.py</code></td>
+<td>Combines multiple port occupations into storage/readout resonator bath occupations</td>
+<td><code>user_guides/microwave_noise.md</code></td>
+</tr>
+<tr>
+<td><code>microwave_noise_qubit_rates.py</code></td>
+<td>Converts a qubit-frequency bath occupation into upward/downward thermal rates</td>
+<td><code>user_guides/microwave_noise.md</code></td>
+</tr>
+<tr>
+<td><code>microwave_noise_photon_dephasing.py</code></td>
+<td>Compares exact and approximate thermal-photon dephasing formulas</td>
+<td><code>user_guides/microwave_noise.md</code></td>
+</tr>
+<tr>
 <td><code>ringdown_noise.py</code></td>
 <td>Cavity ringdown with noise</td>
 <td>retained as a compact standalone diagnostic script</td>
 </tr>
 </tbody>
 </table>
+<hr />
+<h2 id="residual-photon-and-microwave-environment-examples">Residual Photon and Microwave Environment Examples<a class="headerlink" href="#residual-photon-and-microwave-environment-examples" title="Permanent link">&para;</a></h2>
+<p>Under <code>examples/noise/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>photon_shot_noise_dephasing.py</code></td>
+<td>Ramsey envelopes, exact photon-shot-noise dephasing, Lorentzian comparison, and strong-dispersive photon-number-conditioned rates</td>
+</tr>
+<tr>
+<td><code>multimode_thermal_photons.py</code></td>
+<td>Multi-mode residual-photon dephasing budget and effective-temperature sensitivity</td>
+</tr>
+<tr>
+<td><code>noise_induced_dephasing_extraction.py</code></td>
+<td>Synthetic added-noise dephasing measurement and offset fit for residual thermal photons</td>
+</tr>
+</tbody>
+</table>
+<p>Under <code>examples/microwave/</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Script</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cavity_attenuator_design.py</code></td>
+<td>Cold cavity attenuator sweep, lossless-filter comparison, and two-mode participation scan</td>
+</tr>
+</tbody>
+</table>
+<p>The generated plots used by the public tutorial are checked in under
+<code>documentations/assets/images/tutorials/</code>.</p>
 <hr />
 <h2 id="floquet-examples">Floquet Examples<a class="headerlink" href="#floquet-examples" title="Permanent link">&para;</a></h2>
 <p>Under <code>examples/floquet/</code>:</p>

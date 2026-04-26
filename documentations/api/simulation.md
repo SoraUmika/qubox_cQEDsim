@@ -47,14 +47,18 @@ class SimulationConfig:
     atol: float = 1e-8
     rtol: float = 1e-7
     max_step: float | None = None
+    nsteps: int | None = None
     store_states: bool = False
     backend: BaseBackend | None = None   # None = use QuTiP path
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
     # dynamiqs GPU-accelerated ODE solver (optional)
     dynamiqs_solver: str | None = None   # e.g. "Tsit5", "Dopri5", "Expm"
     dynamiqs_atol: float = 1e-8
     dynamiqs_rtol: float = 1e-6
     dynamiqs_device: str | None = None   # "cpu" or "gpu"; None = default
 ```
+
+On the QuTiP path, `nsteps` is forwarded to native `sesolve`/`mesolve` options. Use `solver_options` for additional QuTiP controls such as `method`; conflicting duplicate keys between explicit config fields and `solver_options` raise `ValueError`.
 
 **dynamiqs solver fields** (all default to disabled):
 

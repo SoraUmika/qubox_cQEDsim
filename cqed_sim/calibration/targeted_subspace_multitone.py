@@ -27,6 +27,7 @@ from cqed_sim.core.model import DispersiveTransmonCavityModel
 from cqed_sim.sequence.scheduler import CompiledSequence
 from cqed_sim.sim.extractors import bloch_xyz_from_qubit_state, conditioned_qubit_state, truncate_to_qubit_subspace
 from cqed_sim.sim.runner import hamiltonian_time_slices
+from cqed_sim.solvers.options import build_qutip_solver_options
 from cqed_sim.unitary_synthesis.metrics import LogicalBlockPhaseDiagnostics, logical_block_phase_diagnostics
 
 
@@ -97,14 +98,17 @@ def _full_dimension(model: DispersiveTransmonCavityModel) -> int:
 
 
 def _solver_options(run_config: ConditionedMultitoneRunConfig) -> dict[str, Any]:
-    options: dict[str, Any] = {
-        "atol": 1.0e-8,
-        "rtol": 1.0e-7,
-        "nsteps": 100000,
-    }
-    if run_config.max_step_s is not None:
-        options["max_step"] = float(run_config.max_step_s)
-    return options
+    solver_options = dict(run_config.solver_options)
+    nsteps = run_config.nsteps
+    if nsteps is None and "nsteps" not in solver_options:
+        nsteps = 100000
+    return build_qutip_solver_options(
+        atol=1.0e-8,
+        rtol=1.0e-7,
+        max_step=run_config.max_step_s,
+        nsteps=nsteps,
+        solver_options=solver_options,
+    )
 
 
 def _classify_error(theta_error: float, phi_error: float, bloch_radius: float) -> str:

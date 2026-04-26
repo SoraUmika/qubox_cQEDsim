@@ -120,6 +120,7 @@ For a repo-side script template: `examples/rl_hybrid_control_rollout.py`
 ## Important Assumptions / Conventions
 
 - The environment wraps `cqed_sim.sim` internally; the same model conventions (carrier sign, tensor ordering, frequency units) apply. Qubit and storage primitives expose detunings around positive physical drive frequencies at the wrapper boundary and then translate those values into the raw internal `Pulse.carrier` used by the runtime.
+- `HybridSystemConfig.nsteps` and `HybridSystemConfig.solver_options` are forwarded to the full-pulse `SimulationConfig`.
 - The `ReducedDispersiveModelConfig` computes the dispersive Hamiltonian analytically without running the full QuTiP solver; it is fast enough for inner-loop RL but may miss higher-order effects.
 - The `FullPulseModelConfig` calls `simulate_sequence(...)` at each step; it is physically accurate but slower.
 - Reward signals are in `[−∞, 1]` by convention; fidelity-based rewards are bounded in `[0, 1]` unless penalties dominate.

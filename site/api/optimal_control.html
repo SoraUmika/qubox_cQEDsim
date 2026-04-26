@@ -617,6 +617,8 @@
       
         
       
+        
+      
     
     
     
@@ -931,6 +933,34 @@
     
   
     Open System Dynamics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user_guides/microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
   
 
     
@@ -2487,6 +2517,8 @@
       
         
       
+        
+      
     
     
     
@@ -2533,6 +2565,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/residual_thermal_photons.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Residual Thermal Photons
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2670,6 +2730,10 @@
   
     
     
+      
+        
+      
+        
       
         
       
@@ -2942,6 +3006,34 @@
   
   
     <li class="md-nav__item">
+      <a href="microwave_noise.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Microwave Thermal Noise
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="measurement.html" class="md-nav__link">
         
   
@@ -2950,6 +3042,34 @@
     
   
     Measurement & Readout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="strong_readout.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Strong Readout
   
 
     
@@ -3312,6 +3432,17 @@
     <span class="md-ellipsis">
       
         Hardware and Transfer Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#simulator-replay-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulator Replay Controls
       
     </span>
   </a>
@@ -4306,6 +4437,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#simulator-replay-controls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simulator Replay Controls
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#objectives" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4797,6 +4939,14 @@ I(t) = \sum_k a_k \cos\left(\frac{2\pi k t}{T}\right) + \sum_{k&gt;0} b_k \sin\l
 <li><code>FrequencyResponseHardwareMap(...)</code></li>
 </ul>
 <p>The identity transfer case is represented by <code>HardwareModel(maps=())</code> or <code>hardware_model=None</code> on the <code>ControlProblem</code>.</p>
+<hr />
+<h2 id="simulator-replay-controls">Simulator Replay Controls<a class="headerlink" href="#simulator-replay-controls" title="Permanent link">&para;</a></h2>
+<p><code>ControlEvaluationCase</code> and <code>evaluate_control_with_simulator(...)</code> replay optimized schedules through the standard <code>cqed_sim.sim</code> runtime. For large Hilbert-space or long-duration replays, pass either:</p>
+<ul>
+<li><code>nsteps=...</code> and <code>solver_options={...}</code> directly on the case or top-level replay call, or</li>
+<li><code>simulation_config=SimulationConfig(...)</code> for the full runtime configuration.</li>
+</ul>
+<p>Case-level settings take precedence over top-level defaults.</p>
 <hr />
 <h2 id="objectives">Objectives<a class="headerlink" href="#objectives" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cqed_sim.optimal_control</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>

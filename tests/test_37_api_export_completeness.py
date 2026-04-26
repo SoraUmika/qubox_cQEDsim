@@ -37,6 +37,14 @@ REQUIRED_TOP_LEVEL_NAMES = [
     "SimulationResult",
     "simulate_sequence",
     "prepare_simulation",
+    # microwave thermal-noise propagation
+    "bose_occupation",
+    "PassiveLoss",
+    "DistributedLine",
+    "DirectionalLoss",
+    "PassiveSMatrixComponent",
+    "NoiseCascade",
+    "thermal_photon_dephasing",
     # Floquet
     "PeriodicDriveTerm",
     "FloquetProblem",

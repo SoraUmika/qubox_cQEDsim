@@ -487,17 +487,25 @@ def _lindblad_validation(
     noise: NoiseSpec | None,
     compiler_dt_s: float | None,
     max_step_s: float | None,
+    simulation_config: SimulationConfig | None,
     drive_frequency: float | None,
 ) -> dict[str, Any]:
     pulse = export_readout_emptying_to_pulse(result, channel="readout", carrier=0.0)
     compiled = SequenceCompiler(
         dt=_default_compiler_dt(result.segment_edges_s) if compiler_dt_s is None else float(compiler_dt_s)
     ).compile([pulse], t_end=float(result.spec.tau))
+    resolved_frame = _resolved_frame(frame, drive_frequency=drive_frequency)
+    if simulation_config is None:
+        solver_config = SimulationConfig(frame=resolved_frame, max_step=max_step_s)
+    else:
+        solver_config = replace(simulation_config, frame=resolved_frame)
+        if max_step_s is not None and simulation_config.max_step is None:
+            solver_config = replace(solver_config, max_step=max_step_s)
     session = prepare_simulation(
         readout_model,
         compiled,
         {"readout": "readout"},
-        config=SimulationConfig(frame=_resolved_frame(frame, drive_frequency=drive_frequency), max_step=max_step_s),
+        config=solver_config,
         noise=noise,
         e_ops=_default_lindblad_observables(readout_model),
     )
@@ -698,6 +706,7 @@ class ReadoutEmptyingVerificationConfig:
     noise: NoiseSpec | None = None
     compiler_dt_s: float | None = None
     max_step_s: float | None = None
+    simulation_config: SimulationConfig | None = None
     shots_per_branch: int = 128
     seed: int | None = None
     include_square_baseline: bool = True
@@ -775,6 +784,7 @@ class ReadoutEmptyingRefinementConfig:
     noise: NoiseSpec | None = None
     compiler_dt_s: float | None = None
     max_step_s: float | None = None
+    simulation_config: SimulationConfig | None = None
     shots_per_branch: int = 64
     measurement_noise_mode: str = "calibrated_target_error"
     measurement_target_square_error: float = 0.10
@@ -967,6 +977,7 @@ def verify_readout_emptying_pulse(
                 noise=resolved_config.noise,
                 compiler_dt_s=resolved_config.compiler_dt_s,
                 max_step_s=resolved_config.max_step_s,
+                simulation_config=resolved_config.simulation_config,
                 drive_frequency=drive_frequency,
             )
             lindblad_metrics[label] = dict(lindblad["metrics"])
@@ -1167,6 +1178,7 @@ def refine_readout_emptying_pulse(
                 noise=resolved_config.noise,
                 compiler_dt_s=resolved_config.compiler_dt_s,
                 max_step_s=resolved_config.max_step_s,
+                simulation_config=resolved_config.simulation_config,
                 drive_frequency=drive_frequency,
             )
             lindblad_metrics = dict(lindblad_data["metrics"])
@@ -1197,6 +1209,7 @@ def refine_readout_emptying_pulse(
             noise=resolved_config.noise,
             compiler_dt_s=resolved_config.compiler_dt_s,
             max_step_s=resolved_config.max_step_s,
+            simulation_config=resolved_config.simulation_config,
             shots_per_branch=0,
             measurement_noise_mode="as_provided",
             measurement_target_square_error=resolved_config.measurement_target_square_error,
@@ -1328,6 +1341,7 @@ def refine_readout_emptying_pulse(
                 noise=resolved_config.noise,
                 compiler_dt_s=resolved_config.compiler_dt_s,
                 max_step_s=resolved_config.max_step_s,
+                simulation_config=resolved_config.simulation_config,
                 shots_per_branch=resolved_config.shots_per_branch,
                 seed=resolved_config.seed,
                 measurement_noise_mode="as_provided",

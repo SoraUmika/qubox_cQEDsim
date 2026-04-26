@@ -149,7 +149,7 @@ For a full notebook walkthrough: `tutorials/30_advanced_protocols/03_unitary_syn
 ## Relationships to Other Modules
 
 - **`cqed_sim.core`**: provides the model and `FrameSpec` that `CQEDSystemAdapter` wraps.
-- **`cqed_sim.sim`**: the `backends.py` file in this module re-exports `simulate_sequence` for internal use; converged sequences can be validated against the full solver.
+- **`cqed_sim.sim`**: the `backends.py` file in this module re-exports `simulate_sequence` for internal use; converged sequences can be validated against the full solver. Model-backed waveform primitives accept runtime settings that become a `SimulationConfig`, including `nsteps` and `solver_options` for QuTiP `propagator(...)`.
 - **`cqed_sim.optimal_control`**: GRAPE can refine synthesized waveforms at the pulse level; `objective_from_unitary_synthesis_target(...)` bridges the two.
 - **`cqed_sim.pulses`** and **`cqed_sim.sequence`**: `waveform_bridge` exports synthesized sequences as `Pulse` lists for compilation and simulation.
 

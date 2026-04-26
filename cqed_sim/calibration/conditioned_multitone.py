@@ -17,6 +17,7 @@ from cqed_sim.pulses.pulse import EnvelopeFunc, Pulse
 from cqed_sim.sequence.scheduler import CompiledSequence, SequenceCompiler
 from cqed_sim.sim.extractors import bloch_xyz_from_qubit_state, conditioned_qubit_state
 from cqed_sim.sim.runner import SimulationConfig, prepare_simulation
+from cqed_sim.solvers.options import build_qutip_solver_options
 
 
 _SIGMA_PLUS = qt.create(2)
@@ -262,6 +263,8 @@ class ConditionedMultitoneRunConfig:
     tone_cutoff: float = 1.0e-10
     include_all_levels: bool = False
     max_step_s: float | None = None
+    nsteps: int | None = None
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
     fock_fqs_hz: tuple[float, ...] | None = None
 
     def __post_init__(self) -> None:
@@ -273,8 +276,11 @@ class ConditionedMultitoneRunConfig:
             raise ValueError("sigma_fraction must be positive.")
         if self.max_step_s is not None and float(self.max_step_s) <= 0.0:
             raise ValueError("max_step_s must be positive when provided.")
+        if self.nsteps is not None and int(self.nsteps) <= 0:
+            raise ValueError("nsteps must be positive when provided.")
         if self.fock_fqs_hz is not None:
             object.__setattr__(self, "fock_fqs_hz", tuple(float(value) for value in self.fock_fqs_hz))
+        object.__setattr__(self, "solver_options", dict(self.solver_options))
 
 
 @dataclass(frozen=True)
@@ -639,14 +645,15 @@ def _reduced_sector_qubit_state(
         [_SIGMA_PLUS, coeff],
         [_SIGMA_MINUS, np.conj(coeff)],
     ]
-    options: dict[str, Any] = {
-        "atol": 1.0e-8,
-        "rtol": 1.0e-7,
-        "store_states": False,
-        "store_final_state": True,
-    }
-    if run_config.max_step_s is not None:
-        options["max_step"] = float(run_config.max_step_s)
+    options = build_qutip_solver_options(
+        atol=1.0e-8,
+        rtol=1.0e-7,
+        max_step=run_config.max_step_s,
+        nsteps=run_config.nsteps,
+        store_states=False,
+        store_final_state=True,
+        solver_options=run_config.solver_options,
+    )
     result = qt.sesolve(
         hamiltonian,
         qt.basis(2, 0),
@@ -744,7 +751,12 @@ def evaluate_conditioned_multitone(
             model,
             compiled,
             waveform.drive_ops,
-            config=SimulationConfig(frame=run_config.frame, max_step=run_config.max_step_s),
+            config=SimulationConfig(
+                frame=run_config.frame,
+                max_step=run_config.max_step_s,
+                nsteps=run_config.nsteps,
+                solver_options=run_config.solver_options,
+            ),
         )
         initial_states = [model.basis_state(0, n) for n in range(target_obj.n_levels)]
         results = session.run_many(initial_states)

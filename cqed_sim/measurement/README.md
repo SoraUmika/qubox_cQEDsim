@@ -34,7 +34,7 @@ After `cqed_sim.sim` has produced a state or a compiled replay problem, this mod
 
 ### Continuous readout replay
 
-- **`ContinuousReadoutSpec`**: SME replay options such as monitored subsystem, number of trajectories, and record storage.
+- **`ContinuousReadoutSpec`**: SME replay options such as monitored subsystem, number of trajectories, record storage, and extra QuTiP `solver_options`.
 - **`simulate_continuous_readout(...)`**: QuTiP `smesolve(...)` wrapper using `cqed_sim` drive, frame, and noise conventions.
 - **`ContinuousReadoutResult`**: Average expectations plus per-trajectory measurement records and states.
 - **`integrate_measurement_record(...)`**: Integrates homodyne or heterodyne records along their final time axis.
@@ -132,6 +132,7 @@ replay = simulate_continuous_readout(
         monitored_subsystem="readout",
         ntraj=16,
         max_step=dt,
+        solver_options={"nsteps": 100000},
     ),
 )
 record = replay.measurement_records[0]
@@ -193,5 +194,5 @@ targets = strong_readout_drive_targets(
 
 - The semi-classical readout chain does not insert readout photons into the runtime Hamiltonian by itself.
 - Purcell estimates remain analytic first-order approximations.
-- The stochastic replay wrapper inherits QuTiP SME solver assumptions and option semantics.
+- The stochastic replay wrapper inherits QuTiP SME solver assumptions and option semantics. `ContinuousReadoutSpec.max_step` maps to QuTiP's SME `dt` option, while `solver_options` carries additional native options.
 - The strong-readout disturbance layer is a phenomenological approximation whose coefficients should be calibrated against experiment or a more microscopic model.

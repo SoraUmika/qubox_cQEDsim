@@ -25,6 +25,7 @@ The package also includes a periodic-drive Floquet layer for closed-system quasi
 | [`pulses`](pulses.md) | Pulse dataclass, envelopes, builders, calibration formulas, hardware |
 | [`sequence`](sequence.md) | SequenceCompiler, compiled-channel timeline |
 | [`simulation`](simulation.md) | Hamiltonian assembly, solver, noise, extractors, couplings |
+| [`microwave_noise`](microwave_noise.md) | Cryogenic microwave thermal-noise cascades and bath-occupation helpers |
 | [`floquet`](floquet.md) | Periodic-drive Floquet analysis, quasienergies, Sambe builders, and branch tracking |
 | [`measurement`](measurement.md) | State preparation, qubit measurement, readout-chain modeling |
 | [`optimal_control`](optimal_control.md) | Direct-control problems, held-sample and piecewise-constant schedules, GRAPE, hardware maps, penalties, and waveform export |

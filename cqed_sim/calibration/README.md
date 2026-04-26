@@ -68,17 +68,27 @@ The two included paths ask complementary questions:
 ```python
 from cqed_sim.calibration import (
     ConditionedQubitTargets, ConditionedMultitoneRunConfig,
-    build_conditioned_multitone_waveform, run_conditioned_multitone_validation,
+    run_conditioned_multitone_validation,
 )
 
 targets = ConditionedQubitTargets.from_spec(
     {0: (np.pi / 2, 0), 1: (np.pi, 0), 2: (np.pi / 2, np.pi)},
-    n_sectors=8,
+    n_levels=8,
 )
-waveform = build_conditioned_multitone_waveform(model, targets, config=...)
-result = run_conditioned_multitone_validation(model, targets, waveform, config=ConditionedMultitoneRunConfig(...))
+run_config = ConditionedMultitoneRunConfig(nsteps=100000, solver_options={"method": "bdf"})
+result = run_conditioned_multitone_validation(
+    model,
+    targets,
+    run_config,
+)
 print(result.weighted_fidelity)
 ```
+
+`ConditionedMultitoneRunConfig.nsteps` and `solver_options` propagate through
+reduced conditioned-qubit checks, full runtime validation, and targeted-subspace
+propagator audits. Legacy SQR calibration mappings may still use
+`qutip_nsteps_sqr_calibration`, but explicit `nsteps` or
+`solver_options["nsteps"]` takes precedence.
 
 ### SQR gate calibration
 

@@ -106,6 +106,8 @@ class HybridSystemConfig:
     crosstalk_matrix: dict[str, dict[str, float]] = field(default_factory=dict)
     dt: float = 4.0e-9
     max_step: float | None = None
+    nsteps: int | None = None
+    solver_options: Mapping[str, Any] = field(default_factory=dict)
 ```
 
 Key points:
@@ -113,6 +115,7 @@ Key points:
 - The reduced regime is the fast RL iteration path for dispersive/Kerr tasks.
 - The full regime is the richer multilevel pulse path and uses the same `UniversalCQEDModel` infrastructure as the rest of the package.
 - If `use_model_rotating_frame=True` and the `FrameSpec` is left at zero, the environment convenience layer adopts the model's bare storage/qubit frequencies as the working frame.
+- `nsteps` and `solver_options` are forwarded to the full-pulse `SimulationConfig`.
 
 ---
 

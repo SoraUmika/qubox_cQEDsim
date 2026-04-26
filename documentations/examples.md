@@ -56,7 +56,32 @@ This automation layer is intended for task orchestration, prompt management, per
 | `grape_storage_subspace_gate_demo.py` | Model-backed GRAPE optimization of a storage logical-subspace gate with pulse export and runtime replay | `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` |
 | `hardware_constrained_grape_demo.py` | Hardware-aware GRAPE comparison showing held-sample controls, low-pass filtering, boundary windows, IQ-radius limits, and command-vs-physical replay | `tutorials/30_advanced_protocols/06_grape_optimal_control_workflow.ipynb` |
 | `rl_hybrid_control_rollout.py` | Hybrid RL environment rollout with measurement-like observations, diagnostics, and domain-randomized evaluation | `tutorials/30_advanced_protocols/05_rl_hybrid_control_environment.ipynb` |
+| `microwave_noise_fridge_chain.py` | Cryogenic attenuator cascade and exact thermal-noise budget at 6 GHz | `user_guides/microwave_noise.md` |
+| `microwave_noise_resonator_ports.py` | Combines multiple port occupations into storage/readout resonator bath occupations | `user_guides/microwave_noise.md` |
+| `microwave_noise_qubit_rates.py` | Converts a qubit-frequency bath occupation into upward/downward thermal rates | `user_guides/microwave_noise.md` |
+| `microwave_noise_photon_dephasing.py` | Compares exact and approximate thermal-photon dephasing formulas | `user_guides/microwave_noise.md` |
 | `ringdown_noise.py` | Cavity ringdown with noise | retained as a compact standalone diagnostic script |
+
+---
+
+## Residual Photon and Microwave Environment Examples
+
+Under `examples/noise/`:
+
+| Script | Description |
+|---|---|
+| `photon_shot_noise_dephasing.py` | Ramsey envelopes, exact photon-shot-noise dephasing, Lorentzian comparison, and strong-dispersive photon-number-conditioned rates |
+| `multimode_thermal_photons.py` | Multi-mode residual-photon dephasing budget and effective-temperature sensitivity |
+| `noise_induced_dephasing_extraction.py` | Synthetic added-noise dephasing measurement and offset fit for residual thermal photons |
+
+Under `examples/microwave/`:
+
+| Script | Description |
+|---|---|
+| `cavity_attenuator_design.py` | Cold cavity attenuator sweep, lossless-filter comparison, and two-mode participation scan |
+
+The generated plots used by the public tutorial are checked in under
+`documentations/assets/images/tutorials/`.
 
 ---
 
